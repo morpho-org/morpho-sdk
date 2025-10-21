@@ -1,4 +1,4 @@
-import { describe, expect } from "vitest";
+import { describe } from "vitest";
 import { test } from "./setup";
 import { function1 } from "src/utils";
 

@@ -20,7 +20,10 @@
   "scripts": {
     "prepublish": "$npm_execpath build",
     "compile": "hardhat compile",
-    "build": "tsc --noEmit && tsc --build tsconfig.build.json"
+    "build": "tsc --noEmit && tsc --build tsconfig.build.json",
+    "link": "pnpm link --global",
+    "unlink": "pnpm unlink --global",
+    "setup-dev": "pnpm run build && pnpm link --global"
   },
   "peerDependencies": {
     "viem": "^2.0.0"
