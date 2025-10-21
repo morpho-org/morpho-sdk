@@ -1,0 +1,40 @@
+{
+  "name": "morpho-dapp",
+  "description": "Abstraction layer for Morpho's complexity.",
+  "version": "0.0.1",
+  "author": "Morpho Association <contact@morpho.org>",
+  "contributors": [
+    "Foulks-Plb <https://x.com/FoulkPlb>"
+  ],
+  "repository": "github:morpho-org/morpho-dapp",
+  "homepage": "https://github.com/morpho-org/morpho-dapp",
+  "bugs": {
+    "url": "https://github.com/morpho-org/morpho-dapp/issues",
+    "email": "contact@morpho.org"
+  },
+  "license": "MIT",
+  "main": "src/index.ts",
+  "files": [
+    "lib"
+  ],
+  "scripts": {
+    "prepublish": "$npm_execpath build",
+    "compile": "hardhat compile",
+    "build": "tsc --noEmit && tsc --build tsconfig.build.json"
+  },
+  "peerDependencies": {
+    "viem": "^2.0.0"
+  },
+  "devDependencies": {
+    "@morpho-org/test": "^2.6.0",
+    "@types/node": "^24.9.1",
+    "hardhat": "^2.22.18",
+    "typescript": "^5.7.2",
+    "viem": "^2.33.3",
+    "vitest": "^3.0.5"
+  },
+  "publishConfig": {
+    "main": "lib/index.js",
+    "types": "lib/index.d.ts"
+  }
+}
