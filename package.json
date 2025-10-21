@@ -21,6 +21,8 @@
     "prepublish": "$npm_execpath build",
     "compile": "hardhat compile",
     "build": "tsc --noEmit && tsc --build tsconfig.build.json",
+    "test": "vitest",
+    "test:ui": "vitest --ui",
     "link": "pnpm link --global",
     "unlink": "pnpm unlink --global",
     "setup-dev": "pnpm run build && pnpm link --global"
@@ -31,6 +33,7 @@
   "devDependencies": {
     "@morpho-org/test": "^2.6.0",
     "@types/node": "^24.9.1",
+    "dotenv": "^17.2.3",
     "hardhat": "^2.22.18",
     "typescript": "^5.7.2",
     "viem": "^2.33.3",
