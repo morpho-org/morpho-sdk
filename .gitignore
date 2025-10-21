@@ -19,11 +19,7 @@ coverage
 build
 artifacts
 dist
-packages/**/lib
-sdks/**/lib
-services/**/lib
-services/**/.esbuild
-services/**/.serverless
+lib/
 
 # misc
 .DS_Store
