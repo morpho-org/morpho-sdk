@@ -6,7 +6,7 @@ import {
 } from "@morpho-org/blue-sdk";
 import { Address } from "viem";
 
-export function deposit({
+export function depositVaultV2({
   chainId,
   asset,
   vault,

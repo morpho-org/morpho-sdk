@@ -1,11 +1,11 @@
 import { Address, type WalletClient } from "viem";
-import { MorphoClient, createVaultV2 } from "src";
+import { MorphoClient, VaultParams, createVaultV2 } from "src";
 
 export function createMorphoClient(walletClient: WalletClient): MorphoClient {
   const client: MorphoClient = {
     walletClient,
-    vaultV2: ({ asset, vault }: { asset: Address; vault: Address }) =>
-      createVaultV2(client, asset, vault),
+    vaultV2: ({ vault, asset }: VaultParams) =>
+      createVaultV2(client, { vault, asset }),
   };
 
   return client;

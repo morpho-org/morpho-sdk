@@ -5,12 +5,13 @@ import { createWalletClient, http } from "viem";
 import { createVaultV2 } from "src";
 
 describe("MorphoClient", () => {
+  const walletClient = createWalletClient({
+    chain: mainnet,
+    transport: http(),
+    account: "0x0000000000000000000000000000000000000000",
+  });
+
   test("should create a morpho client", () => {
-    const walletClient = createWalletClient({
-      chain: mainnet,
-      transport: http(),
-      account: "0x0000000000000000000000000000000000000000",
-    });
     const morpho = createMorphoClient(walletClient);
 
     expect(morpho).toBeDefined();
@@ -20,11 +21,7 @@ describe("MorphoClient", () => {
   });
 
   test("should create deposit bundle", async () => {
-    const walletClient = createWalletClient({
-      chain: mainnet,
-      transport: http(),
-      account: "0x0000000000000000000000000000000000000000",
-    });
+    // First Devex with morpho client
     const morpho = createMorphoClient(walletClient);
 
     const depositBundle = morpho
@@ -36,11 +33,11 @@ describe("MorphoClient", () => {
         amount: 1000000000000000000n,
       });
 
-    const vaultV2 = createVaultV2(
-      morpho,
-      "0x0000000000000000000000000000000000000001",
-      "0x0000000000000000000000000000000000000002"
-    );
+    // Second Devex with entity
+    const vaultV2 = createVaultV2(morpho, {
+      vault: "0x0000000000000000000000000000000000000002",
+      asset: "0x0000000000000000000000000000000000000001",
+    });
     const depositTx = vaultV2.deposit({
       amount: 1000000000000000000n,
     });

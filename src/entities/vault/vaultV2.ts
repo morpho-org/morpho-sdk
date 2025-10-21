@@ -1,10 +1,9 @@
-import { deposit, MorphoClient, VaultV2Actions } from "src";
+import { depositVaultV2, MorphoClient, VaultParams, VaultV2Actions } from "src";
 import { Address } from "viem";
 
 export function createVaultV2(
   client: MorphoClient,
-  asset: Address,
-  vault: Address
+  { vault, asset }: VaultParams
 ): VaultV2Actions {
   const userAddress = client.walletClient.account?.address;
   if (!userAddress) {
@@ -22,16 +21,6 @@ export function createVaultV2(
     }: {
       amount: bigint;
       recipient?: Address;
-    }) => {
-      const encodedBundle = deposit({
-        chainId: chainId,
-        asset: asset,
-        vault: vault,
-        amount,
-        recipient: recipient,
-      });
-
-      return encodedBundle;
-    },
+    }) => depositVaultV2({ chainId, asset, vault, amount, recipient }),
   };
 }

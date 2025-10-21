@@ -1,9 +1,9 @@
 import { describe, expect, test } from "vitest";
-import { deposit } from "src";
+import { depositVaultV2 } from "src";
 
 describe("VaultV2", () => {
   test("should deposit", async () => {
-    const depositTx = deposit({
+    const depositTx = depositVaultV2({
       chainId: 1,
       asset: "0x0000000000000000000000000000000000000000",
       amount: 100n,
