@@ -21,7 +21,7 @@
     "prepublish": "$npm_execpath build",
     "compile": "hardhat compile",
     "build": "tsc --noEmit && tsc --build tsconfig.build.json",
-    "test": "vitest",
+    "test": "dotenv -- vitest",
     "test:ui": "vitest --ui",
     "link": "pnpm link --global",
     "unlink": "pnpm unlink --global",
@@ -31,7 +31,7 @@
     "viem": "^2.0.0"
   },
   "devDependencies": {
-    "@morpho-org/test": "^2.6.0",
+    "@morpho-org/test": "2.6.1-next.1",
     "@types/node": "^24.9.1",
     "dotenv": "^17.2.3",
     "hardhat": "^2.22.18",
@@ -42,5 +42,10 @@
   "publishConfig": {
     "main": "lib/index.js",
     "types": "lib/index.d.ts"
+  },
+  "dependencies": {
+    "@morpho-org/blue-sdk": "5.3.0-next.2",
+    "@morpho-org/blue-sdk-viem": "4.1.0-next.5",
+    "@morpho-org/bundler-sdk-viem": "4.1.0-next.1"
   }
 }
