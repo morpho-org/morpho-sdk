@@ -9,14 +9,14 @@ const vaultV2Address = "0x04422053aDDbc9bB2759b248B574e3FCA76Bc145";
 const vaultV2Asset = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48";
 
 describe("MorphoClient", () => {
-  // test("should create a morpho client", ({ client }) => {
-  //   const morpho = createMorphoClient(client);
+  test("should create a morpho client", ({ client }) => {
+    const morpho = createMorphoClient(client);
 
-  //   expect(morpho).toBeDefined();
-  //   expect(morpho.walletClient).toBeDefined();
-  //   expect(morpho.vaultV2).toBeDefined();
-  //   expect(typeof morpho.vaultV2).toBe("function");
-  // });
+    expect(morpho).toBeDefined();
+    expect(morpho.walletClient).toBeDefined();
+    expect(morpho.vaultV2).toBeDefined();
+    expect(typeof morpho.vaultV2).toBe("function");
+  });
 
   test("should create deposit bundle", async ({ client }) => {
     // First Devex with morpho client
