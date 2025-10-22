@@ -2,7 +2,7 @@ import { describe, test, expect } from "vitest";
 import { createMorphoClient } from "../src/client";
 import { mainnet } from "viem/chains";
 import { createWalletClient, http } from "viem";
-import { createVaultV2 } from "src";
+import { createVaultV2, depositVaultV2 } from "src";
 
 describe("MorphoClient", () => {
   const walletClient = createWalletClient({
@@ -44,7 +44,17 @@ describe("MorphoClient", () => {
       recipient: "0x0000000000000000000000000000000000000000",
     });
 
+    // Third Devex build directly tx
+    const depositTx3 = depositVaultV2({
+      chainId: mainnet.id,
+      asset: "0x0000000000000000000000000000000000000001",
+      vault: "0x0000000000000000000000000000000000000002",
+      amount: 1000000000000000000n,
+      recipient: "0x0000000000000000000000000000000000000000",
+    });
+
     expect(depositBundle).toBeDefined();
     expect(depositTx).toStrictEqual(depositBundle);
+    expect(depositTx3).toStrictEqual(depositBundle);
   });
 });
