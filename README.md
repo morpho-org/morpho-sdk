@@ -55,10 +55,4 @@ const tx = depositVaultV2({
 
 Contributions are welcome! Feel free to open an issue or PR.
 
-## 📄 License
-
-MIT © Morpho Association
-
----
-
 **Made with ❤️ by the Morpho team**
