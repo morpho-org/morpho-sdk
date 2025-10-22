@@ -1,10 +1,6 @@
 import { type WalletClient } from "viem";
-import {
-  MorphoClient,
-  MorphoMetadata,
-  VaultParams,
-  createVaultV2WithClient,
-} from "src";
+import { MorphoClient, MorphoMetadata, VaultParams } from "src";
+import { createVaultV2WithClient } from "src/entities/vault/vaultV2";
 
 export function createMorphoClient(
   walletClient: WalletClient,
