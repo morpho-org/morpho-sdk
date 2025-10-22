@@ -1,4 +1,4 @@
-# 🚀 Morpho DApp SDK
+# Morpho DApp SDK
 
 > **The abstraction layer that simplifies Morpho protocol**
 
