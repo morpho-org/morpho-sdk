@@ -5,7 +5,3 @@ export interface Transaction {
   value: bigint;
   data: Hex;
 }
-
-export interface VaultV2Actions {
-  deposit: (params: { amount: bigint; recipient?: Address }) => Transaction;
-}

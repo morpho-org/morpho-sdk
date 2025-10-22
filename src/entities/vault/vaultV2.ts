@@ -1,7 +1,11 @@
-import { depositVaultV2, MorphoClient, VaultParams, VaultV2Actions } from "src";
+import { depositVaultV2, MorphoClient, Transaction, VaultParams } from "src";
 import { Address } from "viem";
 
-export function createVaultV2(
+export interface VaultV2Actions {
+  deposit: (params: { amount: bigint; recipient?: Address }) => Transaction;
+}
+
+export function createVaultV2WithClient(
   client: MorphoClient,
   { vault, asset }: VaultParams
 ): VaultV2Actions {
@@ -22,5 +26,20 @@ export function createVaultV2(
       amount: bigint;
       recipient?: Address;
     }) => depositVaultV2({ chainId, asset, vault, amount, recipient }),
+  };
+}
+
+export function createVaultV2({
+  chainId,
+  vault,
+  asset,
+}: {
+  chainId: number;
+  vault: Address;
+  asset: Address;
+}) {
+  return {
+    deposit: ({ amount, recipient }: { amount: bigint; recipient: Address }) =>
+      depositVaultV2({ chainId, asset, vault, amount, recipient }),
   };
 }

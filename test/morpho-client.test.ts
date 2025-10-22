@@ -34,12 +34,14 @@ describe("MorphoClient", () => {
       });
 
     // Second Devex with entity
-    const vaultV2 = createVaultV2(morpho, {
+    const vaultV2 = createVaultV2({
+      chainId: mainnet.id,
       vault: "0x0000000000000000000000000000000000000002",
       asset: "0x0000000000000000000000000000000000000001",
     });
     const depositTx = vaultV2.deposit({
       amount: 1000000000000000000n,
+      recipient: "0x0000000000000000000000000000000000000000",
     });
 
     expect(depositBundle).toBeDefined();
