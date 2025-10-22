@@ -9,5 +9,5 @@ export interface MorphoMetadata {
 export interface MorphoClient {
   walletClient: WalletClient;
   metadata?: MorphoMetadata;
-  vaultV2: (params: { asset: Address; vault: Address }) => VaultV2Actions;
+  vaultV2: (vault: Address) => Promise<VaultV2Actions>;
 }

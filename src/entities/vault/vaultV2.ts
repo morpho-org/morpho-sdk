@@ -1,14 +1,16 @@
-import { depositVaultV2, MorphoClient, Transaction, VaultParams } from "src";
+import { depositVaultV2, MorphoClient, Transaction } from "src";
 import { Address } from "viem";
+import { fetchVaultV2 } from "@morpho-org/blue-sdk-viem";
 
 export interface VaultV2Actions {
-  deposit: (params: { amount: bigint; recipient?: Address }) => Transaction;
+  data: Awaited<ReturnType<typeof fetchVaultV2>>;
+  deposit: (params: { assets: bigint }) => Transaction;
 }
 
-export function createVaultV2WithClient(
+export async function createVaultV2(
   client: MorphoClient,
-  { vault, asset }: VaultParams
-): VaultV2Actions {
+  vault: Address
+): Promise<VaultV2Actions> {
   const userAddress = client.walletClient.account?.address;
   if (!userAddress) {
     throw new Error("User address not found");
@@ -18,28 +20,18 @@ export function createVaultV2WithClient(
     throw new Error("Chain ID not found");
   }
 
-  return {
-    deposit: ({
-      amount,
-      recipient = userAddress,
-    }: {
-      amount: bigint;
-      recipient?: Address;
-    }) => depositVaultV2({ chainId, asset, vault, amount, recipient }),
-  };
-}
+  const vaultData = await fetchVaultV2(vault, client.walletClient);
 
-export function createVaultV2({
-  chainId,
-  vault,
-  asset,
-}: {
-  chainId: number;
-  vault: Address;
-  asset: Address;
-}) {
   return {
-    deposit: ({ amount, recipient }: { amount: bigint; recipient: Address }) =>
-      depositVaultV2({ chainId, asset, vault, amount, recipient }),
+    data: vaultData,
+    deposit: ({ assets }: { assets: bigint }) =>
+      depositVaultV2({
+        chainId,
+        asset: vaultData.asset,
+        vault,
+        assets: assets,
+        shares: vaultData.toShares(assets),
+        recipient: userAddress,
+      }),
   };
 }

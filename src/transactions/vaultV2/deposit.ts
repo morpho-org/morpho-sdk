@@ -6,24 +6,27 @@ import {
 } from "@morpho-org/blue-sdk";
 import { Address } from "viem";
 
+export interface VaultV2DepositParams {
+  chainId: number;
+  asset: Address;
+  vault: Address;
+  assets: bigint;
+  shares: bigint;
+  recipient: Address;
+}
+
 export function depositVaultV2({
   chainId,
   asset,
   vault,
-  amount,
+  assets,
+  shares,
   recipient,
-}: {
-  chainId: number;
-  asset: Address;
-  vault: Address;
-  amount: bigint;
-  recipient: Address;
-}) {
-  const amountInShares = 1n; // TODO: get
+}: VaultV2DepositParams) {
   const maxSharePrice = MathLib.mulDivUp(
-    amount,
+    assets,
     MathLib.wToRay(MathLib.WAD + DEFAULT_SLIPPAGE_TOLERANCE),
-    amountInShares
+    shares
   );
 
   const {
@@ -33,11 +36,11 @@ export function depositVaultV2({
   const actions: Action[] = [
     {
       type: "erc20TransferFrom",
-      args: [asset, amount, generalAdapter1, false],
+      args: [asset, assets, generalAdapter1, false],
     },
     {
       type: "erc4626Deposit",
-      args: [vault, amount, maxSharePrice, recipient, false],
+      args: [vault, assets, maxSharePrice, recipient, false],
     },
     // To skim the shares tokens
     {
