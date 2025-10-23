@@ -2,7 +2,7 @@ import { describe, expect } from "vitest";
 import { createMorphoClient } from "../src/client";
 import { test } from "./setup";
 
-import { createVaultV2, depositVaultV2 } from "src";
+import { instantiateVaultV2, depositVaultV2 } from "src";
 import { mainnet } from "viem/chains";
 
 const vaultV2Address = "0x04422053aDDbc9bB2759b248B574e3FCA76Bc145";
@@ -22,16 +22,19 @@ describe("MorphoClient", () => {
     // First Devex with morpho client
     const morpho = createMorphoClient(client);
 
-    const depositTx = (await morpho.vaultV2(vaultV2Address)).deposit({
+    const deposit = (await morpho.vaultV2(vaultV2Address)).deposit({
       assets: 1000000000000000000n,
     });
+    const requirements_1 = await deposit.getRequirements();
 
     // Second Devex with entity
-    const vaultV2_2 = await createVaultV2(morpho, vaultV2Address);
+    const vaultV2_2 = await instantiateVaultV2(morpho, vaultV2Address);
 
-    const depositTx_2 = vaultV2_2.deposit({
+    const deposit_2 = vaultV2_2.deposit({
       assets: 1000000000000000000n,
     });
+
+    const requirements_2 = await deposit_2.getRequirements();
 
     // Third Devex build directly tx
     const depositTx_3 = depositVaultV2({
@@ -43,9 +46,10 @@ describe("MorphoClient", () => {
       recipient: client.account.address,
     });
 
-    expect(depositTx).toBeDefined();
-    expect(depositTx).toStrictEqual(depositTx_2);
-    expect(depositTx_3).toStrictEqual(depositTx_2);
+    expect(deposit).toBeDefined();
+    expect(deposit.tx).toStrictEqual(deposit_2.tx);
+    expect(depositTx_3).toStrictEqual(deposit_2.tx);
+    expect(requirements_1).toStrictEqual(requirements_2);
     expect(vaultV2_2.data.asset).toStrictEqual(vaultV2Asset);
   });
 });
