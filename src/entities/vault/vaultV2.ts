@@ -1,10 +1,19 @@
-import { depositVaultV2, MorphoClient, Transaction } from "src";
+import {
+  depositVaultV2,
+  getRequirements,
+  MorphoClient,
+  Transaction,
+} from "src";
 import { Address } from "viem";
 import { fetchVaultV2 } from "@morpho-org/blue-sdk-viem";
+import { TransactionRequirement } from "@morpho-org/bundler-sdk-viem";
 
 export interface VaultV2Actions {
   data: Awaited<ReturnType<typeof fetchVaultV2>>;
-  deposit: (params: { assets: bigint }) => Transaction;
+  deposit: (params: { assets: bigint }) => {
+    tx: Transaction;
+    getRequirements: () => Promise<TransactionRequirement[]>;
+  };
 }
 
 export async function instantiateVaultV2(
@@ -24,14 +33,23 @@ export async function instantiateVaultV2(
 
   return {
     data: vaultData,
-    deposit: ({ assets }: { assets: bigint }) =>
-      depositVaultV2({
+    deposit: ({ assets }: { assets: bigint }) => {
+      const tx = depositVaultV2({
         chainId,
         asset: vaultData.asset,
         vault,
         assets: assets,
         shares: vaultData.toShares(assets),
         recipient: userAddress,
-      }),
+      });
+      return {
+        tx,
+        getRequirements: async () =>
+          getRequirements(client, {
+            address: vaultData.asset,
+            args: { amount: assets, from: userAddress },
+          }),
+      };
+    },
   };
 }
