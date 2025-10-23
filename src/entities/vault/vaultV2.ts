@@ -7,7 +7,7 @@ export interface VaultV2Actions {
   deposit: (params: { assets: bigint }) => Transaction;
 }
 
-export async function createVaultV2(
+export async function instantiateVaultV2(
   client: MorphoClient,
   vault: Address
 ): Promise<VaultV2Actions> {

@@ -2,7 +2,7 @@ import { describe, expect } from "vitest";
 import { createMorphoClient } from "../src/client";
 import { test } from "./setup";
 
-import { createVaultV2, depositVaultV2 } from "src";
+import { instantiateVaultV2, depositVaultV2, getRequirement } from "src";
 import { mainnet } from "viem/chains";
 
 const vaultV2Address = "0x04422053aDDbc9bB2759b248B574e3FCA76Bc145";
@@ -27,11 +27,23 @@ describe("MorphoClient", () => {
     });
 
     // Second Devex with entity
-    const vaultV2_2 = await createVaultV2(morpho, vaultV2Address);
+    const vaultV2_2 = await instantiateVaultV2(morpho, vaultV2Address);
 
     const depositTx_2 = vaultV2_2.deposit({
       assets: 1000000000000000000n,
     });
+
+    const requirements = await getRequirement(morpho, {
+      address: vaultV2Asset,
+      args: {
+        from: client.account.address,
+        to: vaultV2Address,
+        amount: 1000000000000000000n,
+      },
+      type: "Erc20_Transfer",
+      sender: client.account.address,
+    });
+    console.log(requirements);
 
     // Third Devex build directly tx
     const depositTx_3 = depositVaultV2({
