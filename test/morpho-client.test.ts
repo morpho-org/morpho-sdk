@@ -22,9 +22,10 @@ describe("MorphoClient", () => {
     // First Devex with morpho client
     const morpho = createMorphoClient(client);
 
-    const depositTx = (await morpho.vaultV2(vaultV2Address)).deposit({
+    const deposit = (await morpho.vaultV2(vaultV2Address)).deposit({
       assets: 1000000000000000000n,
     });
+    const requirements_1 = await deposit.getRequirements();
 
     // Second Devex with entity
     const vaultV2_2 = await instantiateVaultV2(morpho, vaultV2Address);
@@ -45,9 +46,10 @@ describe("MorphoClient", () => {
       recipient: client.account.address,
     });
 
-    expect(depositTx).toBeDefined();
-    expect(depositTx).toStrictEqual(deposit_2.tx);
+    expect(deposit).toBeDefined();
+    expect(deposit.tx).toStrictEqual(deposit_2.tx);
     expect(depositTx_3).toStrictEqual(deposit_2.tx);
+    expect(requirements_1).toStrictEqual(requirements_2);
     expect(vaultV2_2.data.asset).toStrictEqual(vaultV2Asset);
   });
 });

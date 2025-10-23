@@ -42,6 +42,7 @@ export async function instantiateVaultV2(
         shares: vaultData.toShares(assets),
         recipient: userAddress,
       });
+
       return {
         tx,
         getRequirements: async () =>
