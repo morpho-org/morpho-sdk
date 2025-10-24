@@ -15,7 +15,6 @@ describe("Deposit VaultV2", () => {
     });
     const requirements_1 = await deposit.getRequirements();
 
-    // Second Devex with entity
     const vaultV2_2 = await instantiateVaultV2(
       morpho,
       KeyrockUsdcVaultV2.address
@@ -27,7 +26,6 @@ describe("Deposit VaultV2", () => {
 
     const requirements_2 = await deposit_2.getRequirements();
 
-    // Third Devex build directly tx
     const deposit_3 = depositVaultV2({
       chainId: mainnet.id,
       vault: KeyrockUsdcVaultV2.address,

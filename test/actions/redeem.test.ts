@@ -17,7 +17,6 @@ describe("Deposit VaultV2", () => {
       shares: 1000000000000000000n,
     });
 
-    // Second Devex with entity
     const vaultV2_2 = await instantiateVaultV2(
       morpho,
       KeyrockUsdcVaultV2.address
@@ -27,7 +26,6 @@ describe("Deposit VaultV2", () => {
       shares: 1000000000000000000n,
     });
 
-    // Third Devex build directly tx
     const redeem_3 = redeemVaultV2({
       vault: KeyrockUsdcVaultV2.address,
       shares: 1000000000000000000n,
