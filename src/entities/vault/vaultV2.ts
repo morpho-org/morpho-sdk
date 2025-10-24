@@ -2,7 +2,9 @@ import {
   depositVaultV2,
   getRequirements,
   MorphoClient,
+  redeemVaultV2,
   Transaction,
+  withdrawVaultV2,
 } from "src";
 import { Address } from "viem";
 import { fetchVaultV2 } from "@morpho-org/blue-sdk-viem";
@@ -13,6 +15,12 @@ export interface VaultV2Actions {
   deposit: (params: { assets: bigint }) => {
     tx: Transaction;
     getRequirements: () => Promise<TransactionRequirement[]>;
+  };
+  withdraw: (params: { assets: bigint }) => {
+    tx: Transaction;
+  };
+  redeem: (params: { shares: bigint }) => {
+    tx: Transaction;
   };
 }
 
@@ -50,6 +58,26 @@ export async function instantiateVaultV2(
             address: vaultData.asset,
             args: { amount: assets, from: userAddress },
           }),
+      };
+    },
+    withdraw: ({ assets }: { assets: bigint }) => {
+      return {
+        tx: withdrawVaultV2({
+          vault,
+          assets,
+          recipient: userAddress,
+          onBehalf: userAddress,
+        }),
+      };
+    },
+    redeem: ({ shares }: { shares: bigint }) => {
+      return {
+        tx: redeemVaultV2({
+          vault,
+          shares,
+          recipient: userAddress,
+          onBehalf: userAddress,
+        }),
       };
     },
   };
