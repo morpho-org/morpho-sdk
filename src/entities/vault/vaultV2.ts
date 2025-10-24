@@ -14,7 +14,7 @@ export interface VaultV2Actions {
   data: Awaited<ReturnType<typeof fetchVaultV2>>;
   deposit: (params: { assets: bigint }) => {
     tx: Transaction;
-    getRequirements: () => Promise<TransactionRequirement[]>;
+    getRequirements: () => Promise<Transaction[]>;
   };
   withdraw: (params: { assets: bigint }) => {
     tx: Transaction;

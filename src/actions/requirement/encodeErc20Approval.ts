@@ -14,20 +14,13 @@ export const encodeErc20Approval = (
     MAX_TOKEN_APPROVALS[chainId]?.[token] ?? maxUint256
   );
 
-  const txRequirements: TransactionRequirement[] = [];
-
-  txRequirements.push({
-    type: "erc20Approve",
-    args: [token, spender, amount],
-    tx: {
-      to: token,
-      data: encodeFunctionData({
-        abi: erc20Abi,
-        functionName: "approve",
-        args: [spender, amount],
-      }),
-    },
-  });
-
-  return txRequirements;
+  return {
+    to: token,
+    data: encodeFunctionData({
+      abi: erc20Abi,
+      functionName: "approve",
+      args: [spender, amount],
+    }),
+    value: 0n,
+  };
 };

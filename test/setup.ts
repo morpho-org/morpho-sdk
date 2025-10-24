@@ -6,5 +6,6 @@ import { mainnet } from "viem/chains";
  */
 export const test = createViemTest(mainnet, {
   forkUrl: process.env.MAINNET_RPC_URL,
+  chainId: mainnet.id,
   forkBlockNumber: 23633483,
 });
