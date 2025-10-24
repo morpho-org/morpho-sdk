@@ -59,7 +59,7 @@ describe("Redeem VaultV2", () => {
           assets,
         });
 
-        await morpho.walletClient.sendTransaction(withdraw.tx);
+        await client.sendTransaction(withdraw.tx);
       },
     });
 

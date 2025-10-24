@@ -62,7 +62,7 @@ describe("Withdraw VaultV2", () => {
           shares: shares,
         });
 
-        await morpho.walletClient.sendTransaction(redeem.tx);
+        await client.sendTransaction(redeem.tx);
       },
     });
 

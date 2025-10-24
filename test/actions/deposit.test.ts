@@ -73,8 +73,8 @@ describe("Deposit VaultV2", () => {
           throw new Error("Approve transaction not found");
         }
 
-        await morpho.walletClient.sendTransaction(approveTx);
-        await morpho.walletClient.sendTransaction(deposit.tx);
+        await client.sendTransaction(approveTx);
+        await client.sendTransaction(deposit.tx);
       },
     });
 
