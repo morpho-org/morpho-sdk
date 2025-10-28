@@ -1,6 +1,5 @@
 import { Address, type WalletClient } from "viem";
-import { MorphoClient, MorphoMetadata } from "src";
-import { instantiateVaultV2 } from "src/entities/vault/vaultV2";
+import { MorphoClient, MorphoMetadata, instantiateVaultV2 } from "../../src";
 
 export function createMorphoClient(
   walletClient: WalletClient,

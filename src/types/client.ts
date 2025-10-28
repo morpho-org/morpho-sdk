@@ -1,4 +1,4 @@
-import { VaultV2Actions } from "src";
+import { VaultV2Actions } from "../../src";
 import { WalletClient, Address } from "viem";
 
 export interface MorphoMetadata {

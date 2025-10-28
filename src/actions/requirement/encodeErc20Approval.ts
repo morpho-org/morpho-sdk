@@ -1,5 +1,4 @@
 import { Address, MathLib } from "@morpho-org/blue-sdk";
-import { TransactionRequirement } from "@morpho-org/bundler-sdk-viem";
 import { MAX_TOKEN_APPROVALS } from "@morpho-org/simulation-sdk";
 import { encodeFunctionData, erc20Abi, maxUint256 } from "viem";
 
