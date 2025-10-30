@@ -48,6 +48,7 @@ export async function instantiateVaultV2(
         assets: assets,
         shares: vaultData.toShares(assets),
         recipient: userAddress,
+        metadata: client.metadata,
       });
 
       return {
@@ -66,6 +67,7 @@ export async function instantiateVaultV2(
           assets,
           recipient: userAddress,
           onBehalf: userAddress,
+          metadata: client.metadata,
         }),
       };
     },
@@ -76,6 +78,7 @@ export async function instantiateVaultV2(
           shares,
           recipient: userAddress,
           onBehalf: userAddress,
+          metadata: client.metadata,
         }),
       };
     },
