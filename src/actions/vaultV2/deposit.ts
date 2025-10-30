@@ -6,7 +6,7 @@ import {
 } from "@morpho-org/blue-sdk";
 import { Address } from "viem";
 import { Transaction, Metadata } from "../../types";
-import { addTransactionMetadata } from "src/helpers";
+import { addTransactionMetadata } from "../../../src";
 
 export interface VaultV2DepositParams {
   chainId: number;
