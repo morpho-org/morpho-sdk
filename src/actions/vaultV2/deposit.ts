@@ -8,6 +8,8 @@ import { Address } from "viem";
 import { Transaction, Metadata } from "../../types";
 import { addTransactionMetadata } from "../../../src";
 
+import { deepFreeze } from "@morpho-org/morpho-ts";
+
 export interface VaultV2DepositParams {
   chainId: number;
   asset: Address;
@@ -64,11 +66,11 @@ export function depositVaultV2({
     tx = addTransactionMetadata(tx, metadata);
   }
 
-  return {
+  return deepFreeze({
     ...tx,
     action: {
       type: "vaultV2Deposit",
       args: { vault, assets, shares, recipient },
     },
-  };
+  });
 }
