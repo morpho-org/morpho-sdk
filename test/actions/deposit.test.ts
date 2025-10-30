@@ -66,6 +66,7 @@ describe("Deposit VaultV2", () => {
         const deposit = vaultV2.deposit({
           assets: amount,
         });
+
         const requirements = await deposit.getRequirements();
 
         const approveTx = requirements[0];

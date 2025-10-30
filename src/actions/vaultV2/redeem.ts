@@ -1,5 +1,6 @@
 import { Address, encodeFunctionData } from "viem";
 import { vaultV2Abi } from "@morpho-org/blue-sdk-viem";
+import { Transaction } from "../../types/action";
 
 export interface VaultV2RedeemParams {
   vault: Address;
@@ -13,7 +14,7 @@ export function redeemVaultV2({
   shares,
   recipient,
   onBehalf,
-}: VaultV2RedeemParams) {
+}: VaultV2RedeemParams): Transaction {
   return {
     to: vault,
     data: encodeFunctionData({
@@ -22,5 +23,9 @@ export function redeemVaultV2({
       args: [shares, recipient, onBehalf],
     }),
     value: 0n,
+    action: {
+      type: "vaultV2Redeem",
+      args: { vault, shares, recipient },
+    },
   };
 }

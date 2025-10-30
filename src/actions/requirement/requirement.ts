@@ -27,7 +27,7 @@ export const getRequirements = async (
     client.walletClient
   );
 
-  const txs = [];
+  const txs: Transaction[] = [];
 
   if (erc20Allowances["bundler3.generalAdapter1"] < amount) {
     if (
