@@ -28,6 +28,8 @@ const tx = (
 ```typescript
 import { createVaultV2 } from "morpho-dapp";
 
+const morpho = createMorphoClient(client);
+
 const vault = await createVaultV2(
   morpho,
   "0x04422053aDDbc9bB2759b248B574e3FCA76Bc145"

@@ -1,10 +1,9 @@
 import { Address, getChainAddresses } from "@morpho-org/blue-sdk";
 import { fetchHolding } from "@morpho-org/blue-sdk-viem";
 import { APPROVE_ONLY_ONCE_TOKENS } from "@morpho-org/simulation-sdk";
-import { MorphoClient } from "src";
+import { MorphoClient, Transaction } from "../../../src";
 
 import { encodeErc20Approval } from "./encodeErc20Approval";
-import { TransactionRequirement } from "@morpho-org/bundler-sdk-viem";
 
 export const getRequirements = async (
   client: MorphoClient,
@@ -12,7 +11,7 @@ export const getRequirements = async (
     address,
     args: { amount, from },
   }: { address: Address; args: { amount: bigint; from: Address } }
-): Promise<TransactionRequirement[]> => {
+): Promise<Transaction[]> => {
   const chainId = client.walletClient.chain?.id;
   if (!chainId) {
     throw new Error("Chain ID not found in wallet client");
@@ -28,17 +27,17 @@ export const getRequirements = async (
     client.walletClient
   );
 
-  const txs = [];
+  const txs: Transaction[] = [];
 
   if (erc20Allowances["bundler3.generalAdapter1"] < amount) {
     if (
       APPROVE_ONLY_ONCE_TOKENS[chainId]?.includes(address) &&
       erc20Allowances["bundler3.generalAdapter1"] > 0n
     ) {
-      txs.push(...encodeErc20Approval(address, generalAdapter1, 0n, chainId));
+      txs.push(encodeErc20Approval(address, generalAdapter1, 0n, chainId));
     }
 
-    txs.push(...encodeErc20Approval(address, generalAdapter1, amount, chainId));
+    txs.push(encodeErc20Approval(address, generalAdapter1, amount, chainId));
   }
 
   return txs;

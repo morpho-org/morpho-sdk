@@ -1,5 +1,5 @@
-import { VaultV2Actions } from "src";
-import { WalletClient, Address } from "viem";
+import { VaultV2Actions } from "../../src";
+import { Client, Address } from "viem";
 
 export interface MorphoMetadata {
   origin?: string;
@@ -7,7 +7,7 @@ export interface MorphoMetadata {
 }
 
 export interface MorphoClient {
-  walletClient: WalletClient;
+  walletClient: Client;
   metadata?: MorphoMetadata;
   vaultV2: (vault: Address) => Promise<VaultV2Actions>;
 }

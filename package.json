@@ -27,16 +27,13 @@
     "unlink": "pnpm unlink --global",
     "setup-dev": "pnpm run build && pnpm link --global"
   },
-  "peerDependencies": {
-    "viem": "^2.0.0"
-  },
   "devDependencies": {
     "@morpho-org/test": "2.6.1-next.1",
     "@types/node": "^24.9.1",
     "dotenv": "^17.2.3",
     "hardhat": "^2.22.18",
     "typescript": "^5.7.2",
-    "viem": "^2.33.3",
+    "viem": "^2.28.0",
     "vitest": "^3.0.5"
   },
   "publishConfig": {

@@ -5,16 +5,15 @@ import {
   redeemVaultV2,
   Transaction,
   withdrawVaultV2,
-} from "src";
+} from "../../../src";
 import { Address } from "viem";
 import { fetchVaultV2 } from "@morpho-org/blue-sdk-viem";
-import { TransactionRequirement } from "@morpho-org/bundler-sdk-viem";
 
 export interface VaultV2Actions {
   data: Awaited<ReturnType<typeof fetchVaultV2>>;
   deposit: (params: { assets: bigint }) => {
     tx: Transaction;
-    getRequirements: () => Promise<TransactionRequirement[]>;
+    getRequirements: () => Promise<Transaction[]>;
   };
   withdraw: (params: { assets: bigint }) => {
     tx: Transaction;
