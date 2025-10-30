@@ -5,7 +5,8 @@ import {
   MathLib,
 } from "@morpho-org/blue-sdk";
 import { Address } from "viem";
-import { Transaction } from "../../types/action";
+import { Transaction, Metadata } from "../../types";
+import { addTransactionMetadata } from "../../../src";
 
 export interface VaultV2DepositParams {
   chainId: number;
@@ -14,6 +15,7 @@ export interface VaultV2DepositParams {
   assets: bigint;
   shares: bigint;
   recipient: Address;
+  metadata?: Metadata;
 }
 
 export function depositVaultV2({
@@ -23,6 +25,7 @@ export function depositVaultV2({
   assets,
   shares,
   recipient,
+  metadata,
 }: VaultV2DepositParams): Transaction {
   const maxSharePrice = MathLib.mulDivUp(
     assets,
@@ -55,7 +58,11 @@ export function depositVaultV2({
     },
   ];
 
-  const tx = BundlerAction.encodeBundle(chainId, actions);
+  let tx = BundlerAction.encodeBundle(chainId, actions);
+
+  if (metadata) {
+    tx = addTransactionMetadata(tx, metadata);
+  }
 
   return {
     ...tx,
