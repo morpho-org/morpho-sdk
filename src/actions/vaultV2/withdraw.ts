@@ -11,13 +11,12 @@ export interface VaultV2WithdrawParams {
   metadata?: Metadata;
 }
 
-export function withdrawVaultV2({
-  vault,
-  assets,
-  recipient,
-  onBehalf,
-  metadata,
-}: VaultV2WithdrawParams): Transaction {
+export function withdrawVaultV2(
+  params: VaultV2WithdrawParams
+): Readonly<Transaction> {
+  Object.freeze(params);
+  const { vault, assets, recipient, onBehalf, metadata } = params;
+
   let tx = {
     to: vault,
     data: encodeFunctionData({
@@ -32,11 +31,11 @@ export function withdrawVaultV2({
     tx = addTransactionMetadata(tx, metadata);
   }
 
-  return {
+  return Object.freeze({
     ...tx,
     action: {
-      type: "vaultV2Withdraw",
+      type: "vaultV2Withdraw" as const,
       args: { vault, assets, recipient },
     },
-  };
+  });
 }

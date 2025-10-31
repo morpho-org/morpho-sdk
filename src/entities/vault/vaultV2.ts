@@ -12,14 +12,14 @@ import { fetchVaultV2 } from "@morpho-org/blue-sdk-viem";
 export interface VaultV2Actions {
   data: Awaited<ReturnType<typeof fetchVaultV2>>;
   deposit: (params: { assets: bigint }) => {
-    tx: Transaction;
-    getRequirements: () => Promise<Transaction[]>;
+    tx: Readonly<Transaction>;
+    getRequirements: () => Promise<Readonly<Transaction[]>>;
   };
   withdraw: (params: { assets: bigint }) => {
-    tx: Transaction;
+    tx: Readonly<Transaction>;
   };
   redeem: (params: { shares: bigint }) => {
-    tx: Transaction;
+    tx: Readonly<Transaction>;
   };
 }
 
@@ -41,18 +41,16 @@ export async function instantiateVaultV2(
   return {
     data: vaultData,
     deposit: ({ assets }: { assets: bigint }) => {
-      const tx = depositVaultV2({
-        chainId,
-        asset: vaultData.asset,
-        vault,
-        assets: assets,
-        shares: vaultData.toShares(assets),
-        recipient: userAddress,
-        metadata: client.metadata,
-      });
-
       return {
-        tx,
+        tx: depositVaultV2({
+          chainId,
+          asset: vaultData.asset,
+          vault,
+          assets: assets,
+          shares: vaultData.toShares(assets),
+          recipient: userAddress,
+          metadata: client.metadata,
+        }),
         getRequirements: async () =>
           getRequirements(client, {
             address: vaultData.asset,

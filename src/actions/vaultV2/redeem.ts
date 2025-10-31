@@ -11,13 +11,12 @@ export interface VaultV2RedeemParams {
   metadata?: Metadata;
 }
 
-export function redeemVaultV2({
-  vault,
-  shares,
-  recipient,
-  onBehalf,
-  metadata,
-}: VaultV2RedeemParams): Transaction {
+export function redeemVaultV2(
+  params: VaultV2RedeemParams
+): Readonly<Transaction> {
+  Object.freeze(params);
+  const { vault, shares, recipient, onBehalf, metadata } = params;
+
   let tx = {
     to: vault,
     data: encodeFunctionData({
@@ -32,11 +31,11 @@ export function redeemVaultV2({
     tx = addTransactionMetadata(tx, metadata);
   }
 
-  return {
+  return Object.freeze({
     ...tx,
     action: {
-      type: "vaultV2Redeem",
+      type: "vaultV2Redeem" as const,
       args: { vault, shares, recipient },
     },
-  };
+  });
 }

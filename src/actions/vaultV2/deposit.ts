@@ -6,7 +6,7 @@ import {
 } from "@morpho-org/blue-sdk";
 import { Address } from "viem";
 import { Transaction, Metadata } from "../../types";
-import { addTransactionMetadata } from "../../../src";
+import { addTransactionMetadata } from "../../helpers";
 
 export interface VaultV2DepositParams {
   chainId: number;
@@ -18,15 +18,12 @@ export interface VaultV2DepositParams {
   metadata?: Metadata;
 }
 
-export function depositVaultV2({
-  chainId,
-  asset,
-  vault,
-  assets,
-  shares,
-  recipient,
-  metadata,
-}: VaultV2DepositParams): Transaction {
+export function depositVaultV2(
+  params: VaultV2DepositParams
+): Readonly<Transaction> {
+  Object.freeze(params);
+  const { chainId, asset, vault, assets, shares, recipient, metadata } = params;
+
   const maxSharePrice = MathLib.mulDivUp(
     assets,
     MathLib.wToRay(MathLib.WAD + DEFAULT_SLIPPAGE_TOLERANCE),
@@ -64,11 +61,11 @@ export function depositVaultV2({
     tx = addTransactionMetadata(tx, metadata);
   }
 
-  return {
+  return Object.freeze({
     ...tx,
     action: {
-      type: "vaultV2Deposit",
+      type: "vaultV2Deposit" as const,
       args: { vault, assets, shares, recipient },
     },
-  };
+  });
 }
