@@ -4,14 +4,22 @@ import { encodeFunctionData, erc20Abi, maxUint256 } from "viem";
 import { Transaction } from "../../types/action";
 import { deepFreeze } from "@morpho-org/morpho-ts";
 
+interface EncodeErc20ApprovalParams {
+  token: Address;
+  spender: Address;
+  amount: bigint;
+  chainId: number;
+}
+
 export const encodeErc20Approval = (
-  token: Address,
-  spender: Address,
-  amount: bigint,
-  chainId: number
+  params: EncodeErc20ApprovalParams
 ): Transaction => {
-  amount = MathLib.min(
-    amount,
+  deepFreeze(params);
+  const { token, spender, amount, chainId } = params;
+
+  let amountValue = amount;
+  amountValue = MathLib.min(
+    amountValue,
     MAX_TOKEN_APPROVALS[chainId]?.[token] ?? maxUint256
   );
 
@@ -20,12 +28,12 @@ export const encodeErc20Approval = (
     data: encodeFunctionData({
       abi: erc20Abi,
       functionName: "approve",
-      args: [spender, amount],
+      args: [spender, amountValue],
     }),
     value: 0n,
     action: {
       type: "erc20Approval",
-      args: { spender, amount },
+      args: { spender: spender, amount: amountValue },
     },
   });
 };

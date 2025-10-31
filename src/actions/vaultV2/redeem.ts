@@ -12,13 +12,10 @@ export interface VaultV2RedeemParams {
   metadata?: Metadata;
 }
 
-export function redeemVaultV2({
-  vault,
-  shares,
-  recipient,
-  onBehalf,
-  metadata,
-}: VaultV2RedeemParams): Transaction {
+export function redeemVaultV2(params: VaultV2RedeemParams): Transaction {
+  deepFreeze(params);
+  const { vault, shares, recipient, onBehalf, metadata } = params;
+
   let tx = {
     to: vault,
     data: encodeFunctionData({

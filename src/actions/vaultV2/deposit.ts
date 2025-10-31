@@ -20,15 +20,10 @@ export interface VaultV2DepositParams {
   metadata?: Metadata;
 }
 
-export function depositVaultV2({
-  chainId,
-  asset,
-  vault,
-  assets,
-  shares,
-  recipient,
-  metadata,
-}: VaultV2DepositParams): Transaction {
+export function depositVaultV2(params: VaultV2DepositParams): Transaction {
+  deepFreeze(params);
+  const { chainId, asset, vault, assets, shares, recipient, metadata } = params;
+
   const maxSharePrice = MathLib.mulDivUp(
     assets,
     MathLib.wToRay(MathLib.WAD + DEFAULT_SLIPPAGE_TOLERANCE),
