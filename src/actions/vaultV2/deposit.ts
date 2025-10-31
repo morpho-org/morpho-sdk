@@ -8,8 +8,6 @@ import { Address } from "viem";
 import { Transaction, Metadata } from "../../types";
 import { addTransactionMetadata } from "../../helpers";
 
-import { deepFreeze } from "@morpho-org/morpho-ts";
-
 export interface VaultV2DepositParams {
   chainId: number;
   asset: Address;
@@ -20,8 +18,10 @@ export interface VaultV2DepositParams {
   metadata?: Metadata;
 }
 
-export function depositVaultV2(params: VaultV2DepositParams): Transaction {
-  deepFreeze(params);
+export function depositVaultV2(
+  params: VaultV2DepositParams
+): Readonly<Transaction> {
+  Object.freeze(params);
   const { chainId, asset, vault, assets, shares, recipient, metadata } = params;
 
   const maxSharePrice = MathLib.mulDivUp(
@@ -61,10 +61,10 @@ export function depositVaultV2(params: VaultV2DepositParams): Transaction {
     tx = addTransactionMetadata(tx, metadata);
   }
 
-  return deepFreeze({
+  return Object.freeze({
     ...tx,
     action: {
-      type: "vaultV2Deposit",
+      type: "vaultV2Deposit" as const,
       args: { vault, assets, shares, recipient },
     },
   });

@@ -1,7 +1,6 @@
 import { Address, getChainAddresses } from "@morpho-org/blue-sdk";
 import { fetchHolding } from "@morpho-org/blue-sdk-viem";
 import { APPROVE_ONLY_ONCE_TOKENS } from "@morpho-org/simulation-sdk";
-import { deepFreeze } from "@morpho-org/morpho-ts";
 import { MorphoClient, Transaction } from "../../../src";
 
 import { encodeErc20Approval } from "./encodeErc20Approval";
@@ -9,8 +8,8 @@ import { encodeErc20Approval } from "./encodeErc20Approval";
 export const getRequirements = async (
   client: MorphoClient,
   params: { address: Address; args: { amount: bigint; from: Address } }
-): Promise<Transaction[]> => {
-  deepFreeze(params);
+): Promise<Readonly<Transaction[]>> => {
+  Object.freeze(params);
   const {
     address,
     args: { amount, from },
@@ -57,5 +56,5 @@ export const getRequirements = async (
     );
   }
 
-  return txs;
+  return Object.freeze(txs);
 };
