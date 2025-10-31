@@ -6,7 +6,7 @@ import {
 } from "@morpho-org/blue-sdk";
 import { Address } from "viem";
 import { Transaction, Metadata } from "../../types";
-import { addTransactionMetadata } from "../../../src";
+import { addTransactionMetadata } from "../../helpers";
 
 import { deepFreeze } from "@morpho-org/morpho-ts";
 
