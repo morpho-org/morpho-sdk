@@ -25,7 +25,7 @@ export interface VaultV2Actions {
 
 export function instantiateVaultV2(
   client: MorphoClient,
-  vault: Address
+  vault: Address,
 ): VaultV2Actions {
   const userAddress = client.walletClient.account?.address;
   if (!userAddress) {
