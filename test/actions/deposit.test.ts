@@ -10,17 +10,15 @@ describe("Deposit VaultV2", () => {
   test("should create deposit bundle", async ({ client }) => {
     const morpho = createMorphoClient(client);
 
-    const deposit = (await morpho.vaultV2(KeyrockUsdcVaultV2.address)).deposit({
+    const vault = morpho.vaultV2(KeyrockUsdcVaultV2.address);
+    const deposit = await vault.prepareDeposit({
       assets: 1000000000000000000n,
     });
     const requirements_1 = await deposit.getRequirements();
 
-    const vaultV2_2 = await instantiateVaultV2(
-      morpho,
-      KeyrockUsdcVaultV2.address,
-    );
+    const vaultV2_2 = instantiateVaultV2(morpho, KeyrockUsdcVaultV2.address);
 
-    const deposit_2 = vaultV2_2.deposit({
+    const deposit_2 = await vaultV2_2.prepareDeposit({
       assets: 1000000000000000000n,
     });
 
@@ -35,12 +33,14 @@ describe("Deposit VaultV2", () => {
       recipient: client.account.address,
     });
 
+    const data = await vaultV2_2.getData();
+
     expect(deposit).toBeDefined();
     expect(deposit.tx).toStrictEqual(deposit_2.tx);
     expect(deposit_3).toStrictEqual(deposit_2.tx);
     expect(requirements_1).toStrictEqual(requirements_2);
-    expect(vaultV2_2.data.asset).toStrictEqual(KeyrockUsdcVaultV2.asset);
-    expect(vaultV2_2.data.address).toStrictEqual(KeyrockUsdcVaultV2.address);
+    expect(data.asset).toStrictEqual(KeyrockUsdcVaultV2.asset);
+    expect(data.address).toStrictEqual(KeyrockUsdcVaultV2.address);
   });
 
   test("should deposit 1K USDC in vaultV2", async ({ client }) => {
@@ -61,8 +61,8 @@ describe("Deposit VaultV2", () => {
       },
       actionFn: async () => {
         const morpho = createMorphoClient(client);
-        const vaultV2 = await morpho.vaultV2(KeyrockUsdcVaultV2.address);
-        const deposit = vaultV2.deposit({
+        const vaultV2 = morpho.vaultV2(KeyrockUsdcVaultV2.address);
+        const deposit = await vaultV2.prepareDeposit({
           assets: amount,
         });
 
@@ -79,13 +79,13 @@ describe("Deposit VaultV2", () => {
     });
 
     expect(finalState.userAssetBalance).toEqual(
-      initialState.userAssetBalance - amount,
+      initialState.userAssetBalance - amount
     );
     expect(finalState.morphoAssetBalance).toEqual(
-      initialState.morphoAssetBalance + amount,
+      initialState.morphoAssetBalance + amount
     );
     expect(finalState.userSharesBalance).toBeGreaterThan(
-      initialState.userSharesBalance,
+      initialState.userSharesBalance
     );
     expect(finalState.userSharesBalance).toEqual(995180494962649293673n);
   });

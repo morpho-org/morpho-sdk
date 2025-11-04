@@ -18,27 +18,18 @@ const client = createWalletClient({
 
 const morpho = createMorphoClient(client);
 
-const tx = (
-  await morpho.vaultV2("0x04422053aDDbc9bB2759b248B574e3FCA76Bc145")
-).deposit({ assets: 1000000000000000000n });
+const vault = morpho.vaultV2("0x04422053aDDbc9bB2759b248B574e3FCA76Bc145");
+const deposit = vault.prepareDeposit({ assets: 1000000000000000000n });
+console.log(deposit.tx);
+
+const withdraw = vault.withdraw({ assets: 1000000000000000000n });
+console.log(withdraw.tx);
+
+const redeem = vault.redeem({ assets: 1000000000000000000n });
+console.log(redeem.tx);
 ```
 
-### 2️⃣ **With VaultV2 Entity**
-
-```typescript
-import { createVaultV2 } from "morpho-dapp";
-
-const morpho = createMorphoClient(client);
-
-const vault = await createVaultV2(
-  morpho,
-  "0x04422053aDDbc9bB2759b248B574e3FCA76Bc145"
-);
-
-const tx = vault.deposit({ assets: 1000000000000000000n });
-```
-
-### 3️⃣ **Direct construction** (For experts) (Full control)
+### 2️⃣ **Direct construction** (For experts) (Full control)
 
 ```typescript
 import { depositVaultV2 } from "morpho-dapp";

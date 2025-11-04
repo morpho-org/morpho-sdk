@@ -5,5 +5,5 @@ import type { Metadata } from "./metadata";
 export interface MorphoClient {
   walletClient: Client;
   metadata?: Metadata;
-  vaultV2: (vault: Address) => Promise<VaultV2Actions>;
+  vaultV2: (vault: Address) => VaultV2Actions;
 }
