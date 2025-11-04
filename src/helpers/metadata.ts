@@ -1,6 +1,6 @@
 import { Time } from "@morpho-org/morpho-ts";
-import { Metadata } from "../../src/types";
-import { Address, concatHex, Hex, isHex, numberToHex } from "viem";
+import { type Address, concatHex, type Hex, isHex, numberToHex } from "viem";
+import type { Metadata } from "../../src/types";
 
 /**
  * Adds metadata to a transaction object by concatenating additional
@@ -26,7 +26,7 @@ import { Address, concatHex, Hex, isHex, numberToHex } from "viem";
  */
 export function addTransactionMetadata(
   tx: { data: Hex; value: bigint; to: Address },
-  metadata: Metadata
+  metadata: Metadata,
 ) {
   const { data, ..._tx } = tx;
 
@@ -46,9 +46,12 @@ export function addTransactionMetadata(
     if (origin.length > 8)
       throw Error("Calldata origin must be at most 8 characters long");
     concatItems.push(`0x${origin}`);
-  } catch (error: any) {
+  } catch (error: unknown) {
     // eslint-disable-next-line no-console
-    console.warn("Invalid calldata origin:\n", error.name);
+    console.warn(
+      "Invalid calldata origin:\n",
+      error instanceof Error ? error.name : "Unknown error",
+    );
   }
 
   return { data: concatHex(concatItems), ..._tx };

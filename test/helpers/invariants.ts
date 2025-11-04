@@ -1,13 +1,12 @@
-import { Address, Block, Chain, erc4626Abi } from "viem";
-
 import {
-  AccrualPosition,
+  type AccrualPosition,
   getChainAddresses,
-  MarketParams,
+  type MarketParams,
 } from "@morpho-org/blue-sdk";
 import { fetchAccrualPosition } from "@morpho-org/blue-sdk-viem";
 import { entries } from "@morpho-org/morpho-ts";
-import { AnvilTestClient } from "@morpho-org/test";
+import type { AnvilTestClient } from "@morpho-org/test";
+import { type Address, type Block, type Chain, erc4626Abi } from "viem";
 import { expect } from "vitest";
 
 export interface MarketInvariant {
@@ -64,7 +63,7 @@ export type HoldingParamsMap<T extends string = string> = {
 export interface ActionParams<
   TMarketName extends string = string,
   TVaultName extends string = string,
-  THoldingName extends string = string
+  THoldingName extends string = string,
 > {
   markets?: MarketParamsMap<TMarketName>;
   vaults?: VaultParamsMap<TVaultName>;
@@ -102,7 +101,7 @@ export type HoldingInvariantResults<T extends string> = {
 export interface InvariantCheckResult<
   TMarketName extends string,
   TVaultName extends string,
-  THoldingName extends string
+  THoldingName extends string,
 > {
   markets: MarketInvariantResults<TMarketName>;
   vaults: VaultInvariantResults<TVaultName>;
@@ -112,7 +111,7 @@ export interface InvariantCheckResult<
 export interface InvariantCheck<
   TMarketName extends string = string,
   TVaultName extends string = string,
-  THoldingName extends string = string
+  THoldingName extends string = string,
 > {
   client: AnvilTestClient<Chain>;
   params: ActionParams<TMarketName, TVaultName, THoldingName>;
@@ -142,7 +141,7 @@ const _validateBundler3Balances = ({
   for (const [index, value] of initialBalances.entries()) {
     expect(
       value,
-      `${Object.keys(bundler3)[index]} ${balanceType} should be 0`
+      `${Object.keys(bundler3)[index]} ${balanceType} should be 0`,
     ).toEqual(finalBalances[index]);
   }
 };
@@ -184,13 +183,13 @@ const _fetchMarketOperationState = async ({
     fetchAccrualPosition(client.account.address, market.id, client),
     Promise.all(
       entries(bundler3).map(([, value]) =>
-        client.balanceOf({ erc20: loanToken, owner: value })
-      )
+        client.balanceOf({ erc20: loanToken, owner: value }),
+      ),
     ),
     Promise.all(
       entries(bundler3).map(([, value]) =>
-        client.balanceOf({ erc20: collateralToken, owner: value })
-      )
+        client.balanceOf({ erc20: collateralToken, owner: value }),
+      ),
     ),
   ]);
 
@@ -247,13 +246,13 @@ const _fetchVaultOperationState = async ({
     client.balanceOf({}),
     Promise.all(
       entries(bundler3).map(([, value]) =>
-        client.balanceOf({ erc20: asset, owner: value })
-      )
+        client.balanceOf({ erc20: asset, owner: value }),
+      ),
     ),
     Promise.all(
       entries(bundler3).map(([, value]) =>
-        client.balanceOf({ erc20: vault.address, owner: value })
-      )
+        client.balanceOf({ erc20: vault.address, owner: value }),
+      ),
     ),
     client.maxWithdraw({ erc4626: vault.address }),
     client.readContract({
@@ -318,7 +317,9 @@ const _fetchHoldingOperationState = async ({
         owner: client.account.address,
       }),
       Promise.all(
-        entries(bundler3).map(([, value]) => client.balanceOf({ owner: value }))
+        entries(bundler3).map(([, value]) =>
+          client.balanceOf({ owner: value }),
+        ),
       ),
     ]);
 
@@ -351,7 +352,7 @@ const _buildMarketInitialState = async <TMarketName extends string>({
 
   for (const [name, marketParams] of Object.entries(markets) as [
     TMarketName,
-    MarketParams
+    MarketParams,
   ][]) {
     const initialState = await _fetchMarketOperationState({
       client,
@@ -384,7 +385,7 @@ const _buildVaultInitialState = async <TVaultName extends string>({
 
   for (const [name, vaultParams] of Object.entries(vaults) as [
     TVaultName,
-    VaultParams
+    VaultParams,
   ][]) {
     const initialState = await _fetchVaultOperationState({
       client,
@@ -417,7 +418,7 @@ const _buildHoldingInitialState = async <THoldingName extends string>({
 
   for (const [name, holdingParams] of Object.entries(holdings) as [
     THoldingName,
-    Address
+    Address,
   ][]) {
     const initialState = await _fetchHoldingOperationState({
       client,
@@ -569,7 +570,7 @@ const _buildHoldingFinalState = async <THoldingName extends string>({
 export const testInvariants = async <
   TMarketName extends string,
   TVaultName extends string,
-  THoldingName extends string
+  THoldingName extends string,
 >({
   client,
   params,

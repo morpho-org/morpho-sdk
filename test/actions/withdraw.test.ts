@@ -1,10 +1,9 @@
+import { createMorphoClient, instantiateVaultV2, withdrawVaultV2 } from "src";
+import { KeyrockUsdcVaultV2 } from "test/fixtures/vaultV2";
+import { testInvariants } from "test/helpers/invariants";
+import { parseUnits } from "viem";
 import { describe, expect } from "vitest";
 import { test } from "../setup";
-
-import { instantiateVaultV2, createMorphoClient, withdrawVaultV2 } from "src";
-import { KeyrockUsdcVaultV2 } from "test/fixtures/vaultV2";
-import { parseUnits } from "viem";
-import { testInvariants } from "test/helpers/invariants";
 
 describe("Withdraw VaultV2", () => {
   test("should create withdraw transaction", async ({ client }) => {
@@ -19,7 +18,7 @@ describe("Withdraw VaultV2", () => {
     // Second Devex with entity
     const vaultV2_2 = await instantiateVaultV2(
       morpho,
-      KeyrockUsdcVaultV2.address
+      KeyrockUsdcVaultV2.address,
     );
 
     const withdraw_2 = vaultV2_2.withdraw({
@@ -67,14 +66,14 @@ describe("Withdraw VaultV2", () => {
     });
 
     expect(finalState.userSharesBalance).toEqual(
-      initialState.userSharesBalance - shares
+      initialState.userSharesBalance - shares,
     );
     expect(finalState.userAssetBalance).toBeGreaterThan(
-      initialState.userAssetBalance
+      initialState.userAssetBalance,
     );
     expect(finalState.userAssetBalance).toEqual(1004842842n);
     expect(finalState.morphoAssetBalance).toBeLessThan(
-      initialState.morphoAssetBalance
+      initialState.morphoAssetBalance,
     );
   });
 });

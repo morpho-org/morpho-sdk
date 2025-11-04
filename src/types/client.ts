@@ -1,6 +1,6 @@
-import { Metadata } from "./metadata";
-import { Client, Address } from "viem";
-import { VaultV2Actions } from "../entities/vault/vaultV2";
+import type { Address, Client } from "viem";
+import type { VaultV2Actions } from "../entities/vault/vaultV2";
+import type { Metadata } from "./metadata";
 
 export interface MorphoClient {
   walletClient: Client;

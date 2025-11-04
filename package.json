@@ -19,6 +19,7 @@
   ],
   "scripts": {
     "prepublish": "$npm_execpath build",
+    "lint": "biome check",
     "compile": "hardhat compile",
     "build": "tsc --noEmit && tsc --build tsconfig.build.json",
     "test": "dotenv -- vitest",
@@ -28,6 +29,7 @@
     "setup-dev": "pnpm run build && pnpm link --global"
   },
   "devDependencies": {
+    "@biomejs/biome": "2.3.3",
     "@morpho-org/test": "2.6.1-next.1",
     "@types/node": "^24.9.1",
     "dotenv": "^17.2.3",
