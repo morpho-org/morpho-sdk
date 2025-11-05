@@ -18,7 +18,7 @@ export function validateEnv(): Env {
       for (const err of error.issues) {
         const varName = err.path.join(".");
         invalidVars.push(
-          `${varName}: ${err.message || `${varName} is invalid`}`,
+          `${varName}: ${err.message || `${varName} is invalid`}`
         );
       }
 
