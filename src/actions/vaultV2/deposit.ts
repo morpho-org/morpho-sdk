@@ -6,7 +6,7 @@ import {
 import { type Action, BundlerAction } from "@morpho-org/bundler-sdk-viem";
 import type { Address } from "viem";
 import { addTransactionMetadata } from "../../helpers";
-import type { Metadata, Transaction } from "../../types";
+import type { Metadata, Transaction, VaultV2DepositAction } from "../../types";
 
 export interface VaultV2DepositParams {
   chainId: number;
@@ -20,7 +20,7 @@ export interface VaultV2DepositParams {
 
 export function depositVaultV2(
   params: VaultV2DepositParams
-): Readonly<Transaction> {
+): Readonly<Transaction<VaultV2DepositAction>> {
   Object.freeze(params);
   const { chainId, asset, vault, assets, shares, recipient, metadata } = params;
 
@@ -61,11 +61,13 @@ export function depositVaultV2(
     tx = addTransactionMetadata(tx, metadata);
   }
 
+  const action: VaultV2DepositAction = {
+    type: "vaultV2Deposit",
+    args: { vault, assets, shares, recipient },
+  };
+
   return Object.freeze({
     ...tx,
-    action: {
-      type: "vaultV2Deposit" as const,
-      args: { vault, assets, shares, recipient },
-    },
+    action,
   });
 }

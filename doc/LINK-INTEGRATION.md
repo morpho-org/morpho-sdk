@@ -8,7 +8,7 @@ This guide explains how to link this local package to your Next.js application f
 
 ```bash
 # In this morpho-dapp project
-pnpm run setup-dev
+pnpm run build:link
 ```
 
 ### **Step 2: In your other project**
@@ -16,11 +16,4 @@ pnpm run setup-dev
 ```bash
 # Link the local package
 pnpm link morpho-dapp
-```
-
-### **Step 3: Daily development**
-
-```bash
-# Terminal 2 - Your Next.js
-pnpm run dev
 ```

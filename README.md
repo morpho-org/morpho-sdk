@@ -2,7 +2,7 @@
 
 > **The abstraction layer that simplifies Morpho protocol**
 
-## ✨ Three ways to build transactions
+## ✨ How to use it? (two ways to build transactions)
 
 ### 1️⃣ **With MorphoClient**
 
@@ -19,8 +19,9 @@ const client = createWalletClient({
 const morpho = createMorphoClient(client);
 
 const vault = morpho.vaultV2("0x04422053aDDbc9bB2759b248B574e3FCA76Bc145");
-const deposit = vault.prepareDeposit({ assets: 1000000000000000000n });
+const deposit = await vault.deposit({ assets: 1000000000000000000n });
 console.log(deposit.tx);
+console.log(await deposit.getRequirements());
 
 const withdraw = vault.withdraw({ assets: 1000000000000000000n });
 console.log(withdraw.tx);

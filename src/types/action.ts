@@ -35,13 +35,15 @@ export interface VaultV2RedeemAction {
   };
 }
 
-export interface Transaction {
+export type TransactionAction =
+  | ERC20ApprovalAction
+  | VaultV2DepositAction
+  | VaultV2WithdrawAction
+  | VaultV2RedeemAction;
+
+export interface Transaction<T> {
   to: Address;
   value: bigint;
   data: Hex;
-  action:
-    | ERC20ApprovalAction
-    | VaultV2DepositAction
-    | VaultV2WithdrawAction
-    | VaultV2RedeemAction;
+  action: T;
 }

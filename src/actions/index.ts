@@ -1,2 +1,2 @@
-export * from "./requirement";
+export * from "./requirements";
 export * from "./vaultV2";
