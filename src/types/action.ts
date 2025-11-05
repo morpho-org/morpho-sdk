@@ -1,4 +1,4 @@
-import { Address, Hex } from "viem";
+import type { Address, Hex } from "viem";
 
 export interface ERC20ApprovalAction {
   type: "erc20Approval";

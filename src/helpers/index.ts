@@ -1,1 +1,1 @@
-export * from "./metadata";
+export { addTransactionMetadata } from "./metadata";

@@ -1,12 +1,12 @@
-import { Action, BundlerAction } from "@morpho-org/bundler-sdk-viem";
 import {
   DEFAULT_SLIPPAGE_TOLERANCE,
   getChainAddresses,
   MathLib,
 } from "@morpho-org/blue-sdk";
-import { Address } from "viem";
-import { Transaction, Metadata } from "../../types";
+import { type Action, BundlerAction } from "@morpho-org/bundler-sdk-viem";
+import type { Address } from "viem";
 import { addTransactionMetadata } from "../../helpers";
+import type { Metadata, Transaction } from "../../types";
 
 export interface VaultV2DepositParams {
   chainId: number;

@@ -1,7 +1,7 @@
-import { Address, MathLib } from "@morpho-org/blue-sdk";
+import { type Address, MathLib } from "@morpho-org/blue-sdk";
 import { MAX_TOKEN_APPROVALS } from "@morpho-org/simulation-sdk";
 import { encodeFunctionData, erc20Abi, maxUint256 } from "viem";
-import { Transaction } from "../../types/action";
+import type { Transaction } from "../../types";
 
 interface EncodeErc20ApprovalParams {
   token: Address;

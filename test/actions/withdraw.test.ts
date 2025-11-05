@@ -1,26 +1,20 @@
+import { createMorphoClient, instantiateVaultV2, withdrawVaultV2 } from "src";
+import { KeyrockUsdcVaultV2 } from "test/fixtures/vaultV2";
+import { testInvariants } from "test/helpers/invariants";
+import { parseUnits } from "viem";
 import { describe, expect } from "vitest";
 import { test } from "../setup";
 
-import { instantiateVaultV2, createMorphoClient, withdrawVaultV2 } from "src";
-import { KeyrockUsdcVaultV2 } from "test/fixtures/vaultV2";
-import { parseUnits } from "viem";
-import { testInvariants } from "test/helpers/invariants";
-
 describe("Withdraw VaultV2", () => {
-  test("should create withdraw transaction", async ({ client }) => {
+  test("should create redeem transaction", async ({ client }) => {
     const morpho = createMorphoClient(client);
 
-    const withdraw = (
-      await morpho.vaultV2(KeyrockUsdcVaultV2.address)
-    ).withdraw({
+    const withdraw = morpho.vaultV2(KeyrockUsdcVaultV2.address).withdraw({
       assets: 1000000000000000000n,
     });
 
     // Second Devex with entity
-    const vaultV2_2 = await instantiateVaultV2(
-      morpho,
-      KeyrockUsdcVaultV2.address
-    );
+    const vaultV2_2 = instantiateVaultV2(morpho, KeyrockUsdcVaultV2.address);
 
     const withdraw_2 = vaultV2_2.withdraw({
       assets: 1000000000000000000n,
@@ -39,8 +33,9 @@ describe("Withdraw VaultV2", () => {
     expect(withdraw_3).toStrictEqual(withdraw_2.tx);
   });
 
-  test("should withdraw 1K USDC in vaultV2", async ({ client }) => {
+  test("should withdraw 1K assets in vaultV2", async ({ client }) => {
     const shares = parseUnits("1000", 18);
+    const assets = parseUnits("1000", 6);
     await client.deal({
       erc20: KeyrockUsdcVaultV2.address,
       amount: shares,
@@ -57,24 +52,24 @@ describe("Withdraw VaultV2", () => {
       },
       actionFn: async () => {
         const morpho = createMorphoClient(client);
-        const vaultV2 = await morpho.vaultV2(KeyrockUsdcVaultV2.address);
-        const redeem = vaultV2.redeem({
-          shares: shares,
+        const vaultV2 = morpho.vaultV2(KeyrockUsdcVaultV2.address);
+        const withdraw = vaultV2.withdraw({
+          assets,
         });
 
-        await client.sendTransaction(redeem.tx);
+        await client.sendTransaction(withdraw.tx);
       },
     });
 
-    expect(finalState.userSharesBalance).toEqual(
-      initialState.userSharesBalance - shares
+    expect(finalState.userSharesBalance).toBeLessThan(
+      initialState.userSharesBalance,
     );
-    expect(finalState.userAssetBalance).toBeGreaterThan(
-      initialState.userAssetBalance
+    expect(finalState.userAssetBalance).toEqual(
+      initialState.userAssetBalance + assets,
     );
-    expect(finalState.userAssetBalance).toEqual(1004842842n);
-    expect(finalState.morphoAssetBalance).toBeLessThan(
-      initialState.morphoAssetBalance
+    expect(finalState.userSharesBalance).toEqual(4819502335404300505n);
+    expect(finalState.morphoAssetBalance).toEqual(
+      initialState.morphoAssetBalance - assets,
     );
   });
 });

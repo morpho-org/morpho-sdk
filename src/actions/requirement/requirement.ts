@@ -1,7 +1,7 @@
-import { Address, getChainAddresses } from "@morpho-org/blue-sdk";
+import { type Address, getChainAddresses } from "@morpho-org/blue-sdk";
 import { fetchHolding } from "@morpho-org/blue-sdk-viem";
 import { APPROVE_ONLY_ONCE_TOKENS } from "@morpho-org/simulation-sdk";
-import { MorphoClient, Transaction } from "../../../src";
+import type { MorphoClient, Transaction } from "../../types";
 
 import { encodeErc20Approval } from "./encodeErc20Approval";
 

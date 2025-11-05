@@ -9,4 +9,3 @@ export * from "./blue-sdk";
 export * from "./blue-sdk-viem";
 export * from "./bundler-sdk-viem";
 export * from "./morpho-ts";
-export * from "./simulation-sdk";

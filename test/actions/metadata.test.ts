@@ -1,10 +1,9 @@
-import { describe, expect } from "vitest";
-import { test } from "../setup";
-
 import { createMorphoClient, Time } from "src";
 import { KeyrockUsdcVaultV2 } from "test/fixtures/vaultV2";
-import { parseUnits } from "viem";
 import { testInvariants } from "test/helpers/invariants";
+import { parseUnits } from "viem";
+import { describe, expect } from "vitest";
+import { test } from "../setup";
 
 describe("Metadata", () => {
   test("should create deposit bundle with origin and timestamp metadata", async ({
@@ -30,8 +29,8 @@ describe("Metadata", () => {
           origin: "25AFEA44",
           timestamp: true,
         });
-        const vaultV2 = await morpho.vaultV2(KeyrockUsdcVaultV2.address);
-        const deposit = vaultV2.deposit({
+        const vaultV2 = morpho.vaultV2(KeyrockUsdcVaultV2.address);
+        const deposit = await vaultV2.prepareDeposit({
           assets: amount,
         });
 
@@ -90,8 +89,8 @@ describe("Metadata", () => {
         const morpho = createMorphoClient(client, {
           origin: "25AFEA44",
         });
-        const vaultV2 = await morpho.vaultV2(KeyrockUsdcVaultV2.address);
-        const deposit = vaultV2.deposit({
+        const vaultV2 = morpho.vaultV2(KeyrockUsdcVaultV2.address);
+        const deposit = await vaultV2.prepareDeposit({
           assets: amount,
         });
 

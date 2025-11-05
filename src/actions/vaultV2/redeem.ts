@@ -1,7 +1,7 @@
-import { Address, encodeFunctionData } from "viem";
 import { vaultV2Abi } from "@morpho-org/blue-sdk-viem";
-import { Transaction, Metadata } from "../../types";
+import { type Address, encodeFunctionData } from "viem";
 import { addTransactionMetadata } from "../../helpers";
+import type { Metadata, Transaction } from "../../types";
 
 export interface VaultV2RedeemParams {
   vault: Address;
