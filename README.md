@@ -45,6 +45,24 @@ const tx = depositVaultV2({
 });
 ```
 
+## Link Integration - Local Development Guide
+
+This guide explains how to link this local package to your Next.js application for easier debugging.
+
+### **Step 1: Initial setup (one time only)**
+
+```bash
+# In this morpho-dapp project
+pnpm run build:link
+```
+
+### **Step 2: In your other project**
+
+```bash
+# Link the local package
+pnpm link morpho-dapp
+```
+
 ## 🤝 Contributing
 
 Contributions are welcome! Feel free to open an issue or PR.
