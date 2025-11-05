@@ -28,6 +28,11 @@ jobs:
           pnpm -v
           printenv
 
+      - name: Print MAINNET_RPC_URL
+        run: node -e "console.log('MAINNET_RPC_URL:', process.env.MAINNET_RPC_URL)"
+        env:
+          MAINNET_RPC_URL: ${{ secrets.MAINNET_RPC_URL }}
+
       - name: Debug with node REPL
         run: node
         if: false # Set to true and edit as needed for manual debugging
