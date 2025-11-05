@@ -1,14 +1,18 @@
 import { type Address, getChainAddresses } from "@morpho-org/blue-sdk";
 import { fetchHolding } from "@morpho-org/blue-sdk-viem";
 import { APPROVE_ONLY_ONCE_TOKENS } from "@morpho-org/simulation-sdk";
-import type { MorphoClient, Transaction } from "../../types";
+import type {
+  ERC20ApprovalAction,
+  MorphoClient,
+  Transaction,
+} from "../../types";
 
 import { encodeErc20Approval } from "./encodeErc20Approval";
 
 export const getRequirements = async (
   client: MorphoClient,
   params: { address: Address; args: { amount: bigint; from: Address } }
-): Promise<Readonly<Transaction[]>> => {
+): Promise<Readonly<Transaction<ERC20ApprovalAction>[]>> => {
   Object.freeze(params);
   const {
     address,
@@ -29,7 +33,7 @@ export const getRequirements = async (
     client.walletClient
   );
 
-  const txs: Transaction[] = [];
+  const txs: Transaction<ERC20ApprovalAction>[] = [];
 
   if (erc20Allowances["bundler3.generalAdapter1"] < amount) {
     if (

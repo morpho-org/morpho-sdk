@@ -1,7 +1,7 @@
 import { vaultV2Abi } from "@morpho-org/blue-sdk-viem";
 import { type Address, encodeFunctionData } from "viem";
 import { addTransactionMetadata } from "../../helpers";
-import type { Metadata, Transaction } from "../../types";
+import type { Metadata, Transaction, VaultV2RedeemAction } from "../../types";
 
 export interface VaultV2RedeemParams {
   vault: Address;
@@ -13,7 +13,7 @@ export interface VaultV2RedeemParams {
 
 export function redeemVaultV2(
   params: VaultV2RedeemParams
-): Readonly<Transaction> {
+): Readonly<Transaction<VaultV2RedeemAction>> {
   Object.freeze(params);
   const { vault, shares, recipient, onBehalf, metadata } = params;
 
@@ -31,11 +31,13 @@ export function redeemVaultV2(
     tx = addTransactionMetadata(tx, metadata);
   }
 
+  const action: VaultV2RedeemAction = {
+    type: "vaultV2Redeem",
+    args: { vault, shares, recipient },
+  };
+
   return Object.freeze({
     ...tx,
-    action: {
-      type: "vaultV2Redeem" as const,
-      args: { vault, shares, recipient },
-    },
+    action,
   });
 }

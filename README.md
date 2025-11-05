@@ -2,7 +2,7 @@
 
 > **The abstraction layer that simplifies Morpho protocol**
 
-## ✨ Three ways to build transactions
+## ✨ How to use it? (two ways to build transactions)
 
 ### 1️⃣ **With MorphoClient**
 
@@ -19,8 +19,9 @@ const client = createWalletClient({
 const morpho = createMorphoClient(client);
 
 const vault = morpho.vaultV2("0x04422053aDDbc9bB2759b248B574e3FCA76Bc145");
-const deposit = vault.prepareDeposit({ assets: 1000000000000000000n });
+const deposit = await vault.deposit({ assets: 1000000000000000000n });
 console.log(deposit.tx);
+console.log(await deposit.getRequirements());
 
 const withdraw = vault.withdraw({ assets: 1000000000000000000n });
 console.log(withdraw.tx);
@@ -42,6 +43,24 @@ const tx = depositVaultV2({
   shares: 995180500366542119986981956374n,
   recipient: "0x...",
 });
+```
+
+## Link Integration - Local Development Guide
+
+This guide explains how to link this local package to your Next.js application for easier debugging.
+
+### **Step 1: Initial setup (one time only)**
+
+```bash
+# In this morpho-dapp project
+pnpm run build:link
+```
+
+### **Step 2: In your other project**
+
+```bash
+# Link the local package
+pnpm link morpho-dapp
 ```
 
 ## 🤝 Contributing

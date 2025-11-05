@@ -11,14 +11,14 @@ describe("Deposit VaultV2", () => {
     const morpho = createMorphoClient(client);
 
     const vault = morpho.vaultV2(KeyrockUsdcVaultV2.address);
-    const deposit = await vault.prepareDeposit({
+    const deposit = await vault.deposit({
       assets: 1000000000000000000n,
     });
     const requirements_1 = await deposit.getRequirements();
 
     const vaultV2_2 = instantiateVaultV2(morpho, KeyrockUsdcVaultV2.address);
 
-    const deposit_2 = await vaultV2_2.prepareDeposit({
+    const deposit_2 = await vaultV2_2.deposit({
       assets: 1000000000000000000n,
     });
 
@@ -62,7 +62,7 @@ describe("Deposit VaultV2", () => {
       actionFn: async () => {
         const morpho = createMorphoClient(client);
         const vaultV2 = morpho.vaultV2(KeyrockUsdcVaultV2.address);
-        const deposit = await vaultV2.prepareDeposit({
+        const deposit = await vaultV2.deposit({
           assets: amount,
         });
 
@@ -79,13 +79,13 @@ describe("Deposit VaultV2", () => {
     });
 
     expect(finalState.userAssetBalance).toEqual(
-      initialState.userAssetBalance - amount,
+      initialState.userAssetBalance - amount
     );
     expect(finalState.morphoAssetBalance).toEqual(
-      initialState.morphoAssetBalance + amount,
+      initialState.morphoAssetBalance + amount
     );
     expect(finalState.userSharesBalance).toBeGreaterThan(
-      initialState.userSharesBalance,
+      initialState.userSharesBalance
     );
     expect(finalState.userSharesBalance).toEqual(995180494962649293673n);
   });

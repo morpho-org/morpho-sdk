@@ -1,7 +1,7 @@
 import { vaultV2Abi } from "@morpho-org/blue-sdk-viem";
 import { type Address, encodeFunctionData } from "viem";
 import { addTransactionMetadata } from "../../helpers";
-import type { Metadata, Transaction } from "../../types";
+import type { Metadata, Transaction, VaultV2WithdrawAction } from "../../types";
 
 export interface VaultV2WithdrawParams {
   vault: Address;
@@ -13,7 +13,7 @@ export interface VaultV2WithdrawParams {
 
 export function withdrawVaultV2(
   params: VaultV2WithdrawParams
-): Readonly<Transaction> {
+): Readonly<Transaction<VaultV2WithdrawAction>> {
   Object.freeze(params);
   const { vault, assets, recipient, onBehalf, metadata } = params;
 
@@ -31,11 +31,13 @@ export function withdrawVaultV2(
     tx = addTransactionMetadata(tx, metadata);
   }
 
+  const action: VaultV2WithdrawAction = {
+    type: "vaultV2Withdraw",
+    args: { vault, assets, recipient },
+  };
+
   return Object.freeze({
     ...tx,
-    action: {
-      type: "vaultV2Withdraw" as const,
-      args: { vault, assets, recipient },
-    },
+    action,
   });
 }
