@@ -11,8 +11,3 @@ jobs:
     uses: ./.github/workflows/test.yml
     secrets:
       MAINNET_RPC_URL: ${{ secrets.MAINNET_RPC_URL }}
-
-  debug:
-    uses: ./.github/workflows/debug.yml
-    secrets:
-      MAINNET_RPC_URL: ${{ secrets.MAINNET_RPC_URL }}
