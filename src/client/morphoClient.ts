@@ -1,5 +1,5 @@
 import type { Address, Client } from "viem";
-import { initTelemetry, setUser } from "../telemetry";
+import { initTelemetry } from "../telemetry";
 import { type Metadata, type MorphoClient } from "../types";
 import { instantiateVaultV2 } from "../entities";
 import type { Metadata, MorphoClient } from "../types";
@@ -18,12 +18,6 @@ export function createMorphoClient(
   sentryDsn?: string
 ): MorphoClient {
   initTelemetry(sentryDsn);
-
-  // Set user context if address is available
-  const userAddress = walletClient.account?.address;
-  if (userAddress) {
-    setUser({ address: userAddress });
-  }
 
   const client: MorphoClient = {
     walletClient,

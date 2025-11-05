@@ -13,10 +13,12 @@ export interface VaultV2RedeemParams {
 }
 
 export function redeemVaultV2(
-  params: VaultV2RedeemParams,
+  params: VaultV2RedeemParams
 ): Readonly<Transaction<VaultV2RedeemAction>> {
   Object.freeze(params);
   const { vault, shares, recipient, onBehalf, metadata } = params;
+
+  trackAction("vaultV2Redeem");
 
   let tx = {
     to: vault,
@@ -32,8 +34,6 @@ export function redeemVaultV2(
     tx = addTransactionMetadata(tx, metadata);
   }
 
-  trackAction("vaultV2Redeem");
-  
   const action: VaultV2RedeemAction = {
     type: "vaultV2Redeem",
     args: { vault, shares, recipient },

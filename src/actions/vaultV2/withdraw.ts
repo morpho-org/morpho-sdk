@@ -13,10 +13,12 @@ export interface VaultV2WithdrawParams {
 }
 
 export function withdrawVaultV2(
-  params: VaultV2WithdrawParams,
+  params: VaultV2WithdrawParams
 ): Readonly<Transaction<VaultV2WithdrawAction>> {
   Object.freeze(params);
   const { vault, assets, recipient, onBehalf, metadata } = params;
+
+  trackAction("vaultV2Withdraw");
 
   let tx = {
     to: vault,
@@ -32,8 +34,6 @@ export function withdrawVaultV2(
     tx = addTransactionMetadata(tx, metadata);
   }
 
-  trackAction("vaultV2Withdraw");
-  
   const action: VaultV2WithdrawAction = {
     type: "vaultV2Withdraw",
     args: { vault, assets, recipient },
