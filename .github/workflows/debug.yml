@@ -1,7 +1,13 @@
 name: Debug - Check MAINNET_RPC_URL
-  run: |
-    if [ -z "${{ secrets.MAINNET_RPC_URL }}" ]; then
-      echo "ERROR: MAINNET_RPC_URL is empty or not set"
-      exit 1
-    else
-      echo "MAINNET_RPC_URL is set (length: ${#MAINNET_RPC_URL})"
+  
+  jobs:
+    check-mainnet-rpc-url:
+      runs-on: ubuntu-latest
+      steps:
+        - run: |
+            if [ -z "${{ secrets.MAINNET_RPC_URL }}" ]; then
+              echo "ERROR: MAINNET_RPC_URL is empty or not set"
+              exit 1
+            else
+              echo "MAINNET_RPC_URL is set (length: ${#MAINNET_RPC_URL})"
+            fi
