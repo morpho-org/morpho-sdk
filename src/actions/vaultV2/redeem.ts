@@ -12,7 +12,7 @@ export interface VaultV2RedeemParams {
 }
 
 export function redeemVaultV2(
-  params: VaultV2RedeemParams,
+  params: VaultV2RedeemParams
 ): Readonly<Transaction> {
   Object.freeze(params);
   const { vault, shares, recipient, onBehalf, metadata } = params;

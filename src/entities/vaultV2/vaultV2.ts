@@ -3,11 +3,10 @@ import type { Address } from "viem";
 import {
   depositVaultV2,
   getRequirements,
-  type MorphoClient,
   redeemVaultV2,
-  type Transaction,
   withdrawVaultV2,
-} from "../../../src";
+} from "../../actions";
+import { type MorphoClient, type Transaction } from "../../types";
 
 export interface VaultV2Actions {
   getData: () => Promise<Awaited<ReturnType<typeof fetchVaultV2>>>;
@@ -25,7 +24,7 @@ export interface VaultV2Actions {
 
 export function instantiateVaultV2(
   client: MorphoClient,
-  vault: Address,
+  vault: Address
 ): VaultV2Actions {
   const userAddress = client.walletClient.account?.address;
   if (!userAddress) {

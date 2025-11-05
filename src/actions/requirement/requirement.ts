@@ -1,13 +1,13 @@
 import { type Address, getChainAddresses } from "@morpho-org/blue-sdk";
 import { fetchHolding } from "@morpho-org/blue-sdk-viem";
 import { APPROVE_ONLY_ONCE_TOKENS } from "@morpho-org/simulation-sdk";
-import type { MorphoClient, Transaction } from "../../../src";
+import type { MorphoClient, Transaction } from "../../types";
 
 import { encodeErc20Approval } from "./encodeErc20Approval";
 
 export const getRequirements = async (
   client: MorphoClient,
-  params: { address: Address; args: { amount: bigint; from: Address } },
+  params: { address: Address; args: { amount: bigint; from: Address } }
 ): Promise<Readonly<Transaction[]>> => {
   Object.freeze(params);
   const {
@@ -26,7 +26,7 @@ export const getRequirements = async (
   const { erc20Allowances } = await fetchHolding(
     from,
     address,
-    client.walletClient,
+    client.walletClient
   );
 
   const txs: Transaction[] = [];
@@ -42,7 +42,7 @@ export const getRequirements = async (
           spender: generalAdapter1,
           amount: 0n,
           chainId,
-        }),
+        })
       );
     }
 
@@ -52,7 +52,7 @@ export const getRequirements = async (
         spender: generalAdapter1,
         amount,
         chainId,
-      }),
+      })
     );
   }
 

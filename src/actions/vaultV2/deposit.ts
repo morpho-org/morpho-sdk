@@ -19,7 +19,7 @@ export interface VaultV2DepositParams {
 }
 
 export function depositVaultV2(
-  params: VaultV2DepositParams,
+  params: VaultV2DepositParams
 ): Readonly<Transaction> {
   Object.freeze(params);
   const { chainId, asset, vault, assets, shares, recipient, metadata } = params;
@@ -27,7 +27,7 @@ export function depositVaultV2(
   const maxSharePrice = MathLib.mulDivUp(
     assets,
     MathLib.wToRay(MathLib.WAD + DEFAULT_SLIPPAGE_TOLERANCE),
-    shares,
+    shares
   );
 
   const {
