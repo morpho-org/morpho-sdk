@@ -25,15 +25,15 @@
     "unlink": "pnpm unlink --global",
     "build:link": "pnpm run build && pnpm link --global",
     "test": "vitest",
-    "test:all": "vitest run",
     "test:ui": "vitest --ui",
-    "test:watch": "vitest --watch",
     "test:coverage": "vitest --coverage"
   },
   "devDependencies": {
     "@biomejs/biome": "2.3.3",
     "@morpho-org/test": "2.6.1-next.1",
     "@types/node": "^24.9.1",
+    "@vitest/coverage-v8": "3.2.4",
+    "@vitest/ui": "3.2.4",
     "dotenv": "^17.2.3",
     "typescript": "^5.7.2",
     "viem": "^2.28.0",
