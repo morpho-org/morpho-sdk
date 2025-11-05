@@ -7,7 +7,7 @@ import { type Action, BundlerAction } from "@morpho-org/bundler-sdk-viem";
 import type { Address } from "viem";
 import { addTransactionMetadata } from "../../helpers";
 import { trackAction } from "../../telemetry";
-import type { Metadata, Transaction } from "../../types";
+import type { Metadata, Transaction, VaultV2DepositAction } from "../../types";
 
 export interface VaultV2DepositParams {
   chainId: number;
@@ -20,15 +20,15 @@ export interface VaultV2DepositParams {
 }
 
 export function depositVaultV2(
-  params: VaultV2DepositParams
-): Readonly<Transaction> {
+  params: VaultV2DepositParams,
+): Readonly<Transaction<VaultV2DepositAction>> {
   Object.freeze(params);
   const { chainId, asset, vault, assets, shares, recipient, metadata } = params;
 
   const maxSharePrice = MathLib.mulDivUp(
     assets,
     MathLib.wToRay(MathLib.WAD + DEFAULT_SLIPPAGE_TOLERANCE),
-    shares
+    shares,
   );
 
   const {
@@ -62,14 +62,15 @@ export function depositVaultV2(
     tx = addTransactionMetadata(tx, metadata);
   }
 
-  // Track action usage
   trackAction("vaultV2Deposit");
+  
+  const action: VaultV2DepositAction = {
+    type: "vaultV2Deposit",
+    args: { vault, assets, shares, recipient },
+  };
 
   return Object.freeze({
     ...tx,
-    action: {
-      type: "vaultV2Deposit" as const,
-      args: { vault, assets, shares, recipient },
-    },
+    action,
   });
 }

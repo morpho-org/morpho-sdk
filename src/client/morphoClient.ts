@@ -2,6 +2,7 @@ import type { Address, Client } from "viem";
 import { initTelemetry, setUser } from "../telemetry";
 import { type Metadata, type MorphoClient } from "../types";
 import { instantiateVaultV2 } from "../entities";
+import type { Metadata, MorphoClient } from "../types";
 
 /**
  * Create a Morpho client instance
@@ -16,9 +17,6 @@ export function createMorphoClient(
   metadata?: Metadata,
   sentryDsn?: string
 ): MorphoClient {
-  // Initialize telemetry if not already initialized
-  // DSN can be passed directly, from env var, or left undefined (telemetry will be disabled)
-  // Errors will be automatically captured by Sentry
   initTelemetry(sentryDsn);
 
   // Set user context if address is available

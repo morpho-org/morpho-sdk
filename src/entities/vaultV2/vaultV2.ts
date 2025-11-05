@@ -6,25 +6,34 @@ import {
   redeemVaultV2,
   withdrawVaultV2,
 } from "../../actions";
-import { type MorphoClient, type Transaction } from "../../types";
+import type {
+  ERC20ApprovalAction,
+  MorphoClient,
+  Transaction,
+  VaultV2DepositAction,
+  VaultV2RedeemAction,
+  VaultV2WithdrawAction,
+} from "../../types";
 
 export interface VaultV2Actions {
   getData: () => Promise<Awaited<ReturnType<typeof fetchVaultV2>>>;
-  prepareDeposit: (params: { assets: bigint }) => Promise<{
-    tx: Readonly<Transaction>;
-    getRequirements: () => Promise<Readonly<Transaction[]>>;
+  deposit: (params: { assets: bigint }) => Promise<{
+    tx: Readonly<Transaction<VaultV2DepositAction>>;
+    getRequirements: () => Promise<
+      Readonly<Transaction<ERC20ApprovalAction>[]>
+    >;
   }>;
   withdraw: (params: { assets: bigint }) => {
-    tx: Readonly<Transaction>;
+    tx: Readonly<Transaction<VaultV2WithdrawAction>>;
   };
   redeem: (params: { shares: bigint }) => {
-    tx: Readonly<Transaction>;
+    tx: Readonly<Transaction<VaultV2RedeemAction>>;
   };
 }
 
 export function instantiateVaultV2(
   client: MorphoClient,
-  vault: Address
+  vault: Address,
 ): VaultV2Actions {
   const userAddress = client.walletClient.account?.address;
   if (!userAddress) {
@@ -37,16 +46,16 @@ export function instantiateVaultV2(
 
   return {
     getData: async () => fetchVaultV2(vault, client.walletClient),
-    prepareDeposit: async ({ assets }: { assets: bigint }) => {
+    deposit: async ({ assets }: { assets: bigint }) => {
       const vaultData = await fetchVaultV2(vault, client.walletClient);
-      const shares = vaultData.toShares(assets);
+
       return {
         tx: depositVaultV2({
           chainId,
           asset: vaultData.asset,
           vault,
           assets,
-          shares,
+          shares: vaultData.toShares(assets),
           recipient: userAddress,
           metadata: client.metadata,
         }),

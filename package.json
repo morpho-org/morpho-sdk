@@ -20,20 +20,21 @@
   "scripts": {
     "prepublish": "$npm_execpath build",
     "lint": "biome check",
-    "compile": "hardhat compile",
     "build": "tsc --noEmit && tsc --build tsconfig.build.json",
-    "test": "dotenv -- vitest",
-    "test:ui": "vitest --ui",
     "link": "pnpm link --global",
     "unlink": "pnpm unlink --global",
-    "setup-dev": "pnpm run build && pnpm link --global"
+    "build:link": "pnpm run build && pnpm link --global",
+    "test": "vitest",
+    "test:ui": "vitest --ui",
+    "test:coverage": "vitest --coverage"
   },
   "devDependencies": {
     "@biomejs/biome": "2.3.3",
     "@morpho-org/test": "2.6.1-next.1",
     "@types/node": "^24.9.1",
+    "@vitest/coverage-v8": "3.2.4",
+    "@vitest/ui": "3.2.4",
     "dotenv": "^17.2.3",
-    "hardhat": "^2.22.18",
     "typescript": "^5.7.2",
     "viem": "^2.28.0",
     "vitest": "^3.0.5"
@@ -48,6 +49,7 @@
     "@morpho-org/bundler-sdk-viem": "4.1.0-next.1",
     "@morpho-org/morpho-ts": "^2.4.3",
     "@morpho-org/simulation-sdk": "3.2.0-next.4",
-    "@sentry/node": "^10.22.0"
+    "@sentry/node": "^10.22.0",
+    "zod": "^4.1.12"
   }
 }

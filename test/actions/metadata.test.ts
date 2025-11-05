@@ -30,7 +30,7 @@ describe("Metadata", () => {
           timestamp: true,
         });
         const vaultV2 = morpho.vaultV2(KeyrockUsdcVaultV2.address);
-        const deposit = await vaultV2.prepareDeposit({
+        const deposit = await vaultV2.deposit({
           assets: amount,
         });
 
@@ -57,13 +57,13 @@ describe("Metadata", () => {
     });
 
     expect(finalState.userAssetBalance).toEqual(
-      initialState.userAssetBalance - amount
+      initialState.userAssetBalance - amount,
     );
     expect(finalState.morphoAssetBalance).toEqual(
-      initialState.morphoAssetBalance + amount
+      initialState.morphoAssetBalance + amount,
     );
     expect(finalState.userSharesBalance).toBeGreaterThan(
-      initialState.userSharesBalance
+      initialState.userSharesBalance,
     );
   });
 
@@ -90,7 +90,7 @@ describe("Metadata", () => {
           origin: "25AFEA44",
         });
         const vaultV2 = morpho.vaultV2(KeyrockUsdcVaultV2.address);
-        const deposit = await vaultV2.prepareDeposit({
+        const deposit = await vaultV2.deposit({
           assets: amount,
         });
 
@@ -114,13 +114,13 @@ describe("Metadata", () => {
     });
 
     expect(finalState.userAssetBalance).toEqual(
-      initialState.userAssetBalance - amount
+      initialState.userAssetBalance - amount,
     );
     expect(finalState.morphoAssetBalance).toEqual(
-      initialState.morphoAssetBalance + amount
+      initialState.morphoAssetBalance + amount,
     );
     expect(finalState.userSharesBalance).toBeGreaterThan(
-      initialState.userSharesBalance
+      initialState.userSharesBalance,
     );
   });
 });

@@ -26,7 +26,7 @@ import type { Metadata } from "../types";
  */
 export function addTransactionMetadata(
   tx: { data: Hex; value: bigint; to: Address },
-  metadata: Metadata
+  metadata: Metadata,
 ) {
   const { data, ..._tx } = tx;
 
@@ -50,7 +50,7 @@ export function addTransactionMetadata(
     // eslint-disable-next-line no-console
     console.warn(
       "Invalid calldata origin:\n",
-      error instanceof Error ? error.name : "Unknown error"
+      error instanceof Error ? error.name : "Unknown error",
     );
   }
 
