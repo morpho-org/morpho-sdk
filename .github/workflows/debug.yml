@@ -5,4 +5,3 @@ name: Debug - Check MAINNET_RPC_URL
       exit 1
     else
       echo "MAINNET_RPC_URL is set (length: ${#MAINNET_RPC_URL})"
-    fi
