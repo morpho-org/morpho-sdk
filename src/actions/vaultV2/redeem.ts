@@ -1,6 +1,7 @@
 import { vaultV2Abi } from "@morpho-org/blue-sdk-viem";
 import { type Address, encodeFunctionData } from "viem";
 import { addTransactionMetadata } from "../../helpers";
+import { trackAction } from "../../telemetry";
 import type { Metadata, Transaction } from "../../types";
 
 export interface VaultV2RedeemParams {
@@ -30,6 +31,9 @@ export function redeemVaultV2(
   if (metadata) {
     tx = addTransactionMetadata(tx, metadata);
   }
+
+  // Track action usage
+  trackAction("vaultV2Redeem");
 
   return Object.freeze({
     ...tx,
