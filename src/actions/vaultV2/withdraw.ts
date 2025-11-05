@@ -12,7 +12,7 @@ export interface VaultV2WithdrawParams {
 }
 
 export function withdrawVaultV2(
-  params: VaultV2WithdrawParams
+  params: VaultV2WithdrawParams,
 ): Readonly<Transaction<VaultV2WithdrawAction>> {
   Object.freeze(params);
   const { vault, assets, recipient, onBehalf, metadata } = params;

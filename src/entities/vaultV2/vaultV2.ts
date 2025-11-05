@@ -6,13 +6,13 @@ import {
   redeemVaultV2,
   withdrawVaultV2,
 } from "../../actions";
-import {
+import type {
   ERC20ApprovalAction,
+  MorphoClient,
+  Transaction,
   VaultV2DepositAction,
   VaultV2RedeemAction,
   VaultV2WithdrawAction,
-  type MorphoClient,
-  type Transaction,
 } from "../../types";
 
 export interface VaultV2Actions {
@@ -33,7 +33,7 @@ export interface VaultV2Actions {
 
 export function instantiateVaultV2(
   client: MorphoClient,
-  vault: Address
+  vault: Address,
 ): VaultV2Actions {
   const userAddress = client.walletClient.account?.address;
   if (!userAddress) {
