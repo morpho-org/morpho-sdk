@@ -1,6 +1,7 @@
 import { type Address, getChainAddresses } from "@morpho-org/blue-sdk";
 import { fetchHolding } from "@morpho-org/blue-sdk-viem";
 import { APPROVE_ONLY_ONCE_TOKENS } from "@morpho-org/simulation-sdk";
+import { withTelemetry } from "../../telemetry/wrapper";
 import type {
   ERC20ApprovalAction,
   MorphoClient,
@@ -9,7 +10,7 @@ import type {
 
 import { encodeErc20Approval } from "./encodeErc20Approval";
 
-export const getRequirements = async (
+const _getRequirements = async (
   client: MorphoClient,
   params: { address: Address; args: { amount: bigint; from: Address } },
 ): Promise<Readonly<Transaction<ERC20ApprovalAction>[]>> => {
@@ -62,3 +63,8 @@ export const getRequirements = async (
 
   return Object.freeze(txs);
 };
+
+export const getRequirements = withTelemetry(
+  "getRequirements",
+  _getRequirements,
+);

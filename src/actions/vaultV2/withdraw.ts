@@ -1,6 +1,7 @@
 import { vaultV2Abi } from "@morpho-org/blue-sdk-viem";
 import { type Address, encodeFunctionData } from "viem";
 import { addTransactionMetadata } from "../../helpers";
+import { withTelemetry } from "../../telemetry/wrapper";
 import type { Metadata, Transaction, VaultV2WithdrawAction } from "../../types";
 
 export interface VaultV2WithdrawParams {
@@ -11,7 +12,7 @@ export interface VaultV2WithdrawParams {
   metadata?: Metadata;
 }
 
-export function withdrawVaultV2(
+function _withdrawVaultV2(
   params: VaultV2WithdrawParams,
 ): Readonly<Transaction<VaultV2WithdrawAction>> {
   Object.freeze(params);
@@ -41,3 +42,8 @@ export function withdrawVaultV2(
     action,
   });
 }
+
+export const withdrawVaultV2 = withTelemetry(
+  "vaultV2.withdraw",
+  _withdrawVaultV2,
+);
