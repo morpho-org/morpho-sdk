@@ -8,5 +8,5 @@ import { env } from "../src/config/env";
 export const test = createViemTest(mainnet, {
   forkUrl: env().MAINNET_RPC_URL,
   chainId: mainnet.id,
-  forkBlockNumber: 23633484,
+  forkBlockNumber: 23633482,
 });
