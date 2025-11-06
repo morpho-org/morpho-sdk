@@ -7,14 +7,7 @@ export default defineConfig({
   test: {
     coverage: {
       reporter: process.env.CI ? ["lcov"] : ["text", "json", "html"],
-      exclude: [
-        "vitest.*.ts",
-        "**/lib/**",
-        "**/dist/**",
-        "**/artifacts/**",
-        "packages/test/**",
-        "packages/morpho-test/**",
-      ],
+      exclude: ["vitest.*.ts", "**/lib/**", "**/dist/**", "**/artifacts/**"],
     },
     sequence: {
       concurrent: true,
