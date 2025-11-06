@@ -12,6 +12,9 @@ export const setup = async () => {
       exec(`kill -9 ${pid}`, (error) => {
         if (error) console.error(`Error while killing ${pid}: ${error}`);
       });
+      exec(`anvil --reset --fork-block-number 23633483`, (error) => {
+        if (error) console.error(`Error while resetting cache: ${error}`);
+      });
     }
   } catch {}
 };
