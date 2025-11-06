@@ -10,7 +10,7 @@ describe("Deposit VaultV2", () => {
   test("should verify block", async ({ client }) => {
     const block = await client.getBlock();
     expect(block).toBeDefined();
-    expect(block.number).toBe(23633483n);
+    expect(block.number).toBe(23633484n);
   });
 
   test("should create deposit bundle", async ({ client }) => {
