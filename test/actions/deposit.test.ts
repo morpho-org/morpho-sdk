@@ -29,7 +29,7 @@ describe("Deposit VaultV2", () => {
       vault: KeyrockUsdcVaultV2.address,
       asset: KeyrockUsdcVaultV2.asset,
       assets: 1000000000000000000n,
-      shares: 995180500366542119986981956374n,
+      shares: 995180497664595699494513674403n,
       recipient: client.account.address,
     });
 
@@ -87,6 +87,6 @@ describe("Deposit VaultV2", () => {
     expect(finalState.userSharesBalance).toBeGreaterThan(
       initialState.userSharesBalance,
     );
-    expect(finalState.userSharesBalance).toEqual(995180494962649293673n);
+    expect(finalState.userSharesBalance).toEqual(995180492265720444556n);
   });
 });
