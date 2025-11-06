@@ -30,17 +30,6 @@ export function initTelemetry(config: TelemetryConfig = {}): void {
     integrations: [],
   });
 
-  //   // Capture unhandled errors
-  //   process.on("uncaughtException", (error) => {
-  //     captureError(error, { source: "uncaughtException" });
-  //   });
-
-  //   // Capture unhandled promise rejections
-  //   process.on("unhandledRejection", (reason) => {
-  //     const error = reason instanceof Error ? reason : new Error(String(reason));
-  //     captureError(error, { source: "unhandledRejection" });
-  //   });
-
   isInitialized = true;
 }
 
@@ -51,7 +40,7 @@ export function initTelemetry(config: TelemetryConfig = {}): void {
  */
 export function captureError(
   error: Error,
-  context?: Record<string, unknown>,
+  context?: Record<string, unknown>
 ): void {
   if (!isInitialized) {
     initTelemetry();
