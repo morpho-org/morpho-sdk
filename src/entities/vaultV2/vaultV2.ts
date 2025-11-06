@@ -6,6 +6,7 @@ import {
   redeemVaultV2,
   withdrawVaultV2,
 } from "../../actions";
+import { withTelemetry } from "../../telemetry/wrapper";
 import type {
   ERC20ApprovalAction,
   MorphoClient,
@@ -31,7 +32,7 @@ export interface VaultV2Actions {
   };
 }
 
-export function instantiateVaultV2(
+function _instantiateVaultV2(
   client: MorphoClient,
   vault: Address,
 ): VaultV2Actions {
@@ -45,7 +46,9 @@ export function instantiateVaultV2(
   }
 
   return {
-    getData: async () => fetchVaultV2(vault, client.walletClient),
+    getData: withTelemetry("vaultV2.getData", async () =>
+      fetchVaultV2(vault, client.walletClient),
+    ),
     deposit: async ({ assets }: { assets: bigint }) => {
       const vaultData = await fetchVaultV2(vault, client.walletClient);
 
@@ -90,3 +93,8 @@ export function instantiateVaultV2(
     },
   };
 }
+
+export const instantiateVaultV2 = withTelemetry(
+  "vaultV2.instantiate",
+  _instantiateVaultV2,
+);

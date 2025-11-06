@@ -6,6 +6,7 @@ import {
 import { type Action, BundlerAction } from "@morpho-org/bundler-sdk-viem";
 import type { Address } from "viem";
 import { addTransactionMetadata } from "../../helpers";
+import { withTelemetry } from "../../telemetry/wrapper";
 import type { Metadata, Transaction, VaultV2DepositAction } from "../../types";
 
 export interface VaultV2DepositParams {
@@ -18,7 +19,7 @@ export interface VaultV2DepositParams {
   metadata?: Metadata;
 }
 
-export function depositVaultV2(
+function _depositVaultV2(
   params: VaultV2DepositParams,
 ): Readonly<Transaction<VaultV2DepositAction>> {
   Object.freeze(params);
@@ -71,3 +72,5 @@ export function depositVaultV2(
     action,
   });
 }
+
+export const depositVaultV2 = withTelemetry("vaultV2.deposit", _depositVaultV2);
