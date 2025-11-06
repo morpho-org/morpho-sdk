@@ -20,13 +20,6 @@ jobs:
           node-version-file: .nvmrc
           cache: pnpm
 
-      - name: Restore Foundry cache
-        uses: actions/cache/restore@v4
-        with:
-          path: ~/.foundry/cache/rpc
-          key: foundry-${{ github.job }}-${{ github.sha }}
-          restore-keys: foundry-${{ github.job }}-
-
       - uses: foundry-rs/foundry-toolchain@v1
         with:
           cache: false # Disable built-in cache to always save it.
