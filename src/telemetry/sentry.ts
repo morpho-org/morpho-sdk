@@ -32,7 +32,7 @@ export function initTelemetry(): void {
  */
 export function captureError(
   error: Error,
-  context?: Record<string, unknown>
+  context?: Record<string, unknown>,
 ): void {
   if (!isInitialized) {
     initTelemetry();
