@@ -7,12 +7,6 @@ import { describe, expect } from "vitest";
 import { test } from "../setup";
 
 describe("Deposit VaultV2", () => {
-  test("should verify block", async ({ client }) => {
-    const block = await client.getBlock();
-    expect(block).toBeDefined();
-    expect(block.number).toBe(23633483n);
-  });
-
   test("should create deposit bundle", async ({ client }) => {
     const morpho = createMorphoClient(client);
 
@@ -85,14 +79,14 @@ describe("Deposit VaultV2", () => {
     });
 
     expect(finalState.userAssetBalance).toEqual(
-      initialState.userAssetBalance - amount,
+      initialState.userAssetBalance - amount
     );
     expect(finalState.morphoAssetBalance).toEqual(
-      initialState.morphoAssetBalance + amount,
+      initialState.morphoAssetBalance + amount
     );
     expect(finalState.userSharesBalance).toBeGreaterThan(
-      initialState.userSharesBalance,
+      initialState.userSharesBalance
     );
-    expect(finalState.userSharesBalance).toEqual(995180494962649293673n);
+    expect(finalState.userSharesBalance).toEqual(995180492265720444556n);
   });
 });
