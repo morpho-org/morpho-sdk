@@ -6,7 +6,7 @@ import { captureError, logAction } from "./sentry";
  */
 export function withTelemetry<T extends (...args: never[]) => unknown>(
   actionType: string,
-  fn: T,
+  fn: T
 ): T {
   function wrappedFunction(...args: Parameters<T>): ReturnType<T> {
     try {
@@ -21,7 +21,7 @@ export function withTelemetry<T extends (...args: never[]) => unknown>(
             error instanceof Error ? error : new Error(String(error)),
             {
               action: actionType,
-            },
+            }
           );
           throw error;
         }) as ReturnType<T>;

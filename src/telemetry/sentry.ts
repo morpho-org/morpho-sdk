@@ -11,15 +11,8 @@ let isInitialized = false;
 
 /**
  * Initialize Sentry telemetry
- * @param config - Telemetry configuration
  */
-export function initTelemetry(config: TelemetryConfig = {}): void {
-  const { enabled = true } = config;
-
-  if (!enabled) {
-    return;
-  }
-
+export function initTelemetry(): void {
   if (isInitialized) {
     return;
   }
@@ -27,7 +20,6 @@ export function initTelemetry(config: TelemetryConfig = {}): void {
   Sentry.init({
     dsn: SENTRY_DSN,
     tracesSampleRate: 1.0,
-    integrations: [],
   });
 
   isInitialized = true;
