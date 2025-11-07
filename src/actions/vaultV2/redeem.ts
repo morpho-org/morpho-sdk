@@ -4,6 +4,9 @@ import { addTransactionMetadata } from "../../helpers";
 import { withTelemetry } from "../../telemetry/wrapper";
 import type { Metadata, Transaction, VaultV2RedeemAction } from "../../types";
 
+
+// MOST OF THE COMMENTS ON `deposit.ts` ALSO APPLY IN THIS FILE
+
 export interface VaultV2RedeemParams {
   vault: Address;
   shares: bigint;
@@ -17,6 +20,8 @@ function _redeemVaultV2(
 ): Readonly<Transaction<VaultV2RedeemAction>> {
   Object.freeze(params);
   const { vault, shares, recipient, onBehalf, metadata } = params;
+
+  // on the long term we want to go through the bundler for slippage protection no?
 
   let tx = {
     to: vault,

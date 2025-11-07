@@ -34,6 +34,9 @@ export function addTransactionMetadata(
 
   const concatItems = [data];
 
+  // I know that this is what we've been doing so far
+  // I'm convinced that this is useless
+  // What's interesting is more the age of the data used to create the Tx
   if (metadata.timestamp) {
     concatItems.push(numberToHex(Time.timestamp(), { size: 4 }));
   }

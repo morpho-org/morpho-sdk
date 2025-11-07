@@ -19,12 +19,22 @@ export interface VaultV2DepositParams {
   metadata?: Metadata;
 }
 
+// I would prefer the foolowing signature:
+// function vaultV2Deposit(
+//   vault: Pick<VaultV2, "asset" | "address" | "chainID" | ...>,// the whole entity
+//   args: {assets: bigint; recipient: Address;slippage?: bigint},
+//   metadata?: Metadata
+// ): Readonly<Transaction<VaultV2DepositAction>> {...}
+
+// naming is inconsistent
+// it should be named _vaultV2Deposit
 function _depositVaultV2(
-  params: VaultV2DepositParams,
+  params: VaultV2DepositParams, // I would destruct the params directly in the function signature here
 ): Readonly<Transaction<VaultV2DepositAction>> {
-  Object.freeze(params);
+  Object.freeze(params);  // freezing is useless as you destruct the object
   const { chainId, asset, vault, assets, shares, recipient, metadata } = params;
 
+  // Put an absolute max share price, we're using 100 RAY in sdk 
   const maxSharePrice = MathLib.mulDivUp(
     assets,
     MathLib.wToRay(MathLib.WAD + DEFAULT_SLIPPAGE_TOLERANCE),
@@ -50,6 +60,7 @@ function _depositVaultV2(
       args: [vault, recipient, MathLib.MAX_UINT_256, generalAdapter1, false],
     },
     // To skim the assets tokens
+    // Skimming assets tokens is not needed as we deposit everything that we transfer
     {
       type: "erc20Transfer",
       args: [asset, recipient, MathLib.MAX_UINT_256, generalAdapter1, false],
@@ -58,6 +69,7 @@ function _depositVaultV2(
 
   let tx = BundlerAction.encodeBundle(chainId, actions);
 
+  // it would be cleaner to have addTransactionMetadata accept undefined metadata and thus avoid the `if (metadata)` everywhere
   if (metadata) {
     tx = addTransactionMetadata(tx, metadata);
   }
@@ -67,10 +79,14 @@ function _depositVaultV2(
     args: { vault, assets, shares, recipient },
   };
 
+
+  // I'm not sure we want to freeze the object here
+  // In case we do, we should use `deepFreeze` from `@morpho-org/utils`
   return Object.freeze({
     ...tx,
     action,
   });
 }
 
-export const depositVaultV2 = withTelemetry("vaultV2.deposit", _depositVaultV2);
+// You set telemetry name as "vaultV2.deposit" while depositVaultV2 could be used as a standalone function
+export const depositVaultV2 = withTelemetry("depositVaultV2", _depositVaultV2);

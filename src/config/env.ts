@@ -1,3 +1,5 @@
+//Isn't there proper packages that allow doing env validation?
+
 import { z } from "zod";
 
 const envSchema = z.object({

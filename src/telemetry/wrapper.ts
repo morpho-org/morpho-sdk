@@ -1,22 +1,25 @@
 import { captureError, logAction } from "./sentry";
 
+// It's weird to use the naming "Action" everywhere while these are generic functions that are wrapping other functions
+
 /**
  * Wrap a function with telemetry tracking
  * Automatically logs the action and captures errors
  */
-export function withTelemetry<T extends (...args: never[]) => unknown>(
-  actionType: string,
-  fn: T,
-): T {
-  function wrappedFunction(...args: Parameters<T>): ReturnType<T> {
+// the typing is not clean here, type args and results instead
+export function withTelemetry<TArgs extends any[], TResult>(
+  actionType: string,// I wouldn't require anything here, I would use the function name instead with `fn.name`
+  fn: (...args: TArgs) => TResult,
+) {
+ return  function wrappedFunction(...args: TArgs): TResult {
     try {
       logAction(actionType);
 
       const result = fn(...args);
 
       // Handle async functions
-      if (result && typeof (result as Promise<unknown>).then === "function") {
-        return (result as Promise<unknown>).catch((error: unknown) => {
+      if (result instanceof Promise) { // check for result instanceof Promise is cleaner and type safe
+        return (result).catch((error: unknown) => {
           captureError(
             error instanceof Error ? error : new Error(String(error)),
             {
@@ -24,10 +27,10 @@ export function withTelemetry<T extends (...args: never[]) => unknown>(
             },
           );
           throw error;
-        }) as ReturnType<T>;
+        }) as TResult;
       }
 
-      return result as ReturnType<T>;
+      return result;
     } catch (error) {
       captureError(error instanceof Error ? error : new Error(String(error)), {
         action: actionType,
@@ -35,5 +38,5 @@ export function withTelemetry<T extends (...args: never[]) => unknown>(
       throw error;
     }
   }
-  return wrappedFunction as T;
 }
+

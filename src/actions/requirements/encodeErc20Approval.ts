@@ -10,29 +10,31 @@ interface EncodeErc20ApprovalParams {
   chainId: number;
 }
 
-export const encodeErc20Approval = (
-  params: EncodeErc20ApprovalParams,
-): Transaction<ERC20ApprovalAction> => {
-  Object.freeze(params);
-  const { token, spender, amount, chainId } = params;
 
-  let amountValue = amount;
-  amountValue = MathLib.min(
-    amountValue,
+export const encodeErc20Approval = (
+  { token, spender, amount, chainId }: EncodeErc20ApprovalParams, // destructuring here makes more sense
+): Transaction<ERC20ApprovalAction> => {
+  // freezing is useless as you destruct the object
+
+
+  amount = MathLib.min(
+    amount,
     MAX_TOKEN_APPROVALS[chainId]?.[token] ?? maxUint256,
   );
 
+  // I'm not sure we want to freeze the object here
+  // In case we do, we should use `deepFreeze` from `@morpho-org/utils`
   return Object.freeze({
     to: token,
     data: encodeFunctionData({
       abi: erc20Abi,
       functionName: "approve",
-      args: [spender, amountValue],
+      args: [spender, amount],
     }),
     value: 0n,
     action: {
       type: "erc20Approval" as const,
-      args: { spender: spender, amount: amountValue },
+      args: { spender: spender, amount: amount },
     },
   });
 };

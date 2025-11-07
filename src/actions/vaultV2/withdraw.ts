@@ -4,6 +4,9 @@ import { addTransactionMetadata } from "../../helpers";
 import { withTelemetry } from "../../telemetry/wrapper";
 import type { Metadata, Transaction, VaultV2WithdrawAction } from "../../types";
 
+
+// MOST OF THE COMMENTS ON `deposit.ts` ALSO APPLY IN THIS FILE
+
 export interface VaultV2WithdrawParams {
   vault: Address;
   assets: bigint;
@@ -18,6 +21,9 @@ function _withdrawVaultV2(
   Object.freeze(params);
   const { vault, assets, recipient, onBehalf, metadata } = params;
 
+    // on the long term we want to go through the bundler for slippage protection no?
+
+    
   let tx = {
     to: vault,
     data: encodeFunctionData({

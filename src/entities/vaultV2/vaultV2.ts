@@ -16,6 +16,8 @@ import type {
   VaultV2WithdrawAction,
 } from "../../types";
 
+// VaultV2 should definitely be a class
+
 export interface VaultV2Actions {
   getData: () => Promise<Awaited<ReturnType<typeof fetchVaultV2>>>;
   deposit: (params: { assets: bigint }) => Promise<{
@@ -36,6 +38,9 @@ function _instantiateVaultV2(
   client: MorphoClient,
   vault: Address,
 ): VaultV2Actions {
+  // I'm a bit confused by references etc: I feel like we could easily end up sending a tx with the wrong reciever
+  // This could happen if I instanciate a vault V2 with this function, switch user and execute a tx generated with the previously instanciated vault
+  // I would rather not rely on the client to retrieve user address but rather pass it as arg
   const userAddress = client.walletClient.account?.address;
   if (!userAddress) {
     throw new Error("User address not found");

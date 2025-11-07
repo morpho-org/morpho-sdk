@@ -12,15 +12,19 @@ import { encodeErc20Approval } from "./encodeErc20Approval";
 
 const _getRequirements = async (
   client: MorphoClient,
-  params: { address: Address; args: { amount: bigint; from: Address } },
-): Promise<Readonly<Transaction<ERC20ApprovalAction>[]>> => {
-  Object.freeze(params);
-  const {
+  {
     address,
     args: { amount, from },
-  } = params;
+  } : { address: Address; args: { amount: bigint; from: Address } },
+): Promise<Readonly<Transaction<ERC20ApprovalAction>[]>> => {
+  // Same here, freezing is useless as you destruct the object
+  // Rather destruct the params directly in the function signature here
+
   const chainId = client.walletClient.chain?.id;
   if (!chainId) {
+    // Use a custom error class here 
+    // - Standardize the error messages
+    // - Ease the error handling
     throw new Error("Chain ID not found in wallet client");
   }
 
@@ -36,6 +40,7 @@ const _getRequirements = async (
 
   const txs: Transaction<ERC20ApprovalAction>[] = [];
 
+  // Handle permit and permit2
   if (erc20Allowances["bundler3.generalAdapter1"] < amount) {
     if (
       APPROVE_ONLY_ONCE_TOKENS[chainId]?.includes(address) &&
@@ -61,6 +66,9 @@ const _getRequirements = async (
     );
   }
 
+  // I'm not sure we want to freeze the object here
+  // It prevents the consumer from pushing other txs in the requirements array
+  // In case we do, we should use `deepFreeze` from `@morpho-org/utils`
   return Object.freeze(txs);
 };
 

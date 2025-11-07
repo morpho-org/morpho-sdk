@@ -1,5 +1,7 @@
 import type { Address, Hex } from "viem";
 
+// Have them extend a BaseAction to ensure consistency
+
 export interface ERC20ApprovalAction {
   type: "erc20Approval";
   args: {
