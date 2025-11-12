@@ -4,7 +4,7 @@
  * This module provides a unified interface to all Morpho packages.
  * Users can import any functionality from any Morpho package through this single entry point.
  */
-
+// Having a specific file for each sdk is overkill just export everything from root package index
 export * from "./blue-sdk";
 export * from "./blue-sdk-viem";
 export * from "./bundler-sdk-viem";

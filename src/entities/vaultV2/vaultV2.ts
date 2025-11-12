@@ -34,7 +34,7 @@ export interface VaultV2Actions {
 
 function _instantiateVaultV2(
   client: MorphoClient,
-  vault: Address,
+  vault: Address
 ): VaultV2Actions {
   const userAddress = client.walletClient.account?.address;
   if (!userAddress) {
@@ -45,9 +45,10 @@ function _instantiateVaultV2(
     throw new Error("Chain ID not found");
   }
 
+  // basically a class
   return {
     getData: withTelemetry("vaultV2.getData", async () =>
-      fetchVaultV2(vault, client.walletClient),
+      fetchVaultV2(vault, client.walletClient)
     ),
     deposit: async ({ assets }: { assets: bigint }) => {
       const vaultData = await fetchVaultV2(vault, client.walletClient);
@@ -96,5 +97,5 @@ function _instantiateVaultV2(
 
 export const instantiateVaultV2 = withTelemetry(
   "vaultV2.instantiate",
-  _instantiateVaultV2,
+  _instantiateVaultV2
 );

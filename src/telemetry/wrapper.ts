@@ -4,9 +4,11 @@ import { captureError, logAction } from "./sentry";
  * Wrap a function with telemetry tracking
  * Automatically logs the action and captures errors
  */
+// Can be done at a higher level when consuming the return values of the sdk:
+// wrap all the functions of the sdk instances
 export function withTelemetry<T extends (...args: never[]) => unknown>(
   actionType: string,
-  fn: T,
+  fn: T
 ): T {
   function wrappedFunction(...args: Parameters<T>): ReturnType<T> {
     try {
@@ -21,7 +23,7 @@ export function withTelemetry<T extends (...args: never[]) => unknown>(
             error instanceof Error ? error : new Error(String(error)),
             {
               action: actionType,
-            },
+            }
           );
           throw error;
         }) as ReturnType<T>;
