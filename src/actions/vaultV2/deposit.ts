@@ -8,6 +8,7 @@ import type { Address } from "viem";
 import { addTransactionMetadata } from "../../helpers";
 import { withTelemetry } from "../../telemetry/wrapper";
 import type { Metadata, Transaction, VaultV2DepositAction } from "../../types";
+import { deepFreeze } from "@morpho-org/morpho-ts";
 
 export interface VaultV2DepositParams {
   chainId: number;
@@ -19,16 +20,15 @@ export interface VaultV2DepositParams {
   metadata?: Metadata;
 }
 
-function _depositVaultV2(
-  params: VaultV2DepositParams,
+function _vaultV2Deposit(
+  params: VaultV2DepositParams
 ): Readonly<Transaction<VaultV2DepositAction>> {
-  Object.freeze(params);
   const { chainId, asset, vault, assets, shares, recipient, metadata } = params;
 
   const maxSharePrice = MathLib.mulDivUp(
     assets,
     MathLib.wToRay(MathLib.WAD + DEFAULT_SLIPPAGE_TOLERANCE),
-    shares,
+    shares
   );
 
   const {
@@ -67,10 +67,10 @@ function _depositVaultV2(
     args: { vault, assets, shares, recipient },
   };
 
-  return Object.freeze({
+  return deepFreeze({
     ...tx,
     action,
   });
 }
 
-export const depositVaultV2 = withTelemetry("vaultV2.deposit", _depositVaultV2);
+export const vaultV2Deposit = withTelemetry("vaultV2.deposit", _vaultV2Deposit);

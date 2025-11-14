@@ -1,10 +1,10 @@
-import { fetchVaultV2 } from "@morpho-org/blue-sdk-viem";
+import { fetchAccrualVaultV2, fetchVaultV2 } from "@morpho-org/blue-sdk-viem";
 import type { Address } from "viem";
 import {
-  depositVaultV2,
+  vaultV2Deposit,
   getRequirements,
-  redeemVaultV2,
-  withdrawVaultV2,
+  vaultV2Redeem,
+  vaultV2Withdraw,
 } from "../../actions";
 import { withTelemetry } from "../../telemetry/wrapper";
 import type {
@@ -15,9 +15,10 @@ import type {
   VaultV2RedeemAction,
   VaultV2WithdrawAction,
 } from "../../types";
+import { MissingAddressError, MissingChainIdError } from "../../types";
 
 export interface VaultV2Actions {
-  getData: () => Promise<Awaited<ReturnType<typeof fetchVaultV2>>>;
+  getData: () => Promise<Awaited<ReturnType<typeof fetchAccrualVaultV2>>>;
   deposit: (params: { assets: bigint }) => Promise<{
     tx: Readonly<Transaction<VaultV2DepositAction>>;
     getRequirements: () => Promise<
@@ -32,69 +33,82 @@ export interface VaultV2Actions {
   };
 }
 
-function _instantiateVaultV2(
-  client: MorphoClient,
-  vault: Address,
-): VaultV2Actions {
-  const userAddress = client.walletClient.account?.address;
-  if (!userAddress) {
-    throw new Error("User address not found");
-  }
-  const chainId = client.walletClient.chain?.id;
-  if (!chainId) {
-    throw new Error("Chain ID not found");
+export class VaultV2 implements VaultV2Actions {
+  private readonly client: MorphoClient;
+  private readonly vault: Address;
+
+  constructor(client: MorphoClient, vault: Address) {
+    this.client = client;
+    this.vault = vault;
   }
 
-  return {
-    getData: withTelemetry("vaultV2.getData", async () =>
-      fetchVaultV2(vault, client.walletClient),
-    ),
-    deposit: async ({ assets }: { assets: bigint }) => {
-      const vaultData = await fetchVaultV2(vault, client.walletClient);
+  private get userAddress(): Address {
+    const address = this.client.walletClient.account?.address;
+    if (!address) {
+      throw new MissingAddressError();
+    }
+    return address;
+  }
 
-      return {
-        tx: depositVaultV2({
-          chainId,
-          asset: vaultData.asset,
-          vault,
-          assets,
-          shares: vaultData.toShares(assets),
-          recipient: userAddress,
-          metadata: client.metadata,
+  private get chainId(): number {
+    const id = this.client.walletClient.chain?.id;
+    if (!id) {
+      throw new MissingChainIdError();
+    }
+    return id;
+  }
+
+  getData = withTelemetry("vaultV2.getData", async () =>
+    fetchAccrualVaultV2(this.vault, this.client.walletClient)
+  );
+
+  deposit = async ({ assets }: { assets: bigint }) => {
+    const vaultData = await fetchVaultV2(this.vault, this.client.walletClient);
+
+    return {
+      tx: vaultV2Deposit({
+        chainId: this.chainId,
+        asset: vaultData.asset,
+        vault: this.vault,
+        assets,
+        shares: vaultData.toShares(assets),
+        recipient: this.userAddress,
+        metadata: this.client.metadata,
+      }),
+      getRequirements: async () =>
+        getRequirements(this.client, {
+          address: vaultData.asset,
+          args: { amount: assets, from: this.userAddress },
         }),
-        getRequirements: async () =>
-          getRequirements(client, {
-            address: vaultData.asset,
-            args: { amount: assets, from: userAddress },
-          }),
-      };
-    },
-    withdraw: ({ assets }: { assets: bigint }) => {
-      return {
-        tx: withdrawVaultV2({
-          vault,
-          assets,
-          recipient: userAddress,
-          onBehalf: userAddress,
-          metadata: client.metadata,
-        }),
-      };
-    },
-    redeem: ({ shares }: { shares: bigint }) => {
-      return {
-        tx: redeemVaultV2({
-          vault,
-          shares,
-          recipient: userAddress,
-          onBehalf: userAddress,
-          metadata: client.metadata,
-        }),
-      };
-    },
+    };
+  };
+
+  withdraw = ({ assets }: { assets: bigint }) => {
+    return {
+      tx: vaultV2Withdraw({
+        vault: this.vault,
+        assets,
+        recipient: this.userAddress,
+        onBehalf: this.userAddress,
+        metadata: this.client.metadata,
+      }),
+    };
+  };
+
+  redeem = ({ shares }: { shares: bigint }) => {
+    return {
+      tx: vaultV2Redeem({
+        vault: this.vault,
+        shares,
+        recipient: this.userAddress,
+        onBehalf: this.userAddress,
+        metadata: this.client.metadata,
+      }),
+    };
   };
 }
 
 export const instantiateVaultV2 = withTelemetry(
   "vaultV2.instantiate",
-  _instantiateVaultV2,
+  (client: MorphoClient, vault: Address) => new VaultV2(client, vault)
 );

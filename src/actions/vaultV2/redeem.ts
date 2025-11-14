@@ -3,6 +3,7 @@ import { type Address, encodeFunctionData } from "viem";
 import { addTransactionMetadata } from "../../helpers";
 import { withTelemetry } from "../../telemetry/wrapper";
 import type { Metadata, Transaction, VaultV2RedeemAction } from "../../types";
+import { deepFreeze } from "@morpho-org/morpho-ts";
 
 export interface VaultV2RedeemParams {
   vault: Address;
@@ -12,10 +13,9 @@ export interface VaultV2RedeemParams {
   metadata?: Metadata;
 }
 
-function _redeemVaultV2(
-  params: VaultV2RedeemParams,
+function _vaultV2Redeem(
+  params: VaultV2RedeemParams
 ): Readonly<Transaction<VaultV2RedeemAction>> {
-  Object.freeze(params);
   const { vault, shares, recipient, onBehalf, metadata } = params;
 
   let tx = {
@@ -37,10 +37,10 @@ function _redeemVaultV2(
     args: { vault, shares, recipient },
   };
 
-  return Object.freeze({
+  return deepFreeze({
     ...tx,
     action,
   });
 }
 
-export const redeemVaultV2 = withTelemetry("vaultV2.redeem", _redeemVaultV2);
+export const vaultV2Redeem = withTelemetry("vaultV2.redeem", _vaultV2Redeem);
