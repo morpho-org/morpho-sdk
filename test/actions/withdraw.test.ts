@@ -1,4 +1,4 @@
-import { createMorphoClient, instantiateVaultV2, withdrawVaultV2 } from "src";
+import { createMorphoClient, instantiateVaultV2, vaultV2Withdraw } from "src";
 import { KeyrockUsdcVaultV2 } from "test/fixtures/vaultV2";
 import { testInvariants } from "test/helpers/invariants";
 import { parseUnits } from "viem";
@@ -21,11 +21,15 @@ describe("Withdraw VaultV2", () => {
     });
 
     // Third Devex build directly tx
-    const withdraw_3 = withdrawVaultV2({
-      vault: KeyrockUsdcVaultV2.address,
-      assets: 1000000000000000000n,
-      recipient: client.account.address,
-      onBehalf: client.account.address,
+    const withdraw_3 = vaultV2Withdraw({
+      vault: {
+        address: KeyrockUsdcVaultV2.address,
+      },
+      args: {
+        assets: 1000000000000000000n,
+        recipient: client.account.address,
+        onBehalf: client.account.address,
+      },
     });
 
     expect(withdraw).toBeDefined();

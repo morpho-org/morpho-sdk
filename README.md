@@ -33,9 +33,9 @@ console.log(redeem.tx);
 ### 2️⃣ **Direct construction** (For experts) (Full control)
 
 ```typescript
-import { depositVaultV2 } from "morpho-dapp";
+import { vaultV2Deposit } from "morpho-dapp";
 
-const tx = depositVaultV2({
+const tx = vaultV2Deposit({
   chainId: mainnet.id,
   asset: "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
   vault: "0x04422053aDDbc9bB2759b248B574e3FCA76Bc145",
