@@ -13,8 +13,8 @@ import { deepFreeze } from "@morpho-org/morpho-ts";
 export interface VaultV2DepositParams {
   vault: {
     chainId: number;
-    asset: Address;
     address: Address;
+    asset: Address;
   };
   args: {
     assets: bigint;
@@ -25,7 +25,7 @@ export interface VaultV2DepositParams {
 }
 
 function _vaultV2Deposit({
-  vault: { chainId, asset, address: vaultAddress },
+  vault: { chainId, address: vaultAddress, asset },
   args: { assets, shares, recipient },
   metadata,
 }: VaultV2DepositParams): Readonly<Transaction<VaultV2DepositAction>> {

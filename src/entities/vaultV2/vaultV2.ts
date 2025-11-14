@@ -62,53 +62,71 @@ export class VaultV2 implements VaultV2Actions {
     fetchAccrualVaultV2(this.vault, this.client.walletClient)
   );
 
-  deposit = async ({ assets }: { assets: bigint }) => {
+  deposit = async ({
+    assets,
+    userAddress,
+  }: {
+    assets: bigint;
+    userAddress?: Address;
+  }) => {
     const vaultData = await fetchVaultV2(this.vault, this.client.walletClient);
 
     return {
       tx: vaultV2Deposit({
         vault: {
           chainId: this.chainId,
-          asset: vaultData.asset,
           address: this.vault,
+          asset: vaultData.asset,
         },
         args: {
           assets,
           shares: vaultData.toShares(assets),
-          recipient: this.userAddress,
+          recipient: userAddress ?? this.userAddress,
         },
         metadata: this.client.metadata,
       }),
       getRequirements: async () =>
         getRequirements(this.client, {
           address: vaultData.asset,
-          args: { amount: assets, from: this.userAddress },
+          args: { amount: assets, from: userAddress ?? this.userAddress },
         }),
     };
   };
 
-  withdraw = ({ assets }: { assets: bigint }) => {
+  withdraw = ({
+    assets,
+    userAddress,
+  }: {
+    assets: bigint;
+    userAddress?: Address;
+  }) => {
     return {
       tx: vaultV2Withdraw({
         vault: { address: this.vault },
         args: {
           assets,
-          recipient: this.userAddress,
-          onBehalf: this.userAddress,
+          recipient: userAddress ?? this.userAddress,
+          onBehalf: userAddress ?? this.userAddress,
         },
         metadata: this.client.metadata,
       }),
     };
   };
 
-  redeem = ({ shares }: { shares: bigint }) => {
+  redeem = ({
+    shares,
+    userAddress,
+  }: {
+    shares: bigint;
+    userAddress?: Address;
+  }) => {
     return {
       tx: vaultV2Redeem({
         vault: { address: this.vault },
         args: {
           shares,
-          recipient: this.userAddress,
-          onBehalf: this.userAddress,
+          recipient: userAddress ?? this.userAddress,
+          onBehalf: userAddress ?? this.userAddress,
         },
         metadata: this.client.metadata,
       }),
