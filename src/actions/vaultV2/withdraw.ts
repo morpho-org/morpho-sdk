@@ -6,20 +6,24 @@ import type { Metadata, Transaction, VaultV2WithdrawAction } from "../../types";
 import { deepFreeze } from "@morpho-org/morpho-ts";
 
 export interface VaultV2WithdrawParams {
-  vault: Address;
-  assets: bigint;
-  recipient: Address;
-  onBehalf: Address;
+  vault: {
+    address: Address;
+  };
+  args: {
+    assets: bigint;
+    recipient: Address;
+    onBehalf: Address;
+  };
   metadata?: Metadata;
 }
 
-function _vaultV2Withdraw(
-  params: VaultV2WithdrawParams
-): Readonly<Transaction<VaultV2WithdrawAction>> {
-  const { vault, assets, recipient, onBehalf, metadata } = params;
-
+function _vaultV2Withdraw({
+  vault: { address: vaultAddress },
+  args: { assets, recipient, onBehalf },
+  metadata,
+}: VaultV2WithdrawParams): Readonly<Transaction<VaultV2WithdrawAction>> {
   let tx = {
-    to: vault,
+    to: vaultAddress,
     data: encodeFunctionData({
       abi: vaultV2Abi,
       functionName: "withdraw",
@@ -34,7 +38,7 @@ function _vaultV2Withdraw(
 
   const action: VaultV2WithdrawAction = {
     type: "vaultV2Withdraw",
-    args: { vault, assets, recipient },
+    args: { vault: vaultAddress, assets, recipient },
   };
 
   return deepFreeze({

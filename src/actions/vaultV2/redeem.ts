@@ -6,20 +6,24 @@ import type { Metadata, Transaction, VaultV2RedeemAction } from "../../types";
 import { deepFreeze } from "@morpho-org/morpho-ts";
 
 export interface VaultV2RedeemParams {
-  vault: Address;
-  shares: bigint;
-  recipient: Address;
-  onBehalf: Address;
+  vault: {
+    address: Address;
+  };
+  args: {
+    shares: bigint;
+    recipient: Address;
+    onBehalf: Address;
+  };
   metadata?: Metadata;
 }
 
-function _vaultV2Redeem(
-  params: VaultV2RedeemParams
-): Readonly<Transaction<VaultV2RedeemAction>> {
-  const { vault, shares, recipient, onBehalf, metadata } = params;
-
+function _vaultV2Redeem({
+  vault: { address: vaultAddress },
+  args: { shares, recipient, onBehalf },
+  metadata,
+}: VaultV2RedeemParams): Readonly<Transaction<VaultV2RedeemAction>> {
   let tx = {
-    to: vault,
+    to: vaultAddress,
     data: encodeFunctionData({
       abi: vaultV2Abi,
       functionName: "redeem",
@@ -34,7 +38,7 @@ function _vaultV2Redeem(
 
   const action: VaultV2RedeemAction = {
     type: "vaultV2Redeem",
-    args: { vault, shares, recipient },
+    args: { vault: vaultAddress, shares, recipient },
   };
 
   return deepFreeze({

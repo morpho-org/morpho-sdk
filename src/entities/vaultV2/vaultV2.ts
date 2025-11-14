@@ -67,12 +67,16 @@ export class VaultV2 implements VaultV2Actions {
 
     return {
       tx: vaultV2Deposit({
-        chainId: this.chainId,
-        asset: vaultData.asset,
-        vault: this.vault,
-        assets,
-        shares: vaultData.toShares(assets),
-        recipient: this.userAddress,
+        vault: {
+          chainId: this.chainId,
+          asset: vaultData.asset,
+          address: this.vault,
+        },
+        args: {
+          assets,
+          shares: vaultData.toShares(assets),
+          recipient: this.userAddress,
+        },
         metadata: this.client.metadata,
       }),
       getRequirements: async () =>
@@ -86,10 +90,12 @@ export class VaultV2 implements VaultV2Actions {
   withdraw = ({ assets }: { assets: bigint }) => {
     return {
       tx: vaultV2Withdraw({
-        vault: this.vault,
-        assets,
-        recipient: this.userAddress,
-        onBehalf: this.userAddress,
+        vault: { address: this.vault },
+        args: {
+          assets,
+          recipient: this.userAddress,
+          onBehalf: this.userAddress,
+        },
         metadata: this.client.metadata,
       }),
     };
@@ -98,10 +104,12 @@ export class VaultV2 implements VaultV2Actions {
   redeem = ({ shares }: { shares: bigint }) => {
     return {
       tx: vaultV2Redeem({
-        vault: this.vault,
-        shares,
-        recipient: this.userAddress,
-        onBehalf: this.userAddress,
+        vault: { address: this.vault },
+        args: {
+          shares,
+          recipient: this.userAddress,
+          onBehalf: this.userAddress,
+        },
         metadata: this.client.metadata,
       }),
     };

@@ -11,24 +11,31 @@ import type { Metadata, Transaction, VaultV2DepositAction } from "../../types";
 import { deepFreeze } from "@morpho-org/morpho-ts";
 
 export interface VaultV2DepositParams {
-  chainId: number;
-  asset: Address;
-  vault: Address;
-  assets: bigint;
-  shares: bigint;
-  recipient: Address;
+  vault: {
+    chainId: number;
+    asset: Address;
+    address: Address;
+  };
+  args: {
+    assets: bigint;
+    shares: bigint;
+    recipient: Address;
+  };
   metadata?: Metadata;
 }
 
-function _vaultV2Deposit(
-  params: VaultV2DepositParams
-): Readonly<Transaction<VaultV2DepositAction>> {
-  const { chainId, asset, vault, assets, shares, recipient, metadata } = params;
-
-  const maxSharePrice = MathLib.mulDivUp(
-    assets,
-    MathLib.wToRay(MathLib.WAD + DEFAULT_SLIPPAGE_TOLERANCE),
-    shares
+function _vaultV2Deposit({
+  vault: { chainId, asset, address: vaultAddress },
+  args: { assets, shares, recipient },
+  metadata,
+}: VaultV2DepositParams): Readonly<Transaction<VaultV2DepositAction>> {
+  const maxSharePrice = MathLib.max(
+    MathLib.mulDivUp(
+      assets,
+      MathLib.wToRay(MathLib.WAD + DEFAULT_SLIPPAGE_TOLERANCE),
+      shares
+    ),
+    MathLib.RAY * 100n
   );
 
   const {
@@ -42,17 +49,18 @@ function _vaultV2Deposit(
     },
     {
       type: "erc4626Deposit",
-      args: [vault, assets, maxSharePrice, recipient, false],
+      args: [vaultAddress, assets, maxSharePrice, recipient, false],
     },
     // To skim the shares tokens
     {
       type: "erc20Transfer",
-      args: [vault, recipient, MathLib.MAX_UINT_256, generalAdapter1, false],
-    },
-    // To skim the assets tokens
-    {
-      type: "erc20Transfer",
-      args: [asset, recipient, MathLib.MAX_UINT_256, generalAdapter1, false],
+      args: [
+        vaultAddress,
+        recipient,
+        MathLib.MAX_UINT_256,
+        generalAdapter1,
+        false,
+      ],
     },
   ];
 
@@ -64,7 +72,7 @@ function _vaultV2Deposit(
 
   const action: VaultV2DepositAction = {
     type: "vaultV2Deposit",
-    args: { vault, assets, shares, recipient },
+    args: { vault: vaultAddress, assets, shares, recipient },
   };
 
   return deepFreeze({
