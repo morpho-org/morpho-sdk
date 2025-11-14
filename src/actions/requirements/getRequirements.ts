@@ -64,7 +64,4 @@ const _getRequirements = async (
   return Object.freeze(txs);
 };
 
-export const getRequirements = withTelemetry(
-  "getRequirements",
-  _getRequirements,
-);
+export const getRequirements = withTelemetry(_getRequirements);

@@ -1,9 +1,9 @@
 import { vaultV2Abi } from "@morpho-org/blue-sdk-viem";
+import { deepFreeze } from "@morpho-org/morpho-ts";
 import { type Address, encodeFunctionData } from "viem";
 import { addTransactionMetadata } from "../../helpers";
 import { withTelemetry } from "../../telemetry/wrapper";
 import type { Metadata, Transaction, VaultV2WithdrawAction } from "../../types";
-import { deepFreeze } from "@morpho-org/morpho-ts";
 
 export interface VaultV2WithdrawParams {
   vault: {
@@ -47,7 +47,4 @@ function _vaultV2Withdraw({
   });
 }
 
-export const vaultV2Withdraw = withTelemetry(
-  "vaultV2.withdraw",
-  _vaultV2Withdraw
-);
+export const vaultV2Withdraw = withTelemetry(_vaultV2Withdraw);

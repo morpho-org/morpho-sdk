@@ -1,8 +1,8 @@
 import { fetchAccrualVaultV2, fetchVaultV2 } from "@morpho-org/blue-sdk-viem";
 import type { Address } from "viem";
 import {
-  vaultV2Deposit,
   getRequirements,
+  vaultV2Deposit,
   vaultV2Redeem,
   vaultV2Withdraw,
 } from "../../actions";
@@ -58,8 +58,8 @@ export class VaultV2 implements VaultV2Actions {
     return id;
   }
 
-  getData = withTelemetry("vaultV2.getData", async () =>
-    fetchAccrualVaultV2(this.vault, this.client.walletClient)
+  getData = withTelemetry(async () =>
+    fetchAccrualVaultV2(this.vault, this.client.walletClient),
   );
 
   deposit = async ({
@@ -135,6 +135,5 @@ export class VaultV2 implements VaultV2Actions {
 }
 
 export const instantiateVaultV2 = withTelemetry(
-  "vaultV2.instantiate",
-  (client: MorphoClient, vault: Address) => new VaultV2(client, vault)
+  (client: MorphoClient, vault: Address) => new VaultV2(client, vault),
 );

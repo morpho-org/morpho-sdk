@@ -4,11 +4,11 @@ import {
   MathLib,
 } from "@morpho-org/blue-sdk";
 import { type Action, BundlerAction } from "@morpho-org/bundler-sdk-viem";
+import { deepFreeze } from "@morpho-org/morpho-ts";
 import type { Address } from "viem";
 import { addTransactionMetadata } from "../../helpers";
 import { withTelemetry } from "../../telemetry/wrapper";
 import type { Metadata, Transaction, VaultV2DepositAction } from "../../types";
-import { deepFreeze } from "@morpho-org/morpho-ts";
 
 export interface VaultV2DepositParams {
   vault: {
@@ -33,9 +33,9 @@ function _vaultV2Deposit({
     MathLib.mulDivUp(
       assets,
       MathLib.wToRay(MathLib.WAD + DEFAULT_SLIPPAGE_TOLERANCE),
-      shares
+      shares,
     ),
-    MathLib.RAY * 100n
+    MathLib.RAY * 100n,
   );
 
   const {
@@ -81,4 +81,4 @@ function _vaultV2Deposit({
   });
 }
 
-export const vaultV2Deposit = withTelemetry("vaultV2.deposit", _vaultV2Deposit);
+export const vaultV2Deposit = withTelemetry(_vaultV2Deposit);

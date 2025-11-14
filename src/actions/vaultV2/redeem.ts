@@ -1,9 +1,9 @@
 import { vaultV2Abi } from "@morpho-org/blue-sdk-viem";
+import { deepFreeze } from "@morpho-org/morpho-ts";
 import { type Address, encodeFunctionData } from "viem";
 import { addTransactionMetadata } from "../../helpers";
 import { withTelemetry } from "../../telemetry/wrapper";
 import type { Metadata, Transaction, VaultV2RedeemAction } from "../../types";
-import { deepFreeze } from "@morpho-org/morpho-ts";
 
 export interface VaultV2RedeemParams {
   vault: {
@@ -47,4 +47,4 @@ function _vaultV2Redeem({
   });
 }
 
-export const vaultV2Redeem = withTelemetry("vaultV2.redeem", _vaultV2Redeem);
+export const vaultV2Redeem = withTelemetry(_vaultV2Redeem);

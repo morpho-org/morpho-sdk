@@ -1,6 +1,6 @@
 import type { Address, Client } from "viem";
 import { instantiateVaultV2 } from "../entities";
-import type { Metadata, MorphoClient as IMorphoClient } from "../types";
+import type { MorphoClient as IMorphoClient, Metadata } from "../types";
 
 export class MorphoClient implements IMorphoClient {
   public readonly walletClient: Client;
@@ -29,7 +29,7 @@ export class MorphoClient implements IMorphoClient {
  */
 export function createMorphoClient(
   walletClient: Client,
-  metadata?: Metadata
+  metadata?: Metadata,
 ): MorphoClient {
   return new MorphoClient(walletClient, metadata);
 }
