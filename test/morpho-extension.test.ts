@@ -18,7 +18,7 @@ describe("Morpho viem extension", () => {
     const extendedClient = client.extend(morpho());
 
     const vault = extendedClient.morpho.vaultV2(
-      "0x04422053aDDbc9bB2759b248B574e3FCA76Bc145"
+      "0x04422053aDDbc9bB2759b248B574e3FCA76Bc145",
     );
 
     expect(vault).toBeDefined();

@@ -1,14 +1,35 @@
 import type { Address, Client } from "viem";
 import { instantiateVaultV2 } from "../entities";
-import type { MorphoClient as IMorphoClient, Metadata } from "../types";
+import {
+  type MorphoClient as IMorphoClient,
+  type Metadata,
+  MissingAddressError,
+  MissingChainIdError,
+} from "../types";
 
 export class MorphoClient implements IMorphoClient {
-  public readonly walletClient: Client;
+  public readonly viemClient: Client;
   public readonly metadata?: Metadata;
 
-  constructor(walletClient: Client, metadata?: Metadata) {
-    this.walletClient = walletClient;
+  constructor(client: Client, metadata?: Metadata) {
+    this.viemClient = client;
     this.metadata = metadata;
+  }
+
+  public get userAddress(): Address {
+    const address = this.viemClient.account?.address;
+    if (!address) {
+      throw new MissingAddressError();
+    }
+    return address;
+  }
+
+  public get chainId(): number {
+    const id = this.viemClient.chain?.id;
+    if (!id) {
+      throw new MissingChainIdError();
+    }
+    return id;
   }
 
   vaultV2(vault: Address) {
@@ -19,7 +40,7 @@ export class MorphoClient implements IMorphoClient {
 /**
  * Creates a new MorphoClient instance to interact with Morpho Blue protocol contracts.
  *
- * @param walletClient - A viem Wallet Client for signing and sending transactions.
+ * @param account - A viem Wallet Client for signing and sending transactions.
  * @param metadata - Optional. Attach custom metadata to all actions via this client.
  * @returns MorphoClient instance
  *
@@ -28,8 +49,8 @@ export class MorphoClient implements IMorphoClient {
  * const morpho = createMorphoClient(walletClient);
  */
 export function createMorphoClient(
-  walletClient: Client,
+  client: Client,
   metadata?: Metadata,
 ): MorphoClient {
-  return new MorphoClient(walletClient, metadata);
+  return new MorphoClient(client, metadata);
 }

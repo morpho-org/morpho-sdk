@@ -18,26 +18,22 @@ export const getRequirements = async (
     address,
     args: { amount, from },
   } = params;
-  const chainId = client.walletClient.chain?.id;
-  if (!chainId) {
-    throw new Error("Chain ID not found in wallet client");
-  }
 
   const {
     bundler3: { generalAdapter1 },
-  } = getChainAddresses(chainId);
+  } = getChainAddresses(client.chainId);
 
   const { erc20Allowances } = await fetchHolding(
     from,
     address,
-    client.walletClient,
+    client.viemClient,
   );
 
   const txs: Transaction<ERC20ApprovalAction>[] = [];
 
   if (erc20Allowances["bundler3.generalAdapter1"] < amount) {
     if (
-      APPROVE_ONLY_ONCE_TOKENS[chainId]?.includes(address) &&
+      APPROVE_ONLY_ONCE_TOKENS[client.chainId]?.includes(address) &&
       erc20Allowances["bundler3.generalAdapter1"] > 0n
     ) {
       txs.push(
@@ -45,7 +41,7 @@ export const getRequirements = async (
           token: address,
           spender: generalAdapter1,
           amount: 0n,
-          chainId,
+          chainId: client.chainId,
         }),
       );
     }
@@ -55,7 +51,7 @@ export const getRequirements = async (
         token: address,
         spender: generalAdapter1,
         amount,
-        chainId,
+        chainId: client.chainId,
       }),
     );
   }

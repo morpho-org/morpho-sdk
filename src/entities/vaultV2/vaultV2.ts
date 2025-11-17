@@ -14,7 +14,6 @@ import type {
   VaultV2RedeemAction,
   VaultV2WithdrawAction,
 } from "../../types";
-import { MissingAddressError, MissingChainIdError } from "../../types";
 
 export interface VaultV2Actions {
   getData: () => Promise<Awaited<ReturnType<typeof fetchAccrualVaultV2>>>;
@@ -41,24 +40,7 @@ export class VaultV2 implements VaultV2Actions {
     this.vault = vault;
   }
 
-  private get userAddress(): Address {
-    const address = this.client.walletClient.account?.address;
-    if (!address) {
-      throw new MissingAddressError();
-    }
-    return address;
-  }
-
-  private get chainId(): number {
-    const id = this.client.walletClient.chain?.id;
-    if (!id) {
-      throw new MissingChainIdError();
-    }
-    return id;
-  }
-
-  getData = async () =>
-    fetchAccrualVaultV2(this.vault, this.client.walletClient);
+  getData = async () => fetchAccrualVaultV2(this.vault, this.client.viemClient);
 
   deposit = async ({
     assets,
@@ -67,26 +49,29 @@ export class VaultV2 implements VaultV2Actions {
     assets: bigint;
     userAddress?: Address;
   }) => {
-    const vaultData = await fetchVaultV2(this.vault, this.client.walletClient);
+    const vaultData = await fetchVaultV2(this.vault, this.client.viemClient);
 
     return {
       tx: vaultV2Deposit({
         vault: {
-          chainId: this.chainId,
+          chainId: this.client.chainId,
           address: this.vault,
           asset: vaultData.asset,
         },
         args: {
           assets,
           shares: vaultData.toShares(assets),
-          recipient: userAddress ?? this.userAddress,
+          recipient: userAddress ?? this.client.userAddress,
         },
         metadata: this.client.metadata,
       }),
       getRequirements: async () =>
         getRequirements(this.client, {
           address: vaultData.asset,
-          args: { amount: assets, from: userAddress ?? this.userAddress },
+          args: {
+            amount: assets,
+            from: userAddress ?? this.client.userAddress,
+          },
         }),
     };
   };
@@ -103,8 +88,8 @@ export class VaultV2 implements VaultV2Actions {
         vault: { address: this.vault },
         args: {
           assets,
-          recipient: userAddress ?? this.userAddress,
-          onBehalf: userAddress ?? this.userAddress,
+          recipient: userAddress ?? this.client.userAddress,
+          onBehalf: userAddress ?? this.client.userAddress,
         },
         metadata: this.client.metadata,
       }),
@@ -123,8 +108,8 @@ export class VaultV2 implements VaultV2Actions {
         vault: { address: this.vault },
         args: {
           shares,
-          recipient: userAddress ?? this.userAddress,
-          onBehalf: userAddress ?? this.userAddress,
+          recipient: userAddress ?? this.client.userAddress,
+          onBehalf: userAddress ?? this.client.userAddress,
         },
         metadata: this.client.metadata,
       }),
