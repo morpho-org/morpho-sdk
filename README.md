@@ -57,7 +57,7 @@ const redeem = vault.redeem({ shares: 1000000000000000000n });
 console.log(redeem.tx);
 ```
 
-### 3️⃣ **Direct construction** (For experts) (Full control)
+### 3️⃣ **Direct construction** (Full control)
 
 ```typescript
 import { vaultV2Deposit } from "morpho-dapp";
