@@ -6,7 +6,6 @@ import {
   vaultV2Redeem,
   vaultV2Withdraw,
 } from "../../actions";
-import { withTelemetry } from "../../telemetry/wrapper";
 import type {
   ERC20ApprovalAction,
   MorphoClient,
@@ -58,9 +57,8 @@ export class VaultV2 implements VaultV2Actions {
     return id;
   }
 
-  getData = withTelemetry(async () =>
-    fetchAccrualVaultV2(this.vault, this.client.walletClient),
-  );
+  getData = async () =>
+    fetchAccrualVaultV2(this.vault, this.client.walletClient);
 
   deposit = async ({
     assets,
@@ -134,6 +132,5 @@ export class VaultV2 implements VaultV2Actions {
   };
 }
 
-export const instantiateVaultV2 = withTelemetry(
-  (client: MorphoClient, vault: Address) => new VaultV2(client, vault),
-);
+export const instantiateVaultV2 = (client: MorphoClient, vault: Address) =>
+  new VaultV2(client, vault);

@@ -7,7 +7,6 @@ import { type Action, BundlerAction } from "@morpho-org/bundler-sdk-viem";
 import { deepFreeze } from "@morpho-org/morpho-ts";
 import type { Address } from "viem";
 import { addTransactionMetadata } from "../../helpers";
-import { withTelemetry } from "../../telemetry/wrapper";
 import type { Metadata, Transaction, VaultV2DepositAction } from "../../types";
 
 export interface VaultV2DepositParams {
@@ -24,11 +23,11 @@ export interface VaultV2DepositParams {
   metadata?: Metadata;
 }
 
-function _vaultV2Deposit({
+export const vaultV2Deposit = ({
   vault: { chainId, address: vaultAddress, asset },
   args: { assets, shares, recipient },
   metadata,
-}: VaultV2DepositParams): Readonly<Transaction<VaultV2DepositAction>> {
+}: VaultV2DepositParams): Readonly<Transaction<VaultV2DepositAction>> => {
   const maxSharePrice = MathLib.max(
     MathLib.mulDivUp(
       assets,
@@ -79,6 +78,4 @@ function _vaultV2Deposit({
     ...tx,
     action,
   });
-}
-
-export const vaultV2Deposit = withTelemetry(_vaultV2Deposit);
+};
