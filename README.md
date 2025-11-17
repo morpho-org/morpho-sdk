@@ -63,12 +63,16 @@ console.log(redeem.tx);
 import { vaultV2Deposit } from "morpho-dapp";
 
 const tx = vaultV2Deposit({
-  chainId: mainnet.id,
-  asset: "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
-  vault: "0x04422053aDDbc9bB2759b248B574e3FCA76Bc145",
-  assets: 1000000000000000000n,
-  shares: 995180500366542119986981956374n,
-  recipient: "0x...",
+  vault: {
+    chainId: mainnet.id,
+    address: KeyrockUsdcVaultV2.address,
+    asset: KeyrockUsdcVaultV2.asset,
+  },
+  args: {
+    assets: 1000000000000000000n,
+    shares: 995180497664595699494513674403n,
+    recipient: client.account.address,
+  },
 });
 ```
 
