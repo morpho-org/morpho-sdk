@@ -4,31 +4,37 @@ import {
   MathLib,
 } from "@morpho-org/blue-sdk";
 import { type Action, BundlerAction } from "@morpho-org/bundler-sdk-viem";
+import { deepFreeze } from "@morpho-org/morpho-ts";
 import type { Address } from "viem";
 import { addTransactionMetadata } from "../../helpers";
-import { withTelemetry } from "../../telemetry/wrapper";
 import type { Metadata, Transaction, VaultV2DepositAction } from "../../types";
 
 export interface VaultV2DepositParams {
-  chainId: number;
-  asset: Address;
-  vault: Address;
-  assets: bigint;
-  shares: bigint;
-  recipient: Address;
+  vault: {
+    chainId: number;
+    address: Address;
+    asset: Address;
+  };
+  args: {
+    assets: bigint;
+    shares: bigint;
+    recipient: Address;
+  };
   metadata?: Metadata;
 }
 
-function _depositVaultV2(
-  params: VaultV2DepositParams,
-): Readonly<Transaction<VaultV2DepositAction>> {
-  Object.freeze(params);
-  const { chainId, asset, vault, assets, shares, recipient, metadata } = params;
-
-  const maxSharePrice = MathLib.mulDivUp(
-    assets,
-    MathLib.wToRay(MathLib.WAD + DEFAULT_SLIPPAGE_TOLERANCE),
-    shares,
+export const vaultV2Deposit = ({
+  vault: { chainId, address: vaultAddress, asset },
+  args: { assets, shares, recipient },
+  metadata,
+}: VaultV2DepositParams): Readonly<Transaction<VaultV2DepositAction>> => {
+  const maxSharePrice = MathLib.max(
+    MathLib.mulDivUp(
+      assets,
+      MathLib.wToRay(MathLib.WAD + DEFAULT_SLIPPAGE_TOLERANCE),
+      shares,
+    ),
+    MathLib.RAY * 100n,
   );
 
   const {
@@ -42,17 +48,18 @@ function _depositVaultV2(
     },
     {
       type: "erc4626Deposit",
-      args: [vault, assets, maxSharePrice, recipient, false],
+      args: [vaultAddress, assets, maxSharePrice, recipient, false],
     },
     // To skim the shares tokens
     {
       type: "erc20Transfer",
-      args: [vault, recipient, MathLib.MAX_UINT_256, generalAdapter1, false],
-    },
-    // To skim the assets tokens
-    {
-      type: "erc20Transfer",
-      args: [asset, recipient, MathLib.MAX_UINT_256, generalAdapter1, false],
+      args: [
+        vaultAddress,
+        recipient,
+        MathLib.MAX_UINT_256,
+        generalAdapter1,
+        false,
+      ],
     },
   ];
 
@@ -64,13 +71,11 @@ function _depositVaultV2(
 
   const action: VaultV2DepositAction = {
     type: "vaultV2Deposit",
-    args: { vault, assets, shares, recipient },
+    args: { vault: vaultAddress, assets, shares, recipient },
   };
 
-  return Object.freeze({
+  return deepFreeze({
     ...tx,
     action,
   });
-}
-
-export const depositVaultV2 = withTelemetry("vaultV2.deposit", _depositVaultV2);
+};

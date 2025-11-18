@@ -5,7 +5,7 @@
  * Users can import any functionality from any Morpho package through this single entry point.
  */
 
-export * from "./blue-sdk";
-export * from "./blue-sdk-viem";
-export * from "./bundler-sdk-viem";
-export * from "./morpho-ts";
+export * from "@morpho-org/blue-sdk";
+export * from "@morpho-org/blue-sdk-viem";
+export * from "@morpho-org/bundler-sdk-viem";
+export * from "@morpho-org/morpho-ts";

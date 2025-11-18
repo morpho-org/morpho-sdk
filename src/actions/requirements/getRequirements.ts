@@ -1,7 +1,6 @@
 import { type Address, getChainAddresses } from "@morpho-org/blue-sdk";
 import { fetchHolding } from "@morpho-org/blue-sdk-viem";
 import { APPROVE_ONLY_ONCE_TOKENS } from "@morpho-org/simulation-sdk";
-import { withTelemetry } from "../../telemetry/wrapper";
 import type {
   ERC20ApprovalAction,
   MorphoClient,
@@ -10,7 +9,7 @@ import type {
 
 import { encodeErc20Approval } from "./encodeErc20Approval";
 
-const _getRequirements = async (
+export const getRequirements = async (
   client: MorphoClient,
   params: { address: Address; args: { amount: bigint; from: Address } },
 ): Promise<Readonly<Transaction<ERC20ApprovalAction>[]>> => {
@@ -19,26 +18,22 @@ const _getRequirements = async (
     address,
     args: { amount, from },
   } = params;
-  const chainId = client.walletClient.chain?.id;
-  if (!chainId) {
-    throw new Error("Chain ID not found in wallet client");
-  }
 
   const {
     bundler3: { generalAdapter1 },
-  } = getChainAddresses(chainId);
+  } = getChainAddresses(client.chainId);
 
   const { erc20Allowances } = await fetchHolding(
     from,
     address,
-    client.walletClient,
+    client.viemClient,
   );
 
   const txs: Transaction<ERC20ApprovalAction>[] = [];
 
   if (erc20Allowances["bundler3.generalAdapter1"] < amount) {
     if (
-      APPROVE_ONLY_ONCE_TOKENS[chainId]?.includes(address) &&
+      APPROVE_ONLY_ONCE_TOKENS[client.chainId]?.includes(address) &&
       erc20Allowances["bundler3.generalAdapter1"] > 0n
     ) {
       txs.push(
@@ -46,7 +41,7 @@ const _getRequirements = async (
           token: address,
           spender: generalAdapter1,
           amount: 0n,
-          chainId,
+          chainId: client.chainId,
         }),
       );
     }
@@ -56,15 +51,10 @@ const _getRequirements = async (
         token: address,
         spender: generalAdapter1,
         amount,
-        chainId,
+        chainId: client.chainId,
       }),
     );
   }
 
   return Object.freeze(txs);
 };
-
-export const getRequirements = withTelemetry(
-  "getRequirements",
-  _getRequirements,
-);

@@ -1,12 +1,11 @@
-import { fetchVaultV2 } from "@morpho-org/blue-sdk-viem";
+import { fetchAccrualVaultV2, fetchVaultV2 } from "@morpho-org/blue-sdk-viem";
 import type { Address } from "viem";
 import {
-  depositVaultV2,
   getRequirements,
-  redeemVaultV2,
-  withdrawVaultV2,
+  vaultV2Deposit,
+  vaultV2Redeem,
+  vaultV2Withdraw,
 } from "../../actions";
-import { withTelemetry } from "../../telemetry/wrapper";
 import type {
   ERC20ApprovalAction,
   MorphoClient,
@@ -17,7 +16,7 @@ import type {
 } from "../../types";
 
 export interface VaultV2Actions {
-  getData: () => Promise<Awaited<ReturnType<typeof fetchVaultV2>>>;
+  getData: () => Promise<Awaited<ReturnType<typeof fetchAccrualVaultV2>>>;
   deposit: (params: { assets: bigint }) => Promise<{
     tx: Readonly<Transaction<VaultV2DepositAction>>;
     getRequirements: () => Promise<
@@ -32,69 +31,79 @@ export interface VaultV2Actions {
   };
 }
 
-function _instantiateVaultV2(
-  client: MorphoClient,
-  vault: Address,
-): VaultV2Actions {
-  const userAddress = client.walletClient.account?.address;
-  if (!userAddress) {
-    throw new Error("User address not found");
-  }
-  const chainId = client.walletClient.chain?.id;
-  if (!chainId) {
-    throw new Error("Chain ID not found");
+export class VaultV2 implements VaultV2Actions {
+  private readonly client: MorphoClient;
+  private readonly vault: Address;
+
+  constructor(client: MorphoClient, vault: Address) {
+    this.client = client;
+    this.vault = vault;
   }
 
-  return {
-    getData: withTelemetry("vaultV2.getData", async () =>
-      fetchVaultV2(vault, client.walletClient),
-    ),
-    deposit: async ({ assets }: { assets: bigint }) => {
-      const vaultData = await fetchVaultV2(vault, client.walletClient);
+  getData = async () => fetchAccrualVaultV2(this.vault, this.client.viemClient);
 
-      return {
-        tx: depositVaultV2({
-          chainId,
+  async deposit({
+    assets,
+    userAddress,
+  }: {
+    assets: bigint;
+    userAddress?: Address;
+  }) {
+    const vaultData = await fetchVaultV2(this.vault, this.client.viemClient);
+
+    return {
+      tx: vaultV2Deposit({
+        vault: {
+          chainId: this.client.chainId,
+          address: this.vault,
           asset: vaultData.asset,
-          vault,
+        },
+        args: {
           assets,
           shares: vaultData.toShares(assets),
-          recipient: userAddress,
-          metadata: client.metadata,
+          recipient: userAddress ?? this.client.userAddress,
+        },
+        metadata: this.client.metadata,
+      }),
+      getRequirements: async () =>
+        getRequirements(this.client, {
+          address: vaultData.asset,
+          args: {
+            amount: assets,
+            from: userAddress ?? this.client.userAddress,
+          },
         }),
-        getRequirements: async () =>
-          getRequirements(client, {
-            address: vaultData.asset,
-            args: { amount: assets, from: userAddress },
-          }),
-      };
-    },
-    withdraw: ({ assets }: { assets: bigint }) => {
-      return {
-        tx: withdrawVaultV2({
-          vault,
+    };
+  }
+
+  withdraw({ assets, userAddress }: { assets: bigint; userAddress?: Address }) {
+    return {
+      tx: vaultV2Withdraw({
+        vault: { address: this.vault },
+        args: {
           assets,
-          recipient: userAddress,
-          onBehalf: userAddress,
-          metadata: client.metadata,
-        }),
-      };
-    },
-    redeem: ({ shares }: { shares: bigint }) => {
-      return {
-        tx: redeemVaultV2({
-          vault,
+          recipient: userAddress ?? this.client.userAddress,
+          onBehalf: userAddress ?? this.client.userAddress,
+        },
+        metadata: this.client.metadata,
+      }),
+    };
+  }
+
+  redeem({ shares, userAddress }: { shares: bigint; userAddress?: Address }) {
+    return {
+      tx: vaultV2Redeem({
+        vault: { address: this.vault },
+        args: {
           shares,
-          recipient: userAddress,
-          onBehalf: userAddress,
-          metadata: client.metadata,
-        }),
-      };
-    },
-  };
+          recipient: userAddress ?? this.client.userAddress,
+          onBehalf: userAddress ?? this.client.userAddress,
+        },
+        metadata: this.client.metadata,
+      }),
+    };
+  }
 }
 
-export const instantiateVaultV2 = withTelemetry(
-  "vaultV2.instantiate",
-  _instantiateVaultV2,
-);
+export const instantiateVaultV2 = (client: MorphoClient, vault: Address) =>
+  new VaultV2(client, vault);

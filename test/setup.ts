@@ -1,8 +1,6 @@
 import { createViemTest } from "@morpho-org/test/vitest";
 import { mainnet } from "viem/chains";
-import { env } from "../src/config/env";
-
-console.log(env().MAINNET_RPC_URL);
+import { env } from "./env";
 
 /**
  * This test will run on `mainnet`

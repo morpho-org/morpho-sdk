@@ -1,4 +1,4 @@
-import { createMorphoClient, instantiateVaultV2, redeemVaultV2 } from "src";
+import { createMorphoClient, instantiateVaultV2, vaultV2Redeem } from "src";
 import { KeyrockUsdcVaultV2 } from "test/fixtures/vaultV2";
 import { testInvariants } from "test/helpers/invariants";
 import { parseUnits } from "viem";
@@ -19,11 +19,15 @@ describe("Redeem VaultV2", () => {
       shares: 1000000000000000000n,
     });
 
-    const redeem_3 = redeemVaultV2({
-      vault: KeyrockUsdcVaultV2.address,
-      shares: 1000000000000000000n,
-      recipient: client.account.address,
-      onBehalf: client.account.address,
+    const redeem_3 = vaultV2Redeem({
+      vault: {
+        address: KeyrockUsdcVaultV2.address,
+      },
+      args: {
+        shares: 1000000000000000000n,
+        recipient: client.account.address,
+        onBehalf: client.account.address,
+      },
     });
 
     expect(redeem).toBeDefined();

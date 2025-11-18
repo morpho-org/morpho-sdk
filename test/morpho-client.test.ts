@@ -7,7 +7,7 @@ describe("MorphoClient", () => {
     const morpho = createMorphoClient(client);
 
     expect(morpho).toBeDefined();
-    expect(morpho.walletClient).toBeDefined();
+    expect(morpho.viemClient).toBeDefined();
     expect(morpho.vaultV2).toBeDefined();
     expect(typeof morpho.vaultV2).toBe("function");
   });

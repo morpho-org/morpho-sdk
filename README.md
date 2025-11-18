@@ -2,9 +2,36 @@
 
 > **The abstraction layer that simplifies Morpho protocol**
 
-## ✨ How to use it? (two ways to build transactions)
+## ✨ How to use it? (three ways to build transactions)
 
-### 1️⃣ **With MorphoClient**
+### 1️⃣ **With viem extension** (Recommended)
+
+```typescript
+import { createWalletClient, http } from "viem";
+import { mainnet } from "viem/chains";
+import { morpho } from "morpho-dapp";
+
+const client = createWalletClient({
+  chain: mainnet,
+  transport: http(),
+  account: "0x...",
+}).extend(morphoViemExtension());
+
+const vault = client.morpho.vaultV2(
+  "0x04422053aDDbc9bB2759b248B574e3FCA76Bc145"
+);
+const deposit = await vault.deposit({ assets: 1000000000000000000n });
+console.log(deposit.tx);
+console.log(await deposit.getRequirements());
+
+const withdraw = vault.withdraw({ assets: 1000000000000000000n });
+console.log(withdraw.tx);
+
+const redeem = vault.redeem({ shares: 1000000000000000000n });
+console.log(redeem.tx);
+```
+
+### 2️⃣ **With MorphoClient**
 
 ```typescript
 import { createMorphoClient } from "morpho-dapp";
@@ -26,22 +53,26 @@ console.log(await deposit.getRequirements());
 const withdraw = vault.withdraw({ assets: 1000000000000000000n });
 console.log(withdraw.tx);
 
-const redeem = vault.redeem({ assets: 1000000000000000000n });
+const redeem = vault.redeem({ shares: 1000000000000000000n });
 console.log(redeem.tx);
 ```
 
-### 2️⃣ **Direct construction** (For experts) (Full control)
+### 3️⃣ **Direct construction** (Full control)
 
 ```typescript
-import { depositVaultV2 } from "morpho-dapp";
+import { vaultV2Deposit } from "morpho-dapp";
 
-const tx = depositVaultV2({
-  chainId: mainnet.id,
-  asset: "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
-  vault: "0x04422053aDDbc9bB2759b248B574e3FCA76Bc145",
-  assets: 1000000000000000000n,
-  shares: 995180500366542119986981956374n,
-  recipient: "0x...",
+const tx = vaultV2Deposit({
+  vault: {
+    chainId: mainnet.id,
+    address: KeyrockUsdcVaultV2.address,
+    asset: KeyrockUsdcVaultV2.asset,
+  },
+  args: {
+    assets: 1000000000000000000n,
+    shares: 995180497664595699494513674403n,
+    recipient: client.account.address,
+  },
 });
 ```
 

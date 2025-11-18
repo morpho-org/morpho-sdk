@@ -1,4 +1,4 @@
-import { createMorphoClient, depositVaultV2, instantiateVaultV2 } from "src";
+import { createMorphoClient, instantiateVaultV2, vaultV2Deposit } from "src";
 import { KeyrockUsdcVaultV2 } from "test/fixtures/vaultV2";
 import { testInvariants } from "test/helpers/invariants";
 import { parseUnits } from "viem";
@@ -24,13 +24,17 @@ describe("Deposit VaultV2", () => {
 
     const requirements_2 = await deposit_2.getRequirements();
 
-    const deposit_3 = depositVaultV2({
-      chainId: mainnet.id,
-      vault: KeyrockUsdcVaultV2.address,
-      asset: KeyrockUsdcVaultV2.asset,
-      assets: 1000000000000000000n,
-      shares: 995180497664595699494513674403n,
-      recipient: client.account.address,
+    const deposit_3 = vaultV2Deposit({
+      vault: {
+        chainId: mainnet.id,
+        address: KeyrockUsdcVaultV2.address,
+        asset: KeyrockUsdcVaultV2.asset,
+      },
+      args: {
+        assets: 1000000000000000000n,
+        shares: 995180497664595699494513674403n,
+        recipient: client.account.address,
+      },
     });
 
     const data = await vaultV2_2.getData();

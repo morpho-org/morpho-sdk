@@ -1,25 +1,28 @@
 import { vaultV2Abi } from "@morpho-org/blue-sdk-viem";
+import { deepFreeze } from "@morpho-org/morpho-ts";
 import { type Address, encodeFunctionData } from "viem";
 import { addTransactionMetadata } from "../../helpers";
-import { withTelemetry } from "../../telemetry/wrapper";
 import type { Metadata, Transaction, VaultV2RedeemAction } from "../../types";
 
 export interface VaultV2RedeemParams {
-  vault: Address;
-  shares: bigint;
-  recipient: Address;
-  onBehalf: Address;
+  vault: {
+    address: Address;
+  };
+  args: {
+    shares: bigint;
+    recipient: Address;
+    onBehalf: Address;
+  };
   metadata?: Metadata;
 }
 
-function _redeemVaultV2(
-  params: VaultV2RedeemParams,
-): Readonly<Transaction<VaultV2RedeemAction>> {
-  Object.freeze(params);
-  const { vault, shares, recipient, onBehalf, metadata } = params;
-
+export const vaultV2Redeem = ({
+  vault: { address: vaultAddress },
+  args: { shares, recipient, onBehalf },
+  metadata,
+}: VaultV2RedeemParams): Readonly<Transaction<VaultV2RedeemAction>> => {
   let tx = {
-    to: vault,
+    to: vaultAddress,
     data: encodeFunctionData({
       abi: vaultV2Abi,
       functionName: "redeem",
@@ -34,13 +37,11 @@ function _redeemVaultV2(
 
   const action: VaultV2RedeemAction = {
     type: "vaultV2Redeem",
-    args: { vault, shares, recipient },
+    args: { vault: vaultAddress, shares, recipient },
   };
 
-  return Object.freeze({
+  return deepFreeze({
     ...tx,
     action,
   });
-}
-
-export const redeemVaultV2 = withTelemetry("vaultV2.redeem", _redeemVaultV2);
+};
