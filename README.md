@@ -15,7 +15,7 @@ const client = createWalletClient({
   chain: mainnet,
   transport: http(),
   account: "0x...",
-}).extend(morpho());
+}).extend(morphoViemExtension());
 
 const vault = client.morpho.vaultV2(
   "0x04422053aDDbc9bB2759b248B574e3FCA76Bc145"

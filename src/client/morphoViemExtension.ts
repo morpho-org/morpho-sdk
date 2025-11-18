@@ -19,14 +19,14 @@ import { createMorphoClient } from "./morphoClient";
  *   chain: mainnet,
  *   transport: http(),
  *   account: '0x...',
- * }).extend(morpho());
+ * }).extend(morphoViemExtension());
  *
  * // Use morpho actions
  * const vault = client.morpho.vaultV2('0x...');
  * const deposit = await vault.deposit({ assets: 1000000000000000000n });
  * ```
  */
-export function morpho(metadata?: Metadata) {
+export function morphoViemExtension(metadata?: Metadata) {
   return <TClient extends Client>(client: TClient) => {
     return {
       morpho: createMorphoClient(client, metadata),

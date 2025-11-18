@@ -42,13 +42,13 @@ export class VaultV2 implements VaultV2Actions {
 
   getData = async () => fetchAccrualVaultV2(this.vault, this.client.viemClient);
 
-  deposit = async ({
+  async deposit({
     assets,
     userAddress,
   }: {
     assets: bigint;
     userAddress?: Address;
-  }) => {
+  }) {
     const vaultData = await fetchVaultV2(this.vault, this.client.viemClient);
 
     return {
@@ -74,15 +74,9 @@ export class VaultV2 implements VaultV2Actions {
           },
         }),
     };
-  };
+  }
 
-  withdraw = ({
-    assets,
-    userAddress,
-  }: {
-    assets: bigint;
-    userAddress?: Address;
-  }) => {
+  withdraw({ assets, userAddress }: { assets: bigint; userAddress?: Address }) {
     return {
       tx: vaultV2Withdraw({
         vault: { address: this.vault },
@@ -94,15 +88,9 @@ export class VaultV2 implements VaultV2Actions {
         metadata: this.client.metadata,
       }),
     };
-  };
+  }
 
-  redeem = ({
-    shares,
-    userAddress,
-  }: {
-    shares: bigint;
-    userAddress?: Address;
-  }) => {
+  redeem({ shares, userAddress }: { shares: bigint; userAddress?: Address }) {
     return {
       tx: vaultV2Redeem({
         vault: { address: this.vault },
@@ -114,7 +102,7 @@ export class VaultV2 implements VaultV2Actions {
         metadata: this.client.metadata,
       }),
     };
-  };
+  }
 }
 
 export const instantiateVaultV2 = (client: MorphoClient, vault: Address) =>

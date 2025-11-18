@@ -1,2 +1,2 @@
 export * from "./morphoClient";
-export * from "./morphoExtension";
+export * from "./morphoViemExtension";
