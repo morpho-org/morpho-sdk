@@ -9,7 +9,7 @@
 ```typescript
 import { createWalletClient, http } from "viem";
 import { mainnet } from "viem/chains";
-import { morpho } from "morpho-dapp";
+import { morphoViemExtension } from "morpho-dapp";
 
 const client = createWalletClient({
   chain: mainnet,
@@ -62,7 +62,7 @@ console.log(redeem.tx);
 ```typescript
 import { vaultV2Deposit } from "morpho-dapp";
 
-const tx = vaultV2Deposit({
+const deposit = vaultV2Deposit({
   vault: {
     chainId: mainnet.id,
     address: KeyrockUsdcVaultV2.address,
