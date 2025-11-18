@@ -65,8 +65,8 @@ import { vaultV2Deposit } from "morpho-dapp";
 const deposit = vaultV2Deposit({
   vault: {
     chainId: mainnet.id,
-    address: KeyrockUsdcVaultV2.address,
-    asset: KeyrockUsdcVaultV2.asset,
+    address: "0x1234...", // vault address
+    asset: "0x1234...", // asset address
   },
   args: {
     assets: 1000000000000000000n,
