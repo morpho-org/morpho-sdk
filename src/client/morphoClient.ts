@@ -50,7 +50,7 @@ export class MorphoClient implements IMorphoClient {
  */
 export function createMorphoClient(
   client: Client,
-  metadata?: Metadata,
+  metadata?: Metadata
 ): MorphoClient {
   return new MorphoClient(client, metadata);
 }

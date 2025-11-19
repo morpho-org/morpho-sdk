@@ -21,6 +21,7 @@
   "scripts": {
     "prepublish": "$npm_execpath build",
     "lint": "biome check",
+    "prepare": "husky install",
     "build": "tsc --noEmit && tsc --build tsconfig.build.json",
     "link": "pnpm link --global",
     "unlink": "pnpm unlink --global",
@@ -36,6 +37,7 @@
     "@vitest/coverage-v8": "3.2.4",
     "@vitest/ui": "3.2.4",
     "dotenv": "^17.2.3",
+    "husky": "^9.1.7",
     "typescript": "^5.7.2",
     "viem": "^2.28.0",
     "vitest": "^3.0.5"
