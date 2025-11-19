@@ -28,13 +28,13 @@ export const vaultV2Deposit = ({
   args: { assets, shares, recipient },
   metadata,
 }: VaultV2DepositParams): Readonly<Transaction<VaultV2DepositAction>> => {
-  const maxSharePrice = MathLib.max(
+  const maxSharePrice = MathLib.min(
     MathLib.mulDivUp(
       assets,
       MathLib.wToRay(MathLib.WAD + DEFAULT_SLIPPAGE_TOLERANCE),
-      shares,
+      shares
     ),
-    MathLib.RAY * 100n,
+    MathLib.RAY * 100n
   );
 
   const {
