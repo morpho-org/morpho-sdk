@@ -107,7 +107,7 @@ async function main() {
 
   console.log("\n✅ Examples completed successfully!");
   console.log(
-    "\n💡 Note: These are example transactions. To actually send them:"
+    "\n💡 Note: These are example transactions. To actually send them:",
   );
 }
 
