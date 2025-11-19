@@ -4,6 +4,7 @@ import { deepFreeze } from "@morpho-org/morpho-ts";
 import type { Address } from "viem";
 import { addTransactionMetadata } from "../../helpers";
 import {
+  MaxSharePriceError,
   type Metadata,
   type Transaction,
   type VaultV2DepositAction,
@@ -31,6 +32,10 @@ export const vaultV2Deposit = ({
 }: VaultV2DepositParams): Readonly<Transaction<VaultV2DepositAction>> => {
   if (assets === 0n) {
     throw new ZeroAssetAmountError();
+  }
+
+  if (maxSharePrice === 0n) {
+    throw new MaxSharePriceError();
   }
 
   const {

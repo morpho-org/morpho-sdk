@@ -25,3 +25,10 @@ export class ZeroSharesAmountError extends Error {
     this.name = "ZeroSharesAmountError";
   }
 }
+
+export class MaxSharePriceError extends Error {
+  constructor() {
+    super("Max share price cannot be zero.");
+    this.name = "MaxSharePriceError";
+  }
+}
