@@ -31,6 +31,7 @@ export interface VaultV2Actions {
    * This function constructs the transaction data required to deposit a specified amount of assets into the vault.
    * The function asynchronously fetches the latest vault data to ensure accurate calculations for slippage and asset address,
    * then returns the prepared deposit transaction and a function for retrieving all required approval transactions.
+   * Bundler Integration: This flow uses the bundler to atomically execute the user's asset transfer and vault deposit in a single transaction for slippage protection.
    *
    * @param {Object} params - The deposit parameters.
    * @param {bigint} params.assets - The amount of assets to deposit.

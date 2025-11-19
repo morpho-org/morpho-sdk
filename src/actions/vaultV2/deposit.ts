@@ -29,6 +29,7 @@ export interface VaultV2DepositParams {
  * Prepares a deposit transaction for the VaultV2 contract.
  *
  * This function constructs the transaction data required to deposit a specified amount of assets into the vault.
+ * Bundler Integration: This flow uses the bundler to atomically execute the user's asset transfer and vault deposit in a single transaction for slippage protection.
  *
  * @param {Object} params - The vault related parameters.
  * @param {Object} params.vault - The vault related parameters.
