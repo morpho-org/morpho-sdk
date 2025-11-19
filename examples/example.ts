@@ -15,7 +15,7 @@ import { env } from "../test/env";
 dotenv.config();
 
 // Example vault address
-const VAULT_ADDRESS: Address = "0xbeeff2C5bF38f90e3482a8b19F12E5a6D2FCa757";
+const VAULT_ADDRESS: Address = "0xbeeff2C5bF38f90e3482a8b19F12E5a6D2FCa757"; // Example vault address
 const USER_ADDRESS: Address = "0x34B494Aed18d709D1f84D58682aA89FB53361842"; // Example user address
 
 async function main() {
@@ -107,7 +107,7 @@ async function main() {
 
   console.log("\n✅ Examples completed successfully!");
   console.log(
-    "\n💡 Note: These are example transactions. To actually send them:",
+    "\n💡 Note: These are example transactions. To actually send them:"
   );
 }
 
