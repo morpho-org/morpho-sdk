@@ -17,17 +17,65 @@ import type {
 } from "../../types";
 
 export interface VaultV2Actions {
+  /**
+   * Fetches the latest vault data.
+   *
+   * This function fetches the latest vault data from the blockchain.
+   *
+   * @returns {Promise<Awaited<ReturnType<typeof fetchAccrualVaultV2>>>} The latest vault data.
+   */
   getData: () => Promise<Awaited<ReturnType<typeof fetchAccrualVaultV2>>>;
-  deposit: (params: { assets: bigint }) => Promise<{
+  /**
+   * Prepares a deposit transaction for the VaultV2 contract.
+   *
+   * This function constructs the transaction data required to deposit a specified amount of assets into the vault.
+   * The function asynchronously fetches the latest vault data to ensure accurate calculations for slippage and asset address,
+   * then returns the prepared deposit transaction and a function for retrieving all required approval transactions.
+   *
+   * @param {Object} params - The deposit parameters.
+   * @param {bigint} params.assets - The amount of assets to deposit.
+   * @param {Address} [params.userAddress] - Optional user address initiating the deposit. Default is the client's user address is used.
+   * @param {bigint} [params.slippageTolerance=DEFAULT_SLIPPAGE_TOLERANCE] - Optional slippage tolerance value. Default is 0.03%.
+   * @returns {Object} The result object.
+   * @returns {Readonly<Transaction<VaultV2DepositAction>>} returns.tx The prepared deposit transaction.
+   * @returns {Promise<Readonly<Transaction<ERC20ApprovalAction>[]>>} returns.getRequirements The function for retrieving all required approval transactions.
+   */
+  deposit: (params: {
+    assets: bigint;
+    userAddress?: Address;
+    slippageTolerance?: bigint;
+  }) => Promise<{
     tx: Readonly<Transaction<VaultV2DepositAction>>;
     getRequirements: () => Promise<
       Readonly<Transaction<ERC20ApprovalAction>[]>
     >;
   }>;
-  withdraw: (params: { assets: bigint }) => {
+  /**
+   * Prepares a withdraw transaction for the VaultV2 contract.
+   *
+   * This function constructs the transaction data required to withdraw a specified amount of assets from the vault.
+   *
+   * @param {Object} params - The withdraw parameters.
+   * @param {bigint} params.assets - The amount of assets to withdraw.
+   * @param {Address} [params.userAddress] - Optional user address initiating the withdraw.
+   * @returns {Object} The result object.
+   * @returns {Readonly<Transaction<VaultV2WithdrawAction>>} returns.tx The prepared withdraw transaction.
+   */
+  withdraw: (params: { assets: bigint; userAddress?: Address }) => {
     tx: Readonly<Transaction<VaultV2WithdrawAction>>;
   };
-  redeem: (params: { shares: bigint }) => {
+  /**
+   * Prepares a redeem transaction for the VaultV2 contract.
+   *
+   * This function constructs the transaction data required to redeem a specified amount of shares from the vault.
+   *
+   * @param {Object} params - The redeem parameters.
+   * @param {bigint} params.shares - The amount of shares to redeem.
+   * @param {Address} [params.userAddress] - Optional user address initiating the redeem.
+   * @returns {Object} The result object.
+   * @returns {Readonly<Transaction<VaultV2RedeemAction>>} returns.tx The prepared redeem transaction.
+   */
+  redeem: (params: { shares: bigint; userAddress?: Address }) => {
     tx: Readonly<Transaction<VaultV2RedeemAction>>;
   };
 }
@@ -46,16 +94,18 @@ export class VaultV2 implements VaultV2Actions {
   async deposit({
     assets,
     userAddress,
+    slippageTolerance = DEFAULT_SLIPPAGE_TOLERANCE,
   }: {
     assets: bigint;
     userAddress?: Address;
+    slippageTolerance?: bigint;
   }) {
     const vaultData = await fetchVaultV2(this.vault, this.client.viemClient);
 
     const maxSharePrice = MathLib.min(
       MathLib.mulDivUp(
         assets,
-        MathLib.wToRay(MathLib.WAD + DEFAULT_SLIPPAGE_TOLERANCE),
+        MathLib.wToRay(MathLib.WAD + slippageTolerance),
         vaultData.toShares(assets),
       ),
       MathLib.RAY * 100n,

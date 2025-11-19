@@ -21,6 +21,21 @@ export interface VaultV2RedeemParams {
   metadata?: Metadata;
 }
 
+/**
+ * Prepares a redeem transaction for the VaultV2 contract.
+ *
+ * This function constructs the transaction data required to redeem a specified amount of shares from the vault.
+ *
+ * @param {Object} params - The vault related parameters.
+ * @param {Object} params.vault - The vault related parameters.
+ * @param {Address} params.vault.address - The vault address.
+ * @param {Object} params.args - The redeem related parameters.
+ * @param {bigint} params.args.shares - The amount of shares to redeem.
+ * @param {Address} params.args.recipient - The recipient address.
+ * @param {Address} params.args.onBehalf - The address on behalf of which the redeem is made.
+ * @param {Metadata} [params.metadata] - Optional the metadata.
+ * @returns {Readonly<Transaction<VaultV2RedeemAction>>} The prepared redeem transaction.
+ */
 export const vaultV2Redeem = ({
   vault: { address: vaultAddress },
   args: { shares, recipient, onBehalf },

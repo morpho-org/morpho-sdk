@@ -9,7 +9,7 @@
 ```typescript
 import { createWalletClient, http } from "viem";
 import { mainnet } from "viem/chains";
-import { morphoViemExtension } from "morpho-dapp";
+import { morphoViemExtension } from "morpho-sdk-core";
 
 const client = createWalletClient({
   chain: mainnet,
@@ -32,7 +32,7 @@ console.log(redeem.tx);
 ### 2️⃣ **With MorphoClient**
 
 ```typescript
-import { createMorphoClient } from "morpho-dapp";
+import { createMorphoClient } from "morpho-sdk-core";
 import { createWalletClient, http } from "viem";
 
 const client = createWalletClient({
@@ -58,7 +58,7 @@ console.log(redeem.tx);
 ### 3️⃣ **Direct construction** (Full control)
 
 ```typescript
-import { vaultV2Deposit } from "morpho-dapp";
+import { vaultV2Deposit } from "morpho-sdk-core";
 
 const deposit = vaultV2Deposit({
   vault: {
@@ -81,7 +81,7 @@ This guide explains how to link this local package to your Next.js application f
 ### **Step 1: Initial setup (one time only)**
 
 ```bash
-# In this morpho-dapp project
+# In this morpho-sdk-core project
 pnpm run build:link
 ```
 
@@ -89,7 +89,7 @@ pnpm run build:link
 
 ```bash
 # Link the local package
-pnpm link morpho-dapp
+pnpm link morpho-sdk-core
 ```
 
 ## 🤝 Contributing

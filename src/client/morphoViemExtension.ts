@@ -13,7 +13,7 @@ import { createMorphoClient } from "./morphoClient";
  * ```ts
  * import { createWalletClient, http } from 'viem';
  * import { mainnet } from 'viem/chains';
- * import { morpho } from 'morpho-dapp';
+ * import { morpho } from 'morpho-sdk-core';
  *
  * const client = createWalletClient({
  *   chain: mainnet,

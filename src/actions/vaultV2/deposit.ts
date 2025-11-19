@@ -25,6 +25,23 @@ export interface VaultV2DepositParams {
   metadata?: Metadata;
 }
 
+/**
+ * Prepares a deposit transaction for the VaultV2 contract.
+ *
+ * This function constructs the transaction data required to deposit a specified amount of assets into the vault.
+ *
+ * @param {Object} params - The vault related parameters.
+ * @param {Object} params.vault - The vault related parameters.
+ * @param {number} params.vault.chainId - The chain ID.
+ * @param {Address} params.vault.address - The vault address.
+ * @param {Address} params.vault.asset - The vault asset address.
+ * @param {Object} params.args - The deposit related parameters.
+ * @param {bigint} params.args.assets - The amount of assets to deposit.
+ * @param {bigint} params.args.maxSharePrice - The maximum share price to accept for the deposit.
+ * @param {Address} params.args.recipient - The recipient address.
+ * @param {Metadata} [params.metadata] - Optional the metadata.
+ * @returns {Readonly<Transaction<VaultV2DepositAction>>} The prepared deposit transaction.
+ */
 export const vaultV2Deposit = ({
   vault: { chainId, address: vaultAddress, asset },
   args: { assets, maxSharePrice, recipient },

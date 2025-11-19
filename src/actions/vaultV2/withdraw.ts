@@ -21,6 +21,21 @@ export interface VaultV2WithdrawParams {
   metadata?: Metadata;
 }
 
+/**
+ * Prepares a withdraw transaction for the VaultV2 contract.
+ *
+ * This function constructs the transaction data required to withdraw a specified amount of assets from the vault.
+ *
+ * @param {Object} params - The vault related parameters.
+ * @param {Object} params.vault - The vault related parameters.
+ * @param {Address} params.vault.address - The vault address.
+ * @param {Object} params.args - The withdraw related parameters.
+ * @param {bigint} params.args.assets - The amount of assets to withdraw.
+ * @param {Address} params.args.recipient - The recipient address.
+ * @param {Address} params.args.onBehalf - The address on behalf of which the withdraw is made.
+ * @param {Metadata} [params.metadata] - Optional the metadata.
+ * @returns {Readonly<Transaction<VaultV2WithdrawAction>>} The prepared withdraw transaction.
+ */
 export const vaultV2Withdraw = ({
   vault: { address: vaultAddress },
   args: { assets, recipient, onBehalf },
