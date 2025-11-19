@@ -2,7 +2,12 @@ import { vaultV2Abi } from "@morpho-org/blue-sdk-viem";
 import { deepFreeze } from "@morpho-org/morpho-ts";
 import { type Address, encodeFunctionData } from "viem";
 import { addTransactionMetadata } from "../../helpers";
-import type { Metadata, Transaction, VaultV2RedeemAction } from "../../types";
+import {
+  type Metadata,
+  type Transaction,
+  type VaultV2RedeemAction,
+  ZeroSharesAmountError,
+} from "../../types";
 
 export interface VaultV2RedeemParams {
   vault: {
@@ -21,6 +26,10 @@ export const vaultV2Redeem = ({
   args: { shares, recipient, onBehalf },
   metadata,
 }: VaultV2RedeemParams): Readonly<Transaction<VaultV2RedeemAction>> => {
+  if (shares === 0n) {
+    throw new ZeroSharesAmountError();
+  }
+
   let tx = {
     to: vaultAddress,
     data: encodeFunctionData({

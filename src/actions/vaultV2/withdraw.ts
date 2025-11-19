@@ -2,7 +2,12 @@ import { vaultV2Abi } from "@morpho-org/blue-sdk-viem";
 import { deepFreeze } from "@morpho-org/morpho-ts";
 import { type Address, encodeFunctionData } from "viem";
 import { addTransactionMetadata } from "../../helpers";
-import type { Metadata, Transaction, VaultV2WithdrawAction } from "../../types";
+import {
+  type Metadata,
+  type Transaction,
+  type VaultV2WithdrawAction,
+  ZeroAssetAmountError,
+} from "../../types";
 
 export interface VaultV2WithdrawParams {
   vault: {
@@ -21,6 +26,10 @@ export const vaultV2Withdraw = ({
   args: { assets, recipient, onBehalf },
   metadata,
 }: VaultV2WithdrawParams): Readonly<Transaction<VaultV2WithdrawAction>> => {
+  if (assets === 0n) {
+    throw new ZeroAssetAmountError();
+  }
+
   let tx = {
     to: vaultAddress,
     data: encodeFunctionData({

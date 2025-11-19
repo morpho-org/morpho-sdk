@@ -1,13 +1,14 @@
-import {
-  DEFAULT_SLIPPAGE_TOLERANCE,
-  getChainAddresses,
-  MathLib,
-} from "@morpho-org/blue-sdk";
+import { getChainAddresses, MathLib } from "@morpho-org/blue-sdk";
 import { type Action, BundlerAction } from "@morpho-org/bundler-sdk-viem";
 import { deepFreeze } from "@morpho-org/morpho-ts";
 import type { Address } from "viem";
 import { addTransactionMetadata } from "../../helpers";
-import type { Metadata, Transaction, VaultV2DepositAction } from "../../types";
+import {
+  type Metadata,
+  type Transaction,
+  type VaultV2DepositAction,
+  ZeroAssetAmountError,
+} from "../../types";
 
 export interface VaultV2DepositParams {
   vault: {
@@ -17,7 +18,7 @@ export interface VaultV2DepositParams {
   };
   args: {
     assets: bigint;
-    shares: bigint;
+    maxSharePrice: bigint;
     recipient: Address;
   };
   metadata?: Metadata;
@@ -25,17 +26,12 @@ export interface VaultV2DepositParams {
 
 export const vaultV2Deposit = ({
   vault: { chainId, address: vaultAddress, asset },
-  args: { assets, shares, recipient },
+  args: { assets, maxSharePrice, recipient },
   metadata,
 }: VaultV2DepositParams): Readonly<Transaction<VaultV2DepositAction>> => {
-  const maxSharePrice = MathLib.min(
-    MathLib.mulDivUp(
-      assets,
-      MathLib.wToRay(MathLib.WAD + DEFAULT_SLIPPAGE_TOLERANCE),
-      shares
-    ),
-    MathLib.RAY * 100n
-  );
+  if (assets === 0n) {
+    throw new ZeroAssetAmountError();
+  }
 
   const {
     bundler3: { generalAdapter1 },
@@ -71,7 +67,7 @@ export const vaultV2Deposit = ({
 
   const action: VaultV2DepositAction = {
     type: "vaultV2Deposit",
-    args: { vault: vaultAddress, assets, shares, recipient },
+    args: { vault: vaultAddress, assets, maxSharePrice, recipient },
   };
 
   return deepFreeze({

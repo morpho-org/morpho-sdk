@@ -17,9 +17,7 @@ const client = createWalletClient({
   account: "0x...",
 }).extend(morphoViemExtension());
 
-const vault = client.morpho.vaultV2(
-  "0x04422053aDDbc9bB2759b248B574e3FCA76Bc145"
-);
+const vault = client.morpho.vaultV2("0x1234...");
 const deposit = await vault.deposit({ assets: 1000000000000000000n });
 console.log(deposit.tx);
 console.log(await deposit.getRequirements());
@@ -45,7 +43,7 @@ const client = createWalletClient({
 
 const morpho = createMorphoClient(client);
 
-const vault = morpho.vaultV2("0x04422053aDDbc9bB2759b248B574e3FCA76Bc145");
+const vault = morpho.vaultV2("0x1234...");
 const deposit = await vault.deposit({ assets: 1000000000000000000n });
 console.log(deposit.tx);
 console.log(await deposit.getRequirements());
@@ -70,7 +68,7 @@ const deposit = vaultV2Deposit({
   },
   args: {
     assets: 1000000000000000000n,
-    shares: 995180497664595699494513674403n,
+    maxSharePrice: 995180497664595699494513674403n,
     recipient: client.account.address,
   },
 });

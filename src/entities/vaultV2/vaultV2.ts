@@ -1,3 +1,4 @@
+import { DEFAULT_SLIPPAGE_TOLERANCE, MathLib } from "@morpho-org/blue-sdk";
 import { fetchAccrualVaultV2, fetchVaultV2 } from "@morpho-org/blue-sdk-viem";
 import type { Address } from "viem";
 import {
@@ -51,6 +52,15 @@ export class VaultV2 implements VaultV2Actions {
   }) {
     const vaultData = await fetchVaultV2(this.vault, this.client.viemClient);
 
+    const maxSharePrice = MathLib.min(
+      MathLib.mulDivUp(
+        assets,
+        MathLib.wToRay(MathLib.WAD + DEFAULT_SLIPPAGE_TOLERANCE),
+        vaultData.toShares(assets),
+      ),
+      MathLib.RAY * 100n,
+    );
+
     return {
       tx: vaultV2Deposit({
         vault: {
@@ -60,7 +70,7 @@ export class VaultV2 implements VaultV2Actions {
         },
         args: {
           assets,
-          shares: vaultData.toShares(assets),
+          maxSharePrice,
           recipient: userAddress ?? this.client.userAddress,
         },
         metadata: this.client.metadata,

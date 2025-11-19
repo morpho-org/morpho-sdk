@@ -17,7 +17,7 @@ export interface VaultV2DepositAction
     {
       vault: Address;
       assets: bigint;
-      shares: bigint;
+      maxSharePrice: bigint;
       recipient: Address;
     }
   > {}
