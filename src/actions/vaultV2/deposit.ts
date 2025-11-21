@@ -1,13 +1,15 @@
-import {
-  DEFAULT_SLIPPAGE_TOLERANCE,
-  getChainAddresses,
-  MathLib,
-} from "@morpho-org/blue-sdk";
+import { getChainAddresses, MathLib } from "@morpho-org/blue-sdk";
 import { type Action, BundlerAction } from "@morpho-org/bundler-sdk-viem";
 import { deepFreeze } from "@morpho-org/morpho-ts";
 import type { Address } from "viem";
 import { addTransactionMetadata } from "../../helpers";
-import type { Metadata, Transaction, VaultV2DepositAction } from "../../types";
+import {
+  MaxSharePriceError,
+  type Metadata,
+  type Transaction,
+  type VaultV2DepositAction,
+  ZeroAssetAmountError,
+} from "../../types";
 
 export interface VaultV2DepositParams {
   vault: {
@@ -17,25 +19,42 @@ export interface VaultV2DepositParams {
   };
   args: {
     assets: bigint;
-    shares: bigint;
+    maxSharePrice: bigint;
     recipient: Address;
   };
   metadata?: Metadata;
 }
 
+/**
+ * Prepares a deposit transaction for the VaultV2 contract.
+ *
+ * This function constructs the transaction data required to deposit a specified amount of assets into the vault.
+ * Bundler Integration: This flow uses the bundler to atomically execute the user's asset transfer and vault deposit in a single transaction for slippage protection.
+ *
+ * @param {Object} params - The vault related parameters.
+ * @param {Object} params.vault - The vault related parameters.
+ * @param {number} params.vault.chainId - The chain ID.
+ * @param {Address} params.vault.address - The vault address.
+ * @param {Address} params.vault.asset - The vault asset address.
+ * @param {Object} params.args - The deposit related parameters.
+ * @param {bigint} params.args.assets - The amount of assets to deposit.
+ * @param {bigint} params.args.maxSharePrice - The maximum share price to accept for the deposit.
+ * @param {Address} params.args.recipient - The recipient address.
+ * @param {Metadata} [params.metadata] - Optional the metadata.
+ * @returns {Readonly<Transaction<VaultV2DepositAction>>} The prepared deposit transaction.
+ */
 export const vaultV2Deposit = ({
   vault: { chainId, address: vaultAddress, asset },
-  args: { assets, shares, recipient },
+  args: { assets, maxSharePrice, recipient },
   metadata,
 }: VaultV2DepositParams): Readonly<Transaction<VaultV2DepositAction>> => {
-  const maxSharePrice = MathLib.max(
-    MathLib.mulDivUp(
-      assets,
-      MathLib.wToRay(MathLib.WAD + DEFAULT_SLIPPAGE_TOLERANCE),
-      shares,
-    ),
-    MathLib.RAY * 100n,
-  );
+  if (assets === 0n) {
+    throw new ZeroAssetAmountError();
+  }
+
+  if (maxSharePrice === 0n) {
+    throw new MaxSharePriceError();
+  }
 
   const {
     bundler3: { generalAdapter1 },
@@ -71,7 +90,7 @@ export const vaultV2Deposit = ({
 
   const action: VaultV2DepositAction = {
     type: "vaultV2Deposit",
-    args: { vault: vaultAddress, assets, shares, recipient },
+    args: { vault: vaultAddress, assets, maxSharePrice, recipient },
   };
 
   return deepFreeze({

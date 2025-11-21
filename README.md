@@ -9,7 +9,7 @@
 ```typescript
 import { createWalletClient, http } from "viem";
 import { mainnet } from "viem/chains";
-import { morphoViemExtension } from "morpho-dapp";
+import { morphoViemExtension } from "morpho-sdk-core";
 
 const client = createWalletClient({
   chain: mainnet,
@@ -17,9 +17,7 @@ const client = createWalletClient({
   account: "0x...",
 }).extend(morphoViemExtension());
 
-const vault = client.morpho.vaultV2(
-  "0x04422053aDDbc9bB2759b248B574e3FCA76Bc145"
-);
+const vault = client.morpho.vaultV2("0x1234...");
 const deposit = await vault.deposit({ assets: 1000000000000000000n });
 console.log(deposit.tx);
 console.log(await deposit.getRequirements());
@@ -34,7 +32,7 @@ console.log(redeem.tx);
 ### 2️⃣ **With MorphoClient**
 
 ```typescript
-import { createMorphoClient } from "morpho-dapp";
+import { createMorphoClient } from "morpho-sdk-core";
 import { createWalletClient, http } from "viem";
 
 const client = createWalletClient({
@@ -45,7 +43,7 @@ const client = createWalletClient({
 
 const morpho = createMorphoClient(client);
 
-const vault = morpho.vaultV2("0x04422053aDDbc9bB2759b248B574e3FCA76Bc145");
+const vault = morpho.vaultV2("0x1234...");
 const deposit = await vault.deposit({ assets: 1000000000000000000n });
 console.log(deposit.tx);
 console.log(await deposit.getRequirements());
@@ -60,7 +58,7 @@ console.log(redeem.tx);
 ### 3️⃣ **Direct construction** (Full control)
 
 ```typescript
-import { vaultV2Deposit } from "morpho-dapp";
+import { vaultV2Deposit } from "morpho-sdk-core";
 
 const deposit = vaultV2Deposit({
   vault: {
@@ -70,7 +68,7 @@ const deposit = vaultV2Deposit({
   },
   args: {
     assets: 1000000000000000000n,
-    shares: 995180497664595699494513674403n,
+    maxSharePrice: 995180497664595699494513674403n,
     recipient: client.account.address,
   },
 });
@@ -83,7 +81,7 @@ This guide explains how to link this local package to your Next.js application f
 ### **Step 1: Initial setup (one time only)**
 
 ```bash
-# In this morpho-dapp project
+# In this morpho-sdk-core project
 pnpm run build:link
 ```
 
@@ -91,7 +89,7 @@ pnpm run build:link
 
 ```bash
 # Link the local package
-pnpm link morpho-dapp
+pnpm link morpho-sdk-core
 ```
 
 ## 🤝 Contributing

@@ -1,15 +1,15 @@
 {
-  "name": "morpho-dapp",
+  "name": "morpho-sdk-core",
   "description": "Abstraction layer for Morpho's complexity.",
   "version": "0.0.1",
   "author": "Morpho Association <contact@morpho.org>",
   "contributors": [
     "Foulks-Plb <https://x.com/FoulkPlb>"
   ],
-  "repository": "github:morpho-org/morpho-dapp",
-  "homepage": "https://github.com/morpho-org/morpho-dapp",
+  "repository": "github:morpho-org/morpho-sdk-core",
+  "homepage": "https://github.com/morpho-org/morpho-sdk-core",
   "bugs": {
-    "url": "https://github.com/morpho-org/morpho-dapp/issues",
+    "url": "https://github.com/morpho-org/morpho-sdk-core/issues",
     "email": "contact@morpho.org"
   },
   "license": "MIT",
@@ -21,6 +21,7 @@
   "scripts": {
     "prepublish": "$npm_execpath build",
     "lint": "biome check",
+    "prepare": "husky install",
     "build": "tsc --noEmit && tsc --build tsconfig.build.json",
     "link": "pnpm link --global",
     "unlink": "pnpm unlink --global",
@@ -31,11 +32,12 @@
   },
   "devDependencies": {
     "@biomejs/biome": "2.3.3",
-    "@morpho-org/test": "2.6.1-next.1",
+    "@morpho-org/test": "2.6.3",
     "@types/node": "^24.9.1",
     "@vitest/coverage-v8": "3.2.4",
     "@vitest/ui": "3.2.4",
     "dotenv": "^17.2.3",
+    "husky": "^9.1.7",
     "typescript": "^5.7.2",
     "viem": "^2.28.0",
     "vitest": "^3.0.5"
@@ -45,11 +47,11 @@
     "types": "lib/index.d.ts"
   },
   "dependencies": {
-    "@morpho-org/blue-sdk": "5.3.0-next.2",
-    "@morpho-org/blue-sdk-viem": "4.1.0-next.5",
-    "@morpho-org/bundler-sdk-viem": "4.1.0-next.1",
-    "@morpho-org/morpho-ts": "^2.4.3",
-    "@morpho-org/simulation-sdk": "3.2.0-next.4",
+    "@morpho-org/blue-sdk": "5.7.0",
+    "@morpho-org/blue-sdk-viem": "4.1.2",
+    "@morpho-org/bundler-sdk-viem": "4.1.2",
+    "@morpho-org/morpho-ts": "^2.4.5",
+    "@morpho-org/simulation-sdk": "3.2.2",
     "zod": "^4.1.12"
   }
 }
