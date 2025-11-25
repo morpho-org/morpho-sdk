@@ -44,16 +44,16 @@ export interface VaultV2DepositParams {
  * @returns {Readonly<Transaction<VaultV2DepositAction>>} The prepared deposit transaction.
  */
 export const vaultV2Deposit = ({
-  vault: { chainId, address: vaultAddress, asset },
+  vault: { chainId, address: vaultAddress, asset }, // I would type this as Pick<VaultV2, "chainId" | "address" | "asset"> for convnience
   args: { assets, maxSharePrice, recipient },
   metadata,
 }: VaultV2DepositParams): Readonly<Transaction<VaultV2DepositAction>> => {
   if (assets === 0n) {
-    throw new ZeroAssetAmountError();
+    throw new ZeroAssetAmountError(); // The error should get passed args to ease debugging
   }
 
   if (maxSharePrice === 0n) {
-    throw new MaxSharePriceError();
+    throw new MaxSharePriceError(); // The error should get passed args to ease debugging
   }
 
   const {
@@ -70,29 +70,33 @@ export const vaultV2Deposit = ({
       args: [vaultAddress, assets, maxSharePrice, recipient, false],
     },
     // To skim the shares tokens
+    // This skim seems useless as shares are transferred back to the recipient
     {
       type: "erc20Transfer",
       args: [
         vaultAddress,
         recipient,
-        MathLib.MAX_UINT_256,
+        MathLib.MAX_UINT_256, // use constant from viem
         generalAdapter1,
         false,
       ],
     },
   ];
 
+  // Again I would allow metadata not to be defined in addTransactionMetadata so we can avoid the if statement and use a const
   let tx = BundlerAction.encodeBundle(chainId, actions);
 
   if (metadata) {
     tx = addTransactionMetadata(tx, metadata);
   }
 
+  // This constant is useless, we can just return the object directly
   const action: VaultV2DepositAction = {
     type: "vaultV2Deposit",
     args: { vault: vaultAddress, assets, maxSharePrice, recipient },
   };
 
+  // I would let consumer freeze the object if they want to
   return deepFreeze({
     ...tx,
     action,

@@ -31,7 +31,7 @@ async function main() {
   const walletClient = createWalletClient({
     chain: mainnet,
     transport: http(MAINNET_RPC_URL),
-  });
+  }); // I would use morphoViemExtension() in the exemple = more elegant
 
   // Create Morpho client
   const morpho = createMorphoClient(walletClient);

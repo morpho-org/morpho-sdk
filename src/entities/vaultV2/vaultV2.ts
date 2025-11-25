@@ -82,6 +82,7 @@ export interface VaultV2Actions {
 }
 
 export class VaultV2 implements VaultV2Actions {
+  // You should declare these directly in constructor to avoid wordy asignement
   private readonly client: MorphoClient;
   private readonly vault: Address;
 
@@ -90,7 +91,9 @@ export class VaultV2 implements VaultV2Actions {
     this.vault = vault;
   }
 
+  // declare a method on the prototype not an arrow function property
   getData = async () => fetchAccrualVaultV2(this.vault, this.client.viemClient);
+  // TODO in blue-sdk-viem but i would store blockNumber in the result class
 
   async deposit({
     assets,
@@ -112,6 +115,8 @@ export class VaultV2 implements VaultV2Actions {
       MathLib.RAY * 100n,
     );
 
+    // TO be honest, I think the whole bundle should be built at once, without separating approvals and main action
+    // I thought that this was what we agreed on
     return {
       tx: vaultV2Deposit({
         vault: {
@@ -122,7 +127,7 @@ export class VaultV2 implements VaultV2Actions {
         args: {
           assets,
           maxSharePrice,
-          recipient: userAddress ?? this.client.userAddress,
+          recipient: userAddress ?? this.client.userAddress, // I don't like this, userAddress should be required and deterministic
         },
         metadata: this.client.metadata,
       }),
@@ -131,7 +136,8 @@ export class VaultV2 implements VaultV2Actions {
           address: vaultData.asset,
           args: {
             amount: assets,
-            from: userAddress ?? this.client.userAddress,
+            from: userAddress ?? this.client.userAddress, // I really don't like having non-deterministic values in auch arrow functions: the value of this.client.userAddress can change in the middle of the execution and thus result in 2 different userAddress for approvals and recipients
+            // I could imagine a scenario where tx is built with an address different than mine because i'm currently switching user, it would lead to me signing approvals but sending the tx with a recipient that is not me...
           },
         }),
     };
@@ -166,5 +172,6 @@ export class VaultV2 implements VaultV2Actions {
   }
 }
 
+// I don't see the interest of this function, this is basically the constructor of VaultV2
 export const instantiateVaultV2 = (client: MorphoClient, vault: Address) =>
   new VaultV2(client, vault);

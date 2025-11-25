@@ -9,10 +9,12 @@ import type {
 
 import { encodeErc20Approval } from "./encodeErc20Approval";
 
+// NB requirements are not necessarily approvals
 export const getRequirements = async (
   client: MorphoClient,
-  params: { address: Address; args: { amount: bigint; from: Address } },
+  params: { address: Address; args: { amount: bigint; from: Address } }, // use explicit interface
 ): Promise<Readonly<Transaction<ERC20ApprovalAction>[]>> => {
+  // again don't freeze + destructure in function parameters
   Object.freeze(params);
   const {
     address,
@@ -57,4 +59,6 @@ export const getRequirements = async (
   }
 
   return Object.freeze(txs);
+  // As discussed, we should return the object directly instead of freezing it and let the consumer freeze it if they want
+  // We sould use deepFreeze if we really want to freeze
 };

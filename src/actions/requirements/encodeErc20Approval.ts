@@ -13,15 +13,18 @@ interface EncodeErc20ApprovalParams {
 export const encodeErc20Approval = (
   params: EncodeErc20ApprovalParams,
 ): Transaction<ERC20ApprovalAction> => {
-  Object.freeze(params);
-  const { token, spender, amount, chainId } = params;
+  Object.freeze(params); // This is an undesired side effect
+  const { token, spender, amount, chainId } = params; // You shouldn't freeze and destructure in function parameters
 
+  // use a const here and do all in one line
   let amountValue = amount;
   amountValue = MathLib.min(
     amountValue,
     MAX_TOKEN_APPROVALS[chainId]?.[token] ?? maxUint256,
   );
 
+  // As discussed, we should return the object directly instead of freezing it and let the consumer freeze it if they want
+  // We sould use deepFreeze if we really want to freeze
   return Object.freeze({
     to: token,
     data: encodeFunctionData({

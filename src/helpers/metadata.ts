@@ -50,9 +50,11 @@ export function addTransactionMetadata(
     // eslint-disable-next-line no-console
     console.warn(
       "Invalid calldata origin:\n",
-      error instanceof Error ? error.name : "Unknown error",
+      error instanceof Error ? error.name : "Unknown error", // How could it not be instanceof Error?
     );
   }
 
   return { data: concatHex(concatItems), ..._tx };
 }
+
+// For me this function should 100% be done on consumer side, not in sdk
