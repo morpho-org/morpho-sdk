@@ -109,9 +109,9 @@ export class VaultV2 implements VaultV2Actions {
       MathLib.mulDivUp(
         assets,
         MathLib.wToRay(MathLib.WAD + slippageTolerance),
-        vaultData.toShares(assets)
+        vaultData.toShares(assets),
       ),
-      MathLib.RAY * 100n
+      MathLib.RAY * 100n,
     );
 
     return {
