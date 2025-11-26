@@ -1,10 +1,10 @@
 import { createMorphoClient, instantiateVaultV2, vaultV2Deposit } from "src";
 import { KeyrockUsdcVaultV2 } from "test/fixtures/vaultV2";
+import { testInvariants } from "test/helpers/invariants";
+import { parseUnits } from "viem";
 import { mainnet } from "viem/chains";
 import { describe, expect } from "vitest";
 import { test } from "../setup";
-import { testInvariants } from "test/helpers/invariants";
-import { parseUnits } from "viem";
 
 describe("Deposit VaultV2", () => {
   test("should create deposit bundle", async ({ client }) => {
@@ -87,13 +87,13 @@ describe("Deposit VaultV2", () => {
     });
 
     expect(finalState.userAssetBalance).toEqual(
-      initialState.userAssetBalance - amount
+      initialState.userAssetBalance - amount,
     );
     expect(finalState.morphoAssetBalance).toEqual(
-      initialState.morphoAssetBalance + amount
+      initialState.morphoAssetBalance + amount,
     );
     expect(finalState.userSharesBalance).toBeGreaterThan(
-      initialState.userSharesBalance
+      initialState.userSharesBalance,
     );
     expect(finalState.userSharesBalance).toEqual(995180492265720444556n);
   });
