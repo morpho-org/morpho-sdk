@@ -11,13 +11,13 @@ interface EncodeErc20ApprovalParams {
 }
 
 export const encodeErc20Approval = (
-  params: EncodeErc20ApprovalParams
+  params: EncodeErc20ApprovalParams,
 ): Transaction<ERC20ApprovalAction> => {
   const { token, spender, amount, chainId } = params;
 
   const amountValue = MathLib.min(
     amount,
-    MAX_TOKEN_APPROVALS[chainId]?.[token] ?? maxUint256
+    MAX_TOKEN_APPROVALS[chainId]?.[token] ?? maxUint256,
   );
 
   return Object.freeze({

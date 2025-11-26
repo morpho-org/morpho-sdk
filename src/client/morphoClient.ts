@@ -1,16 +1,16 @@
 import type { Address, Client } from "viem";
 import { instantiateVaultV2 } from "../entities";
 import {
-  type MorphoClientType,
   type Metadata,
   MissingAddressError,
   MissingChainIdError,
+  type MorphoClientType,
 } from "../types";
 
 export class MorphoClient implements MorphoClientType {
   constructor(
     public readonly viemClient: Client,
-    public readonly metadata?: Metadata
+    public readonly metadata?: Metadata,
   ) {}
 
   public get userAddress(): Address {
@@ -47,7 +47,7 @@ export class MorphoClient implements MorphoClientType {
  */
 export function createMorphoClient(
   client: Client,
-  metadata?: Metadata
+  metadata?: Metadata,
 ): MorphoClient {
   return new MorphoClient(client, metadata);
 }

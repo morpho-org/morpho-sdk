@@ -4,11 +4,11 @@ import { deepFreeze } from "@morpho-org/morpho-ts";
 import type { Address } from "viem";
 import { addTransactionMetadata } from "../../helpers";
 import {
-  ZeroMaxSharePriceError,
   type Metadata,
   type Transaction,
   type VaultV2DepositAction,
   ZeroAssetAmountError,
+  ZeroMaxSharePriceError,
 } from "../../types";
 
 export interface VaultV2DepositParams {
