@@ -1,4 +1,4 @@
-import { getChainAddresses, MathLib } from "@morpho-org/blue-sdk";
+import { getChainAddresses } from "@morpho-org/blue-sdk";
 import { type Action, BundlerAction } from "@morpho-org/bundler-sdk-viem";
 import { deepFreeze } from "@morpho-org/morpho-ts";
 import type { Address } from "viem";
@@ -68,17 +68,6 @@ export const vaultV2Deposit = ({
     {
       type: "erc4626Deposit",
       args: [vaultAddress, assets, maxSharePrice, recipient, false],
-    },
-    // To skim the shares tokens
-    {
-      type: "erc20Transfer",
-      args: [
-        vaultAddress,
-        recipient,
-        MathLib.MAX_UINT_256,
-        generalAdapter1,
-        false,
-      ],
     },
   ];
 
