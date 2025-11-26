@@ -9,6 +9,7 @@ import dotenv from "dotenv";
 import { type Address, createWalletClient, http, parseUnits } from "viem";
 import { mainnet } from "viem/chains";
 import { createMorphoClient } from "../src";
+import { morphoViemExtension } from "../src/client";
 import { env } from "../test/env";
 
 // Load environment variables
@@ -27,11 +28,11 @@ async function main() {
     throw new Error("USER_ADDRESS is required");
   }
 
-  // Create wallet client
+  // Create wallet client with Morpho viem extension
   const walletClient = createWalletClient({
     chain: mainnet,
     transport: http(MAINNET_RPC_URL),
-  });
+  }).extend(morphoViemExtension());
 
   // Create Morpho client
   const morpho = createMorphoClient(walletClient);
@@ -107,7 +108,7 @@ async function main() {
 
   console.log("\n✅ Examples completed successfully!");
   console.log(
-    "\n💡 Note: These are example transactions. To actually send them:",
+    "\n💡 Note: These are example transactions. To actually send them:"
   );
 }
 

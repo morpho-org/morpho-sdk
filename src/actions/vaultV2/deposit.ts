@@ -4,7 +4,7 @@ import { deepFreeze } from "@morpho-org/morpho-ts";
 import type { Address } from "viem";
 import { addTransactionMetadata } from "../../helpers";
 import {
-  MaxSharePriceError,
+  ZeroMaxSharePriceError,
   type Metadata,
   type Transaction,
   type VaultV2DepositAction,
@@ -53,7 +53,7 @@ export const vaultV2Deposit = ({
   }
 
   if (maxSharePrice === 0n) {
-    throw new MaxSharePriceError();
+    throw new ZeroMaxSharePriceError();
   }
 
   const {
@@ -77,13 +77,11 @@ export const vaultV2Deposit = ({
     tx = addTransactionMetadata(tx, metadata);
   }
 
-  const action: VaultV2DepositAction = {
-    type: "vaultV2Deposit",
-    args: { vault: vaultAddress, assets, maxSharePrice, recipient },
-  };
-
   return deepFreeze({
     ...tx,
-    action,
+    action: {
+      type: "vaultV2Deposit",
+      args: { vault: vaultAddress, assets, maxSharePrice, recipient },
+    },
   });
 };

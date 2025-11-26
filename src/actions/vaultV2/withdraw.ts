@@ -59,13 +59,11 @@ export const vaultV2Withdraw = ({
     tx = addTransactionMetadata(tx, metadata);
   }
 
-  const action: VaultV2WithdrawAction = {
-    type: "vaultV2Withdraw",
-    args: { vault: vaultAddress, assets, recipient },
-  };
-
   return deepFreeze({
     ...tx,
-    action,
+    action: {
+      type: "vaultV2Withdraw",
+      args: { vault: vaultAddress, assets, recipient },
+    },
   });
 };

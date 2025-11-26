@@ -59,13 +59,11 @@ export const vaultV2Redeem = ({
     tx = addTransactionMetadata(tx, metadata);
   }
 
-  const action: VaultV2RedeemAction = {
-    type: "vaultV2Redeem",
-    args: { vault: vaultAddress, shares, recipient },
-  };
-
   return deepFreeze({
     ...tx,
-    action,
+    action: {
+      type: "vaultV2Redeem",
+      args: { vault: vaultAddress, shares, recipient },
+    },
   });
 };

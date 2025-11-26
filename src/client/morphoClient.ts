@@ -1,20 +1,17 @@
 import type { Address, Client } from "viem";
 import { instantiateVaultV2 } from "../entities";
 import {
-  type MorphoClient as IMorphoClient,
+  type MorphoClientType,
   type Metadata,
   MissingAddressError,
   MissingChainIdError,
 } from "../types";
 
-export class MorphoClient implements IMorphoClient {
-  public readonly viemClient: Client;
-  public readonly metadata?: Metadata;
-
-  constructor(client: Client, metadata?: Metadata) {
-    this.viemClient = client;
-    this.metadata = metadata;
-  }
+export class MorphoClient implements MorphoClientType {
+  constructor(
+    public readonly viemClient: Client,
+    public readonly metadata?: Metadata
+  ) {}
 
   public get userAddress(): Address {
     const address = this.viemClient.account?.address;
@@ -50,7 +47,7 @@ export class MorphoClient implements IMorphoClient {
  */
 export function createMorphoClient(
   client: Client,
-  metadata?: Metadata,
+  metadata?: Metadata
 ): MorphoClient {
   return new MorphoClient(client, metadata);
 }

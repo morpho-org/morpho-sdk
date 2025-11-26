@@ -11,9 +11,8 @@ import { encodeErc20Approval } from "./encodeErc20Approval";
 
 export const getRequirements = async (
   client: MorphoClient,
-  params: { address: Address; args: { amount: bigint; from: Address } },
+  params: { address: Address; args: { amount: bigint; from: Address } }
 ): Promise<Readonly<Transaction<ERC20ApprovalAction>[]>> => {
-  Object.freeze(params);
   const {
     address,
     args: { amount, from },
@@ -26,7 +25,7 @@ export const getRequirements = async (
   const { erc20Allowances } = await fetchHolding(
     from,
     address,
-    client.viemClient,
+    client.viemClient
   );
 
   const txs: Transaction<ERC20ApprovalAction>[] = [];
@@ -42,7 +41,7 @@ export const getRequirements = async (
           spender: generalAdapter1,
           amount: 0n,
           chainId: client.chainId,
-        }),
+        })
       );
     }
 
@@ -52,7 +51,7 @@ export const getRequirements = async (
         spender: generalAdapter1,
         amount,
         chainId: client.chainId,
-      }),
+      })
     );
   }
 
