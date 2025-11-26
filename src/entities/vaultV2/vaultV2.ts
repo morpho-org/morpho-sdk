@@ -9,7 +9,7 @@ import {
 } from "../../actions";
 import type {
   ERC20ApprovalAction,
-  MorphoClient,
+  MorphoClientType,
   Transaction,
   VaultV2DepositAction,
   VaultV2RedeemAction,
@@ -43,7 +43,7 @@ export interface VaultV2Actions {
    */
   deposit: (params: {
     assets: bigint;
-    userAddress?: Address;
+    userAddress: Address;
     slippageTolerance?: bigint;
   }) => Promise<{
     tx: Readonly<Transaction<VaultV2DepositAction>>;
@@ -62,7 +62,7 @@ export interface VaultV2Actions {
    * @returns {Object} The result object.
    * @returns {Readonly<Transaction<VaultV2WithdrawAction>>} returns.tx The prepared withdraw transaction.
    */
-  withdraw: (params: { assets: bigint; userAddress?: Address }) => {
+  withdraw: (params: { assets: bigint; userAddress: Address }) => {
     tx: Readonly<Transaction<VaultV2WithdrawAction>>;
   };
   /**
@@ -76,21 +76,23 @@ export interface VaultV2Actions {
    * @returns {Object} The result object.
    * @returns {Readonly<Transaction<VaultV2RedeemAction>>} returns.tx The prepared redeem transaction.
    */
-  redeem: (params: { shares: bigint; userAddress?: Address }) => {
+  redeem: (params: { shares: bigint; userAddress: Address }) => {
     tx: Readonly<Transaction<VaultV2RedeemAction>>;
   };
 }
 
 export class VaultV2 implements VaultV2Actions {
-  private readonly client: MorphoClient;
+  private readonly client: MorphoClientType;
   private readonly vault: Address;
 
-  constructor(client: MorphoClient, vault: Address) {
+  constructor(client: MorphoClientType, vault: Address) {
     this.client = client;
     this.vault = vault;
   }
 
-  getData = async () => fetchAccrualVaultV2(this.vault, this.client.viemClient);
+  async getData() {
+    return fetchAccrualVaultV2(this.vault, this.client.viemClient);
+  }
 
   async deposit({
     assets,
@@ -98,7 +100,7 @@ export class VaultV2 implements VaultV2Actions {
     slippageTolerance = DEFAULT_SLIPPAGE_TOLERANCE,
   }: {
     assets: bigint;
-    userAddress?: Address;
+    userAddress: Address;
     slippageTolerance?: bigint;
   }) {
     const vaultData = await fetchVaultV2(this.vault, this.client.viemClient);
@@ -122,7 +124,7 @@ export class VaultV2 implements VaultV2Actions {
         args: {
           assets,
           maxSharePrice,
-          recipient: userAddress ?? this.client.userAddress,
+          recipient: userAddress,
         },
         metadata: this.client.metadata,
       }),
@@ -131,34 +133,34 @@ export class VaultV2 implements VaultV2Actions {
           address: vaultData.asset,
           args: {
             amount: assets,
-            from: userAddress ?? this.client.userAddress,
+            from: userAddress,
           },
         }),
     };
   }
 
-  withdraw({ assets, userAddress }: { assets: bigint; userAddress?: Address }) {
+  withdraw({ assets, userAddress }: { assets: bigint; userAddress: Address }) {
     return {
       tx: vaultV2Withdraw({
         vault: { address: this.vault },
         args: {
           assets,
-          recipient: userAddress ?? this.client.userAddress,
-          onBehalf: userAddress ?? this.client.userAddress,
+          recipient: userAddress,
+          onBehalf: userAddress,
         },
         metadata: this.client.metadata,
       }),
     };
   }
 
-  redeem({ shares, userAddress }: { shares: bigint; userAddress?: Address }) {
+  redeem({ shares, userAddress }: { shares: bigint; userAddress: Address }) {
     return {
       tx: vaultV2Redeem({
         vault: { address: this.vault },
         args: {
           shares,
-          recipient: userAddress ?? this.client.userAddress,
-          onBehalf: userAddress ?? this.client.userAddress,
+          recipient: userAddress,
+          onBehalf: userAddress,
         },
         metadata: this.client.metadata,
       }),
@@ -166,5 +168,5 @@ export class VaultV2 implements VaultV2Actions {
   }
 }
 
-export const instantiateVaultV2 = (client: MorphoClient, vault: Address) =>
+export const instantiateVaultV2 = (client: MorphoClientType, vault: Address) =>
   new VaultV2(client, vault);

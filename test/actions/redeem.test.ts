@@ -11,12 +11,14 @@ describe("Redeem VaultV2", () => {
 
     const redeem = morpho.vaultV2(KeyrockUsdcVaultV2.address).redeem({
       shares: 1000000000000000000n,
+      userAddress: client.account.address,
     });
 
     const vaultV2_2 = instantiateVaultV2(morpho, KeyrockUsdcVaultV2.address);
 
     const redeem_2 = vaultV2_2.redeem({
       shares: 1000000000000000000n,
+      userAddress: client.account.address,
     });
 
     const redeem_3 = vaultV2Redeem({
@@ -56,6 +58,7 @@ describe("Redeem VaultV2", () => {
         const vaultV2 = morpho.vaultV2(KeyrockUsdcVaultV2.address);
         const redeem = vaultV2.redeem({
           shares,
+          userAddress: client.account.address,
         });
 
         await client.sendTransaction(redeem.tx);

@@ -48,10 +48,7 @@ export function addTransactionMetadata(
     concatItems.push(`0x${origin}`);
   } catch (error: unknown) {
     // eslint-disable-next-line no-console
-    console.warn(
-      "Invalid calldata origin:\n",
-      error instanceof Error ? error.name : "Unknown error",
-    );
+    console.warn("Invalid calldata origin:\n", error);
   }
 
   return { data: concatHex(concatItems), ..._tx };

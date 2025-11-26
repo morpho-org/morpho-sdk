@@ -18,6 +18,7 @@ describe("Withdraw VaultV2", () => {
 
     const withdraw_2 = vaultV2_2.withdraw({
       assets: 1000000000000000000n,
+      userAddress: client.account.address,
     });
 
     // Third Devex build directly tx
@@ -59,6 +60,7 @@ describe("Withdraw VaultV2", () => {
         const vaultV2 = morpho.vaultV2(KeyrockUsdcVaultV2.address);
         const withdraw = vaultV2.withdraw({
           assets,
+          userAddress: client.account.address,
         });
 
         await client.sendTransaction(withdraw.tx);

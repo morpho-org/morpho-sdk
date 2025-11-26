@@ -3,14 +3,14 @@ import { fetchHolding } from "@morpho-org/blue-sdk-viem";
 import { APPROVE_ONLY_ONCE_TOKENS } from "@morpho-org/simulation-sdk";
 import type {
   ERC20ApprovalAction,
-  MorphoClient,
+  MorphoClientType,
   Transaction,
 } from "../../types";
 
 import { encodeErc20Approval } from "./encodeErc20Approval";
 
 export const getRequirements = async (
-  client: MorphoClient,
+  client: MorphoClientType,
   params: { address: Address; args: { amount: bigint; from: Address } },
 ): Promise<Readonly<Transaction<ERC20ApprovalAction>[]>> => {
   const {
