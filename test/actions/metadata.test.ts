@@ -35,11 +35,12 @@ describe("Metadata", () => {
           assets: amount,
         });
 
-        expect(deposit.tx.data).toContain("25AFEA44");
-        const position = deposit.tx.data.indexOf("25AFEA44");
+        const tx_1 = deposit.build();
+        expect(tx_1.data).toContain("25AFEA44");
+        const position = tx_1.data.indexOf("25AFEA44");
         expect(position).toBeGreaterThanOrEqual(8);
 
-        const timestampHex = deposit.tx.data.slice(position - 8, position);
+        const timestampHex = tx_1.data.slice(position - 8, position);
         expect(timestampHex).toMatch(/^[0-9a-fA-F]{8}$/);
         const timestampNumber = parseInt(timestampHex, 16);
         expect(typeof timestampNumber).toBe("number");
@@ -52,19 +53,20 @@ describe("Metadata", () => {
           throw new Error("Approve transaction not found");
         }
 
+        const tx_2 = deposit.build();
         await client.sendTransaction(approveTx);
-        await client.sendTransaction(deposit.tx);
+        await client.sendTransaction(tx_2);
       },
     });
 
     expect(finalState.userAssetBalance).toEqual(
-      initialState.userAssetBalance - amount,
+      initialState.userAssetBalance - amount
     );
     expect(finalState.morphoAssetBalance).toEqual(
-      initialState.morphoAssetBalance + amount,
+      initialState.morphoAssetBalance + amount
     );
     expect(finalState.userSharesBalance).toBeGreaterThan(
-      initialState.userSharesBalance,
+      initialState.userSharesBalance
     );
   });
 
@@ -96,11 +98,12 @@ describe("Metadata", () => {
           assets: amount,
         });
 
-        expect(deposit.tx.data).toContain("25AFEA44");
-        const position = deposit.tx.data.indexOf("25AFEA44");
+        const tx = deposit.build();
+        expect(tx.data).toContain("25AFEA44");
+        const position = tx.data.indexOf("25AFEA44");
         expect(position).toBeGreaterThanOrEqual(8);
 
-        const timestampHex = deposit.tx.data.slice(position - 8, position);
+        const timestampHex = tx.data.slice(position - 8, position);
         expect(timestampHex).toBe("00000000");
 
         const requirements = await deposit.getRequirements();
@@ -111,18 +114,18 @@ describe("Metadata", () => {
         }
 
         await client.sendTransaction(approveTx);
-        await client.sendTransaction(deposit.tx);
+        await client.sendTransaction(tx);
       },
     });
 
     expect(finalState.userAssetBalance).toEqual(
-      initialState.userAssetBalance - amount,
+      initialState.userAssetBalance - amount
     );
     expect(finalState.morphoAssetBalance).toEqual(
-      initialState.morphoAssetBalance + amount,
+      initialState.morphoAssetBalance + amount
     );
     expect(finalState.userSharesBalance).toBeGreaterThan(
-      initialState.userSharesBalance,
+      initialState.userSharesBalance
     );
   });
 });

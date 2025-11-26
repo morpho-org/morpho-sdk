@@ -10,7 +10,7 @@ import {
 export class MorphoClient implements MorphoClientType {
   constructor(
     public readonly viemClient: Client,
-    public readonly metadata?: Metadata,
+    public readonly metadata?: Metadata
   ) {}
 
   public get userAddress(): Address {
@@ -47,7 +47,7 @@ export class MorphoClient implements MorphoClientType {
  */
 export function createMorphoClient(
   client: Client,
-  metadata?: Metadata,
-): MorphoClient {
+  metadata?: Metadata
+): MorphoClientType {
   return new MorphoClient(client, metadata);
 }

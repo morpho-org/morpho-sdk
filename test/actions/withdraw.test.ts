@@ -13,6 +13,7 @@ describe("Withdraw VaultV2", () => {
       userAddress: client.account.address,
       assets: 1000000000000000000n,
     });
+    const tx_1 = withdraw.build();
 
     // Second Devex with entity
     const vaultV2_2 = instantiateVaultV2(morpho, KeyrockUsdcVaultV2.address);
@@ -21,6 +22,7 @@ describe("Withdraw VaultV2", () => {
       assets: 1000000000000000000n,
       userAddress: client.account.address,
     });
+    const tx_2 = withdraw_2.build();
 
     // Third Devex build directly tx
     const withdraw_3 = vaultV2Withdraw({
@@ -35,8 +37,8 @@ describe("Withdraw VaultV2", () => {
     });
 
     expect(withdraw).toBeDefined();
-    expect(withdraw.tx).toStrictEqual(withdraw_2.tx);
-    expect(withdraw_3).toStrictEqual(withdraw_2.tx);
+    expect(tx_1).toStrictEqual(tx_2);
+    expect(withdraw_3).toStrictEqual(tx_2);
   });
 
   test("should withdraw 1K assets in vaultV2", async ({ client }) => {
@@ -63,20 +65,21 @@ describe("Withdraw VaultV2", () => {
           userAddress: client.account.address,
           assets,
         });
+        const tx = withdraw.build();
 
-        await client.sendTransaction(withdraw.tx);
+        await client.sendTransaction(tx);
       },
     });
 
     expect(finalState.userSharesBalance).toBeLessThan(
-      initialState.userSharesBalance,
+      initialState.userSharesBalance
     );
     expect(finalState.userAssetBalance).toEqual(
-      initialState.userAssetBalance + assets,
+      initialState.userAssetBalance + assets
     );
     expect(finalState.userSharesBalance).toEqual(4819505037350706326n);
     expect(finalState.morphoAssetBalance).toEqual(
-      initialState.morphoAssetBalance - assets,
+      initialState.morphoAssetBalance - assets
     );
   });
 });

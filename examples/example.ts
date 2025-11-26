@@ -52,11 +52,12 @@ async function main() {
     assets: depositAmount,
     userAddress: USER_ADDRESS,
   });
+  const depositTx = deposit.build();
 
   console.log("Deposit transaction:", {
-    to: deposit.tx.to,
-    data: deposit.tx.data,
-    value: deposit.tx.value,
+    to: depositTx.to,
+    data: depositTx.data,
+    value: depositTx.value,
   });
 
   // Get requirements (e.g., ERC20 approval)
@@ -77,11 +78,12 @@ async function main() {
     assets: withdrawAmount,
     userAddress: USER_ADDRESS,
   });
+  const withdrawTx = withdraw.build();
 
   console.log("Withdraw transaction:", {
-    to: withdraw.tx.to,
-    data: withdraw.tx.data,
-    value: withdraw.tx.value?.toString(),
+    to: withdrawTx.to,
+    data: withdrawTx.data,
+    value: withdrawTx.value,
   });
 
   // Example 3: Create a redeem transaction
@@ -91,11 +93,12 @@ async function main() {
     shares: redeemShares,
     userAddress: USER_ADDRESS,
   });
+  const redeemTx = redeem.build();
 
   console.log("Redeem transaction:", {
-    to: redeem.tx.to,
-    data: redeem.tx.data,
-    value: redeem.tx.value?.toString(),
+    to: redeemTx.to,
+    data: redeemTx.data,
+    value: redeemTx.value,
   });
 
   // Example 4: Get vault data
@@ -108,7 +111,7 @@ async function main() {
 
   console.log("\n✅ Examples completed successfully!");
   console.log(
-    "\n💡 Note: These are example transactions. To actually send them:",
+    "\n💡 Note: These are example transactions. To actually send them:"
   );
 }
 

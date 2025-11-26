@@ -46,7 +46,7 @@ export interface VaultV2Actions {
     userAddress: Address;
     slippageTolerance?: bigint;
   }) => Promise<{
-    tx: Readonly<Transaction<VaultV2DepositAction>>;
+    build: () => Readonly<Transaction<VaultV2DepositAction>>;
     getRequirements: () => Promise<
       Readonly<Transaction<ERC20ApprovalAction>[]>
     >;
@@ -63,7 +63,7 @@ export interface VaultV2Actions {
    * @returns {Readonly<Transaction<VaultV2WithdrawAction>>} returns.tx The prepared withdraw transaction.
    */
   withdraw: (params: { assets: bigint; userAddress: Address }) => {
-    tx: Readonly<Transaction<VaultV2WithdrawAction>>;
+    build: () => Readonly<Transaction<VaultV2WithdrawAction>>;
   };
   /**
    * Prepares a redeem transaction for the VaultV2 contract.
@@ -77,7 +77,7 @@ export interface VaultV2Actions {
    * @returns {Readonly<Transaction<VaultV2RedeemAction>>} returns.tx The prepared redeem transaction.
    */
   redeem: (params: { shares: bigint; userAddress: Address }) => {
-    tx: Readonly<Transaction<VaultV2RedeemAction>>;
+    build: () => Readonly<Transaction<VaultV2RedeemAction>>;
   };
 }
 
@@ -109,61 +109,65 @@ export class VaultV2 implements VaultV2Actions {
       MathLib.mulDivUp(
         assets,
         MathLib.wToRay(MathLib.WAD + slippageTolerance),
-        vaultData.toShares(assets),
+        vaultData.toShares(assets)
       ),
-      MathLib.RAY * 100n,
+      MathLib.RAY * 100n
     );
 
     return {
-      tx: vaultV2Deposit({
-        vault: {
-          chainId: this.client.chainId,
-          address: this.vault,
-          asset: vaultData.asset,
-        },
-        args: {
-          assets,
-          maxSharePrice,
-          recipient: userAddress,
-        },
-        metadata: this.client.metadata,
-      }),
-      getRequirements: async () =>
-        getRequirements(this.client, {
+      build: () =>
+        vaultV2Deposit({
+          vault: {
+            chainId: this.client.chainId,
+            address: this.vault,
+            asset: vaultData.asset,
+          },
+          args: {
+            assets,
+            maxSharePrice,
+            recipient: userAddress,
+          },
+          metadata: this.client.metadata,
+        }),
+      getRequirements: async () => {
+        return getRequirements(this.client, {
           address: vaultData.asset,
           args: {
             amount: assets,
             from: userAddress,
           },
-        }),
+        });
+      },
     };
   }
 
   withdraw({ assets, userAddress }: { assets: bigint; userAddress: Address }) {
     return {
-      tx: vaultV2Withdraw({
-        vault: { address: this.vault },
-        args: {
-          assets,
-          recipient: userAddress,
-          onBehalf: userAddress,
-        },
-        metadata: this.client.metadata,
-      }),
+      build: () =>
+        vaultV2Withdraw({
+          vault: { address: this.vault },
+          args: {
+            assets,
+            recipient: userAddress,
+            onBehalf: userAddress,
+          },
+          metadata: this.client.metadata,
+        }),
     };
   }
 
   redeem({ shares, userAddress }: { shares: bigint; userAddress: Address }) {
     return {
-      tx: vaultV2Redeem({
-        vault: { address: this.vault },
-        args: {
-          shares,
-          recipient: userAddress,
-          onBehalf: userAddress,
-        },
-        metadata: this.client.metadata,
-      }),
+      build: () =>
+        vaultV2Redeem({
+          vault: { address: this.vault },
+          args: {
+            shares,
+            recipient: userAddress,
+            onBehalf: userAddress,
+          },
+          metadata: this.client.metadata,
+        }),
     };
   }
 }

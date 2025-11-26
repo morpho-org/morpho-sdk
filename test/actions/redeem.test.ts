@@ -13,6 +13,7 @@ describe("Redeem VaultV2", () => {
       userAddress: client.account.address,
       shares: 1000000000000000000n,
     });
+    const tx_1 = redeem.build();
 
     const vaultV2_2 = instantiateVaultV2(morpho, KeyrockUsdcVaultV2.address);
 
@@ -20,6 +21,7 @@ describe("Redeem VaultV2", () => {
       userAddress: client.account.address,
       shares: 1000000000000000000n,
     });
+    const tx_2 = redeem_2.build();
 
     const redeem_3 = vaultV2Redeem({
       vault: {
@@ -33,8 +35,8 @@ describe("Redeem VaultV2", () => {
     });
 
     expect(redeem).toBeDefined();
-    expect(redeem.tx).toStrictEqual(redeem_2.tx);
-    expect(redeem_3).toStrictEqual(redeem_2.tx);
+    expect(tx_1).toStrictEqual(tx_2);
+    expect(redeem_3).toStrictEqual(tx_2);
   });
 
   test("should redeem 1K USDC in vaultV2", async ({ client }) => {
@@ -60,20 +62,21 @@ describe("Redeem VaultV2", () => {
           userAddress: client.account.address,
           shares,
         });
+        const tx = redeem.build();
 
-        await client.sendTransaction(redeem.tx);
+        await client.sendTransaction(tx);
       },
     });
 
     expect(finalState.userSharesBalance).toEqual(
-      initialState.userSharesBalance - shares,
+      initialState.userSharesBalance - shares
     );
     expect(finalState.userAssetBalance).toBeGreaterThan(
-      initialState.userAssetBalance,
+      initialState.userAssetBalance
     );
     expect(finalState.userAssetBalance).toEqual(1004842845n);
     expect(finalState.morphoAssetBalance).toBeLessThan(
-      initialState.morphoAssetBalance,
+      initialState.morphoAssetBalance
     );
   });
 });
