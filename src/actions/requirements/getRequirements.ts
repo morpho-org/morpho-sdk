@@ -8,10 +8,11 @@ import type {
 } from "../../types";
 
 import { encodeErc20Approval } from "./encodeErc20Approval";
+import { deepFreeze } from "@morpho-org/morpho-ts";
 
 export const getRequirements = async (
   client: MorphoClientType,
-  params: { address: Address; args: { amount: bigint; from: Address } },
+  params: { address: Address; args: { amount: bigint; from: Address } }
 ): Promise<Readonly<Transaction<ERC20ApprovalAction>[]>> => {
   const {
     address,
@@ -25,7 +26,7 @@ export const getRequirements = async (
   const { erc20Allowances } = await fetchHolding(
     from,
     address,
-    client.viemClient,
+    client.viemClient
   );
 
   const txs: Transaction<ERC20ApprovalAction>[] = [];
@@ -41,7 +42,7 @@ export const getRequirements = async (
           spender: generalAdapter1,
           amount: 0n,
           chainId: client.chainId,
-        }),
+        })
       );
     }
 
@@ -51,9 +52,9 @@ export const getRequirements = async (
         spender: generalAdapter1,
         amount,
         chainId: client.chainId,
-      }),
+      })
     );
   }
 
-  return Object.freeze(txs);
+  return deepFreeze(txs);
 };

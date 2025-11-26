@@ -2,6 +2,7 @@ import { type Address, MathLib } from "@morpho-org/blue-sdk";
 import { MAX_TOKEN_APPROVALS } from "@morpho-org/simulation-sdk";
 import { encodeFunctionData, erc20Abi, maxUint256 } from "viem";
 import type { ERC20ApprovalAction, Transaction } from "../../types";
+import { deepFreeze } from "@morpho-org/morpho-ts";
 
 interface EncodeErc20ApprovalParams {
   token: Address;
@@ -11,16 +12,16 @@ interface EncodeErc20ApprovalParams {
 }
 
 export const encodeErc20Approval = (
-  params: EncodeErc20ApprovalParams,
+  params: EncodeErc20ApprovalParams
 ): Transaction<ERC20ApprovalAction> => {
   const { token, spender, amount, chainId } = params;
 
   const amountValue = MathLib.min(
     amount,
-    MAX_TOKEN_APPROVALS[chainId]?.[token] ?? maxUint256,
+    MAX_TOKEN_APPROVALS[chainId]?.[token] ?? maxUint256
   );
 
-  return Object.freeze({
+  return deepFreeze({
     to: token,
     data: encodeFunctionData({
       abi: erc20Abi,
