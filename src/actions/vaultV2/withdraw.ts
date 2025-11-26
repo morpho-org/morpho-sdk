@@ -42,7 +42,7 @@ export const vaultV2Withdraw = ({
   metadata,
 }: VaultV2WithdrawParams): Readonly<Transaction<VaultV2WithdrawAction>> => {
   if (assets === 0n) {
-    throw new ZeroAssetAmountError();
+    throw new ZeroAssetAmountError(vaultAddress);
   }
 
   let tx = {

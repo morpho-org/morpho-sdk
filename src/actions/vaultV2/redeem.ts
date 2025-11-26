@@ -42,7 +42,7 @@ export const vaultV2Redeem = ({
   metadata,
 }: VaultV2RedeemParams): Readonly<Transaction<VaultV2RedeemAction>> => {
   if (shares === 0n) {
-    throw new ZeroSharesAmountError();
+    throw new ZeroSharesAmountError(vaultAddress);
   }
 
   let tx = {

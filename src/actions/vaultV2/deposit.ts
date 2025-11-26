@@ -49,11 +49,11 @@ export const vaultV2Deposit = ({
   metadata,
 }: VaultV2DepositParams): Readonly<Transaction<VaultV2DepositAction>> => {
   if (assets === 0n) {
-    throw new ZeroAssetAmountError();
+    throw new ZeroAssetAmountError(asset);
   }
 
   if (maxSharePrice === 0n) {
-    throw new ZeroMaxSharePriceError();
+    throw new ZeroMaxSharePriceError(vaultAddress);
   }
 
   const {

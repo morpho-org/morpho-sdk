@@ -10,6 +10,7 @@ describe("Withdraw VaultV2", () => {
     const morpho = createMorphoClient(client);
 
     const withdraw = morpho.vaultV2(KeyrockUsdcVaultV2.address).withdraw({
+      userAddress: client.account.address,
       assets: 1000000000000000000n,
     });
 
@@ -59,8 +60,8 @@ describe("Withdraw VaultV2", () => {
         const morpho = createMorphoClient(client);
         const vaultV2 = morpho.vaultV2(KeyrockUsdcVaultV2.address);
         const withdraw = vaultV2.withdraw({
-          assets,
           userAddress: client.account.address,
+          assets,
         });
 
         await client.sendTransaction(withdraw.tx);
