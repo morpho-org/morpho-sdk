@@ -63,14 +63,14 @@ describe("Redeem VaultV2", () => {
     });
 
     expect(finalState.userSharesBalance).toEqual(
-      initialState.userSharesBalance - shares
+      initialState.userSharesBalance - shares,
     );
     expect(finalState.userAssetBalance).toBeGreaterThan(
-      initialState.userAssetBalance
+      initialState.userAssetBalance,
     );
     expect(finalState.userAssetBalance).toEqual(1014668429n);
     expect(finalState.morphoAssetBalance).toBeLessThan(
-      initialState.morphoAssetBalance
+      initialState.morphoAssetBalance,
     );
   });
 });

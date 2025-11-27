@@ -1,3 +1,4 @@
+import { getChainAddresses } from "@morpho-org/blue-sdk";
 import { MorphoClient, vaultV2Deposit } from "src";
 import { KeyrockUsdcVaultV2, Re7UsdtVaultV2 } from "test/fixtures/vaultV2";
 import { testInvariants } from "test/helpers/invariants";
@@ -5,7 +6,6 @@ import { parseUnits } from "viem";
 import { mainnet } from "viem/chains";
 import { describe, expect } from "vitest";
 import { test } from "../setup";
-import { getChainAddresses } from "@morpho-org/blue-sdk";
 
 describe("Deposit VaultV2", () => {
   test("should create deposit bundle", async ({ client }) => {
@@ -78,13 +78,13 @@ describe("Deposit VaultV2", () => {
     });
 
     expect(finalState.userAssetBalance).toEqual(
-      initialState.userAssetBalance - amount
+      initialState.userAssetBalance - amount,
     );
     expect(finalState.morphoAssetBalance).toEqual(
-      initialState.morphoAssetBalance + amount
+      initialState.morphoAssetBalance + amount,
     );
     expect(finalState.userSharesBalance).toBeGreaterThan(
-      initialState.userSharesBalance
+      initialState.userSharesBalance,
     );
     expect(finalState.userSharesBalance).toEqual(985543619960501791635n);
   });
