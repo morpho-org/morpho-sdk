@@ -27,7 +27,7 @@ async function main() {
     throw new Error("USER_ADDRESS is required");
   }
 
-  // Create wallet client with Morpho viem extension
+  // Create wallet client
   const walletClient = createWalletClient({
     chain: mainnet,
     transport: http(MAINNET_RPC_URL),
@@ -110,7 +110,7 @@ async function main() {
 
   console.log("\n✅ Examples completed successfully!");
   console.log(
-    "\n💡 Note: These are example transactions. To actually send them:",
+    "\n💡 Note: These are example transactions. To actually send them:"
   );
 }
 
