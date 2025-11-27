@@ -1,10 +1,10 @@
 import { describe, expect } from "vitest";
-import { createMorphoClient } from "../src/client";
+import { MorphoClient } from "../src/client";
 import { test } from "./setup";
 
 describe("MorphoClient", () => {
   test("should create a morpho client", ({ client }) => {
-    const morpho = createMorphoClient(client);
+    const morpho = new MorphoClient(client);
 
     expect(morpho).toBeDefined();
     expect(morpho.viemClient).toBeDefined();
