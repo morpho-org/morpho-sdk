@@ -1,4 +1,4 @@
-import { createMorphoClient, instantiateVaultV2, vaultV2Deposit } from "src";
+import { MorphoClient, vaultV2Deposit } from "src";
 import { KeyrockUsdcVaultV2 } from "test/fixtures/vaultV2";
 import { testInvariants } from "test/helpers/invariants";
 import { parseUnits } from "viem";
@@ -8,26 +8,18 @@ import { test } from "../setup";
 
 describe("Deposit VaultV2", () => {
   test("should create deposit bundle", async ({ client }) => {
-    const morpho = createMorphoClient(client);
+    const morpho = new MorphoClient(client);
 
-    const vault = morpho.vaultV2(KeyrockUsdcVaultV2.address);
-
+    const vault = morpho.vaultV2(KeyrockUsdcVaultV2.address, mainnet.id);
     const deposit = await vault.deposit({
       userAddress: client.account.address,
       assets: 1000000000000000000n,
     });
     const requirements_1 = await deposit.getRequirements();
-    const tx_1 = deposit.build();
+    const data = await vault.getData();
+    const tx_1 = deposit.buildTx();
 
-    const vaultV2_2 = instantiateVaultV2(morpho, KeyrockUsdcVaultV2.address);
-    const deposit_2 = await vaultV2_2.deposit({
-      userAddress: client.account.address,
-      assets: 1000000000000000000n,
-    });
-    const requirements_2 = await deposit_2.getRequirements();
-    const tx_2 = deposit_2.build();
-
-    const deposit_3 = vaultV2Deposit({
+    const tx_2 = vaultV2Deposit({
       vault: {
         chainId: mainnet.id,
         address: KeyrockUsdcVaultV2.address,
@@ -39,12 +31,10 @@ describe("Deposit VaultV2", () => {
         recipient: client.account.address,
       },
     });
-    const data = await vaultV2_2.getData();
 
     expect(deposit).toBeDefined();
+    expect(requirements_1).toBeDefined();
     expect(tx_1).toStrictEqual(tx_2);
-    expect(tx_1).toStrictEqual(deposit_3);
-    expect(requirements_1).toStrictEqual(requirements_2);
     expect(data.asset).toStrictEqual(KeyrockUsdcVaultV2.asset);
     expect(data.address).toStrictEqual(KeyrockUsdcVaultV2.address);
   });
@@ -66,14 +56,14 @@ describe("Deposit VaultV2", () => {
         vaults: { KeyrockUsdcVaultV2 },
       },
       actionFn: async () => {
-        const morpho = createMorphoClient(client);
-        const vaultV2 = morpho.vaultV2(KeyrockUsdcVaultV2.address);
+        const morpho = new MorphoClient(client);
+        const vaultV2 = morpho.vaultV2(KeyrockUsdcVaultV2.address, mainnet.id);
         const deposit = await vaultV2.deposit({
           userAddress: client.account.address,
           assets: amount,
         });
 
-        const tx = deposit.build();
+        const tx = deposit.buildTx();
         const requirements = await deposit.getRequirements();
 
         const approveTx = requirements[0];
@@ -87,13 +77,13 @@ describe("Deposit VaultV2", () => {
     });
 
     expect(finalState.userAssetBalance).toEqual(
-      initialState.userAssetBalance - amount,
+      initialState.userAssetBalance - amount
     );
     expect(finalState.morphoAssetBalance).toEqual(
-      initialState.morphoAssetBalance + amount,
+      initialState.morphoAssetBalance + amount
     );
     expect(finalState.userSharesBalance).toBeGreaterThan(
-      initialState.userSharesBalance,
+      initialState.userSharesBalance
     );
     expect(finalState.userSharesBalance).toEqual(995180492265720444556n);
   });

@@ -4,35 +4,10 @@
 
 ## ✨ How to use it? (three ways to build transactions)
 
-### 1️⃣ **With viem extension** (Recommended)
+### 1️⃣ **With MorphoClient**
 
 ```typescript
-import { createWalletClient, http } from "viem";
-import { mainnet } from "viem/chains";
-import { morphoViemExtension } from "morpho-sdk-core";
-
-const client = createWalletClient({
-  chain: mainnet,
-  transport: http(),
-  account: "0x...",
-}).extend(morphoViemExtension());
-
-const vault = client.morpho.vaultV2("0x1234...");
-const deposit = await vault.deposit({ assets: 1000000000000000000n });
-console.log(deposit.tx);
-console.log(await deposit.getRequirements());
-
-const withdraw = vault.withdraw({ assets: 1000000000000000000n });
-console.log(withdraw.tx);
-
-const redeem = vault.redeem({ shares: 1000000000000000000n });
-console.log(redeem.tx);
-```
-
-### 2️⃣ **With MorphoClient**
-
-```typescript
-import { createMorphoClient } from "morpho-sdk-core";
+import { MorphoClient } from "consumer-sdk";
 import { createWalletClient, http } from "viem";
 
 const client = createWalletClient({
@@ -41,21 +16,30 @@ const client = createWalletClient({
   account: "0x...",
 });
 
-const morpho = createMorphoClient(client);
+const morpho = new MorphoClient(client);
 
-const vault = morpho.vaultV2("0x1234...");
-const deposit = await vault.deposit({ assets: 1000000000000000000n });
-console.log(deposit.tx);
+const vault = morpho.vaultV2("0x1234...", 1); // vault address, chain ID
+const deposit = await vault.deposit({
+  assets: 1000000000000000000n, // vault asset amount
+  userAddress: "0x1234...", // recipient address
+});
+console.log(deposit.buildTx());
 console.log(await deposit.getRequirements());
 
-const withdraw = vault.withdraw({ assets: 1000000000000000000n });
-console.log(withdraw.tx);
+const withdraw = vault.withdraw({
+  assets: 1000000000000000000n, // vault asset amount
+  userAddress: "0x1234...", // recipient address
+});
+console.log(withdraw.buildTx());
 
-const redeem = vault.redeem({ shares: 1000000000000000000n });
-console.log(redeem.tx);
+const redeem = vault.redeem({
+  shares: 1000000000000000000n, // vault shares amount
+  userAddress: "0x1234...", // recipient address
+});
+console.log(redeem.buildTx());
 ```
 
-### 3️⃣ **Direct construction** (Full control)
+### 2️⃣ **Direct construction** (Full control)
 
 ```typescript
 import { vaultV2Deposit } from "morpho-sdk-core";
@@ -67,9 +51,9 @@ const deposit = vaultV2Deposit({
     asset: "0x1234...", // asset address
   },
   args: {
-    assets: 1000000000000000000n,
+    assets: 1000000000000000000n, // vault asset amount
     maxSharePrice: 995180497664595699494513674403n,
-    recipient: client.account.address,
+    recipient: "0x1234...", // recipient address
   },
 });
 ```

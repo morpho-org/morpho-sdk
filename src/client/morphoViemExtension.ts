@@ -1,6 +1,6 @@
 import type { Client } from "viem";
 import type { Metadata } from "../types";
-import { createMorphoClient } from "./morphoClient";
+import { MorphoClient } from "./morphoClient";
 
 /**
  * Morpho extension for viem clients.
@@ -29,7 +29,7 @@ import { createMorphoClient } from "./morphoClient";
 export function morphoViemExtension(metadata?: Metadata) {
   return <TClient extends Client>(client: TClient) => {
     return {
-      morpho: createMorphoClient(client, metadata),
+      morpho: new MorphoClient(client, metadata),
     };
   };
 }

@@ -1,9 +1,10 @@
-import { createMorphoClient, Time } from "src";
+import { MorphoClient, Time } from "src";
 import { KeyrockUsdcVaultV2 } from "test/fixtures/vaultV2";
 import { testInvariants } from "test/helpers/invariants";
 import { parseUnits } from "viem";
 import { describe, expect } from "vitest";
 import { test } from "../setup";
+import { mainnet } from "viem/chains";
 
 describe("Metadata", () => {
   test("should create deposit bundle with origin and timestamp metadata", async ({
@@ -25,17 +26,17 @@ describe("Metadata", () => {
         vaults: { KeyrockUsdcVaultV2 },
       },
       actionFn: async () => {
-        const morpho = createMorphoClient(client, {
+        const morpho = new MorphoClient(client, {
           origin: "25AFEA44",
           timestamp: true,
         });
-        const vaultV2 = morpho.vaultV2(KeyrockUsdcVaultV2.address);
+        const vaultV2 = morpho.vaultV2(KeyrockUsdcVaultV2.address, mainnet.id);
         const deposit = await vaultV2.deposit({
           userAddress: client.account.address,
           assets: amount,
         });
 
-        const tx_1 = deposit.build();
+        const tx_1 = deposit.buildTx();
         expect(tx_1.data).toContain("25AFEA44");
         const position = tx_1.data.indexOf("25AFEA44");
         expect(position).toBeGreaterThanOrEqual(8);
@@ -53,20 +54,20 @@ describe("Metadata", () => {
           throw new Error("Approve transaction not found");
         }
 
-        const tx_2 = deposit.build();
+        const tx_2 = deposit.buildTx();
         await client.sendTransaction(approveTx);
         await client.sendTransaction(tx_2);
       },
     });
 
     expect(finalState.userAssetBalance).toEqual(
-      initialState.userAssetBalance - amount,
+      initialState.userAssetBalance - amount
     );
     expect(finalState.morphoAssetBalance).toEqual(
-      initialState.morphoAssetBalance + amount,
+      initialState.morphoAssetBalance + amount
     );
     expect(finalState.userSharesBalance).toBeGreaterThan(
-      initialState.userSharesBalance,
+      initialState.userSharesBalance
     );
   });
 
@@ -89,16 +90,16 @@ describe("Metadata", () => {
         vaults: { KeyrockUsdcVaultV2 },
       },
       actionFn: async () => {
-        const morpho = createMorphoClient(client, {
+        const morpho = new MorphoClient(client, {
           origin: "25AFEA44",
         });
-        const vaultV2 = morpho.vaultV2(KeyrockUsdcVaultV2.address);
+        const vaultV2 = morpho.vaultV2(KeyrockUsdcVaultV2.address, mainnet.id);
         const deposit = await vaultV2.deposit({
           userAddress: client.account.address,
           assets: amount,
         });
 
-        const tx = deposit.build();
+        const tx = deposit.buildTx();
         expect(tx.data).toContain("25AFEA44");
         const position = tx.data.indexOf("25AFEA44");
         expect(position).toBeGreaterThanOrEqual(8);
@@ -119,13 +120,13 @@ describe("Metadata", () => {
     });
 
     expect(finalState.userAssetBalance).toEqual(
-      initialState.userAssetBalance - amount,
+      initialState.userAssetBalance - amount
     );
     expect(finalState.morphoAssetBalance).toEqual(
-      initialState.morphoAssetBalance + amount,
+      initialState.morphoAssetBalance + amount
     );
     expect(finalState.userSharesBalance).toBeGreaterThan(
-      initialState.userSharesBalance,
+      initialState.userSharesBalance
     );
   });
 });

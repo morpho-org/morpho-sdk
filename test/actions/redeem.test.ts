@@ -1,29 +1,24 @@
-import { createMorphoClient, instantiateVaultV2, vaultV2Redeem } from "src";
+import { MorphoClient, vaultV2Redeem } from "src";
 import { KeyrockUsdcVaultV2 } from "test/fixtures/vaultV2";
 import { testInvariants } from "test/helpers/invariants";
 import { parseUnits } from "viem";
 import { describe, expect } from "vitest";
 import { test } from "../setup";
+import { mainnet } from "viem/chains";
 
 describe("Redeem VaultV2", () => {
   test("should create redeem transaction", async ({ client }) => {
-    const morpho = createMorphoClient(client);
+    const morpho = new MorphoClient(client);
 
-    const redeem = morpho.vaultV2(KeyrockUsdcVaultV2.address).redeem({
-      userAddress: client.account.address,
-      shares: 1000000000000000000n,
-    });
-    const tx_1 = redeem.build();
+    const redeem = morpho
+      .vaultV2(KeyrockUsdcVaultV2.address, mainnet.id)
+      .redeem({
+        userAddress: client.account.address,
+        shares: 1000000000000000000n,
+      });
+    const tx_1 = redeem.buildTx();
 
-    const vaultV2_2 = instantiateVaultV2(morpho, KeyrockUsdcVaultV2.address);
-
-    const redeem_2 = vaultV2_2.redeem({
-      userAddress: client.account.address,
-      shares: 1000000000000000000n,
-    });
-    const tx_2 = redeem_2.build();
-
-    const redeem_3 = vaultV2Redeem({
+    const tx_2 = vaultV2Redeem({
       vault: {
         address: KeyrockUsdcVaultV2.address,
       },
@@ -36,7 +31,6 @@ describe("Redeem VaultV2", () => {
 
     expect(redeem).toBeDefined();
     expect(tx_1).toStrictEqual(tx_2);
-    expect(redeem_3).toStrictEqual(tx_2);
   });
 
   test("should redeem 1K USDC in vaultV2", async ({ client }) => {
@@ -56,27 +50,27 @@ describe("Redeem VaultV2", () => {
         vaults: { KeyrockUsdcVaultV2 },
       },
       actionFn: async () => {
-        const morpho = createMorphoClient(client);
-        const vaultV2 = morpho.vaultV2(KeyrockUsdcVaultV2.address);
+        const morpho = new MorphoClient(client);
+        const vaultV2 = morpho.vaultV2(KeyrockUsdcVaultV2.address, mainnet.id);
         const redeem = vaultV2.redeem({
           userAddress: client.account.address,
           shares,
         });
-        const tx = redeem.build();
+        const tx = redeem.buildTx();
 
         await client.sendTransaction(tx);
       },
     });
 
     expect(finalState.userSharesBalance).toEqual(
-      initialState.userSharesBalance - shares,
+      initialState.userSharesBalance - shares
     );
     expect(finalState.userAssetBalance).toBeGreaterThan(
-      initialState.userAssetBalance,
+      initialState.userAssetBalance
     );
     expect(finalState.userAssetBalance).toEqual(1004842845n);
     expect(finalState.morphoAssetBalance).toBeLessThan(
-      initialState.morphoAssetBalance,
+      initialState.morphoAssetBalance
     );
   });
 });

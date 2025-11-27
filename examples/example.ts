@@ -1,14 +1,13 @@
 /**
- * Example: Using Morpho SDK with MorphoClient
+ * Example: Using Morpho SDK with viem client extension
  *
  * This example demonstrates how to use the Morpho SDK
- * by creating a MorphoClient instance.
+ * by creating a viem client extension.
  */
 
 import dotenv from "dotenv";
 import { type Address, createWalletClient, http, parseUnits } from "viem";
 import { mainnet } from "viem/chains";
-import { createMorphoClient } from "../src";
 import { morphoViemExtension } from "../src/client";
 import { env } from "../test/env";
 
@@ -34,16 +33,13 @@ async function main() {
     transport: http(MAINNET_RPC_URL),
   }).extend(morphoViemExtension());
 
-  // Create Morpho client
-  const morpho = createMorphoClient(walletClient);
-
   console.log("🔷 Morpho SDK Example - MorphoClient");
   console.log("====================================\n");
   console.log(`Chain: ${mainnet.name} (${mainnet.id})`);
   console.log(`Vault: ${VAULT_ADDRESS}\n`);
 
   // Get vault instance
-  const vault = morpho.vaultV2(VAULT_ADDRESS);
+  const vault = walletClient.morpho.vaultV2(VAULT_ADDRESS, mainnet.id);
 
   // Example 1: Create a deposit transaction
   console.log("📥 Creating deposit transaction...");
@@ -52,7 +48,7 @@ async function main() {
     assets: depositAmount,
     userAddress: USER_ADDRESS,
   });
-  const depositTx = deposit.build();
+  const depositTx = deposit.buildTx();
 
   console.log("Deposit transaction:", {
     to: depositTx.to,
@@ -78,7 +74,7 @@ async function main() {
     assets: withdrawAmount,
     userAddress: USER_ADDRESS,
   });
-  const withdrawTx = withdraw.build();
+  const withdrawTx = withdraw.buildTx();
 
   console.log("Withdraw transaction:", {
     to: withdrawTx.to,
@@ -93,7 +89,7 @@ async function main() {
     shares: redeemShares,
     userAddress: USER_ADDRESS,
   });
-  const redeemTx = redeem.build();
+  const redeemTx = redeem.buildTx();
 
   console.log("Redeem transaction:", {
     to: redeemTx.to,
@@ -111,7 +107,7 @@ async function main() {
 
   console.log("\n✅ Examples completed successfully!");
   console.log(
-    "\n💡 Note: These are example transactions. To actually send them:",
+    "\n💡 Note: These are example transactions. To actually send them:"
   );
 }
 

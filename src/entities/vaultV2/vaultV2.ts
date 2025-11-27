@@ -46,7 +46,7 @@ export interface VaultV2Actions {
     userAddress: Address;
     slippageTolerance?: bigint;
   }) => Promise<{
-    build: () => Readonly<Transaction<VaultV2DepositAction>>;
+    buildTx: () => Readonly<Transaction<VaultV2DepositAction>>;
     getRequirements: () => Promise<
       Readonly<Transaction<ERC20ApprovalAction>[]>
     >;
@@ -63,7 +63,7 @@ export interface VaultV2Actions {
    * @returns {Readonly<Transaction<VaultV2WithdrawAction>>} returns.tx The prepared withdraw transaction.
    */
   withdraw: (params: { assets: bigint; userAddress: Address }) => {
-    build: () => Readonly<Transaction<VaultV2WithdrawAction>>;
+    buildTx: () => Readonly<Transaction<VaultV2WithdrawAction>>;
   };
   /**
    * Prepares a redeem transaction for the VaultV2 contract.
@@ -77,18 +77,16 @@ export interface VaultV2Actions {
    * @returns {Readonly<Transaction<VaultV2RedeemAction>>} returns.tx The prepared redeem transaction.
    */
   redeem: (params: { shares: bigint; userAddress: Address }) => {
-    build: () => Readonly<Transaction<VaultV2RedeemAction>>;
+    buildTx: () => Readonly<Transaction<VaultV2RedeemAction>>;
   };
 }
 
 export class VaultV2 implements VaultV2Actions {
-  private readonly client: MorphoClientType;
-  private readonly vault: Address;
-
-  constructor(client: MorphoClientType, vault: Address) {
-    this.client = client;
-    this.vault = vault;
-  }
+  constructor(
+    private readonly client: MorphoClientType,
+    private readonly vault: Address,
+    private readonly chainId: number
+  ) {}
 
   async getData() {
     return fetchAccrualVaultV2(this.vault, this.client.viemClient);
@@ -109,16 +107,16 @@ export class VaultV2 implements VaultV2Actions {
       MathLib.mulDivUp(
         assets,
         MathLib.wToRay(MathLib.WAD + slippageTolerance),
-        vaultData.toShares(assets),
+        vaultData.toShares(assets)
       ),
-      MathLib.RAY * 100n,
+      MathLib.RAY * 100n
     );
 
     return {
-      build: () =>
+      buildTx: () =>
         vaultV2Deposit({
           vault: {
-            chainId: this.client.chainId,
+            chainId: this.chainId,
             address: this.vault,
             asset: vaultData.asset,
           },
@@ -130,8 +128,9 @@ export class VaultV2 implements VaultV2Actions {
           metadata: this.client.metadata,
         }),
       getRequirements: async () => {
-        return getRequirements(this.client, {
+        return getRequirements(this.client.viemClient, {
           address: vaultData.asset,
+          chainId: this.chainId,
           args: {
             amount: assets,
             from: userAddress,
@@ -143,7 +142,7 @@ export class VaultV2 implements VaultV2Actions {
 
   withdraw({ assets, userAddress }: { assets: bigint; userAddress: Address }) {
     return {
-      build: () =>
+      buildTx: () =>
         vaultV2Withdraw({
           vault: { address: this.vault },
           args: {
@@ -158,7 +157,7 @@ export class VaultV2 implements VaultV2Actions {
 
   redeem({ shares, userAddress }: { shares: bigint; userAddress: Address }) {
     return {
-      build: () =>
+      buildTx: () =>
         vaultV2Redeem({
           vault: { address: this.vault },
           args: {
@@ -171,6 +170,3 @@ export class VaultV2 implements VaultV2Actions {
     };
   }
 }
-
-export const instantiateVaultV2 = (client: MorphoClientType, vault: Address) =>
-  new VaultV2(client, vault);
