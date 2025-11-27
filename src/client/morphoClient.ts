@@ -5,7 +5,7 @@ import type { Metadata, MorphoClientType } from "../types";
 export class MorphoClient implements MorphoClientType {
   constructor(
     public readonly viemClient: Client,
-    public readonly metadata?: Metadata
+    public readonly metadata?: Metadata,
   ) {}
 
   vaultV2(vault: Address, chainId: number) {

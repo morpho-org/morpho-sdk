@@ -2,9 +2,9 @@ import { MorphoClient, vaultV2Withdraw } from "src";
 import { KeyrockUsdcVaultV2 } from "test/fixtures/vaultV2";
 import { testInvariants } from "test/helpers/invariants";
 import { parseUnits } from "viem";
+import { mainnet } from "viem/chains";
 import { describe, expect } from "vitest";
 import { test } from "../setup";
-import { mainnet } from "viem/chains";
 
 describe("Withdraw VaultV2", () => {
   test("should create redeem transaction", async ({ client }) => {
@@ -64,14 +64,14 @@ describe("Withdraw VaultV2", () => {
     });
 
     expect(finalState.userSharesBalance).toBeLessThan(
-      initialState.userSharesBalance
+      initialState.userSharesBalance,
     );
     expect(finalState.userAssetBalance).toEqual(
-      initialState.userAssetBalance + assets
+      initialState.userAssetBalance + assets,
     );
     expect(finalState.userSharesBalance).toEqual(4819505037350706326n);
     expect(finalState.morphoAssetBalance).toEqual(
-      initialState.morphoAssetBalance - assets
+      initialState.morphoAssetBalance - assets,
     );
   });
 });

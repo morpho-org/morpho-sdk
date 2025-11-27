@@ -2,9 +2,9 @@ import { type Address, getChainAddresses } from "@morpho-org/blue-sdk";
 import { fetchHolding } from "@morpho-org/blue-sdk-viem";
 import { deepFreeze } from "@morpho-org/morpho-ts";
 import { APPROVE_ONLY_ONCE_TOKENS } from "@morpho-org/simulation-sdk";
+import type { Client } from "viem";
 import type { ERC20ApprovalAction, Transaction } from "../../types";
 import { encodeErc20Approval } from "./encodeErc20Approval";
-import type { Client } from "viem";
 
 export const getRequirements = async (
   viemClient: Client,
@@ -12,7 +12,7 @@ export const getRequirements = async (
     address: Address;
     chainId: number;
     args: { amount: bigint; from: Address };
-  }
+  },
 ): Promise<Readonly<Transaction<ERC20ApprovalAction>[]>> => {
   const {
     address,
@@ -39,7 +39,7 @@ export const getRequirements = async (
           spender: generalAdapter1,
           amount: 0n,
           chainId: chainId,
-        })
+        }),
       );
     }
 
@@ -49,7 +49,7 @@ export const getRequirements = async (
         spender: generalAdapter1,
         amount,
         chainId: chainId,
-      })
+      }),
     );
   }
 

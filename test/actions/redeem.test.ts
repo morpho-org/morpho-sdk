@@ -2,9 +2,9 @@ import { MorphoClient, vaultV2Redeem } from "src";
 import { KeyrockUsdcVaultV2 } from "test/fixtures/vaultV2";
 import { testInvariants } from "test/helpers/invariants";
 import { parseUnits } from "viem";
+import { mainnet } from "viem/chains";
 import { describe, expect } from "vitest";
 import { test } from "../setup";
-import { mainnet } from "viem/chains";
 
 describe("Redeem VaultV2", () => {
   test("should create redeem transaction", async ({ client }) => {
@@ -63,14 +63,14 @@ describe("Redeem VaultV2", () => {
     });
 
     expect(finalState.userSharesBalance).toEqual(
-      initialState.userSharesBalance - shares
+      initialState.userSharesBalance - shares,
     );
     expect(finalState.userAssetBalance).toBeGreaterThan(
-      initialState.userAssetBalance
+      initialState.userAssetBalance,
     );
     expect(finalState.userAssetBalance).toEqual(1004842845n);
     expect(finalState.morphoAssetBalance).toBeLessThan(
-      initialState.morphoAssetBalance
+      initialState.morphoAssetBalance,
     );
   });
 });

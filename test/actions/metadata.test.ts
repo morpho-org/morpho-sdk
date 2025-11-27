@@ -2,9 +2,9 @@ import { MorphoClient, Time } from "src";
 import { KeyrockUsdcVaultV2 } from "test/fixtures/vaultV2";
 import { testInvariants } from "test/helpers/invariants";
 import { parseUnits } from "viem";
+import { mainnet } from "viem/chains";
 import { describe, expect } from "vitest";
 import { test } from "../setup";
-import { mainnet } from "viem/chains";
 
 describe("Metadata", () => {
   test("should create deposit bundle with origin and timestamp metadata", async ({
@@ -61,13 +61,13 @@ describe("Metadata", () => {
     });
 
     expect(finalState.userAssetBalance).toEqual(
-      initialState.userAssetBalance - amount
+      initialState.userAssetBalance - amount,
     );
     expect(finalState.morphoAssetBalance).toEqual(
-      initialState.morphoAssetBalance + amount
+      initialState.morphoAssetBalance + amount,
     );
     expect(finalState.userSharesBalance).toBeGreaterThan(
-      initialState.userSharesBalance
+      initialState.userSharesBalance,
     );
   });
 
@@ -120,13 +120,13 @@ describe("Metadata", () => {
     });
 
     expect(finalState.userAssetBalance).toEqual(
-      initialState.userAssetBalance - amount
+      initialState.userAssetBalance - amount,
     );
     expect(finalState.morphoAssetBalance).toEqual(
-      initialState.morphoAssetBalance + amount
+      initialState.morphoAssetBalance + amount,
     );
     expect(finalState.userSharesBalance).toBeGreaterThan(
-      initialState.userSharesBalance
+      initialState.userSharesBalance,
     );
   });
 });
