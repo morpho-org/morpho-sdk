@@ -130,6 +130,10 @@ describe("Deposit VaultV2", () => {
 
         const tx = deposit.buildTx();
 
+        if (!requirements[0] || !requirements[1]) {
+          throw new Error("Approval transactions not found");
+        }
+
         await client.sendTransaction(requirements[0]);
         await client.sendTransaction(requirements[1]);
         await client.sendTransaction(tx);
