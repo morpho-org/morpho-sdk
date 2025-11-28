@@ -33,7 +33,7 @@ export class ZeroMaxSharePriceError extends Error {
 export class ChainIdMismatchError extends Error {
   constructor(clientChainId: number | undefined, argsChainId: number) {
     super(
-      `Chain ID mismatch between client and args: client chain ID is ${clientChainId} and args chain ID is ${argsChainId}`
+      `Chain ID mismatch between client: ${clientChainId} and args: ${argsChainId}`,
     );
   }
 }
