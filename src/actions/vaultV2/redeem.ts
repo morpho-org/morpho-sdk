@@ -25,6 +25,9 @@ export interface VaultV2RedeemParams {
  * Prepares a redeem transaction for the VaultV2 contract.
  *
  * This function constructs the transaction data required to redeem a specified amount of shares from the vault.
+ * 
+ * IMPORTANT FOR DEVELOPERS:
+ * This flow is not routed through the bundler because the risks are negligible since these operations cannot be affected by attacks. This avoids unnecessary approvals and keeps the UX clean.
  *
  * @param {Object} params - The vault related parameters.
  * @param {Object} params.vault - The vault related parameters.
