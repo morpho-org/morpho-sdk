@@ -25,7 +25,7 @@ export interface VaultV2WithdrawParams {
  * Prepares a withdraw transaction for the VaultV2 contract.
  *
  * This function constructs the transaction data required to withdraw a specified amount of assets from the vault.
- * 
+ *
  * IMPORTANT FOR DEVELOPERS:
  * This flow is not routed through the bundler because the risks are negligible since these operations cannot be affected by attacks. This avoids unnecessary approvals and keeps the UX clean.
  *

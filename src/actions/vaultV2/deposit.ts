@@ -27,7 +27,7 @@ export interface VaultV2DepositParams {
 
 /**
  * Prepares a deposit transaction for the VaultV2 contract.
- * 
+ *
  * This function constructs the transaction data required to deposit a specified amount of assets into the vault.
  * Bundler Integration: This flow uses the bundler to atomically execute the user's asset transfer and vault deposit in a single transaction for slippage protection.
  *
@@ -48,7 +48,7 @@ export interface VaultV2DepositParams {
  * @param {bigint} params.args.maxSharePrice - The maximum share price to accept for the deposit.
  * @param {Address} params.args.recipient - The recipient address.
  * @param {Metadata} [params.metadata] - Optional the metadata.
- * 
+ *
  * @returns {Readonly<Transaction<VaultV2DepositAction>>} The prepared deposit transaction.
  */
 export const vaultV2Deposit = ({
