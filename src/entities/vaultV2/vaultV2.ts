@@ -86,7 +86,7 @@ export class VaultV2 implements VaultV2Actions {
   constructor(
     private readonly client: MorphoClientType,
     private readonly vault: Address,
-    private readonly chainId: number
+    private readonly chainId: number,
   ) {}
 
   async getData() {
@@ -105,7 +105,7 @@ export class VaultV2 implements VaultV2Actions {
     if (this.client.viemClient.chain?.id !== this.chainId) {
       throw new ChainIdMismatchError(
         this.client.viemClient.chain?.id,
-        this.chainId
+        this.chainId,
       );
     }
 
@@ -115,9 +115,9 @@ export class VaultV2 implements VaultV2Actions {
       MathLib.mulDivUp(
         assets,
         MathLib.wToRay(MathLib.WAD + slippageTolerance),
-        vaultData.toShares(assets)
+        vaultData.toShares(assets),
       ),
-      MathLib.RAY * 100n
+      MathLib.RAY * 100n,
     );
 
     return {

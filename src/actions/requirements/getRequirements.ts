@@ -16,7 +16,7 @@ export const getRequirements = async (
     address: Address;
     chainId: number;
     args: { amount: bigint; from: Address };
-  }
+  },
 ): Promise<Readonly<Transaction<ERC20ApprovalAction>[]>> => {
   const {
     address,
@@ -46,7 +46,7 @@ export const getRequirements = async (
           spender: generalAdapter1,
           amount: 0n,
           chainId: chainId,
-        })
+        }),
       );
     }
 
@@ -56,7 +56,7 @@ export const getRequirements = async (
         spender: generalAdapter1,
         amount,
         chainId: chainId,
-      })
+      }),
     );
   }
 
