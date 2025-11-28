@@ -7,13 +7,14 @@ import {
   vaultV2Redeem,
   vaultV2Withdraw,
 } from "../../actions";
-import type {
-  ERC20ApprovalAction,
-  MorphoClientType,
-  Transaction,
-  VaultV2DepositAction,
-  VaultV2RedeemAction,
-  VaultV2WithdrawAction,
+import {
+  ChainIdMismatchError,
+  type ERC20ApprovalAction,
+  type MorphoClientType,
+  type Transaction,
+  type VaultV2DepositAction,
+  type VaultV2RedeemAction,
+  type VaultV2WithdrawAction,
 } from "../../types";
 
 export interface VaultV2Actions {
@@ -85,7 +86,7 @@ export class VaultV2 implements VaultV2Actions {
   constructor(
     private readonly client: MorphoClientType,
     private readonly vault: Address,
-    private readonly chainId: number,
+    private readonly chainId: number
   ) {}
 
   async getData() {
@@ -101,15 +102,22 @@ export class VaultV2 implements VaultV2Actions {
     userAddress: Address;
     slippageTolerance?: bigint;
   }) {
+    if (this.client.viemClient.chain?.id !== this.chainId) {
+      throw new ChainIdMismatchError(
+        this.client.viemClient.chain?.id,
+        this.chainId
+      );
+    }
+
     const vaultData = await fetchVaultV2(this.vault, this.client.viemClient);
 
     const maxSharePrice = MathLib.min(
       MathLib.mulDivUp(
         assets,
         MathLib.wToRay(MathLib.WAD + slippageTolerance),
-        vaultData.toShares(assets),
+        vaultData.toShares(assets)
       ),
-      MathLib.RAY * 100n,
+      MathLib.RAY * 100n
     );
 
     return {
