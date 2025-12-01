@@ -1,8 +1,12 @@
-# Morpho SDK
+# consumer-sdk
+
+![Beta](https://img.shields.io/badge/status-beta-orange)
 
 > **The abstraction layer that simplifies Morpho protocol**
 
-## ✨ How to use it? (three ways to build transactions)
+> ⚠️ **Experimental package**: This SDK is currently in experimental phase.
+
+## ✨ How to use it? (Two ways to build transactions)
 
 ### 1️⃣ **With MorphoClient**
 
