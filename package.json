@@ -37,6 +37,7 @@
     "@types/node": "^24.9.1",
     "@vitest/coverage-v8": "3.2.4",
     "@vitest/ui": "3.2.4",
+    "conventional-changelog-writer": "^8.2.0",
     "dotenv": "^17.2.3",
     "husky": "^9.1.7",
     "typescript": "^5.7.2",
