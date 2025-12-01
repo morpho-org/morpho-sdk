@@ -21,7 +21,7 @@ jobs:
       MAINNET_RPC_URL: ${{ secrets.MAINNET_RPC_URL }}
 
   publish:
-    if: github.ref_name == 'main' || github.ref_name == 'next'
+    if: github.ref_name == 'main' || github.ref_name == 'next' || github.ref_name == 'feat/deploy-npm-workflow'
 
     needs:
       - lint
