@@ -2,4 +2,4 @@
 "@morpho-org/consumer-sdk": patch
 ---
 
-update doc with disclaimer
+Add disclaimer in readme

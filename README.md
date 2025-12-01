@@ -2,9 +2,9 @@
 
 ![Beta](https://img.shields.io/badge/status-beta-orange)
 
-> **The abstraction layer that simplifies Morpho protocol**
-
 > ⚠️ **Experimental package**: This SDK is currently in experimental phase.
+
+> **The abstraction layer that simplifies Morpho protocol**
 
 ## ✨ How to use it? (two ways to build transactions)
 
