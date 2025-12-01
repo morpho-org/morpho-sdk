@@ -45,7 +45,7 @@ export const getRequirements = async (
           token: address,
           spender: generalAdapter1,
           amount: 0n,
-          chainId: chainId,
+          chainId,
         }),
       );
     }
@@ -55,7 +55,7 @@ export const getRequirements = async (
         token: address,
         spender: generalAdapter1,
         amount,
-        chainId: chainId,
+        chainId,
       }),
     );
   }
