@@ -1,20 +1,18 @@
-name: Publish
+name: Version Pull Request
 
 on:
-  workflow_call:
   push:
     branches:
       - main
 
 permissions:
-  id-token: write
   contents: write
+  pull-requests: write
 
 jobs:
-  publish:
-    name: Publish to npm
+  version:
+    name: Create Version Pull Request
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v4
         with:
@@ -26,22 +24,14 @@ jobs:
         with:
           node-version-file: .nvmrc
           cache: pnpm
-          registry-url: https://registry.npmjs.org
-          scope: '@morpho-org'
-
-      # Required to use OIDC trusted publishing.
-      - run: npm install -g npm@latest
 
       - run: pnpm install --frozen-lockfile
 
-      - name: Publish to npm
-        uses: changesets/action@v1
+      - uses: changesets/action@v1
         with:
-          publish: pnpm release
           version: pnpm version
           commit: "chore: version packages"
           title: "chore: version packages"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
