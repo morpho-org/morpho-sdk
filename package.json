@@ -31,7 +31,7 @@
     "test:coverage": "vitest --coverage",
     "changeset": "changeset",
     "version": "changeset version",
-    "release": "pnpm build && changeset publish"
+    "release": "changeset publish"
   },
   "devDependencies": {
     "@biomejs/biome": "2.3.3",
