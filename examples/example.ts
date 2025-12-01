@@ -8,7 +8,7 @@
 import dotenv from "dotenv";
 import { type Address, createWalletClient, http, parseUnits } from "viem";
 import { mainnet } from "viem/chains";
-import { createMorphoClient } from "../src";
+import { MorphoClient } from "../src/client";
 import { env } from "../test/env";
 
 // Load environment variables
@@ -34,7 +34,7 @@ async function main() {
   });
 
   // Create Morpho client
-  const morpho = createMorphoClient(walletClient);
+  const morpho = new MorphoClient(walletClient);
 
   console.log("🔷 Morpho SDK Example - MorphoClient");
   console.log("====================================\n");
@@ -42,7 +42,7 @@ async function main() {
   console.log(`Vault: ${VAULT_ADDRESS}\n`);
 
   // Get vault instance
-  const vault = morpho.vaultV2(VAULT_ADDRESS);
+  const vault = morpho.vaultV2(VAULT_ADDRESS, mainnet.id);
 
   // Example 1: Create a deposit transaction
   console.log("📥 Creating deposit transaction...");
@@ -51,11 +51,12 @@ async function main() {
     assets: depositAmount,
     userAddress: USER_ADDRESS,
   });
+  const depositTx = deposit.buildTx();
 
   console.log("Deposit transaction:", {
-    to: deposit.tx.to,
-    data: deposit.tx.data,
-    value: deposit.tx.value,
+    to: depositTx.to,
+    data: depositTx.data,
+    value: depositTx.value,
   });
 
   // Get requirements (e.g., ERC20 approval)
@@ -76,11 +77,12 @@ async function main() {
     assets: withdrawAmount,
     userAddress: USER_ADDRESS,
   });
+  const withdrawTx = withdraw.buildTx();
 
   console.log("Withdraw transaction:", {
-    to: withdraw.tx.to,
-    data: withdraw.tx.data,
-    value: withdraw.tx.value?.toString(),
+    to: withdrawTx.to,
+    data: withdrawTx.data,
+    value: withdrawTx.value,
   });
 
   // Example 3: Create a redeem transaction
@@ -90,11 +92,12 @@ async function main() {
     shares: redeemShares,
     userAddress: USER_ADDRESS,
   });
+  const redeemTx = redeem.buildTx();
 
   console.log("Redeem transaction:", {
-    to: redeem.tx.to,
-    data: redeem.tx.data,
-    value: redeem.tx.value?.toString(),
+    to: redeemTx.to,
+    data: redeemTx.data,
+    value: redeemTx.value,
   });
 
   // Example 4: Get vault data

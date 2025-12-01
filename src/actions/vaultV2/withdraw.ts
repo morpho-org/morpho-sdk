@@ -26,6 +26,9 @@ export interface VaultV2WithdrawParams {
  *
  * This function constructs the transaction data required to withdraw a specified amount of assets from the vault.
  *
+ * IMPORTANT FOR DEVELOPERS:
+ * This flow is not routed through the bundler because the risks are negligible since these operations cannot be affected by attacks. This avoids unnecessary approvals and keeps the UX clean.
+ *
  * @param {Object} params - The vault related parameters.
  * @param {Object} params.vault - The vault related parameters.
  * @param {Address} params.vault.address - The vault address.
@@ -42,7 +45,7 @@ export const vaultV2Withdraw = ({
   metadata,
 }: VaultV2WithdrawParams): Readonly<Transaction<VaultV2WithdrawAction>> => {
   if (assets === 0n) {
-    throw new ZeroAssetAmountError();
+    throw new ZeroAssetAmountError(vaultAddress);
   }
 
   let tx = {
@@ -59,13 +62,11 @@ export const vaultV2Withdraw = ({
     tx = addTransactionMetadata(tx, metadata);
   }
 
-  const action: VaultV2WithdrawAction = {
-    type: "vaultV2Withdraw",
-    args: { vault: vaultAddress, assets, recipient },
-  };
-
   return deepFreeze({
     ...tx,
-    action,
+    action: {
+      type: "vaultV2Withdraw",
+      args: { vault: vaultAddress, assets, recipient },
+    },
   });
 };

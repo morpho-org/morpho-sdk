@@ -1,27 +1,24 @@
-import { createMorphoClient, instantiateVaultV2, vaultV2Withdraw } from "src";
+import { MorphoClient, vaultV2Withdraw } from "src";
 import { KeyrockUsdcVaultV2 } from "test/fixtures/vaultV2";
 import { testInvariants } from "test/helpers/invariants";
 import { parseUnits } from "viem";
+import { mainnet } from "viem/chains";
 import { describe, expect } from "vitest";
 import { test } from "../setup";
 
 describe("Withdraw VaultV2", () => {
   test("should create redeem transaction", async ({ client }) => {
-    const morpho = createMorphoClient(client);
+    const morpho = new MorphoClient(client);
 
-    const withdraw = morpho.vaultV2(KeyrockUsdcVaultV2.address).withdraw({
-      assets: 1000000000000000000n,
-    });
+    const withdraw = morpho
+      .vaultV2(KeyrockUsdcVaultV2.address, mainnet.id)
+      .withdraw({
+        userAddress: client.account.address,
+        assets: 1000000000000000000n,
+      });
+    const tx_1 = withdraw.buildTx();
 
-    // Second Devex with entity
-    const vaultV2_2 = instantiateVaultV2(morpho, KeyrockUsdcVaultV2.address);
-
-    const withdraw_2 = vaultV2_2.withdraw({
-      assets: 1000000000000000000n,
-    });
-
-    // Third Devex build directly tx
-    const withdraw_3 = vaultV2Withdraw({
+    const tx_2 = vaultV2Withdraw({
       vault: {
         address: KeyrockUsdcVaultV2.address,
       },
@@ -33,8 +30,7 @@ describe("Withdraw VaultV2", () => {
     });
 
     expect(withdraw).toBeDefined();
-    expect(withdraw.tx).toStrictEqual(withdraw_2.tx);
-    expect(withdraw_3).toStrictEqual(withdraw_2.tx);
+    expect(tx_1).toStrictEqual(tx_2);
   });
 
   test("should withdraw 1K assets in vaultV2", async ({ client }) => {
@@ -55,13 +51,15 @@ describe("Withdraw VaultV2", () => {
         vaults: { KeyrockUsdcVaultV2 },
       },
       actionFn: async () => {
-        const morpho = createMorphoClient(client);
-        const vaultV2 = morpho.vaultV2(KeyrockUsdcVaultV2.address);
+        const morpho = new MorphoClient(client);
+        const vaultV2 = morpho.vaultV2(KeyrockUsdcVaultV2.address, mainnet.id);
         const withdraw = vaultV2.withdraw({
+          userAddress: client.account.address,
           assets,
         });
+        const tx = withdraw.buildTx();
 
-        await client.sendTransaction(withdraw.tx);
+        await client.sendTransaction(tx);
       },
     });
 
@@ -71,7 +69,7 @@ describe("Withdraw VaultV2", () => {
     expect(finalState.userAssetBalance).toEqual(
       initialState.userAssetBalance + assets,
     );
-    expect(finalState.userSharesBalance).toEqual(4819505037350706326n);
+    expect(finalState.userSharesBalance).toEqual(14456377621545858217n);
     expect(finalState.morphoAssetBalance).toEqual(
       initialState.morphoAssetBalance - assets,
     );

@@ -1,34 +1,39 @@
+import type { Address } from "viem";
+
 export class MissingAddressError extends Error {
   constructor() {
     super("User address not found.");
-    this.name = "MissingAddressError";
   }
 }
 
 export class MissingChainIdError extends Error {
   constructor() {
     super("Chain ID not found.");
-    this.name = "MissingChainIdError";
   }
 }
 
 export class ZeroAssetAmountError extends Error {
-  constructor() {
-    super("Asset amount cannot be zero.");
-    this.name = "ZeroAssetAmountError";
+  constructor(asset: Address) {
+    super(`Asset amount cannot be zero for address: ${asset}`);
   }
 }
 
 export class ZeroSharesAmountError extends Error {
-  constructor() {
-    super("Shares amount cannot be zero.");
-    this.name = "ZeroSharesAmountError";
+  constructor(vault: Address) {
+    super(`Shares amount cannot be zero for address: ${vault}`);
   }
 }
 
-export class MaxSharePriceError extends Error {
-  constructor() {
-    super("Max share price cannot be zero.");
-    this.name = "MaxSharePriceError";
+export class ZeroMaxSharePriceError extends Error {
+  constructor(vault: Address) {
+    super(`Max share price cannot be zero for vault: ${vault}`);
+  }
+}
+
+export class ChainIdMismatchError extends Error {
+  constructor(clientChainId: number | undefined, argsChainId: number) {
+    super(
+      `Chain ID mismatch between client: ${clientChainId} and args: ${argsChainId}`,
+    );
   }
 }

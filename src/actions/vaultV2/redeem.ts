@@ -26,6 +26,9 @@ export interface VaultV2RedeemParams {
  *
  * This function constructs the transaction data required to redeem a specified amount of shares from the vault.
  *
+ * IMPORTANT FOR DEVELOPERS:
+ * This flow is not routed through the bundler because the risks are negligible since these operations cannot be affected by attacks. This avoids unnecessary approvals and keeps the UX clean.
+ *
  * @param {Object} params - The vault related parameters.
  * @param {Object} params.vault - The vault related parameters.
  * @param {Address} params.vault.address - The vault address.
@@ -42,7 +45,7 @@ export const vaultV2Redeem = ({
   metadata,
 }: VaultV2RedeemParams): Readonly<Transaction<VaultV2RedeemAction>> => {
   if (shares === 0n) {
-    throw new ZeroSharesAmountError();
+    throw new ZeroSharesAmountError(vaultAddress);
   }
 
   let tx = {
@@ -59,13 +62,11 @@ export const vaultV2Redeem = ({
     tx = addTransactionMetadata(tx, metadata);
   }
 
-  const action: VaultV2RedeemAction = {
-    type: "vaultV2Redeem",
-    args: { vault: vaultAddress, shares, recipient },
-  };
-
   return deepFreeze({
     ...tx,
-    action,
+    action: {
+      type: "vaultV2Redeem",
+      args: { vault: vaultAddress, shares, recipient },
+    },
   });
 };
