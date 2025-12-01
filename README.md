@@ -11,7 +11,7 @@
 ### 1️⃣ **With MorphoClient**
 
 ```typescript
-import { MorphoClient } from "consumer-sdk";
+import { MorphoClient } from "@morpho-org/consumer-sdk";
 import { createWalletClient, http } from "viem";
 
 const client = createWalletClient({
@@ -46,7 +46,7 @@ console.log(redeem.buildTx());
 ### 2️⃣ **Direct construction** (Full control)
 
 ```typescript
-import { vaultV2Deposit } from "consumer-sdk";
+import { vaultV2Deposit } from "@morpho-org/consumer-sdk";
 
 const deposit = vaultV2Deposit({
   vault: {
