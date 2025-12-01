@@ -1,13 +1,17 @@
-# Morpho SDK
+# Consumer sdk
+
+![Beta](https://img.shields.io/badge/status-beta-orange)
 
 > **The abstraction layer that simplifies Morpho protocol**
 
-## ✨ How to use it? (three ways to build transactions)
+> ⚠️ **Experimental package**: This SDK is currently in experimental phase.
+
+## ✨ How to use it? (two ways to build transactions)
 
 ### 1️⃣ **With MorphoClient**
 
 ```typescript
-import { MorphoClient } from "consumer-sdk";
+import { MorphoClient } from "@morpho-org/consumer-sdk";
 import { createWalletClient, http } from "viem";
 
 const client = createWalletClient({
@@ -42,7 +46,7 @@ console.log(redeem.buildTx());
 ### 2️⃣ **Direct construction** (Full control)
 
 ```typescript
-import { vaultV2Deposit } from "morpho-sdk-core";
+import { vaultV2Deposit } from "@morpho-org/consumer-sdk";
 
 const deposit = vaultV2Deposit({
   vault: {
@@ -65,7 +69,7 @@ This guide explains how to link this local package to your Next.js application f
 ### **Step 1: Initial setup (one time only)**
 
 ```bash
-# In this morpho-sdk-core project
+# In this consumer-sdk project
 pnpm run build:link
 ```
 
@@ -73,7 +77,7 @@ pnpm run build:link
 
 ```bash
 # Link the local package
-pnpm link morpho-sdk-core
+pnpm link consumer-sdk
 ```
 
 ## 🤝 Contributing

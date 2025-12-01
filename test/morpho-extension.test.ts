@@ -1,3 +1,4 @@
+import { mainnet } from "viem/chains";
 import { describe, expect } from "vitest";
 import { morphoViemExtension } from "../src/client";
 import { test } from "./setup";
@@ -19,6 +20,7 @@ describe("Morpho viem extension", () => {
 
     const vault = extendedClient.morpho.vaultV2(
       "0x04422053aDDbc9bB2759b248B574e3FCA76Bc145",
+      mainnet.id,
     );
 
     expect(vault).toBeDefined();
