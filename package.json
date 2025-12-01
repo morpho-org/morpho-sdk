@@ -1,15 +1,15 @@
 {
-  "name": "morpho-sdk-core",
+  "name": "consumer-sdk",
   "description": "Abstraction layer for Morpho's complexity.",
   "version": "0.0.1",
   "author": "Morpho Association <contact@morpho.org>",
   "contributors": [
     "Foulks-Plb <https://x.com/FoulkPlb>"
   ],
-  "repository": "github:morpho-org/morpho-sdk-core",
-  "homepage": "https://github.com/morpho-org/morpho-sdk-core",
+  "repository": "github:morpho-org/consumer-sdk",
+  "homepage": "https://github.com/morpho-org/consumer-sdk",
   "bugs": {
-    "url": "https://github.com/morpho-org/morpho-sdk-core/issues",
+    "url": "https://github.com/morpho-org/consumer-sdk/issues",
     "email": "contact@morpho.org"
   },
   "license": "MIT",

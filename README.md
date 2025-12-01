@@ -42,7 +42,7 @@ console.log(redeem.buildTx());
 ### 2️⃣ **Direct construction** (Full control)
 
 ```typescript
-import { vaultV2Deposit } from "morpho-sdk-core";
+import { vaultV2Deposit } from "consumer-sdk";
 
 const deposit = vaultV2Deposit({
   vault: {
@@ -65,7 +65,7 @@ This guide explains how to link this local package to your Next.js application f
 ### **Step 1: Initial setup (one time only)**
 
 ```bash
-# In this morpho-sdk-core project
+# In this consumer-sdk project
 pnpm run build:link
 ```
 
@@ -73,7 +73,7 @@ pnpm run build:link
 
 ```bash
 # Link the local package
-pnpm link morpho-sdk-core
+pnpm link consumer-sdk
 ```
 
 ## 🤝 Contributing
