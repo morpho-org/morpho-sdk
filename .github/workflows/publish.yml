@@ -42,6 +42,25 @@ jobs:
         run: |
           node -e "const fs = require('fs'); const config = JSON.parse(fs.readFileSync('.changeset/config.json', 'utf8')); config.baseBranch = '${{ github.ref_name }}'; fs.writeFileSync('.changeset/config.json', JSON.stringify(config, null, 2));"
 
+      - name: Create changeset automatically if none exists (feature branches only)
+        if: github.ref != 'refs/heads/main'
+        run: |
+          node -e "
+          const fs = require('fs');
+          const path = require('path');
+          const changesetDir = '.changeset';
+          const files = fs.readdirSync(changesetDir).filter(f => f.endsWith('.md') && f !== 'README.md');
+          if (files.length === 0) {
+            console.log('No changesets found. Creating automatic patch changeset...');
+            const changesetContent = '---\n---\n\n`@morpho-org/consumer-sdk`: patch\n\nAutomatic patch release for testing\n';
+            const timestamp = Date.now();
+            fs.writeFileSync(path.join(changesetDir, \`auto-\${timestamp}.md\`), changesetContent);
+            console.log('Created automatic changeset');
+          } else {
+            console.log(\`Found \${files.length} changeset(s), skipping auto-creation\`);
+          }
+          "
+
       - name: Create Release Pull Request or Publish to npm
         id: changesets
         uses: changesets/action@v1
