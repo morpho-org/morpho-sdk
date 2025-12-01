@@ -37,6 +37,11 @@ jobs:
       - name: Install Dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Update changeset baseBranch for feature branch
+        if: github.ref != 'refs/heads/main'
+        run: |
+          node -e "const fs = require('fs'); const config = JSON.parse(fs.readFileSync('.changeset/config.json', 'utf8')); config.baseBranch = '${{ github.ref_name }}'; fs.writeFileSync('.changeset/config.json', JSON.stringify(config, null, 2));"
+
       - name: Create Release Pull Request or Publish to npm
         id: changesets
         uses: changesets/action@v1
