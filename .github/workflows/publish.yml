@@ -5,6 +5,7 @@ on:
   push:
     branches:
       - main
+      - feat/deploy-npm-workflow
 
 permissions:
   id-token: write
