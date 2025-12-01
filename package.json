@@ -1,5 +1,5 @@
 {
-  "name": "consumer-sdk",
+  "name": "@morpho-org/consumer-sdk",
   "description": "Abstraction layer for Morpho's complexity.",
   "version": "0.0.1",
   "author": "Morpho Association <contact@morpho.org>",
