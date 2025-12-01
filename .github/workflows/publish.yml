@@ -32,8 +32,21 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
-      - run: pnpm run build
+      - id: release
+        run: node scripts/release/release.js
 
-      - name: Publish to npm
-        run: pnpm publish --no-git-checks --access public
+      # Set version of package to the most recent so it is referenced correctly in dependencies.
+      - run: node scripts/release/version.js
+        if: steps.release.outputs.version
+
+      - run: pnpm publish --no-git-checks --access public --tag ${{ steps.release.outputs.channel }}
+        if: steps.release.outputs.version
+
+      - run: gh release create ${{ steps.release.outputs.tag }} --target ${{ steps.release.outputs.branch }} --notes-file CHANGELOG.md --title '${{ steps.release.outputs.tag }}' ${{ steps.release.outputs.channel == 'latest' && '--latest' || '--prerelease' }}
+        if: steps.release.outputs.version
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - run: echo "- [RELEASE] ${{ steps.release.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+        if: steps.release.outputs.version
 

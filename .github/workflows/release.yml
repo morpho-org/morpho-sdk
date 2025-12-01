@@ -2,12 +2,14 @@ name: Release
 
 on:
   push:
-    tags:
-      - 'v*.*.*'
+    branches:
+      - '**'
+    tags-ignore:
+      - '**'
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: false
+  group: ${{ github.workflow }}-${{ github.ref }}-${{ github.event_name }}
+  cancel-in-progress: true
 
 jobs:
   lint:
@@ -19,9 +21,10 @@ jobs:
       MAINNET_RPC_URL: ${{ secrets.MAINNET_RPC_URL }}
 
   publish:
+    if: github.ref_name == 'main' || github.ref_name == 'next'
+
     needs:
       - lint
       - test
 
     uses: ./.github/workflows/publish.yml
-
