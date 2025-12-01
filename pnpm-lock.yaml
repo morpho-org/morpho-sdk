@@ -23,6 +23,9 @@ importers:
       '@morpho-org/simulation-sdk':
         specifier: 3.2.2
         version: 3.2.2(@morpho-org/blue-sdk@5.7.0(@morpho-org/morpho-ts@2.4.5))(@morpho-org/morpho-ts@2.4.5)
+      semver:
+        specifier: ^7.7.3
+        version: 7.7.3
       zod:
         specifier: ^4.1.12
         version: 4.1.12
