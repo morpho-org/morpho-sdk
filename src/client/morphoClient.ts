@@ -1,5 +1,5 @@
 import type { Address, Client } from "viem";
-import { VaultV2 } from "../entities";
+import { MorphoVaultV2 } from "../entities";
 import type { Metadata, MorphoClientType } from "../types";
 
 export class MorphoClient implements MorphoClientType {
@@ -9,6 +9,6 @@ export class MorphoClient implements MorphoClientType {
   ) {}
 
   vaultV2(vault: Address, chainId: number) {
-    return new VaultV2(this, vault, chainId);
+    return new MorphoVaultV2(this, vault, chainId);
   }
 }

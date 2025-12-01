@@ -82,7 +82,7 @@ export interface VaultV2Actions {
   };
 }
 
-export class VaultV2 implements VaultV2Actions {
+export class MorphoVaultV2 implements VaultV2Actions {
   constructor(
     private readonly client: MorphoClientType,
     private readonly vault: Address,
