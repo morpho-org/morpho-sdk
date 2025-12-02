@@ -1,7 +1,7 @@
 {
   "name": "@morpho-org/consumer-sdk",
   "description": "Abstraction layer for Morpho's complexity.",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "author": "Morpho Association <contact@morpho.org>",
   "contributors": [
     "Foulks-Plb <https://x.com/FoulkPlb>"
