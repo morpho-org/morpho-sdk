@@ -64,14 +64,17 @@ export interface Requirement {
   action: SignatureAction;
 }
 
-export interface SignatureAction extends BaseAction<"signature", { spender: Address; amount: bigint }> {}
+export interface SignatureAction
+  extends BaseAction<"signature", { spender: Address; amount: bigint }> {}
 
-export function isRequirementApproval(requirement: Transaction<ERC20ApprovalAction> | Requirement): requirement is Transaction<ERC20ApprovalAction> {
+export function isRequirementApproval(
+  requirement: Transaction<ERC20ApprovalAction> | Requirement,
+): requirement is Transaction<ERC20ApprovalAction> {
   return "to" in requirement && "value" in requirement && "data" in requirement;
 }
 
-export function isRequirementSignature(requirement: Transaction<ERC20ApprovalAction> | Requirement): requirement is Requirement {
+export function isRequirementSignature(
+  requirement: Transaction<ERC20ApprovalAction> | Requirement,
+): requirement is Requirement {
   return "sign" in requirement && typeof requirement.sign === "function";
 }
-
-

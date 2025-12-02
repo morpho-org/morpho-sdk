@@ -1,10 +1,10 @@
 import { getChainAddresses } from "@morpho-org/blue-sdk";
-import { isRequirementApproval, MorphoClient, vaultV2Deposit } from "../../src";
 import { KeyrockUsdcVaultV2, Re7UsdtVaultV2 } from "test/fixtures/vaultV2";
 import { testInvariants } from "test/helpers/invariants";
 import { parseUnits } from "viem";
 import { mainnet } from "viem/chains";
 import { describe, expect } from "vitest";
+import { isRequirementApproval, MorphoClient, vaultV2Deposit } from "../../src";
 import { test } from "../setup";
 
 describe("Deposit VaultV2", () => {
@@ -71,7 +71,7 @@ describe("Deposit VaultV2", () => {
         if (!approveTx) {
           throw new Error("Approve transaction not found");
         }
-        if(!isRequirementApproval(approveTx)) {
+        if (!isRequirementApproval(approveTx)) {
           throw new Error("Approve transaction is not an approval transaction");
         }
 
@@ -137,7 +137,10 @@ describe("Deposit VaultV2", () => {
           throw new Error("Approval transactions not found");
         }
 
-        if (!isRequirementApproval(requirements[0]) || !isRequirementApproval(requirements[1])) {
+        if (
+          !isRequirementApproval(requirements[0]) ||
+          !isRequirementApproval(requirements[1])
+        ) {
           throw new Error("Approve transaction is not an approval transaction");
         }
 

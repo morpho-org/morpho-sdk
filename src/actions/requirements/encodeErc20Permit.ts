@@ -24,10 +24,10 @@ export const encodeErc20Permit = (
   const { dai } = getChainAddresses(chainId);
 
   // TODO: verify it
-//   const amountValue = MathLib.min(
-//     amount,
-//     MAX_TOKEN_APPROVALS[chainId]?.[token] ?? maxUint256,
-//   );
+  //   const amountValue = MathLib.min(
+  //     amount,
+  //     MAX_TOKEN_APPROVALS[chainId]?.[token] ?? maxUint256,
+  //   );
 
   const isDai = dai != null && token === dai;
 
