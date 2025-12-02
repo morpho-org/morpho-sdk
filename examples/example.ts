@@ -16,7 +16,7 @@ dotenv.config();
 
 // Example vault address
 const VAULT_ADDRESS: Address = "0xbeeff2C5bF38f90e3482a8b19F12E5a6D2FCa757"; // Example vault address
-const USER_ADDRESS: Address = "0x34B494Aed18d709D1f84D58682aA89FB53361842"; // Example user address
+const USER_ADDRESS: Address = "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266"; // Example user address
 
 async function main() {
   const { MAINNET_RPC_URL } = env();
