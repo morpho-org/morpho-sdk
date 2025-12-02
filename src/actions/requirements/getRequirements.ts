@@ -1,14 +1,15 @@
 import { type Address, getChainAddresses } from "@morpho-org/blue-sdk";
 import { fetchHolding } from "@morpho-org/blue-sdk-viem";
-import { deepFreeze } from "@morpho-org/morpho-ts";
 import { APPROVE_ONLY_ONCE_TOKENS } from "@morpho-org/simulation-sdk";
 import type { Client } from "viem";
 import {
   ChainIdMismatchError,
   type ERC20ApprovalAction,
+  type Requirement,
   type Transaction,
 } from "../../types";
 import { encodeErc20Approval } from "./encodeErc20Approval";
+import { encodeErc20Permit } from "./encodeErc20Permit";
 
 export const getRequirements = async (
   viemClient: Client,
@@ -17,7 +18,8 @@ export const getRequirements = async (
     chainId: number;
     args: { amount: bigint; from: Address };
   },
-): Promise<Readonly<Transaction<ERC20ApprovalAction>[]>> => {
+  supportSignature: boolean,
+): Promise<(Readonly<Transaction<ERC20ApprovalAction>> | Requirement)[]> => {
   const {
     address,
     chainId,
@@ -31,34 +33,62 @@ export const getRequirements = async (
     bundler3: { generalAdapter1 },
   } = getChainAddresses(chainId);
 
-  const { erc20Allowances } = await fetchHolding(from, address, viemClient);
+  const { erc20Allowances, erc2612Nonce } = await fetchHolding(
+    from,
+    address,
+    viemClient,
+  );
 
-  const txs: Transaction<ERC20ApprovalAction>[] = [];
+  const requirements: (Transaction<ERC20ApprovalAction> | Requirement)[] = [];
 
   if (erc20Allowances["bundler3.generalAdapter1"] < amount) {
     if (
       APPROVE_ONLY_ONCE_TOKENS[chainId]?.includes(address) &&
       erc20Allowances["bundler3.generalAdapter1"] > 0n
     ) {
-      txs.push(
+      if (supportSignature) {
+        requirements.push(
+          encodeErc20Permit({
+            token: address,
+            spender: generalAdapter1,
+            amount: 0n,
+            chainId,
+            nonce: erc2612Nonce, // TODO: handle undefined
+          }),
+        );
+      } else {
+        requirements.push(
+          encodeErc20Approval({
+            token: address,
+            spender: generalAdapter1,
+            amount: 0n,
+            chainId,
+          }),
+        );
+      }
+    }
+
+    if (supportSignature) {
+      requirements.push(
+        encodeErc20Permit({
+          token: address,
+          spender: generalAdapter1,
+          amount,
+          chainId,
+          nonce: erc2612Nonce, // TODO: handle undefined
+        }),
+      );
+    } else {
+      requirements.push(
         encodeErc20Approval({
           token: address,
           spender: generalAdapter1,
-          amount: 0n,
+          amount,
           chainId,
         }),
       );
     }
-
-    txs.push(
-      encodeErc20Approval({
-        token: address,
-        spender: generalAdapter1,
-        amount,
-        chainId,
-      }),
-    );
   }
 
-  return deepFreeze(txs);
+  return requirements;
 };

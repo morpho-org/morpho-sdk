@@ -1,6 +1,6 @@
 import { DEFAULT_SLIPPAGE_TOLERANCE, MathLib } from "@morpho-org/blue-sdk";
 import { fetchAccrualVaultV2, fetchVaultV2 } from "@morpho-org/blue-sdk-viem";
-import type { Address } from "viem";
+import type { Address, Hex } from "viem";
 import {
   getRequirements,
   vaultV2Deposit,
@@ -11,6 +11,7 @@ import {
   ChainIdMismatchError,
   type ERC20ApprovalAction,
   type MorphoClientType,
+  type Requirement,
   type Transaction,
   type VaultV2DepositAction,
   type VaultV2RedeemAction,
@@ -49,7 +50,7 @@ export interface VaultV2Actions {
   }) => Promise<{
     buildTx: () => Readonly<Transaction<VaultV2DepositAction>>;
     getRequirements: () => Promise<
-      Readonly<Transaction<ERC20ApprovalAction>[]>
+      (Readonly<Transaction<ERC20ApprovalAction>> | Requirement)[]
     >;
   }>;
   /**
@@ -120,7 +121,37 @@ export class MorphoVaultV2 implements VaultV2Actions {
       MathLib.RAY * 100n,
     );
 
+    const signatures: Hex[] = [];
+
     return {
+      getRequirements: async () => {
+        const requirements = await getRequirements(
+          this.client.viemClient,
+          {
+            address: vaultData.asset,
+            chainId: this.chainId,
+            args: {
+              amount: assets,
+              from: userAddress,
+            },
+          },
+          this.client.supportSignature,
+        );
+
+        // Wrap each requirement with a sign method that pushes the signature into the signatures array for final execution
+        for (const req of requirements) {
+          if ("sign" in req && typeof req.sign === "function") {
+            const originalSign = req.sign;
+            req.sign = async (...args: Parameters<typeof originalSign>) => {
+              const sig = await originalSign(...args);
+              signatures.push(sig);
+              return sig;
+            };
+          }
+        }
+
+        return requirements;
+      },
       buildTx: () =>
         vaultV2Deposit({
           vault: {
@@ -132,19 +163,10 @@ export class MorphoVaultV2 implements VaultV2Actions {
             assets,
             maxSharePrice,
             recipient: userAddress,
+            signatures,
           },
           metadata: this.client.metadata,
         }),
-      getRequirements: async () => {
-        return getRequirements(this.client.viemClient, {
-          address: vaultData.asset,
-          chainId: this.chainId,
-          args: {
-            amount: assets,
-            from: userAddress,
-          },
-        });
-      },
     };
   }
 

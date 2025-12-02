@@ -1,7 +1,7 @@
 import { getChainAddresses } from "@morpho-org/blue-sdk";
 import { type Action, BundlerAction } from "@morpho-org/bundler-sdk-viem";
 import { deepFreeze } from "@morpho-org/morpho-ts";
-import type { Address } from "viem";
+import type { Address, Hex } from "viem";
 import { addTransactionMetadata } from "../../helpers";
 import {
   type Metadata,
@@ -21,6 +21,7 @@ export interface VaultV2DepositParams {
     assets: bigint;
     maxSharePrice: bigint;
     recipient: Address;
+    signatures?: Hex[];
   };
   metadata?: Metadata;
 }
@@ -53,7 +54,7 @@ export interface VaultV2DepositParams {
  */
 export const vaultV2Deposit = ({
   vault: { chainId, address: vaultAddress, asset },
-  args: { assets, maxSharePrice, recipient },
+  args: { assets, maxSharePrice, recipient, signatures },
   metadata,
 }: VaultV2DepositParams): Readonly<Transaction<VaultV2DepositAction>> => {
   if (assets === 0n) {
@@ -63,6 +64,8 @@ export const vaultV2Deposit = ({
   if (maxSharePrice === 0n) {
     throw new ZeroMaxSharePriceError(vaultAddress);
   }
+
+  console.log("signatures", signatures);
 
   const {
     bundler3: { generalAdapter1 },

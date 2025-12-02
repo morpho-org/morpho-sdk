@@ -5,6 +5,7 @@ import type { Metadata, MorphoClientType } from "../types";
 export class MorphoClient implements MorphoClientType {
   constructor(
     public readonly viemClient: Client,
+    public readonly supportSignature: boolean = false,
     public readonly metadata?: Metadata,
   ) {}
 

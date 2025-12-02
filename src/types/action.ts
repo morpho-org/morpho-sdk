@@ -1,4 +1,4 @@
-import type { Address, Hex } from "viem";
+import type { Address, Client, Hex } from "viem";
 
 export interface BaseAction<
   TType extends string = string,
@@ -10,6 +10,10 @@ export interface BaseAction<
 
 export interface ERC20ApprovalAction
   extends BaseAction<"erc20Approval", { spender: Address; amount: bigint }> {}
+
+export interface ERC20PermitAction {
+  sign: (client: Client, userAddress: Address) => Promise<Hex>;
+}
 
 export interface VaultV2DepositAction
   extends BaseAction<
@@ -54,3 +58,20 @@ export interface Transaction<TAction extends BaseAction = TransactionAction> {
   readonly data: Hex;
   readonly action: TAction;
 }
+
+export interface Requirement {
+  sign: (client: Client, userAddress: Address) => Promise<Hex>;
+  action: SignatureAction;
+}
+
+export interface SignatureAction extends BaseAction<"signature", { spender: Address; amount: bigint }> {}
+
+export function isRequirementApproval(requirement: Transaction<ERC20ApprovalAction> | Requirement): requirement is Transaction<ERC20ApprovalAction> {
+  return "to" in requirement && "value" in requirement && "data" in requirement;
+}
+
+export function isRequirementSignature(requirement: Transaction<ERC20ApprovalAction> | Requirement): requirement is Requirement {
+  return "sign" in requirement && typeof requirement.sign === "function";
+}
+
+

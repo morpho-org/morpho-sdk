@@ -1,4 +1,4 @@
-import { MorphoClient, Time } from "src";
+import { isRequirementApproval, MorphoClient, Time } from "../../src";
 import { KeyrockUsdcVaultV2 } from "test/fixtures/vaultV2";
 import { testInvariants } from "test/helpers/invariants";
 import { parseUnits } from "viem";
@@ -26,7 +26,7 @@ describe("Metadata", () => {
         vaults: { KeyrockUsdcVaultV2 },
       },
       actionFn: async () => {
-        const morpho = new MorphoClient(client, {
+        const morpho = new MorphoClient(client, false, {
           origin: "25AFEA44",
           timestamp: true,
         });
@@ -52,6 +52,9 @@ describe("Metadata", () => {
         const approveTx = requirements[0];
         if (!approveTx) {
           throw new Error("Approve transaction not found");
+        }
+        if (!isRequirementApproval(approveTx)) {
+          throw new Error("Approve transaction is not an approval transaction");
         }
 
         const tx_2 = deposit.buildTx();
@@ -90,7 +93,7 @@ describe("Metadata", () => {
         vaults: { KeyrockUsdcVaultV2 },
       },
       actionFn: async () => {
-        const morpho = new MorphoClient(client, {
+        const morpho = new MorphoClient(client, false, {
           origin: "25AFEA44",
         });
         const vaultV2 = morpho.vaultV2(KeyrockUsdcVaultV2.address, mainnet.id);
@@ -112,6 +115,9 @@ describe("Metadata", () => {
         const approveTx = requirements[0];
         if (!approveTx) {
           throw new Error("Approve transaction not found");
+        }
+        if (!isRequirementApproval(approveTx)) {
+          throw new Error("Approve transaction is not an approval transaction");
         }
 
         await client.sendTransaction(approveTx);
