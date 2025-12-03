@@ -21,15 +21,11 @@ export const encodeErc20Permit = (
 ): Requirement => {
   const { token, spender, amount, chainId, nonce } = params;
 
-  const { dai } = getChainAddresses(chainId);
-
   // TODO: verify it
   //   const amountValue = MathLib.min(
   //     amount,
   //     MAX_TOKEN_APPROVALS[chainId]?.[token] ?? maxUint256,
   //   );
-
-  const isDai = dai != null && token === dai;
 
   const now = BigInt(Math.floor(Date.now() / 1000));
   const deadline = now + Time.s.from.h(2n);
@@ -50,6 +46,10 @@ export const encodeErc20Permit = (
       if (client.account.address !== userAddress) {
         throw new Error("Client account address does not match user address"); // TODO: generic error
       }
+
+      const { dai } = getChainAddresses(chainId);
+
+      const isDai = dai != null && token === dai;
 
       let signature: Hex;
       if (isDai) {
@@ -83,6 +83,7 @@ export const encodeErc20Permit = (
           },
           chainId,
         );
+
         signature = await client.account.signTypedData(typedData);
 
         await verifyTypedData({
@@ -92,7 +93,7 @@ export const encodeErc20Permit = (
         });
       }
 
-      return deepFreeze({ owner: userAddress, signature, deadline });
+      return deepFreeze({ owner: userAddress, signature, deadline, amount });
     },
   };
 };

@@ -1,6 +1,6 @@
 import { isRequirementSignature, MorphoClient } from "src";
 import { KeyrockUsdcVaultV2 } from "test/fixtures/vaultV2";
-import { isHex } from "viem";
+import { isHex, parseUnits } from "viem";
 import { mainnet } from "viem/chains";
 import { describe, expect } from "vitest";
 import { test } from "../setup";
@@ -9,10 +9,12 @@ describe("Signature", () => {
   test("should create deposit bundle with permit", async ({ client }) => {
     const morpho = new MorphoClient(client, true);
 
+    const assets = parseUnits("10", 6);
+
     const vault = morpho.vaultV2(KeyrockUsdcVaultV2.address, mainnet.id);
     const deposit = await vault.deposit({
       userAddress: client.account.address,
-      assets: 1000000000000000000n,
+      assets,
     });
     const requirements_1 = await deposit.getRequirements();
 
@@ -33,6 +35,8 @@ describe("Signature", () => {
     );
 
     const tx_1 = deposit.buildTx();
+
+    console.log(tx_1);
 
     await client.sendTransaction(tx_1);
   });

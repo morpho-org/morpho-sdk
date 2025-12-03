@@ -39,6 +39,10 @@ export const getRequirements = async (
     viemClient,
   );
 
+  if (erc2612Nonce === undefined) {
+    throw new Error("ERC2612 nonce is undefined for permit signature");
+  }
+
   const requirements: (Transaction<ERC20ApprovalAction> | Requirement)[] = [];
 
   if (erc20Allowances["bundler3.generalAdapter1"] < amount) {
@@ -53,7 +57,7 @@ export const getRequirements = async (
             spender: generalAdapter1,
             amount: 0n,
             chainId,
-            nonce: erc2612Nonce, // TODO: handle undefined
+            nonce: erc2612Nonce,
           }),
         );
       } else {
@@ -75,7 +79,7 @@ export const getRequirements = async (
           spender: generalAdapter1,
           amount,
           chainId,
-          nonce: erc2612Nonce, // TODO: handle undefined
+          nonce: erc2612Nonce,
         }),
       );
     } else {

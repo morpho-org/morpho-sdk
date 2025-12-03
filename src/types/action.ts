@@ -63,6 +63,7 @@ export interface SignatureArgs {
   owner: Address;
   signature: Hex;
   deadline: bigint;
+  amount: bigint;
 }
 
 export interface Requirement {

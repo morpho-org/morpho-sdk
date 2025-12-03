@@ -79,7 +79,7 @@ export const vaultV2Deposit = ({
       args: [
         signatureArgs.owner,
         asset,
-        assets,
+        signatureArgs.amount,
         signatureArgs.deadline,
         signatureArgs.signature,
         false,
@@ -87,14 +87,18 @@ export const vaultV2Deposit = ({
     });
   }
 
-  actions.push({
-    type: "erc20TransferFrom",
-    args: [asset, assets, generalAdapter1, false],
-  });
-  actions.push({
-    type: "erc4626Deposit",
-    args: [vaultAddress, assets, maxSharePrice, recipient, false],
-  });
+  actions.push(
+    {
+      type: "erc20TransferFrom",
+      args: [asset, assets, generalAdapter1, false],
+    },
+    {
+      type: "erc4626Deposit",
+      args: [vaultAddress, assets, maxSharePrice, recipient, false],
+    },
+  );
+
+  console.log(actions);
 
   let tx = BundlerAction.encodeBundle(chainId, actions);
 
