@@ -1,7 +1,10 @@
 name: Release
 
 on:
-  push:
+  workflow_run:
+    workflows: ["CI"]
+    types:
+      - completed
     branches:
       - main
 
@@ -14,6 +17,7 @@ permissions:
 jobs:
   release:
     name: Release
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     env:
       CI: true
@@ -21,6 +25,8 @@ jobs:
     steps:
       - name: Checkout Repo
         uses: actions/checkout@v3
+        with:
+          ref: ${{ github.event.workflow_run.head_branch }}
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
@@ -32,6 +38,9 @@ jobs:
           cache: pnpm
           registry-url: https://registry.npmjs.org
           scope: '@morpho-org'
+
+      # Required to use OIDC trusted publishing.
+      - run: npm install -g npm@latest
 
       - name: Install Dependencies
         run: pnpm install --frozen-lockfile
