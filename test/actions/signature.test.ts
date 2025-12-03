@@ -1,11 +1,12 @@
-import { MorphoClient } from "src";
+import { isRequirementSignature, MorphoClient } from "src";
 import { KeyrockUsdcVaultV2 } from "test/fixtures/vaultV2";
+import { isHex } from "viem";
 import { mainnet } from "viem/chains";
-import { describe } from "vitest";
+import { describe, expect } from "vitest";
 import { test } from "../setup";
 
 describe("Signature", () => {
-  test("should create deposit bundle", async ({ client }) => {
+  test("should create deposit bundle with permit", async ({ client }) => {
     const morpho = new MorphoClient(client, true);
 
     const vault = morpho.vaultV2(KeyrockUsdcVaultV2.address, mainnet.id);
@@ -13,13 +14,26 @@ describe("Signature", () => {
       userAddress: client.account.address,
       assets: 1000000000000000000n,
     });
-    const _requirements_1 = await deposit.getRequirements();
+    const requirements_1 = await deposit.getRequirements();
 
-    // const signature = await requirements_1[0]?.sign(
-    //   client,
-    //   client.account.address,
-    // );
+    if (!isRequirementSignature(requirements_1[0])) {
+      throw new Error("Requirement is not a signature requirement");
+    }
 
-    // const tx_1 = deposit.buildTx();
+    const signatureArgs = await requirements_1[0].sign(
+      client,
+      client.account.address,
+    );
+
+    expect(signatureArgs.owner).toEqual(client.account.address);
+    expect(isHex(signatureArgs.signature)).toBe(true);
+    expect(signatureArgs.signature.length).toBe(132);
+    expect(signatureArgs.deadline).toBeGreaterThan(
+      BigInt(Math.floor(Date.now() / 1000)),
+    );
+
+    const tx_1 = deposit.buildTx();
+
+    await client.sendTransaction(tx_1);
   });
 });

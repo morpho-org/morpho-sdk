@@ -24,11 +24,11 @@ describe("encodeErc20Permit", () => {
         nonce: mockNonce,
       });
 
-      const signature = await permit.sign(client, userAddress);
+      const signatureArgs = await permit.sign(client, userAddress);
 
-      expect(signature).toBeDefined();
-      expect(isHex(signature)).toBe(true);
-      expect(signature.length).toBe(132);
+      expect(signatureArgs.owner).toEqual(userAddress);
+      expect(isHex(signatureArgs.signature)).toBe(true);
+      expect(signatureArgs.signature.length).toBe(132);
     });
 
     test("should sign permit for DAI token", async ({ client }) => {
@@ -42,11 +42,11 @@ describe("encodeErc20Permit", () => {
         nonce: mockNonce,
       });
 
-      const signature = await permit.sign(client, userAddress);
+      const signatureArgs = await permit.sign(client, userAddress);
 
-      expect(signature).toBeDefined();
-      expect(isHex(signature)).toBe(true);
-      expect(signature.length).toBe(132);
+      expect(signatureArgs.owner).toEqual(userAddress);
+      expect(isHex(signatureArgs.signature)).toBe(true);
+      expect(signatureArgs.signature.length).toBe(132);
     });
 
     test("should throw error if client account is missing", async ({

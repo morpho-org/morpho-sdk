@@ -1,10 +1,11 @@
 import { getChainAddresses } from "@morpho-org/blue-sdk";
 import { type Action, BundlerAction } from "@morpho-org/bundler-sdk-viem";
 import { deepFreeze } from "@morpho-org/morpho-ts";
-import type { Address, Hex } from "viem";
+import type { Address } from "viem";
 import { addTransactionMetadata } from "../../helpers";
 import {
   type Metadata,
+  type SignatureArgs,
   type Transaction,
   type VaultV2DepositAction,
   ZeroAssetAmountError,
@@ -21,7 +22,7 @@ export interface VaultV2DepositParams {
     assets: bigint;
     maxSharePrice: bigint;
     recipient: Address;
-    signatures?: Hex[];
+    signaturesArgs?: SignatureArgs[];
   };
   metadata?: Metadata;
 }
@@ -54,7 +55,7 @@ export interface VaultV2DepositParams {
  */
 export const vaultV2Deposit = ({
   vault: { chainId, address: vaultAddress, asset },
-  args: { assets, maxSharePrice, recipient, signatures },
+  args: { assets, maxSharePrice, recipient, signaturesArgs },
   metadata,
 }: VaultV2DepositParams): Readonly<Transaction<VaultV2DepositAction>> => {
   if (assets === 0n) {
@@ -65,22 +66,35 @@ export const vaultV2Deposit = ({
     throw new ZeroMaxSharePriceError(vaultAddress);
   }
 
-  console.log("signatures", signatures);
-
   const {
     bundler3: { generalAdapter1 },
   } = getChainAddresses(chainId);
 
-  const actions: Action[] = [
-    {
-      type: "erc20TransferFrom",
-      args: [asset, assets, generalAdapter1, false],
-    },
-    {
-      type: "erc4626Deposit",
-      args: [vaultAddress, assets, maxSharePrice, recipient, false],
-    },
-  ];
+  const actions: Action[] = [];
+
+  for (const signatureArgs of signaturesArgs ?? []) {
+    // TODO: integrate DAI
+    actions.push({
+      type: "permit",
+      args: [
+        signatureArgs.owner,
+        asset,
+        assets,
+        signatureArgs.deadline,
+        signatureArgs.signature,
+        false,
+      ],
+    });
+  }
+
+  actions.push({
+    type: "erc20TransferFrom",
+    args: [asset, assets, generalAdapter1, false],
+  });
+  actions.push({
+    type: "erc4626Deposit",
+    args: [vaultAddress, assets, maxSharePrice, recipient, false],
+  });
 
   let tx = BundlerAction.encodeBundle(chainId, actions);
 

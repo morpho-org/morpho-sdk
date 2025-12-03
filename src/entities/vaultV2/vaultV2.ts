@@ -1,6 +1,6 @@
 import { DEFAULT_SLIPPAGE_TOLERANCE, MathLib } from "@morpho-org/blue-sdk";
 import { fetchAccrualVaultV2, fetchVaultV2 } from "@morpho-org/blue-sdk-viem";
-import type { Address, Hex } from "viem";
+import type { Address } from "viem";
 import {
   getRequirements,
   vaultV2Deposit,
@@ -12,6 +12,7 @@ import {
   type ERC20ApprovalAction,
   type MorphoClientType,
   type Requirement,
+  type SignatureArgs,
   type Transaction,
   type VaultV2DepositAction,
   type VaultV2RedeemAction,
@@ -121,7 +122,7 @@ export class MorphoVaultV2 implements VaultV2Actions {
       MathLib.RAY * 100n,
     );
 
-    const signatures: Hex[] = [];
+    const signaturesArgs: SignatureArgs[] = [];
 
     return {
       getRequirements: async () => {
@@ -144,7 +145,7 @@ export class MorphoVaultV2 implements VaultV2Actions {
             const originalSign = req.sign;
             req.sign = async (...args: Parameters<typeof originalSign>) => {
               const sig = await originalSign(...args);
-              signatures.push(sig);
+              signaturesArgs.push(sig);
               return sig;
             };
           }
@@ -163,7 +164,7 @@ export class MorphoVaultV2 implements VaultV2Actions {
             assets,
             maxSharePrice,
             recipient: userAddress,
-            signatures,
+            signaturesArgs,
           },
           metadata: this.client.metadata,
         }),

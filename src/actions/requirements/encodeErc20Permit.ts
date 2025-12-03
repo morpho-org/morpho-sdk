@@ -40,11 +40,10 @@ export const encodeErc20Permit = (
       args: {
         spender,
         amount,
+        deadline,
       },
     },
     async sign(client: Client, userAddress: Address) {
-      // verify userAddress everywhere
-
       if (!client.account || !client.account.signTypedData) {
         throw new Error("Client missing account or signTypedData method"); // TODO: generic error
       }
@@ -93,7 +92,7 @@ export const encodeErc20Permit = (
         });
       }
 
-      return deepFreeze(signature);
+      return deepFreeze({ owner: userAddress, signature, deadline });
     },
   };
 };

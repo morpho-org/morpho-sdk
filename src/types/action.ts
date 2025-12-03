@@ -59,22 +59,40 @@ export interface Transaction<TAction extends BaseAction = TransactionAction> {
   readonly action: TAction;
 }
 
+export interface SignatureArgs {
+  owner: Address;
+  signature: Hex;
+  deadline: bigint;
+}
+
 export interface Requirement {
-  sign: (client: Client, userAddress: Address) => Promise<Hex>;
+  sign: (client: Client, userAddress: Address) => Promise<SignatureArgs>;
   action: SignatureAction;
 }
 
 export interface SignatureAction
-  extends BaseAction<"signature", { spender: Address; amount: bigint }> {}
+  extends BaseAction<
+    "signature",
+    { spender: Address; amount: bigint; deadline: bigint }
+  > {}
 
 export function isRequirementApproval(
-  requirement: Transaction<ERC20ApprovalAction> | Requirement,
+  requirement: Transaction<ERC20ApprovalAction> | Requirement | undefined,
 ): requirement is Transaction<ERC20ApprovalAction> {
-  return "to" in requirement && "value" in requirement && "data" in requirement;
+  return (
+    requirement !== undefined &&
+    "to" in requirement &&
+    "value" in requirement &&
+    "data" in requirement
+  );
 }
 
 export function isRequirementSignature(
-  requirement: Transaction<ERC20ApprovalAction> | Requirement,
+  requirement: Transaction<ERC20ApprovalAction> | Requirement | undefined,
 ): requirement is Requirement {
-  return "sign" in requirement && typeof requirement.sign === "function";
+  return (
+    requirement !== undefined &&
+    "sign" in requirement &&
+    typeof requirement.sign === "function"
+  );
 }
