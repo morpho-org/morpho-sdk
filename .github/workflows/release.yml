@@ -1,7 +1,10 @@
 name: Release
 
 on:
-  push:
+  workflow_run:
+    workflows: ["CI"]
+    types:
+      - completed
     branches:
       - main
 
@@ -12,17 +15,9 @@ permissions:
   contents: write
 
 jobs:
-  lint:
-    uses: ./.github/workflows/lint.yml
-
-  test:
-    uses: ./.github/workflows/test.yml
-    secrets:
-      MAINNET_RPC_URL: ${{ secrets.MAINNET_RPC_URL }}
-
   release:
     name: Release
-    needs: [lint, test]
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}  # Seulement si CI a réussi
     runs-on: ubuntu-latest
     env:
       CI: true
@@ -30,6 +25,8 @@ jobs:
     steps:
       - name: Checkout Repo
         uses: actions/checkout@v3
+        with:
+          ref: ${{ github.event.workflow_run.head_branch }}
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
