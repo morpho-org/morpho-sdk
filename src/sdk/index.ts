@@ -1,3 +1,5 @@
+// IMO it's worth looking into export maps. Since this is meant to be a simplifed abstraction, it feels like full package imports means we're exposing misuse and unnecessary package dependencies
+
 /**
  * Morpho SDK Unified Exports
  *

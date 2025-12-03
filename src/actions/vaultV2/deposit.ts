@@ -51,6 +51,7 @@ export interface VaultV2DepositParams {
  *
  * @returns {Readonly<Transaction<VaultV2DepositAction>>} The prepared deposit transaction.
  */
+// Should we do some address validation here? For example, check that addresses are valid checksums and vault addresses are contracts?
 export const vaultV2Deposit = ({
   vault: { chainId, address: vaultAddress, asset },
   args: { assets, maxSharePrice, recipient },

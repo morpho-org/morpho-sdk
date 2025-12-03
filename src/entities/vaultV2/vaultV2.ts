@@ -102,6 +102,7 @@ export class MorphoVaultV2 implements VaultV2Actions {
     userAddress: Address;
     slippageTolerance?: bigint;
   }) {
+    // Should we include this in the lower level `vaultV2Deposit` function instead?
     if (this.client.viemClient.chain?.id !== this.chainId) {
       throw new ChainIdMismatchError(
         this.client.viemClient.chain?.id,
@@ -111,6 +112,7 @@ export class MorphoVaultV2 implements VaultV2Actions {
 
     const vaultData = await fetchVaultV2(this.vault, this.client.viemClient);
 
+    // Should we warn when slippage tolerance is "too high"? For example, can be useful if a user accidentally adds an extra zero and enters 100% instead of 10%
     const maxSharePrice = MathLib.min(
       MathLib.mulDivUp(
         assets,

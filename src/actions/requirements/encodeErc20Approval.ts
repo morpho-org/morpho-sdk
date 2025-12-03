@@ -16,6 +16,7 @@ export const encodeErc20Approval = (
 ): Transaction<ERC20ApprovalAction> => {
   const { token, spender, amount, chainId } = params;
 
+  // Should we warn when a user is approving max value?
   const amountValue = MathLib.min(
     amount,
     MAX_TOKEN_APPROVALS[chainId]?.[token] ?? maxUint256,
