@@ -33,6 +33,9 @@ jobs:
           registry-url: https://registry.npmjs.org
           scope: '@morpho-org'
 
+      # Required to use OIDC trusted publishing.
+      - run: npm install -g npm@latest
+
       - name: Install Dependencies
         run: pnpm install --frozen-lockfile
 
