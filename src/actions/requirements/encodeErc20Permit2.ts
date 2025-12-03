@@ -1,7 +1,7 @@
 import { type Address, getChainAddresses, MathLib } from "@morpho-org/blue-sdk";
 import {
   fetchToken,
-  getDaiPermitTypedData,
+  getPermit2PermitTypedData,
   getPermitTypedData,
 } from "@morpho-org/blue-sdk-viem";
 import { deepFreeze, Time } from "@morpho-org/morpho-ts";
@@ -13,18 +13,19 @@ import {
 } from "../../types";
 import { MAX_TOKEN_APPROVALS } from "@morpho-org/simulation-sdk";
 
-interface EncodeErc20PermitParams {
+interface EncodeErc20Permit2Params {
   token: Address;
   spender: Address;
   amount: bigint;
   chainId: number;
   nonce: bigint;
+  expiration: bigint;
 }
 
-export const encodeErc20Permit = (
-  params: EncodeErc20PermitParams
+export const encodeErc20Permit2 = (
+  params: EncodeErc20Permit2Params
 ): Requirement => {
-  const { token, spender, amount, chainId, nonce } = params;
+  const { token, spender, amount, chainId, nonce, expiration = MathLib.MAX_UINT_48 } = params;
 
   const amountValue = MathLib.min(
     amount,
@@ -36,11 +37,12 @@ export const encodeErc20Permit = (
 
   return {
     action: {
-      type: "permit",
+      type: "permit2",
       args: {
         spender,
         amount: amountValue,
         deadline,
+        expiration,
       },
     },
     async sign(client: Client, userAddress: Address) {
@@ -54,51 +56,30 @@ export const encodeErc20Permit = (
         throw new AddressMismatchError(client.account.address, userAddress);
       }
 
-      const { dai } = getChainAddresses(chainId);
-
-      const isDai = dai != null && token === dai;
+      const { generalAdapter1 } = getChainAddresses(chainId);
 
       let signature: Hex;
-      if (isDai) {
-        const typedData = getDaiPermitTypedData(
-          {
-            owner: userAddress,
-            spender,
-            allowance: amountValue,
-            nonce,
-            deadline,
-          },
-          chainId
-        );
-        signature = await client.account.signTypedData(typedData);
 
-        await verifyTypedData({
-          ...typedData,
-          address: userAddress,
-          signature,
-        });
-      } else {
-        const tokenData = await fetchToken(token, client);
-        const typedData = getPermitTypedData(
-          {
-            erc20: tokenData,
-            owner: userAddress,
-            spender,
-            allowance: amountValue,
-            nonce,
-            deadline,
-          },
-          chainId
-        );
+      const typedData = getPermit2PermitTypedData(
+        {
+          // Never permit any other address than the GeneralAdapter1 otherwise
+          // the signature can be used independently.
+          spender: generalAdapter1,
+          allowance: amountValue,
+          erc20: token,
+          nonce: Number(nonce),
+          deadline,
+          expiration: Number(expiration),
+        },
+        chainId
+      );
+      signature = await client.account.signTypedData(typedData);
 
-        signature = await client.account.signTypedData(typedData);
-
-        await verifyTypedData({
-          ...typedData,
-          address: userAddress, // Verify against the permit's owner.
-          signature,
-        });
-      }
+      await verifyTypedData({
+        ...typedData,
+        address: userAddress,
+        signature,
+      });
 
       return deepFreeze({
         owner: userAddress,

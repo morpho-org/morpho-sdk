@@ -5,7 +5,7 @@ import type { Address } from "viem";
 import { addTransactionMetadata } from "../../helpers";
 import {
   type Metadata,
-  type SignatureArgs,
+  type PermitArgs,
   type Transaction,
   type VaultV2DepositAction,
   ZeroAssetAmountError,
@@ -22,7 +22,7 @@ export interface VaultV2DepositParams {
     assets: bigint;
     maxSharePrice: bigint;
     recipient: Address;
-    signaturesArgs?: SignatureArgs[];
+    signaturesArgs?: PermitArgs[];
   };
   metadata?: Metadata;
 }
@@ -68,23 +68,39 @@ export const vaultV2Deposit = ({
 
   const {
     bundler3: { generalAdapter1 },
+    dai,
   } = getChainAddresses(chainId);
 
   const actions: Action[] = [];
 
   for (const signatureArgs of signaturesArgs ?? []) {
-    // TODO: integrate DAI
-    actions.push({
-      type: "permit",
-      args: [
-        signatureArgs.owner,
-        asset,
-        signatureArgs.amount,
-        signatureArgs.deadline,
-        signatureArgs.signature,
-        false,
-      ],
-    });
+    const isDai = dai != null && signatureArgs.asset === dai;
+
+    const action: Action = isDai
+      ? {
+          type: "permitDai",
+          args: [
+            signatureArgs.owner,
+            signatureArgs.nonce,
+            signatureArgs.deadline,
+            signatureArgs.amount > 0n,
+            signatureArgs.signature,
+            false,
+          ],
+        }
+      : {
+          type: "permit",
+          args: [
+            signatureArgs.owner,
+            asset,
+            signatureArgs.amount,
+            signatureArgs.deadline,
+            signatureArgs.signature,
+            false,
+          ],
+        };
+
+    actions.push(action);
   }
 
   actions.push(
@@ -95,10 +111,8 @@ export const vaultV2Deposit = ({
     {
       type: "erc4626Deposit",
       args: [vaultAddress, assets, maxSharePrice, recipient, false],
-    },
+    }
   );
-
-  console.log(actions);
 
   let tx = BundlerAction.encodeBundle(chainId, actions);
 

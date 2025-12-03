@@ -12,7 +12,7 @@ import {
   type ERC20ApprovalAction,
   type MorphoClientType,
   type Requirement,
-  type SignatureArgs,
+  type PermitArgs,
   type Transaction,
   type VaultV2DepositAction,
   type VaultV2RedeemAction,
@@ -122,7 +122,7 @@ export class MorphoVaultV2 implements VaultV2Actions {
       MathLib.RAY * 100n,
     );
 
-    const signaturesArgs: SignatureArgs[] = [];
+    const signaturesArgs: PermitArgs[] = [];
 
     return {
       getRequirements: async () => {

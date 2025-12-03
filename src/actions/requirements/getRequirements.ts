@@ -1,6 +1,5 @@
 import { type Address, getChainAddresses } from "@morpho-org/blue-sdk";
 import { fetchHolding } from "@morpho-org/blue-sdk-viem";
-import { APPROVE_ONLY_ONCE_TOKENS } from "@morpho-org/simulation-sdk";
 import type { Client } from "viem";
 import {
   ChainIdMismatchError,
@@ -8,8 +7,16 @@ import {
   type Requirement,
   type Transaction,
 } from "../../types";
-import { encodeErc20Approval } from "./encodeErc20Approval";
 import { encodeErc20Permit } from "./encodeErc20Permit";
+import { isDefined } from "@morpho-org/morpho-ts";
+import { getApprovals } from "./getApprovals";
+import { getPermits2 } from "./getPermits2";
+
+// not support signature => classic approval
+
+// support signature => permit or permit2
+/// if support simple permit => permit
+/// else => permit2
 
 export const getRequirements = async (
   viemClient: Client,
@@ -18,7 +25,7 @@ export const getRequirements = async (
     chainId: number;
     args: { amount: bigint; from: Address };
   },
-  supportSignature: boolean,
+  supportSignature: boolean
 ): Promise<(Readonly<Transaction<ERC20ApprovalAction>> | Requirement)[]> => {
   const {
     address,
@@ -33,47 +40,14 @@ export const getRequirements = async (
     bundler3: { generalAdapter1 },
   } = getChainAddresses(chainId);
 
-  const { erc20Allowances, erc2612Nonce } = await fetchHolding(
-    from,
-    address,
-    viemClient,
-  );
+  const { erc20Allowances, erc2612Nonce, permit2BundlerAllowance } =
+    await fetchHolding(from, address, viemClient);
 
-  if (erc2612Nonce === undefined) {
-    throw new Error("ERC2612 nonce is undefined for permit signature");
-  }
+  if (supportSignature) {
+    const supportSimplePermit = isDefined(erc2612Nonce);
 
-  const requirements: (Transaction<ERC20ApprovalAction> | Requirement)[] = [];
-
-  if (erc20Allowances["bundler3.generalAdapter1"] < amount) {
-    if (
-      APPROVE_ONLY_ONCE_TOKENS[chainId]?.includes(address) &&
-      erc20Allowances["bundler3.generalAdapter1"] > 0n
-    ) {
-      if (supportSignature) {
-        requirements.push(
-          encodeErc20Permit({
-            token: address,
-            spender: generalAdapter1,
-            amount: 0n,
-            chainId,
-            nonce: erc2612Nonce,
-          }),
-        );
-      } else {
-        requirements.push(
-          encodeErc20Approval({
-            token: address,
-            spender: generalAdapter1,
-            amount: 0n,
-            chainId,
-          }),
-        );
-      }
-    }
-
-    if (supportSignature) {
-      requirements.push(
+    if (supportSimplePermit) {
+      return [
         encodeErc20Permit({
           token: address,
           spender: generalAdapter1,
@@ -81,18 +55,23 @@ export const getRequirements = async (
           chainId,
           nonce: erc2612Nonce,
         }),
-      );
-    } else {
-      requirements.push(
-        encodeErc20Approval({
-          token: address,
-          spender: generalAdapter1,
-          amount,
-          chainId,
-        }),
-      );
+      ];
     }
+
+    return getPermits2({
+      address,
+      chainId,
+      args: { amount },
+      allowancesPermit2: erc20Allowances.permit2,
+      allowanceBundlerPermit2: permit2BundlerAllowance.amount,
+      allowanceBundlerExpiration: permit2BundlerAllowance.expiration,
+    });
   }
 
-  return requirements;
+  return getApprovals({
+    address,
+    chainId,
+    args: { amount },
+    allowancesGeneralAdapter: erc20Allowances["bundler3.generalAdapter1"],
+  });
 };

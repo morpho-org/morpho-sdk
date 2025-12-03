@@ -59,22 +59,30 @@ export interface Transaction<TAction extends BaseAction = TransactionAction> {
   readonly action: TAction;
 }
 
-export interface SignatureArgs {
+export interface PermitArgs {
   owner: Address;
+  nonce: bigint;
+  asset: Address;
   signature: Hex;
   deadline: bigint;
   amount: bigint;
 }
 
 export interface Requirement {
-  sign: (client: Client, userAddress: Address) => Promise<SignatureArgs>;
-  action: SignatureAction;
+  sign: (client: Client, userAddress: Address) => Promise<PermitArgs>;
+  action: PermitAction | Permit2Action;
 }
 
-export interface SignatureAction
+export interface PermitAction
   extends BaseAction<
-    "signature",
+    "permit",
     { spender: Address; amount: bigint; deadline: bigint }
+  > {}
+
+export interface Permit2Action
+  extends BaseAction<
+    "permit2",
+    { spender: Address; amount: bigint; deadline: bigint; expiration: bigint }
   > {}
 
 export function isRequirementApproval(
