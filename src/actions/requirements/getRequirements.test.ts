@@ -28,24 +28,6 @@ describe("getRequirements", () => {
   const mockFrom: Address = "0x1234567890123456789012345678901234567890";
   const mockAmount = 1000000n;
 
-  const mockHolding = new Holding({
-    user: mockFrom,
-    token: usdc,
-    erc20Allowances: {
-      morpho: 0n,
-      "bundler3.generalAdapter1": 0n,
-      permit2: 0n,
-    },
-    permit2BundlerAllowance: {
-      amount: 0n,
-      expiration: 0n,
-      nonce: 0n,
-    },
-    erc2612Nonce: undefined,
-    canTransfer: false,
-    balance: 0n,
-  });
-
   let mockClient: Client;
 
   beforeEach(() => {
@@ -73,17 +55,33 @@ describe("getRequirements", () => {
             chainId: mainnet.id,
             args: { amount: mockAmount, from: mockFrom },
           },
-          false,
-        ),
+          false
+        )
       ).rejects.toThrow(new ChainIdMismatchError(137, mainnet.id));
     });
   });
 
   describe("Flow 1: supportSignature = false (classic approval)", () => {
     test("should return approval when allowance is less than amount", async () => {
-      const _mockHolding = mockHolding;
-      _mockHolding.erc20Allowances["bundler3.generalAdapter1"] = 500000n;
-      vi.mocked(fetchHolding).mockResolvedValue(_mockHolding);
+      vi.mocked(fetchHolding).mockResolvedValue(
+        new Holding({
+          user: mockFrom,
+          token: usdc,
+          erc20Allowances: {
+            morpho: 0n,
+            "bundler3.generalAdapter1": 500000n,
+            permit2: 0n,
+          },
+          permit2BundlerAllowance: {
+            amount: 0n,
+            expiration: 0n,
+            nonce: 0n,
+          },
+          erc2612Nonce: undefined,
+          canTransfer: false,
+          balance: 0n,
+        })
+      );
 
       const requirements = await getRequirements(
         mockClient,
@@ -92,7 +90,7 @@ describe("getRequirements", () => {
           chainId: mainnet.id,
           args: { amount: mockAmount, from: mockFrom },
         },
-        false,
+        false
       );
 
       expect(requirements).toHaveLength(1);
@@ -106,9 +104,25 @@ describe("getRequirements", () => {
     });
 
     test("should return empty array when allowance is sufficient", async () => {
-      const _mockHolding = mockHolding;
-      _mockHolding.erc20Allowances["bundler3.generalAdapter1"] = 2000000n;
-      vi.mocked(fetchHolding).mockResolvedValue(_mockHolding);
+      vi.mocked(fetchHolding).mockResolvedValue(
+        new Holding({
+          user: mockFrom,
+          token: usdc,
+          erc20Allowances: {
+            morpho: 0n,
+            "bundler3.generalAdapter1": 2000000n,
+            permit2: 0n,
+          },
+          permit2BundlerAllowance: {
+            amount: 0n,
+            expiration: 0n,
+            nonce: 0n,
+          },
+          erc2612Nonce: undefined,
+          canTransfer: false,
+          balance: 0n,
+        })
+      );
 
       const requirements = await getRequirements(
         mockClient,
@@ -117,7 +131,7 @@ describe("getRequirements", () => {
           chainId: mainnet.id,
           args: { amount: mockAmount, from: mockFrom },
         },
-        false,
+        false
       );
 
       expect(requirements).toHaveLength(0);
@@ -127,9 +141,25 @@ describe("getRequirements", () => {
   describe("supportSignature = true", () => {
     describe("Flow 2: Simple permit (EIP-2612)", () => {
       test("should return simple permit requirement when erc2612Nonce is defined", async () => {
-        const _mockHolding = mockHolding;
-        _mockHolding.erc2612Nonce = 0n;
-        vi.mocked(fetchHolding).mockResolvedValue(_mockHolding);
+        vi.mocked(fetchHolding).mockResolvedValue(
+          new Holding({
+            user: mockFrom,
+            token: usdc,
+            erc20Allowances: {
+              morpho: 0n,
+              "bundler3.generalAdapter1": 0n,
+              permit2: 0n,
+            },
+            permit2BundlerAllowance: {
+              amount: 0n,
+              expiration: 0n,
+              nonce: 0n,
+            },
+            erc2612Nonce: 0n,
+            canTransfer: false,
+            balance: 0n,
+          })
+        );
 
         const requirements = await getRequirements(
           mockClient,
@@ -138,7 +168,7 @@ describe("getRequirements", () => {
             chainId: mainnet.id,
             args: { amount: mockAmount, from: mockFrom },
           },
-          true,
+          true
         );
 
         expect(requirements).toHaveLength(1);
@@ -152,9 +182,25 @@ describe("getRequirements", () => {
       });
 
       test("should return empty array when allowance is sufficient", async () => {
-        const _mockHolding = mockHolding;
-        _mockHolding.erc20Allowances["bundler3.generalAdapter1"] = 2000000n;
-        vi.mocked(fetchHolding).mockResolvedValue(_mockHolding);
+        vi.mocked(fetchHolding).mockResolvedValue(
+          new Holding({
+            user: mockFrom,
+            token: usdc,
+            erc20Allowances: {
+              morpho: 0n,
+              "bundler3.generalAdapter1": 2000000n,
+              permit2: 0n,
+            },
+            permit2BundlerAllowance: {
+              amount: 0n,
+              expiration: 0n,
+              nonce: 0n,
+            },
+            erc2612Nonce: 0n,
+            canTransfer: false,
+            balance: 0n,
+          })
+        );
 
         const requirements = await getRequirements(
           mockClient,
@@ -163,16 +209,32 @@ describe("getRequirements", () => {
             chainId: mainnet.id,
             args: { amount: mockAmount, from: mockFrom },
           },
-          true,
+          true
         );
 
         expect(requirements).toHaveLength(0);
       });
 
       test("should return simple permit when DAI (supports EIP-2612) and allowance is insufficient", async () => {
-        const _mockHolding = mockHolding;
-        _mockHolding.erc20Allowances["bundler3.generalAdapter1"] = 0n;
-        vi.mocked(fetchHolding).mockResolvedValue(_mockHolding);
+        vi.mocked(fetchHolding).mockResolvedValue(
+          new Holding({
+            user: mockFrom,
+            token: dai,
+            erc20Allowances: {
+              morpho: 0n,
+              "bundler3.generalAdapter1": 0n,
+              permit2: 0n,
+            },
+            permit2BundlerAllowance: {
+              amount: 0n,
+              expiration: 0n,
+              nonce: 0n,
+            },
+            erc2612Nonce: 0n,
+            canTransfer: false,
+            balance: 0n,
+          })
+        );
 
         const requirements = await getRequirements(
           mockClient,
@@ -181,7 +243,7 @@ describe("getRequirements", () => {
             chainId: mainnet.id,
             args: { amount: mockAmount, from: mockFrom },
           },
-          true,
+          true
         );
 
         expect(requirements).toHaveLength(1);
@@ -198,7 +260,25 @@ describe("getRequirements", () => {
 
     describe("Flow 3: Permit2", () => {
       test("should return permit2 requirement with prior approval for permit2", async () => {
-        vi.mocked(fetchHolding).mockResolvedValue(mockHolding);
+        vi.mocked(fetchHolding).mockResolvedValue(
+          new Holding({
+            user: mockFrom,
+            token: usdc,
+            erc20Allowances: {
+              morpho: 0n,
+              "bundler3.generalAdapter1": 0n,
+              permit2: 0n,
+            },
+            permit2BundlerAllowance: {
+              amount: 0n,
+              expiration: 0n,
+              nonce: 0n,
+            },
+            erc2612Nonce: undefined,
+            canTransfer: false,
+            balance: 0n,
+          })
+        );
 
         const requirements = await getRequirements(
           mockClient,
@@ -207,7 +287,7 @@ describe("getRequirements", () => {
             chainId: mainnet.id,
             args: { amount: mockAmount, from: mockFrom },
           },
-          true,
+          true
         );
 
         // Should return permit2 approval + permit2 requirement
@@ -232,10 +312,25 @@ describe("getRequirements", () => {
       });
 
       test("should return permit2 only when prior approval for permit2 is sufficient", async () => {
-        const _mockHolding = mockHolding;
-        _mockHolding.erc20Allowances["bundler3.generalAdapter1"] = 0n;
-        _mockHolding.erc20Allowances.permit2 = 2000000n;
-        vi.mocked(fetchHolding).mockResolvedValue(_mockHolding);
+        vi.mocked(fetchHolding).mockResolvedValue(
+          new Holding({
+            user: mockFrom,
+            token: usdc,
+            erc20Allowances: {
+              morpho: 0n,
+              "bundler3.generalAdapter1": 0n,
+              permit2: 2000000n,
+            },
+            permit2BundlerAllowance: {
+              amount: 0n,
+              expiration: 0n,
+              nonce: 0n,
+            },
+            erc2612Nonce: undefined,
+            canTransfer: false,
+            balance: 0n,
+          })
+        );
 
         const requirements = await getRequirements(
           mockClient,
@@ -244,7 +339,7 @@ describe("getRequirements", () => {
             chainId: mainnet.id,
             args: { amount: mockAmount, from: mockFrom },
           },
-          true,
+          true
         );
 
         expect(requirements).toHaveLength(1);
@@ -259,12 +354,25 @@ describe("getRequirements", () => {
 
       test("should return empty array when permit2 allowance is sufficient and not expired", async () => {
         const currentTime = BigInt(Math.floor(Date.now() / 1000));
-        const _mockHolding = mockHolding;
-        _mockHolding.erc20Allowances.permit2 = 2000000n; // Sufficient permit2 allowance
-        _mockHolding.permit2BundlerAllowance.amount = 2000000n; // Sufficient amount
-        _mockHolding.permit2BundlerAllowance.expiration = currentTime + 10000n; // Not expired
-        _mockHolding.permit2BundlerAllowance.nonce = 0n;
-        vi.mocked(fetchHolding).mockResolvedValue(_mockHolding);
+        vi.mocked(fetchHolding).mockResolvedValue(
+          new Holding({
+            user: mockFrom,
+            token: usdc,
+            erc20Allowances: {
+              morpho: 0n,
+              "bundler3.generalAdapter1": 0n,
+              permit2: 2000000n, // Sufficient permit2 allowance
+            },
+            permit2BundlerAllowance: {
+              amount: 2000000n, // Sufficient amount
+              expiration: currentTime + 10000n, // Not expired
+              nonce: 0n,
+            },
+            erc2612Nonce: undefined,
+            canTransfer: false,
+            balance: 0n,
+          })
+        );
 
         const requirements = await getRequirements(
           mockClient,
@@ -273,7 +381,7 @@ describe("getRequirements", () => {
             chainId: mainnet.id,
             args: { amount: mockAmount, from: mockFrom },
           },
-          true,
+          true
         );
 
         // Should return empty array when everything is sufficient
@@ -283,13 +391,25 @@ describe("getRequirements", () => {
       test("should return permit2 requirement when expiration is expired", async () => {
         const currentTime = BigInt(Math.floor(Date.now() / 1000));
         const expiration = currentTime - 1000n;
-        const _mockHolding = mockHolding;
-        _mockHolding.erc20Allowances["bundler3.generalAdapter1"] = 0n;
-        _mockHolding.erc20Allowances.permit2 = 2000000n; // Sufficient permit2 allowance
-        _mockHolding.permit2BundlerAllowance.amount = 2000000n; // Sufficient amount
-        _mockHolding.permit2BundlerAllowance.expiration = expiration; // Expired
-        _mockHolding.permit2BundlerAllowance.nonce = 0n;
-        vi.mocked(fetchHolding).mockResolvedValue(_mockHolding);
+        vi.mocked(fetchHolding).mockResolvedValue(
+          new Holding({
+            user: mockFrom,
+            token: usdc,
+            erc20Allowances: {
+              morpho: 0n,
+              "bundler3.generalAdapter1": 0n,
+              permit2: 2000000n, // Sufficient permit2 allowance
+            },
+            permit2BundlerAllowance: {
+              amount: 2000000n, // Sufficient amount
+              expiration: expiration, // Expired
+              nonce: 0n,
+            },
+            erc2612Nonce: undefined,
+            canTransfer: false,
+            balance: 0n,
+          })
+        );
 
         const requirements = await getRequirements(
           mockClient,
@@ -298,7 +418,7 @@ describe("getRequirements", () => {
             chainId: mainnet.id,
             args: { amount: mockAmount, from: mockFrom },
           },
-          true,
+          true
         );
 
         expect(requirements).toHaveLength(1);
