@@ -1,4 +1,4 @@
-import { type Address, getChainAddresses } from "@morpho-org/blue-sdk";
+import { type Address } from "@morpho-org/blue-sdk";
 import { fetchHolding } from "@morpho-org/blue-sdk-viem";
 import type { Client } from "viem";
 import {
@@ -7,17 +7,28 @@ import {
   type Requirement,
   type Transaction,
 } from "../../types";
-import { encodeErc20Permit } from "./encodeErc20Permit";
 import { isDefined } from "@morpho-org/morpho-ts";
 import { getApprovals } from "./getApprovals";
 import { getPermits2 } from "./getPermits2";
+import { getPermits } from "./getPermits";
 
-// not support signature => classic approval
-
-// support signature => permit or permit2
-/// if support simple permit => permit
-/// else => permit2
-
+/**
+ * Get token "requirement" for approval/permit before interacting with protocol.
+ *
+ * Three flows:
+ * 1. If signature not supported, use classic approval (transaction).
+ * 2. If signature supported, try simple permit (EIP-2612), else fallback to permit2.
+ *
+ * @param viemClient - The connected viem Client instance, with the correct chain and account.
+ * @param params - Destructured object with:
+ * @param params.address - ERC20 token address.
+ * @param params.chainId - Chain/network id.
+ * @param params.args - Object with:
+ * @param params.args.amount - Required token amount.
+ * @param params.args.from - The account that will grant approval.
+ * @param supportSignature - Whether signature-based approvals are supported. If true, will try to use permit or permit2.
+ * @returns Promise of array of approval transaction or requirement objects.
+ */
 export const getRequirements = async (
   viemClient: Client,
   params: {
@@ -36,10 +47,6 @@ export const getRequirements = async (
     throw new ChainIdMismatchError(viemClient.chain?.id, chainId);
   }
 
-  const {
-    bundler3: { generalAdapter1 },
-  } = getChainAddresses(chainId);
-
   const { erc20Allowances, erc2612Nonce, permit2BundlerAllowance } =
     await fetchHolding(from, address, viemClient);
 
@@ -47,15 +54,13 @@ export const getRequirements = async (
     const supportSimplePermit = isDefined(erc2612Nonce);
 
     if (supportSimplePermit) {
-      return [
-        encodeErc20Permit({
-          token: address,
-          spender: generalAdapter1,
-          amount,
-          chainId,
-          nonce: erc2612Nonce,
-        }),
-      ];
+      return getPermits({
+        address,
+        chainId,
+        args: { amount },
+        allowancesGeneralAdapter: erc20Allowances["bundler3.generalAdapter1"],
+        nonce: erc2612Nonce,
+      });
     }
 
     return getPermits2({
