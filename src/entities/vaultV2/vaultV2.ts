@@ -11,14 +11,14 @@ import {
   ChainIdMismatchError,
   type ERC20ApprovalAction,
   type MorphoClientType,
-  type Requirement,
+  type Permit2Action,
+  type PermitAction,
   type PermitArgs,
+  type Requirement,
   type Transaction,
   type VaultV2DepositAction,
   type VaultV2RedeemAction,
   type VaultV2WithdrawAction,
-  type PermitAction,
-  type Permit2Action,
 } from "../../types";
 
 export interface VaultV2Actions {
@@ -124,7 +124,10 @@ export class MorphoVaultV2 implements VaultV2Actions {
       MathLib.RAY * 100n,
     );
 
-    const signatures: { args: PermitArgs; action: PermitAction | Permit2Action }[] = [];
+    const signatures: {
+      args: PermitArgs;
+      action: PermitAction | Permit2Action;
+    }[] = [];
 
     return {
       getRequirements: async () => {

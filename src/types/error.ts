@@ -20,7 +20,9 @@ export class ZeroMaxSharePriceError extends Error {
 
 export class AddressMismatchError extends Error {
   constructor(clientAddress: Address, argsAddress: Address) {
-    super(`Address mismatch between client: ${clientAddress} and args: ${argsAddress}`);
+    super(
+      `Address mismatch between client: ${clientAddress} and args: ${argsAddress}`,
+    );
   }
 }
 

@@ -1,14 +1,13 @@
-import type { Address } from "viem";
+import { addressesRegistry, Holding, MathLib } from "@morpho-org/blue-sdk";
+import type { Address, Client } from "viem";
 import { mainnet } from "viem/chains";
 import { beforeEach, describe, expect, test, vi } from "vitest";
-import { getRequirements } from "./getRequirements";
 import {
   ChainIdMismatchError,
   isRequirementApproval,
   isRequirementSignature,
 } from "../../types";
-import { addressesRegistry, Holding, MathLib } from "@morpho-org/blue-sdk";
-import type { Client } from "viem";
+import { getRequirements } from "./getRequirements";
 
 // Mock fetchHolding
 vi.mock("@morpho-org/blue-sdk-viem", () => ({
@@ -27,7 +26,7 @@ describe("getRequirements", () => {
   } = addressesRegistry[mainnet.id];
 
   const mockFrom: Address = "0x1234567890123456789012345678901234567890";
-  const mockAmount = 1000000n; 
+  const mockAmount = 1000000n;
 
   const mockHolding = new Holding({
     user: mockFrom,
@@ -74,8 +73,8 @@ describe("getRequirements", () => {
             chainId: mainnet.id,
             args: { amount: mockAmount, from: mockFrom },
           },
-          false
-        )
+          false,
+        ),
       ).rejects.toThrow(new ChainIdMismatchError(137, mainnet.id));
     });
   });
@@ -93,7 +92,7 @@ describe("getRequirements", () => {
           chainId: mainnet.id,
           args: { amount: mockAmount, from: mockFrom },
         },
-        false
+        false,
       );
 
       expect(requirements).toHaveLength(1);
@@ -118,7 +117,7 @@ describe("getRequirements", () => {
           chainId: mainnet.id,
           args: { amount: mockAmount, from: mockFrom },
         },
-        false
+        false,
       );
 
       expect(requirements).toHaveLength(0);
@@ -139,7 +138,7 @@ describe("getRequirements", () => {
             chainId: mainnet.id,
             args: { amount: mockAmount, from: mockFrom },
           },
-          true
+          true,
         );
 
         expect(requirements).toHaveLength(1);
@@ -164,7 +163,7 @@ describe("getRequirements", () => {
             chainId: mainnet.id,
             args: { amount: mockAmount, from: mockFrom },
           },
-          true
+          true,
         );
 
         expect(requirements).toHaveLength(0);
@@ -182,7 +181,7 @@ describe("getRequirements", () => {
             chainId: mainnet.id,
             args: { amount: mockAmount, from: mockFrom },
           },
-          true
+          true,
         );
 
         expect(requirements).toHaveLength(1);
@@ -208,7 +207,7 @@ describe("getRequirements", () => {
             chainId: mainnet.id,
             args: { amount: mockAmount, from: mockFrom },
           },
-          true
+          true,
         );
 
         // Should return permit2 approval + permit2 requirement
@@ -245,7 +244,7 @@ describe("getRequirements", () => {
             chainId: mainnet.id,
             args: { amount: mockAmount, from: mockFrom },
           },
-          true
+          true,
         );
 
         expect(requirements).toHaveLength(1);
@@ -274,7 +273,7 @@ describe("getRequirements", () => {
             chainId: mainnet.id,
             args: { amount: mockAmount, from: mockFrom },
           },
-          true
+          true,
         );
 
         // Should return empty array when everything is sufficient
@@ -299,7 +298,7 @@ describe("getRequirements", () => {
             chainId: mainnet.id,
             args: { amount: mockAmount, from: mockFrom },
           },
-          true
+          true,
         );
 
         expect(requirements).toHaveLength(1);

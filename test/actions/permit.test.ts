@@ -40,14 +40,14 @@ describe("Permit", () => {
 
         const signatureArgs = await requirements_1[0].sign(
           client,
-          client.account.address
+          client.account.address,
         );
 
         expect(signatureArgs.owner).toEqual(client.account.address);
         expect(isHex(signatureArgs.signature)).toBe(true);
         expect(signatureArgs.signature.length).toBe(132);
         expect(signatureArgs.deadline).toBeGreaterThan(
-          BigInt(Math.floor(Date.now() / 1000))
+          BigInt(Math.floor(Date.now() / 1000)),
         );
 
         const tx_1 = deposit.buildTx();
@@ -57,13 +57,13 @@ describe("Permit", () => {
     });
 
     expect(finalState.userAssetBalance).toEqual(
-      initialState.userAssetBalance - amount
+      initialState.userAssetBalance - amount,
     );
     expect(finalState.morphoAssetBalance).toEqual(
-      initialState.morphoAssetBalance + amount
+      initialState.morphoAssetBalance + amount,
     );
     expect(finalState.userSharesBalance).toBeGreaterThan(
-      initialState.userSharesBalance
+      initialState.userSharesBalance,
     );
   });
 

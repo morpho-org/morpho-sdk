@@ -21,7 +21,7 @@ interface EncodeErc20PermitParams {
 }
 
 export const encodeErc20Permit = (
-  params: EncodeErc20PermitParams
+  params: EncodeErc20PermitParams,
 ): Requirement => {
   const { token, spender, amount, chainId, nonce } = params;
 
@@ -62,7 +62,7 @@ export const encodeErc20Permit = (
             nonce,
             deadline,
           },
-          chainId
+          chainId,
         );
         signature = await client.account.signTypedData(typedData);
 
@@ -82,7 +82,7 @@ export const encodeErc20Permit = (
             nonce,
             deadline,
           },
-          chainId
+          chainId,
         );
 
         signature = await client.account.signTypedData(typedData);

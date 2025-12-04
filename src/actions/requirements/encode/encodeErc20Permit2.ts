@@ -1,7 +1,5 @@
 import { type Address, getChainAddresses, MathLib } from "@morpho-org/blue-sdk";
-import {
-  getPermit2PermitTypedData,
-} from "@morpho-org/blue-sdk-viem";
+import { getPermit2PermitTypedData } from "@morpho-org/blue-sdk-viem";
 import { deepFreeze, Time } from "@morpho-org/morpho-ts";
 import { type Client, verifyTypedData } from "viem";
 import {
@@ -20,9 +18,16 @@ interface EncodeErc20Permit2Params {
 }
 
 export const encodeErc20Permit2 = (
-  params: EncodeErc20Permit2Params
+  params: EncodeErc20Permit2Params,
 ): Requirement => {
-  const { token, spender, amount, chainId, nonce, expiration = MathLib.MAX_UINT_48 } = params;
+  const {
+    token,
+    spender,
+    amount,
+    chainId,
+    nonce,
+    expiration = MathLib.MAX_UINT_48,
+  } = params;
 
   const now = BigInt(Math.floor(Date.now() / 1000));
   const deadline = now + Time.s.from.h(2n);
@@ -48,7 +53,9 @@ export const encodeErc20Permit2 = (
         throw new AddressMismatchError(client.account.address, userAddress);
       }
 
-      const { bundler3: { generalAdapter1 } } = getChainAddresses(chainId);
+      const {
+        bundler3: { generalAdapter1 },
+      } = getChainAddresses(chainId);
 
       const typedData = getPermit2PermitTypedData(
         {
@@ -61,7 +68,7 @@ export const encodeErc20Permit2 = (
           deadline,
           expiration: Number(expiration),
         },
-        chainId
+        chainId,
       );
       const signature = await client.account.signTypedData(typedData);
 

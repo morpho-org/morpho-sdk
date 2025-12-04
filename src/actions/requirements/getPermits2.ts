@@ -1,8 +1,8 @@
 import { type Address, MathLib } from "@morpho-org/blue-sdk";
 import { APPROVE_ONLY_ONCE_TOKENS } from "@morpho-org/simulation-sdk";
 import type {
-  Requirement,
   ERC20ApprovalAction,
+  Requirement,
   Transaction,
 } from "../../types";
 import { encodeErc20Approval } from "./encode/encodeErc20Approval";
@@ -42,7 +42,7 @@ export const getPermits2 = (params: {
           spender: permit2,
           amount: 0n,
           chainId,
-        })
+        }),
       );
     }
 
@@ -52,7 +52,7 @@ export const getPermits2 = (params: {
         spender: permit2,
         amount: MathLib.MAX_UINT_160, // Always approve infinite.
         chainId,
-      })
+      }),
     );
   }
 
@@ -60,14 +60,16 @@ export const getPermits2 = (params: {
     allowanceBundlerPermit2 < amount ||
     allowanceBundlerExpiration < BigInt(Math.floor(Date.now() / 1000)) // TODO: verify this
   ) {
-    requirements.push(encodeErc20Permit2({
-      token: address,
-      spender: permit2,
-      amount,
-      chainId,
-      nonce,
-      expiration: MathLib.MAX_UINT_48, // Always approve indefinitely.
-    }));
+    requirements.push(
+      encodeErc20Permit2({
+        token: address,
+        spender: permit2,
+        amount,
+        chainId,
+        nonce,
+        expiration: MathLib.MAX_UINT_48, // Always approve indefinitely.
+      }),
+    );
   }
 
   return requirements;

@@ -79,7 +79,10 @@ export interface Permit2Args {
 }
 
 export interface Requirement {
-  sign: (client: Client, userAddress: Address) => Promise<PermitArgs | Permit2Args>;
+  sign: (
+    client: Client,
+    userAddress: Address,
+  ) => Promise<PermitArgs | Permit2Args>;
   action: PermitAction | Permit2Action;
 }
 

@@ -1,13 +1,13 @@
+import { addressesRegistry } from "@morpho-org/blue-sdk";
 import { type Address, isHex } from "viem";
 import { mainnet } from "viem/chains";
 import { describe, expect } from "vitest";
 import { test } from "../../../../test/setup";
-import { encodeErc20Permit } from "./encodeErc20Permit";
 import {
   AddressMismatchError,
   MissingClientPropertyError,
 } from "../../../types";
-import { addressesRegistry } from "@morpho-org/blue-sdk";
+import { encodeErc20Permit } from "./encodeErc20Permit";
 
 describe("encodeErc20Permit", () => {
   const {
@@ -73,7 +73,7 @@ describe("encodeErc20Permit", () => {
       });
 
       await expect(
-        permit.sign(clientWithoutAccount, client.account.address)
+        permit.sign(clientWithoutAccount, client.account.address),
       ).rejects.toThrow(new MissingClientPropertyError("client.account"));
     });
 
@@ -97,9 +97,9 @@ describe("encodeErc20Permit", () => {
       });
 
       await expect(
-        permit.sign(clientWithoutSignTypedData, client.account.address)
+        permit.sign(clientWithoutSignTypedData, client.account.address),
       ).rejects.toThrow(
-        new MissingClientPropertyError("client.account.signTypedData")
+        new MissingClientPropertyError("client.account.signTypedData"),
       );
     });
 
@@ -118,7 +118,7 @@ describe("encodeErc20Permit", () => {
       });
 
       await expect(permit.sign(client, differentAddress)).rejects.toThrow(
-        new AddressMismatchError(client.account.address, differentAddress)
+        new AddressMismatchError(client.account.address, differentAddress),
       );
     });
 
@@ -172,10 +172,10 @@ describe("encodeErc20Permit", () => {
 
       expect(signatureArgs.deadline).toBeGreaterThan(now);
       expect(signatureArgs.deadline).toBeGreaterThanOrEqual(
-        expectedDeadline - tolerance
+        expectedDeadline - tolerance,
       );
       expect(signatureArgs.deadline).toBeLessThanOrEqual(
-        expectedDeadline + tolerance
+        expectedDeadline + tolerance,
       );
     });
 

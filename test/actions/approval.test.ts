@@ -103,7 +103,7 @@ describe("Approval", () => {
         await client.sendTransaction(requirements[1]);
 
         const tx = deposit.buildTx();
-        
+
         await client.sendTransaction(tx);
       },
     });

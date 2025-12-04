@@ -134,13 +134,10 @@ export const vaultV2Deposit = ({
     }
   }
 
-  actions.push(
-    transferFromAction,
-    {
-      type: "erc4626Deposit",
-      args: [vaultAddress, assets, maxSharePrice, recipient, false],
-    }
-  );
+  actions.push(transferFromAction, {
+    type: "erc4626Deposit",
+    args: [vaultAddress, assets, maxSharePrice, recipient, false],
+  });
 
   let tx = BundlerAction.encodeBundle(chainId, actions);
 

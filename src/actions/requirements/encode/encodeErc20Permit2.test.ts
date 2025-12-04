@@ -1,16 +1,19 @@
+import { addressesRegistry, MathLib } from "@morpho-org/blue-sdk";
 import { type Address, isHex } from "viem";
 import { mainnet } from "viem/chains";
 import { describe, expect } from "vitest";
 import { test } from "../../../../test/setup";
-import { encodeErc20Permit2 } from "./encodeErc20Permit2";
 import {
   AddressMismatchError,
   MissingClientPropertyError,
 } from "../../../types";
-import { addressesRegistry, MathLib } from "@morpho-org/blue-sdk";
+import { encodeErc20Permit2 } from "./encodeErc20Permit2";
 
 describe("encodeErc20Permit2", () => {
-  const { usdc, bundler3: { generalAdapter1 } } =  addressesRegistry[mainnet.id];
+  const {
+    usdc,
+    bundler3: { generalAdapter1 },
+  } = addressesRegistry[mainnet.id];
 
   const mockAmount = 1000000n;
   const mockNonce = 0n;
@@ -54,7 +57,7 @@ describe("encodeErc20Permit2", () => {
       });
 
       await expect(
-        permit.sign(clientWithoutAccount, client.account.address)
+        permit.sign(clientWithoutAccount, client.account.address),
       ).rejects.toThrow(new MissingClientPropertyError("client.account"));
     });
 
@@ -79,9 +82,9 @@ describe("encodeErc20Permit2", () => {
       });
 
       await expect(
-        permit.sign(clientWithoutSignTypedData, client.account.address)
+        permit.sign(clientWithoutSignTypedData, client.account.address),
       ).rejects.toThrow(
-        new MissingClientPropertyError("client.account.signTypedData")
+        new MissingClientPropertyError("client.account.signTypedData"),
       );
     });
 
@@ -101,7 +104,7 @@ describe("encodeErc20Permit2", () => {
       });
 
       await expect(permit.sign(client, differentAddress)).rejects.toThrow(
-        new AddressMismatchError(client.account.address, differentAddress)
+        new AddressMismatchError(client.account.address, differentAddress),
       );
     });
 
@@ -160,10 +163,10 @@ describe("encodeErc20Permit2", () => {
 
       expect(signatureArgs.deadline).toBeGreaterThan(now);
       expect(signatureArgs.deadline).toBeGreaterThanOrEqual(
-        expectedDeadline - tolerance
+        expectedDeadline - tolerance,
       );
       expect(signatureArgs.deadline).toBeLessThanOrEqual(
-        expectedDeadline + tolerance
+        expectedDeadline + tolerance,
       );
     });
 
@@ -192,4 +195,3 @@ describe("encodeErc20Permit2", () => {
     });
   });
 });
-

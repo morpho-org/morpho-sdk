@@ -33,7 +33,7 @@ export const getApprovals = (params: {
           spender: generalAdapter1,
           amount: 0n,
           chainId,
-        })
+        }),
       );
     }
 
@@ -43,7 +43,7 @@ export const getApprovals = (params: {
         spender: generalAdapter1,
         amount,
         chainId,
-      })
+      }),
     );
   }
 

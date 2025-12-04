@@ -1,11 +1,14 @@
+import { addressesRegistry } from "@morpho-org/blue-sdk";
 import { decodeFunctionData, erc20Abi, isHex } from "viem";
 import { mainnet } from "viem/chains";
 import { describe, expect, test } from "vitest";
 import { encodeErc20Approval } from "./encodeErc20Approval";
-import { addressesRegistry } from "@morpho-org/blue-sdk";
 
 describe("encodeErc20Approval", () => {
-  const { usdc, bundler3: { generalAdapter1 } } = addressesRegistry[mainnet.id];
+  const {
+    usdc,
+    bundler3: { generalAdapter1 },
+  } = addressesRegistry[mainnet.id];
 
   const mockAmount = 1000000n;
 
@@ -50,7 +53,7 @@ describe("encodeErc20Approval", () => {
     });
 
     expect(transaction.action.args.amount).toEqual(0n);
-    
+
     const decoded = decodeFunctionData({
       abi: erc20Abi,
       data: transaction.data,
@@ -58,4 +61,3 @@ describe("encodeErc20Approval", () => {
     expect(decoded.args[1]).toEqual(0n);
   });
 });
-

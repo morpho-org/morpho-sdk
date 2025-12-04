@@ -1,3 +1,4 @@
+import { getChainAddresses, MathLib } from "@morpho-org/blue-sdk";
 import {
   isRequirementApproval,
   isRequirementSignature,
@@ -9,7 +10,6 @@ import { isHex, parseUnits } from "viem";
 import { mainnet } from "viem/chains";
 import { describe, expect } from "vitest";
 import { test } from "../setup";
-import { getChainAddresses, MathLib } from "@morpho-org/blue-sdk";
 
 describe("Permit2", () => {
   test("should deposit USDT with permit2 with prior reset", async ({
@@ -58,7 +58,7 @@ describe("Permit2", () => {
           !isRequirementApproval(approvalPermit2)
         ) {
           throw new Error(
-            "Approval requirement not found (reset permit2 or approve permit2)"
+            "Approval requirement not found (reset permit2 or approve permit2)",
           );
         }
 
@@ -82,7 +82,7 @@ describe("Permit2", () => {
         expect(isHex(sig.signature)).toBe(true);
         expect(sig.signature.length).toBe(132);
         expect(sig.deadline).toBeGreaterThan(
-          BigInt(Math.floor(Date.now() / 1000))
+          BigInt(Math.floor(Date.now() / 1000)),
         );
 
         const tx = deposit.buildTx();
@@ -92,13 +92,13 @@ describe("Permit2", () => {
     });
 
     expect(finalState.userAssetBalance).toEqual(
-      initialState.userAssetBalance - amount
+      initialState.userAssetBalance - amount,
     );
     expect(finalState.morphoAssetBalance).toEqual(
-      initialState.morphoAssetBalance + amount
+      initialState.morphoAssetBalance + amount,
     );
     expect(finalState.userSharesBalance).toBeGreaterThan(
-      initialState.userSharesBalance
+      initialState.userSharesBalance,
     );
   });
 
@@ -153,7 +153,7 @@ describe("Permit2", () => {
         expect(isHex(sig.signature)).toBe(true);
         expect(sig.signature.length).toBe(132);
         expect(sig.deadline).toBeGreaterThan(
-          BigInt(Math.floor(Date.now() / 1000))
+          BigInt(Math.floor(Date.now() / 1000)),
         );
 
         const tx = deposit.buildTx();
@@ -163,13 +163,13 @@ describe("Permit2", () => {
     });
 
     expect(finalState.userAssetBalance).toEqual(
-      initialState.userAssetBalance - amount
+      initialState.userAssetBalance - amount,
     );
     expect(finalState.morphoAssetBalance).toEqual(
-      initialState.morphoAssetBalance + amount
+      initialState.morphoAssetBalance + amount,
     );
     expect(finalState.userSharesBalance).toBeGreaterThan(
-      initialState.userSharesBalance
+      initialState.userSharesBalance,
     );
   });
 });

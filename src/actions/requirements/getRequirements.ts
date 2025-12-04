@@ -1,5 +1,6 @@
-import { getChainAddresses, type Address } from "@morpho-org/blue-sdk";
+import { type Address, getChainAddresses } from "@morpho-org/blue-sdk";
 import { fetchHolding } from "@morpho-org/blue-sdk-viem";
+import { isDefined } from "@morpho-org/morpho-ts";
 import type { Client } from "viem";
 import {
   ChainIdMismatchError,
@@ -7,10 +8,9 @@ import {
   type Requirement,
   type Transaction,
 } from "../../types";
-import { isDefined } from "@morpho-org/morpho-ts";
 import { getApprovals } from "./getApprovals";
-import { getPermits2 } from "./getPermits2";
 import { getPermits } from "./getPermits";
+import { getPermits2 } from "./getPermits2";
 
 /**
  * Get token "requirement" for approval/permit before interacting with protocol.
@@ -36,7 +36,7 @@ export const getRequirements = async (
     chainId: number;
     args: { amount: bigint; from: Address };
   },
-  supportSignature: boolean
+  supportSignature: boolean,
 ): Promise<(Readonly<Transaction<ERC20ApprovalAction>> | Requirement)[]> => {
   const {
     address,
