@@ -90,7 +90,7 @@ export class MorphoVaultV2 implements VaultV2Actions {
   constructor(
     private readonly client: MorphoClientType,
     private readonly vault: Address,
-    private readonly chainId: number,
+    private readonly chainId: number
   ) {}
 
   async getData() {
@@ -109,7 +109,7 @@ export class MorphoVaultV2 implements VaultV2Actions {
     if (this.client.viemClient.chain?.id !== this.chainId) {
       throw new ChainIdMismatchError(
         this.client.viemClient.chain?.id,
-        this.chainId,
+        this.chainId
       );
     }
 
@@ -119,9 +119,9 @@ export class MorphoVaultV2 implements VaultV2Actions {
       MathLib.mulDivUp(
         assets,
         MathLib.wToRay(MathLib.WAD + slippageTolerance),
-        vaultData.toShares(assets),
+        vaultData.toShares(assets)
       ),
-      MathLib.RAY * 100n,
+      MathLib.RAY * 100n
     );
 
     const signatures: {
@@ -131,18 +131,15 @@ export class MorphoVaultV2 implements VaultV2Actions {
 
     return {
       getRequirements: async () => {
-        const requirements = await getRequirements(
-          this.client.viemClient,
-          {
-            address: vaultData.asset,
-            chainId: this.chainId,
-            args: {
-              amount: assets,
-              from: userAddress,
-            },
+        const requirements = await getRequirements(this.client.viemClient, {
+          address: vaultData.asset,
+          chainId: this.chainId,
+          supportSignature: this.client.options.supportSignature,
+          args: {
+            amount: assets,
+            from: userAddress,
           },
-          this.client.supportSignature,
-        );
+        });
 
         // Wrap each requirement with a sign method that pushes the signature into the signatures array for final execution
         for (const req of requirements) {
@@ -174,7 +171,7 @@ export class MorphoVaultV2 implements VaultV2Actions {
             recipient: userAddress,
             signatures,
           },
-          metadata: this.client.metadata,
+          metadata: this.client.options.metadata,
         }),
     };
   }
@@ -189,7 +186,7 @@ export class MorphoVaultV2 implements VaultV2Actions {
             recipient: userAddress,
             onBehalf: userAddress,
           },
-          metadata: this.client.metadata,
+          metadata: this.client.options.metadata,
         }),
     };
   }
@@ -204,7 +201,7 @@ export class MorphoVaultV2 implements VaultV2Actions {
             recipient: userAddress,
             onBehalf: userAddress,
           },
-          metadata: this.client.metadata,
+          metadata: this.client.options.metadata,
         }),
     };
   }

@@ -34,13 +34,14 @@ export const getRequirements = async (
   params: {
     address: Address;
     chainId: number;
+    supportSignature: boolean,
     args: { amount: bigint; from: Address };
   },
-  supportSignature: boolean,
 ): Promise<(Readonly<Transaction<ERC20ApprovalAction>> | Requirement)[]> => {
   const {
     address,
     chainId,
+    supportSignature,
     args: { amount, from },
   } = params;
   if (viemClient.chain?.id !== chainId) {

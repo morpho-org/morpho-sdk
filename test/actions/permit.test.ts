@@ -25,7 +25,7 @@ describe("Permit", () => {
         vaults: { KeyrockUsdcVaultV2 },
       },
       actionFn: async () => {
-        const morpho = new MorphoClient(client, true);
+        const morpho = new MorphoClient(client, { supportSignature: true });
 
         const vault = morpho.vaultV2(KeyrockUsdcVaultV2.address, mainnet.id);
         const deposit = await vault.deposit({

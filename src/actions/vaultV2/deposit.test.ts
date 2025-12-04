@@ -19,18 +19,15 @@ describe("depositVaultV2 unit tests", () => {
     const maxSharePrice = 1000000000000000000n; // 1:1 share price
 
     // Create DAI permit signature
-    const requirements = await getRequirements(
-      client,
-      {
-        address: dai,
-        chainId: mainnet.id,
-        args: {
-          amount: assets,
-          from: client.account.address,
-        },
+    const requirements = await getRequirements(client, {
+      address: dai,
+      chainId: mainnet.id,
+      supportSignature: true,
+      args: {
+        amount: assets,
+        from: client.account.address,
       },
-      true,
-    );
+    });
 
     const permitDai = requirements[0];
     if (!isRequirementSignature(permitDai)) {

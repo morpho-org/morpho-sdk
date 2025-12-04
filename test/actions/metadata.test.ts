@@ -26,9 +26,12 @@ describe("Metadata", () => {
         vaults: { KeyrockUsdcVaultV2 },
       },
       actionFn: async () => {
-        const morpho = new MorphoClient(client, false, {
-          origin: "25AFEA44",
-          timestamp: true,
+        const morpho = new MorphoClient(client, {
+          supportSignature: false,
+          metadata: {
+            origin: "25AFEA44",
+            timestamp: true,
+          },
         });
         const vaultV2 = morpho.vaultV2(KeyrockUsdcVaultV2.address, mainnet.id);
         const deposit = await vaultV2.deposit({
@@ -64,13 +67,13 @@ describe("Metadata", () => {
     });
 
     expect(finalState.userAssetBalance).toEqual(
-      initialState.userAssetBalance - amount,
+      initialState.userAssetBalance - amount
     );
     expect(finalState.morphoAssetBalance).toEqual(
-      initialState.morphoAssetBalance + amount,
+      initialState.morphoAssetBalance + amount
     );
     expect(finalState.userSharesBalance).toBeGreaterThan(
-      initialState.userSharesBalance,
+      initialState.userSharesBalance
     );
   });
 
@@ -93,8 +96,11 @@ describe("Metadata", () => {
         vaults: { KeyrockUsdcVaultV2 },
       },
       actionFn: async () => {
-        const morpho = new MorphoClient(client, false, {
-          origin: "25AFEA44",
+        const morpho = new MorphoClient(client, {
+          supportSignature: false,
+          metadata: {
+            origin: "25AFEA44",
+          },
         });
         const vaultV2 = morpho.vaultV2(KeyrockUsdcVaultV2.address, mainnet.id);
         const deposit = await vaultV2.deposit({
@@ -126,13 +132,13 @@ describe("Metadata", () => {
     });
 
     expect(finalState.userAssetBalance).toEqual(
-      initialState.userAssetBalance - amount,
+      initialState.userAssetBalance - amount
     );
     expect(finalState.morphoAssetBalance).toEqual(
-      initialState.morphoAssetBalance + amount,
+      initialState.morphoAssetBalance + amount
     );
     expect(finalState.userSharesBalance).toBeGreaterThan(
-      initialState.userSharesBalance,
+      initialState.userSharesBalance
     );
   });
 });

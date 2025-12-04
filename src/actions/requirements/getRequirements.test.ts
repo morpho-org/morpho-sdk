@@ -48,15 +48,12 @@ describe("getRequirements", () => {
       } as unknown as Client;
 
       await expect(
-        getRequirements(
-          clientWithWrongChain,
-          {
-            address: usdc,
-            chainId: mainnet.id,
-            args: { amount: mockAmount, from: mockFrom },
-          },
-          false,
-        ),
+        getRequirements(clientWithWrongChain, {
+          supportSignature: false,
+          address: usdc,
+          chainId: mainnet.id,
+          args: { amount: mockAmount, from: mockFrom },
+        })
       ).rejects.toThrow(new ChainIdMismatchError(137, mainnet.id));
     });
   });
@@ -80,18 +77,15 @@ describe("getRequirements", () => {
           erc2612Nonce: undefined,
           canTransfer: false,
           balance: 0n,
-        }),
+        })
       );
 
-      const requirements = await getRequirements(
-        mockClient,
-        {
-          address: usdc,
-          chainId: mainnet.id,
-          args: { amount: mockAmount, from: mockFrom },
-        },
-        false,
-      );
+      const requirements = await getRequirements(mockClient, {
+        supportSignature: false,
+        address: usdc,
+        chainId: mainnet.id,
+        args: { amount: mockAmount, from: mockFrom },
+      });
 
       expect(requirements).toHaveLength(1);
       const approval = requirements[0];
@@ -121,18 +115,15 @@ describe("getRequirements", () => {
           erc2612Nonce: undefined,
           canTransfer: false,
           balance: 0n,
-        }),
+        })
       );
 
-      const requirements = await getRequirements(
-        mockClient,
-        {
-          address: usdc,
-          chainId: mainnet.id,
-          args: { amount: mockAmount, from: mockFrom },
-        },
-        false,
-      );
+      const requirements = await getRequirements(mockClient, {
+        supportSignature: false,
+        address: usdc,
+        chainId: mainnet.id,
+        args: { amount: mockAmount, from: mockFrom },
+      });
 
       expect(requirements).toHaveLength(0);
     });
@@ -158,18 +149,15 @@ describe("getRequirements", () => {
             erc2612Nonce: 0n,
             canTransfer: false,
             balance: 0n,
-          }),
+          })
         );
 
-        const requirements = await getRequirements(
-          mockClient,
-          {
-            address: usdc,
-            chainId: mainnet.id,
-            args: { amount: mockAmount, from: mockFrom },
-          },
-          true,
-        );
+        const requirements = await getRequirements(mockClient, {
+          supportSignature: true,
+          address: usdc,
+          chainId: mainnet.id,
+          args: { amount: mockAmount, from: mockFrom },
+        });
 
         expect(requirements).toHaveLength(1);
         const permit = requirements[0];
@@ -199,18 +187,15 @@ describe("getRequirements", () => {
             erc2612Nonce: 0n,
             canTransfer: false,
             balance: 0n,
-          }),
+          })
         );
 
-        const requirements = await getRequirements(
-          mockClient,
-          {
-            address: usdc,
-            chainId: mainnet.id,
-            args: { amount: mockAmount, from: mockFrom },
-          },
-          true,
-        );
+        const requirements = await getRequirements(mockClient, {
+          supportSignature: true,
+          address: usdc,
+          chainId: mainnet.id,
+          args: { amount: mockAmount, from: mockFrom },
+        });
 
         expect(requirements).toHaveLength(0);
       });
@@ -233,18 +218,15 @@ describe("getRequirements", () => {
             erc2612Nonce: 0n,
             canTransfer: false,
             balance: 0n,
-          }),
+          })
         );
 
-        const requirements = await getRequirements(
-          mockClient,
-          {
-            address: dai,
-            chainId: mainnet.id,
-            args: { amount: mockAmount, from: mockFrom },
-          },
-          true,
-        );
+        const requirements = await getRequirements(mockClient, {
+          supportSignature: true,
+          address: dai,
+          chainId: mainnet.id,
+          args: { amount: mockAmount, from: mockFrom },
+        });
 
         expect(requirements).toHaveLength(1);
 
@@ -277,18 +259,15 @@ describe("getRequirements", () => {
             erc2612Nonce: undefined,
             canTransfer: false,
             balance: 0n,
-          }),
+          })
         );
 
-        const requirements = await getRequirements(
-          mockClient,
-          {
-            address: wNative,
-            chainId: mainnet.id,
-            args: { amount: mockAmount, from: mockFrom },
-          },
-          true,
-        );
+        const requirements = await getRequirements(mockClient, {
+          supportSignature: true,
+          address: wNative,
+          chainId: mainnet.id,
+          args: { amount: mockAmount, from: mockFrom },
+        });
 
         // Should return permit2 approval + permit2 requirement
         expect(requirements.length).toBe(2);
@@ -329,18 +308,15 @@ describe("getRequirements", () => {
             erc2612Nonce: undefined,
             canTransfer: false,
             balance: 0n,
-          }),
+          })
         );
 
-        const requirements = await getRequirements(
-          mockClient,
-          {
-            address: wNative,
-            chainId: mainnet.id,
-            args: { amount: mockAmount, from: mockFrom },
-          },
-          true,
-        );
+        const requirements = await getRequirements(mockClient, {
+          supportSignature: true,
+          address: wNative,
+          chainId: mainnet.id,
+          args: { amount: mockAmount, from: mockFrom },
+        });
 
         expect(requirements).toHaveLength(1);
         const permit2Requirement = requirements[0];
@@ -371,18 +347,15 @@ describe("getRequirements", () => {
             erc2612Nonce: undefined,
             canTransfer: false,
             balance: 0n,
-          }),
+          })
         );
 
-        const requirements = await getRequirements(
-          mockClient,
-          {
-            address: wNative,
-            chainId: mainnet.id,
-            args: { amount: mockAmount, from: mockFrom },
-          },
-          true,
-        );
+        const requirements = await getRequirements(mockClient, {
+          supportSignature: true,
+          address: wNative,
+          chainId: mainnet.id,
+          args: { amount: mockAmount, from: mockFrom },
+        });
 
         // Should return empty array when everything is sufficient
         expect(requirements).toHaveLength(0);
@@ -408,18 +381,15 @@ describe("getRequirements", () => {
             erc2612Nonce: undefined,
             canTransfer: false,
             balance: 0n,
-          }),
+          })
         );
 
-        const requirements = await getRequirements(
-          mockClient,
-          {
-            address: wNative,
-            chainId: mainnet.id,
-            args: { amount: mockAmount, from: mockFrom },
-          },
-          true,
-        );
+        const requirements = await getRequirements(mockClient, {
+          supportSignature: true,
+          address: wNative,
+          chainId: mainnet.id,
+          args: { amount: mockAmount, from: mockFrom },
+        });
 
         expect(requirements).toHaveLength(1);
         const permit2Requirement = requirements[0];

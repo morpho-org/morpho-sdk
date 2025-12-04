@@ -5,11 +5,13 @@ import type { Metadata, MorphoClientType } from "../types";
 export class MorphoClient implements MorphoClientType {
   constructor(
     public readonly viemClient: Client,
-    public readonly supportSignature: boolean = false,
-    public readonly metadata?: Metadata,
+    public readonly options: {
+      supportSignature: boolean;
+      metadata?: Metadata;
+    } = { supportSignature: false }
   ) {}
 
-  vaultV2(vault: Address, chainId: number) {
+  public vaultV2(vault: Address, chainId: number) {
     return new MorphoVaultV2(this, vault, chainId);
   }
 }
