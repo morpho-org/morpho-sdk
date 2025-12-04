@@ -53,7 +53,7 @@ describe("getRequirements", () => {
           address: usdc,
           chainId: mainnet.id,
           args: { amount: mockAmount, from: mockFrom },
-        })
+        }),
       ).rejects.toThrow(new ChainIdMismatchError(137, mainnet.id));
     });
   });
@@ -77,7 +77,7 @@ describe("getRequirements", () => {
           erc2612Nonce: undefined,
           canTransfer: false,
           balance: 0n,
-        })
+        }),
       );
 
       const requirements = await getRequirements(mockClient, {
@@ -115,7 +115,7 @@ describe("getRequirements", () => {
           erc2612Nonce: undefined,
           canTransfer: false,
           balance: 0n,
-        })
+        }),
       );
 
       const requirements = await getRequirements(mockClient, {
@@ -149,7 +149,7 @@ describe("getRequirements", () => {
             erc2612Nonce: 0n,
             canTransfer: false,
             balance: 0n,
-          })
+          }),
         );
 
         const requirements = await getRequirements(mockClient, {
@@ -187,7 +187,7 @@ describe("getRequirements", () => {
             erc2612Nonce: 0n,
             canTransfer: false,
             balance: 0n,
-          })
+          }),
         );
 
         const requirements = await getRequirements(mockClient, {
@@ -218,7 +218,7 @@ describe("getRequirements", () => {
             erc2612Nonce: 0n,
             canTransfer: false,
             balance: 0n,
-          })
+          }),
         );
 
         const requirements = await getRequirements(mockClient, {
@@ -259,7 +259,7 @@ describe("getRequirements", () => {
             erc2612Nonce: undefined,
             canTransfer: false,
             balance: 0n,
-          })
+          }),
         );
 
         const requirements = await getRequirements(mockClient, {
@@ -308,7 +308,7 @@ describe("getRequirements", () => {
             erc2612Nonce: undefined,
             canTransfer: false,
             balance: 0n,
-          })
+          }),
         );
 
         const requirements = await getRequirements(mockClient, {
@@ -347,7 +347,7 @@ describe("getRequirements", () => {
             erc2612Nonce: undefined,
             canTransfer: false,
             balance: 0n,
-          })
+          }),
         );
 
         const requirements = await getRequirements(mockClient, {
@@ -381,7 +381,7 @@ describe("getRequirements", () => {
             erc2612Nonce: undefined,
             canTransfer: false,
             balance: 0n,
-          })
+          }),
         );
 
         const requirements = await getRequirements(mockClient, {

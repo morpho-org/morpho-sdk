@@ -34,7 +34,7 @@ export const getRequirements = async (
   params: {
     address: Address;
     chainId: number;
-    supportSignature: boolean,
+    supportSignature: boolean;
     args: { amount: bigint; from: Address };
   },
 ): Promise<(Readonly<Transaction<ERC20ApprovalAction>> | Requirement)[]> => {

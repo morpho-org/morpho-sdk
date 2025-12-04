@@ -8,7 +8,7 @@ export class MorphoClient implements MorphoClientType {
     public readonly options: {
       supportSignature: boolean;
       metadata?: Metadata;
-    } = { supportSignature: false }
+    } = { supportSignature: false },
   ) {}
 
   public vaultV2(vault: Address, chainId: number) {
