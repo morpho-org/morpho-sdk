@@ -146,12 +146,12 @@ export class MorphoVaultV2 implements VaultV2Actions {
           if ("sign" in req && typeof req.sign === "function") {
             const originalSign = req.sign;
             req.sign = async (...args: Parameters<typeof originalSign>) => {
-              const sig = await originalSign(...args);
+              const signatureArgs = await originalSign(...args);
               signatures.push({
-                args: sig,
+                args: signatureArgs,
                 action: req.action,
               });
-              return sig;
+              return signatureArgs;
             };
           }
         }
