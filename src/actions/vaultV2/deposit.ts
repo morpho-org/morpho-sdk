@@ -110,6 +110,9 @@ export const vaultV2Deposit = ({
 
       actions.push(action);
     } else if (signature.action.type === "permit2") {
+      if (!("expiration" in signature.args)) {
+        throw new Error("Expiration is not defined");
+      }
       actions.push({
         type: "approve2",
         args: [
