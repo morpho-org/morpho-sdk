@@ -65,6 +65,7 @@ export const getRequirements = async (
       allowancesPermit2: erc20Allowances.permit2,
       allowanceBundlerPermit2: permit2BundlerAllowance.amount,
       allowanceBundlerExpiration: permit2BundlerAllowance.expiration,
+      nonce: permit2BundlerAllowance.nonce,
     });
   }
 

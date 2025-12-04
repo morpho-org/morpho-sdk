@@ -1,17 +1,14 @@
 import { type Address, getChainAddresses, MathLib } from "@morpho-org/blue-sdk";
 import {
-  fetchToken,
   getPermit2PermitTypedData,
-  getPermitTypedData,
 } from "@morpho-org/blue-sdk-viem";
 import { deepFreeze, Time } from "@morpho-org/morpho-ts";
-import { type Client, type Hex, verifyTypedData, maxUint256 } from "viem";
+import { type Client, type Hex, verifyTypedData } from "viem";
 import {
   AddressMismatchError,
   MissingClientPropertyError,
   type Requirement,
-} from "../../types";
-import { MAX_TOKEN_APPROVALS } from "@morpho-org/simulation-sdk";
+} from "../../../types";
 
 interface EncodeErc20Permit2Params {
   token: Address;
@@ -27,11 +24,6 @@ export const encodeErc20Permit2 = (
 ): Requirement => {
   const { token, spender, amount, chainId, nonce, expiration = MathLib.MAX_UINT_48 } = params;
 
-  const amountValue = MathLib.min(
-    amount,
-    MAX_TOKEN_APPROVALS[chainId]?.[token] ?? maxUint256
-  );
-
   const now = BigInt(Math.floor(Date.now() / 1000));
   const deadline = now + Time.s.from.h(2n);
 
@@ -40,7 +32,7 @@ export const encodeErc20Permit2 = (
       type: "permit2",
       args: {
         spender,
-        amount: amountValue,
+        amount,
         deadline,
         expiration,
       },
@@ -56,16 +48,14 @@ export const encodeErc20Permit2 = (
         throw new AddressMismatchError(client.account.address, userAddress);
       }
 
-      const { generalAdapter1 } = getChainAddresses(chainId);
-
-      let signature: Hex;
+      const { bundler3: { generalAdapter1 } } = getChainAddresses(chainId);
 
       const typedData = getPermit2PermitTypedData(
         {
           // Never permit any other address than the GeneralAdapter1 otherwise
           // the signature can be used independently.
           spender: generalAdapter1,
-          allowance: amountValue,
+          allowance: amount,
           erc20: token,
           nonce: Number(nonce),
           deadline,
@@ -73,7 +63,7 @@ export const encodeErc20Permit2 = (
         },
         chainId
       );
-      signature = await client.account.signTypedData(typedData);
+      const signature = await client.account.signTypedData(typedData);
 
       await verifyTypedData({
         ...typedData,
@@ -85,8 +75,9 @@ export const encodeErc20Permit2 = (
         owner: userAddress,
         signature,
         deadline,
-        amount: amountValue,
+        amount,
         asset: token,
+        expiration,
         nonce,
       });
     },

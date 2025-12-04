@@ -17,6 +17,8 @@ import {
   type VaultV2DepositAction,
   type VaultV2RedeemAction,
   type VaultV2WithdrawAction,
+  PermitAction,
+  Permit2Action,
 } from "../../types";
 
 export interface VaultV2Actions {
@@ -122,7 +124,7 @@ export class MorphoVaultV2 implements VaultV2Actions {
       MathLib.RAY * 100n,
     );
 
-    const signaturesArgs: PermitArgs[] = [];
+    const signatures: { args: PermitArgs; action: PermitAction | Permit2Action }[] = [];
 
     return {
       getRequirements: async () => {
@@ -145,7 +147,10 @@ export class MorphoVaultV2 implements VaultV2Actions {
             const originalSign = req.sign;
             req.sign = async (...args: Parameters<typeof originalSign>) => {
               const sig = await originalSign(...args);
-              signaturesArgs.push(sig);
+              signatures.push({
+                args: sig,
+                action: req.action,
+              });
               return sig;
             };
           }
@@ -164,7 +169,7 @@ export class MorphoVaultV2 implements VaultV2Actions {
             assets,
             maxSharePrice,
             recipient: userAddress,
-            signaturesArgs,
+            signatures,
           },
           metadata: this.client.metadata,
         }),

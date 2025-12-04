@@ -59,13 +59,15 @@ export interface Transaction<TAction extends BaseAction = TransactionAction> {
   readonly action: TAction;
 }
 
+// TODO: split two type for permit & permit2
 export interface PermitArgs {
   owner: Address;
   nonce: bigint;
+  expiration: bigint;
   asset: Address;
   signature: Hex;
-  deadline: bigint;
   amount: bigint;
+  deadline?: bigint;
 }
 
 export interface Requirement {

@@ -1,17 +1,16 @@
-import { type Address, getChainAddresses, MathLib } from "@morpho-org/blue-sdk";
+import { type Address, getChainAddresses } from "@morpho-org/blue-sdk";
 import {
   fetchToken,
   getDaiPermitTypedData,
   getPermitTypedData,
 } from "@morpho-org/blue-sdk-viem";
 import { deepFreeze, Time } from "@morpho-org/morpho-ts";
-import { type Client, type Hex, verifyTypedData, maxUint256 } from "viem";
+import { type Client, type Hex, verifyTypedData } from "viem";
 import {
   AddressMismatchError,
   MissingClientPropertyError,
   type Requirement,
-} from "../../types";
-import { MAX_TOKEN_APPROVALS } from "@morpho-org/simulation-sdk";
+} from "../../../types";
 
 interface EncodeErc20PermitParams {
   token: Address;
@@ -26,11 +25,6 @@ export const encodeErc20Permit = (
 ): Requirement => {
   const { token, spender, amount, chainId, nonce } = params;
 
-  const amountValue = MathLib.min(
-    amount,
-    MAX_TOKEN_APPROVALS[chainId]?.[token] ?? maxUint256
-  );
-
   const now = BigInt(Math.floor(Date.now() / 1000));
   const deadline = now + Time.s.from.h(2n);
 
@@ -39,7 +33,7 @@ export const encodeErc20Permit = (
       type: "permit",
       args: {
         spender,
-        amount: amountValue,
+        amount,
         deadline,
       },
     },
@@ -64,7 +58,7 @@ export const encodeErc20Permit = (
           {
             owner: userAddress,
             spender,
-            allowance: amountValue,
+            allowance: amount,
             nonce,
             deadline,
           },
@@ -84,7 +78,7 @@ export const encodeErc20Permit = (
             erc20: tokenData,
             owner: userAddress,
             spender,
-            allowance: amountValue,
+            allowance: amount,
             nonce,
             deadline,
           },
@@ -104,7 +98,7 @@ export const encodeErc20Permit = (
         owner: userAddress,
         signature,
         deadline,
-        amount: amountValue,
+        amount,
         asset: token,
         nonce,
       });

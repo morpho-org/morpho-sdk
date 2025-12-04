@@ -5,6 +5,8 @@ import type { Address } from "viem";
 import { addTransactionMetadata } from "../../helpers";
 import {
   type Metadata,
+  Permit2Action,
+  PermitAction,
   type PermitArgs,
   type Transaction,
   type VaultV2DepositAction,
@@ -22,7 +24,7 @@ export interface VaultV2DepositParams {
     assets: bigint;
     maxSharePrice: bigint;
     recipient: Address;
-    signaturesArgs?: PermitArgs[];
+    signatures?: { args: PermitArgs; action: PermitAction | Permit2Action }[];
   };
   metadata?: Metadata;
 }
@@ -55,7 +57,7 @@ export interface VaultV2DepositParams {
  */
 export const vaultV2Deposit = ({
   vault: { chainId, address: vaultAddress, asset },
-  args: { assets, maxSharePrice, recipient, signaturesArgs },
+  args: { assets, maxSharePrice, recipient, signatures },
   metadata,
 }: VaultV2DepositParams): Readonly<Transaction<VaultV2DepositAction>> => {
   if (assets === 0n) {
@@ -73,41 +75,67 @@ export const vaultV2Deposit = ({
 
   const actions: Action[] = [];
 
-  for (const signatureArgs of signaturesArgs ?? []) {
-    const isDai = dai != null && signatureArgs.asset === dai;
+  let transferFromAction: Action = {
+    type: "erc20TransferFrom",
+    args: [asset, assets, generalAdapter1, false],
+  };
 
-    const action: Action = isDai
-      ? {
-          type: "permitDai",
-          args: [
-            signatureArgs.owner,
-            signatureArgs.nonce,
-            signatureArgs.deadline,
-            signatureArgs.amount > 0n,
-            signatureArgs.signature,
-            false,
-          ],
-        }
-      : {
-          type: "permit",
-          args: [
-            signatureArgs.owner,
-            asset,
-            signatureArgs.amount,
-            signatureArgs.deadline,
-            signatureArgs.signature,
-            false,
-          ],
-        };
+  for (const signature of signatures ?? []) {
+    if (signature.action.type === "permit") {
+      const isDai = dai != null && signature.args.asset === dai;
 
-    actions.push(action);
+      const action: Action = isDai
+        ? {
+            type: "permitDai",
+            args: [
+              signature.args.owner,
+              signature.args.nonce,
+              signature.args.deadline,
+              signature.args.amount > 0n,
+              signature.args.signature,
+              false,
+            ],
+          }
+        : {
+            type: "permit",
+            args: [
+              signature.args.owner,
+              asset,
+              signature.args.amount,
+              signature.args.deadline,
+              signature.args.signature,
+              false,
+            ],
+          };
+
+      actions.push(action);
+    } else if (signature.action.type === "permit2") {
+      actions.push({
+        type: "approve2",
+        args: [
+          signature.args.owner,
+          {
+            details: {
+              token: asset,
+              amount: signature.args.amount,
+              nonce: Number(signature.args.nonce),
+              expiration: Number(signature.args.expiration),
+            },
+            sigDeadline: signature.args.deadline,
+          },
+          signature.args.signature,
+          false,
+        ],
+      });
+      transferFromAction = {
+        type: "transferFrom2",
+        args: [asset, assets, generalAdapter1, false],
+      };
+    }
   }
 
   actions.push(
-    {
-      type: "erc20TransferFrom",
-      args: [asset, assets, generalAdapter1, false],
-    },
+    transferFromAction,
     {
       type: "erc4626Deposit",
       args: [vaultAddress, assets, maxSharePrice, recipient, false],

@@ -5,7 +5,8 @@ import {
   type ERC20ApprovalAction,
   type Transaction,
 } from "../../types";
-import { encodeErc20Approval } from "./encodeErc20Approval";
+import { encodeErc20Approval } from "./encode/encodeErc20Approval";
+import { encodeErc20Permit2 } from "./encode/encodeErc20Permit2";
 
 export const getPermits2 = (params: {
   address: Address;
@@ -14,6 +15,7 @@ export const getPermits2 = (params: {
   allowancesPermit2: bigint;
   allowanceBundlerPermit2: bigint;
   allowanceBundlerExpiration: bigint;
+  nonce: bigint;
 }): Readonly<Transaction<ERC20ApprovalAction> | Requirement>[] => {
   const {
     address,
@@ -22,6 +24,7 @@ export const getPermits2 = (params: {
     allowancesPermit2,
     allowanceBundlerPermit2,
     allowanceBundlerExpiration,
+    nonce,
   } = params;
 
   const { permit2 } = getChainAddresses(chainId);
@@ -47,7 +50,7 @@ export const getPermits2 = (params: {
       encodeErc20Approval({
         token: address,
         spender: permit2,
-        amount: MathLib.MAX_UINT_160, // Always approve infinite.,
+        amount: MathLib.MAX_UINT_160, // Always approve infinite.
         chainId,
       })
     );
@@ -57,16 +60,14 @@ export const getPermits2 = (params: {
     allowanceBundlerPermit2 < amount ||
     allowanceBundlerExpiration < BigInt(Math.floor(Date.now() / 1000)) // TODO: verify this
   ) {
-    // operations.push({
-    //   type: "Erc20_Permit2",
-    //   sender: from,
-    //   address,
-    //   args: {
-    //     amount,
-    //     expiration: MathLib.MAX_UINT_48, // Always approve indefinitely.
-    //     nonce: permit2BundlerAllowance.nonce,
-    //   },
-    // });
+    requirements.push(encodeErc20Permit2({
+      token: address,
+      spender: permit2,
+      amount,
+      chainId,
+      nonce,
+      expiration: MathLib.MAX_UINT_48, // Always approve indefinitely.
+    }));
   }
 
   return requirements;
