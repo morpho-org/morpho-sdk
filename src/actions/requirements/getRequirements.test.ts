@@ -55,8 +55,8 @@ describe("getRequirements", () => {
             chainId: mainnet.id,
             args: { amount: mockAmount, from: mockFrom },
           },
-          false
-        )
+          false,
+        ),
       ).rejects.toThrow(new ChainIdMismatchError(137, mainnet.id));
     });
   });
@@ -80,7 +80,7 @@ describe("getRequirements", () => {
           erc2612Nonce: undefined,
           canTransfer: false,
           balance: 0n,
-        })
+        }),
       );
 
       const requirements = await getRequirements(
@@ -90,7 +90,7 @@ describe("getRequirements", () => {
           chainId: mainnet.id,
           args: { amount: mockAmount, from: mockFrom },
         },
-        false
+        false,
       );
 
       expect(requirements).toHaveLength(1);
@@ -121,7 +121,7 @@ describe("getRequirements", () => {
           erc2612Nonce: undefined,
           canTransfer: false,
           balance: 0n,
-        })
+        }),
       );
 
       const requirements = await getRequirements(
@@ -131,7 +131,7 @@ describe("getRequirements", () => {
           chainId: mainnet.id,
           args: { amount: mockAmount, from: mockFrom },
         },
-        false
+        false,
       );
 
       expect(requirements).toHaveLength(0);
@@ -158,7 +158,7 @@ describe("getRequirements", () => {
             erc2612Nonce: 0n,
             canTransfer: false,
             balance: 0n,
-          })
+          }),
         );
 
         const requirements = await getRequirements(
@@ -168,7 +168,7 @@ describe("getRequirements", () => {
             chainId: mainnet.id,
             args: { amount: mockAmount, from: mockFrom },
           },
-          true
+          true,
         );
 
         expect(requirements).toHaveLength(1);
@@ -199,7 +199,7 @@ describe("getRequirements", () => {
             erc2612Nonce: 0n,
             canTransfer: false,
             balance: 0n,
-          })
+          }),
         );
 
         const requirements = await getRequirements(
@@ -209,7 +209,7 @@ describe("getRequirements", () => {
             chainId: mainnet.id,
             args: { amount: mockAmount, from: mockFrom },
           },
-          true
+          true,
         );
 
         expect(requirements).toHaveLength(0);
@@ -233,7 +233,7 @@ describe("getRequirements", () => {
             erc2612Nonce: 0n,
             canTransfer: false,
             balance: 0n,
-          })
+          }),
         );
 
         const requirements = await getRequirements(
@@ -243,7 +243,7 @@ describe("getRequirements", () => {
             chainId: mainnet.id,
             args: { amount: mockAmount, from: mockFrom },
           },
-          true
+          true,
         );
 
         expect(requirements).toHaveLength(1);
@@ -277,7 +277,7 @@ describe("getRequirements", () => {
             erc2612Nonce: undefined,
             canTransfer: false,
             balance: 0n,
-          })
+          }),
         );
 
         const requirements = await getRequirements(
@@ -287,7 +287,7 @@ describe("getRequirements", () => {
             chainId: mainnet.id,
             args: { amount: mockAmount, from: mockFrom },
           },
-          true
+          true,
         );
 
         // Should return permit2 approval + permit2 requirement
@@ -329,7 +329,7 @@ describe("getRequirements", () => {
             erc2612Nonce: undefined,
             canTransfer: false,
             balance: 0n,
-          })
+          }),
         );
 
         const requirements = await getRequirements(
@@ -339,7 +339,7 @@ describe("getRequirements", () => {
             chainId: mainnet.id,
             args: { amount: mockAmount, from: mockFrom },
           },
-          true
+          true,
         );
 
         expect(requirements).toHaveLength(1);
@@ -371,7 +371,7 @@ describe("getRequirements", () => {
             erc2612Nonce: undefined,
             canTransfer: false,
             balance: 0n,
-          })
+          }),
         );
 
         const requirements = await getRequirements(
@@ -381,7 +381,7 @@ describe("getRequirements", () => {
             chainId: mainnet.id,
             args: { amount: mockAmount, from: mockFrom },
           },
-          true
+          true,
         );
 
         // Should return empty array when everything is sufficient
@@ -408,7 +408,7 @@ describe("getRequirements", () => {
             erc2612Nonce: undefined,
             canTransfer: false,
             balance: 0n,
-          })
+          }),
         );
 
         const requirements = await getRequirements(
@@ -418,7 +418,7 @@ describe("getRequirements", () => {
             chainId: mainnet.id,
             args: { amount: mockAmount, from: mockFrom },
           },
-          true
+          true,
         );
 
         expect(requirements).toHaveLength(1);
