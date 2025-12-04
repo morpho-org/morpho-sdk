@@ -17,8 +17,8 @@ import {
   type VaultV2DepositAction,
   type VaultV2RedeemAction,
   type VaultV2WithdrawAction,
-  PermitAction,
-  Permit2Action,
+  type PermitAction,
+  type Permit2Action,
 } from "../../types";
 
 export interface VaultV2Actions {

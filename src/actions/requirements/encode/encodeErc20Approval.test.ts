@@ -1,11 +1,11 @@
-import { decodeFunctionData, erc20Abi, isHex, maxUint256 } from "viem";
+import { decodeFunctionData, erc20Abi, isHex } from "viem";
 import { mainnet } from "viem/chains";
 import { describe, expect, test } from "vitest";
 import { encodeErc20Approval } from "./encodeErc20Approval";
-import { getChainAddresses } from "@morpho-org/blue-sdk";
+import { addressesRegistry } from "@morpho-org/blue-sdk";
 
 describe("encodeErc20Approval", () => {
-  const { usdc, bundler3: { generalAdapter1 } } = getChainAddresses(mainnet.id);
+  const { usdc, bundler3: { generalAdapter1 } } = addressesRegistry[mainnet.id];
 
   const mockAmount = 1000000n;
 

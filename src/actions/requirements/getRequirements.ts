@@ -1,4 +1,4 @@
-import { type Address } from "@morpho-org/blue-sdk";
+import { getChainAddresses, type Address } from "@morpho-org/blue-sdk";
 import { fetchHolding } from "@morpho-org/blue-sdk-viem";
 import type { Client } from "viem";
 import {
@@ -46,7 +46,7 @@ export const getRequirements = async (
   if (viemClient.chain?.id !== chainId) {
     throw new ChainIdMismatchError(viemClient.chain?.id, chainId);
   }
-
+  const { permit2 } = getChainAddresses(chainId);
   const { erc20Allowances, erc2612Nonce, permit2BundlerAllowance } =
     await fetchHolding(from, address, viemClient);
 
@@ -63,15 +63,18 @@ export const getRequirements = async (
       });
     }
 
-    return getPermits2({
-      address,
-      chainId,
-      args: { amount },
-      allowancesPermit2: erc20Allowances.permit2,
-      allowanceBundlerPermit2: permit2BundlerAllowance.amount,
-      allowanceBundlerExpiration: permit2BundlerAllowance.expiration,
-      nonce: permit2BundlerAllowance.nonce,
-    });
+    if (permit2) {
+      return getPermits2({
+        address,
+        chainId,
+        permit2,
+        args: { amount },
+        allowancesPermit2: erc20Allowances.permit2,
+        allowanceBundlerPermit2: permit2BundlerAllowance.amount,
+        allowanceBundlerExpiration: permit2BundlerAllowance.expiration,
+        nonce: permit2BundlerAllowance.nonce,
+      });
+    }
   }
 
   return getApprovals({

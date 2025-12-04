@@ -1,6 +1,6 @@
 import { type Address, getChainAddresses } from "@morpho-org/blue-sdk";
 import { APPROVE_ONLY_ONCE_TOKENS } from "@morpho-org/simulation-sdk";
-import { type ERC20ApprovalAction, type Transaction } from "../../types";
+import type { ERC20ApprovalAction, Transaction } from "../../types";
 import { encodeErc20Approval } from "./encode/encodeErc20Approval";
 
 export const getApprovals = (params: {

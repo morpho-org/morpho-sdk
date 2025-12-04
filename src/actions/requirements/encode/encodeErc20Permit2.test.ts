@@ -7,10 +7,10 @@ import {
   AddressMismatchError,
   MissingClientPropertyError,
 } from "../../../types";
-import { getChainAddresses, MathLib } from "@morpho-org/blue-sdk";
+import { addressesRegistry, MathLib } from "@morpho-org/blue-sdk";
 
 describe("encodeErc20Permit2", () => {
-  const { usdc, bundler3: { generalAdapter1 } } = getChainAddresses(mainnet.id);
+  const { usdc, bundler3: { generalAdapter1 } } =  addressesRegistry[mainnet.id];
 
   const mockAmount = 1000000n;
   const mockNonce = 0n;
@@ -130,6 +130,10 @@ describe("encodeErc20Permit2", () => {
       expect(signatureArgs.amount).toEqual(mockAmount);
       expect(signatureArgs.asset).toEqual(usdc);
       expect(signatureArgs.nonce).toEqual(mockNonce);
+
+      if (!("expiration" in signatureArgs)) {
+        throw new Error("Expiration is not defined");
+      }
       expect(signatureArgs.expiration).toEqual(mockExpiration);
     });
 
@@ -172,6 +176,10 @@ describe("encodeErc20Permit2", () => {
         nonce: mockNonce,
         expiration: mockExpiration,
       });
+
+      if (permit.action.type !== "permit2") {
+        throw new Error("Permit action type is not permit2");
+      }
 
       expect(permit.action.type).toBe("permit2");
       expect(permit.action.args).toHaveProperty("spender");

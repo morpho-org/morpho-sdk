@@ -7,14 +7,14 @@ import {
   AddressMismatchError,
   MissingClientPropertyError,
 } from "../../../types";
-import { getChainAddresses } from "@morpho-org/blue-sdk";
+import { addressesRegistry } from "@morpho-org/blue-sdk";
 
 describe("encodeErc20Permit", () => {
   const {
     usdc,
     dai,
     bundler3: { generalAdapter1 },
-  } = getChainAddresses(mainnet.id);
+  } = addressesRegistry[mainnet.id];
 
   const mockAmount = 1000000n;
   const mockNonce = 0n;

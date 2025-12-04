@@ -1,9 +1,9 @@
-import { type Address, getChainAddresses, MathLib } from "@morpho-org/blue-sdk";
+import { type Address, MathLib } from "@morpho-org/blue-sdk";
 import { APPROVE_ONLY_ONCE_TOKENS } from "@morpho-org/simulation-sdk";
-import {
+import type {
   Requirement,
-  type ERC20ApprovalAction,
-  type Transaction,
+  ERC20ApprovalAction,
+  Transaction,
 } from "../../types";
 import { encodeErc20Approval } from "./encode/encodeErc20Approval";
 import { encodeErc20Permit2 } from "./encode/encodeErc20Permit2";
@@ -11,6 +11,7 @@ import { encodeErc20Permit2 } from "./encode/encodeErc20Permit2";
 export const getPermits2 = (params: {
   address: Address;
   chainId: number;
+  permit2: Address;
   args: { amount: bigint };
   allowancesPermit2: bigint;
   allowanceBundlerPermit2: bigint;
@@ -20,14 +21,13 @@ export const getPermits2 = (params: {
   const {
     address,
     chainId,
+    permit2,
     args: { amount },
     allowancesPermit2,
     allowanceBundlerPermit2,
     allowanceBundlerExpiration,
     nonce,
   } = params;
-
-  const { permit2 } = getChainAddresses(chainId);
 
   const requirements: (Transaction<ERC20ApprovalAction> | Requirement)[] = [];
 

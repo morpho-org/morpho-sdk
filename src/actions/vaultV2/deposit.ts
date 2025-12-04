@@ -5,8 +5,8 @@ import type { Address } from "viem";
 import { addTransactionMetadata } from "../../helpers";
 import {
   type Metadata,
-  Permit2Action,
-  PermitAction,
+  type Permit2Action,
+  type PermitAction,
   type PermitArgs,
   type Transaction,
   type VaultV2DepositAction,

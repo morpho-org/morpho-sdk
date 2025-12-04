@@ -3,7 +3,7 @@ import {
   getPermit2PermitTypedData,
 } from "@morpho-org/blue-sdk-viem";
 import { deepFreeze, Time } from "@morpho-org/morpho-ts";
-import { type Client, type Hex, verifyTypedData } from "viem";
+import { type Client, verifyTypedData } from "viem";
 import {
   AddressMismatchError,
   MissingClientPropertyError,
