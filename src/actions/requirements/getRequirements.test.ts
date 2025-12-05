@@ -342,7 +342,7 @@ describe("getRequirements", () => {
             },
             permit2BundlerAllowance: {
               amount: 2000000n, // Sufficient amount
-              expiration: now + 10000n, // Not expired
+              expiration: now + Time.s.from.h(5n), // Not expired with 5 hours margin
               nonce: 0n,
             },
             erc2612Nonce: undefined,
