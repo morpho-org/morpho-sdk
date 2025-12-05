@@ -8,6 +8,7 @@ import {
   MissingClientPropertyError,
 } from "../../../types";
 import { encodeErc20Permit } from "./encodeErc20Permit";
+import { Time } from "@morpho-org/morpho-ts";
 
 describe("encodeErc20Permit", () => {
   const {
@@ -153,7 +154,7 @@ describe("encodeErc20Permit", () => {
       client,
     }) => {
       const userAddress = client.account.address;
-      const now = BigInt(Math.floor(Date.now() / 1000));
+      const now = Time.timestamp();
 
       const permit = encodeErc20Permit({
         token: usdc,

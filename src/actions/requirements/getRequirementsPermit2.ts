@@ -7,6 +7,7 @@ import type {
 } from "../../types";
 import { encodeErc20Approval } from "./encode/encodeErc20Approval";
 import { encodeErc20Permit2 } from "./encode/encodeErc20Permit2";
+import { Time } from "@morpho-org/morpho-ts";
 
 /**
  * Get token "requirement" for permit2.
@@ -63,7 +64,7 @@ export const getRequirementsPermit2 = (params: {
           spender: permit2,
           amount: 0n,
           chainId,
-        }),
+        })
       );
     }
 
@@ -73,13 +74,13 @@ export const getRequirementsPermit2 = (params: {
         spender: permit2,
         amount: MathLib.MAX_UINT_160, // Always approve infinite.
         chainId,
-      }),
+      })
     );
   }
 
   if (
     allowanceGeneralAdapterPermit2 < amount ||
-    allowanceGeneralAdapterExpiration < BigInt(Math.floor(Date.now() / 1000)) // TODO: verify this
+    allowanceGeneralAdapterExpiration < Time.timestamp() + Time.s.from.h(4n)
   ) {
     requirements.push(
       encodeErc20Permit2({
@@ -89,7 +90,7 @@ export const getRequirementsPermit2 = (params: {
         chainId,
         nonce,
         expiration: MathLib.MAX_UINT_48, // Always approve indefinitely.
-      }),
+      })
     );
   }
 

@@ -25,7 +25,7 @@ export const encodeErc20Permit = (
 ): Requirement => {
   const { token, spender, amount, chainId, nonce } = params;
 
-  const now = BigInt(Math.floor(Date.now() / 1000));
+  const now = Time.timestamp();
   const deadline = now + Time.s.from.h(2n);
 
   return {

@@ -15,6 +15,7 @@ vi.mock("@morpho-org/blue-sdk-viem", () => ({
 }));
 
 import { fetchHolding } from "@morpho-org/blue-sdk-viem";
+import { Time } from "@morpho-org/morpho-ts";
 
 describe("getRequirements", () => {
   const {
@@ -329,7 +330,7 @@ describe("getRequirements", () => {
       });
 
       test("should return empty array when permit2 allowance is sufficient and not expired", async () => {
-        const currentTime = BigInt(Math.floor(Date.now() / 1000));
+        const now = Time.timestamp();
         vi.mocked(fetchHolding).mockResolvedValue(
           new Holding({
             user: mockFrom,
@@ -341,7 +342,7 @@ describe("getRequirements", () => {
             },
             permit2BundlerAllowance: {
               amount: 2000000n, // Sufficient amount
-              expiration: currentTime + 10000n, // Not expired
+              expiration: now + 10000n, // Not expired
               nonce: 0n,
             },
             erc2612Nonce: undefined,
@@ -362,8 +363,8 @@ describe("getRequirements", () => {
       });
 
       test("should return permit2 requirement when expiration is expired", async () => {
-        const currentTime = BigInt(Math.floor(Date.now() / 1000));
-        const expiration = currentTime - 1000n;
+        const now = Time.timestamp();
+        const expiration = now - 1000n;
         vi.mocked(fetchHolding).mockResolvedValue(
           new Holding({
             user: mockFrom,
