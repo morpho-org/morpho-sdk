@@ -8,9 +8,9 @@ import {
   type Requirement,
   type Transaction,
 } from "../../types";
-import { getApprovals } from "./getApprovals";
-import { getPermits } from "./getPermits";
-import { getPermits2 } from "./getPermits2";
+import { getRequirementsApproval } from "./getRequirementsApproval";
+import { getRequirementsPermit } from "./getRequirementsPermit";
+import { getRequirementsPermit2 } from "./getRequirementsPermit2";
 
 /**
  * Get token "requirement" for approval/permit before interacting with protocol.
@@ -47,7 +47,7 @@ export const getRequirements = async (
   if (viemClient.chain?.id !== chainId) {
     throw new ChainIdMismatchError(viemClient.chain?.id, chainId);
   }
-  const { permit2 } = getChainAddresses(chainId);
+  const { permit2, bundler3: { generalAdapter1 } } = getChainAddresses(chainId);
   const { erc20Allowances, erc2612Nonce, permit2BundlerAllowance } =
     await fetchHolding(from, address, viemClient);
 
@@ -55,7 +55,7 @@ export const getRequirements = async (
     const supportSimplePermit = isDefined(erc2612Nonce);
 
     if (supportSimplePermit) {
-      return getPermits({
+      return getRequirementsPermit({
         address,
         chainId,
         args: { amount },
@@ -65,23 +65,23 @@ export const getRequirements = async (
     }
 
     if (permit2) {
-      return getPermits2({
+      return getRequirementsPermit2({
         address,
         chainId,
         permit2,
         args: { amount },
         allowancesPermit2: erc20Allowances.permit2,
-        allowanceBundlerPermit2: permit2BundlerAllowance.amount,
-        allowanceBundlerExpiration: permit2BundlerAllowance.expiration,
+        allowanceGeneralAdapterPermit2: permit2BundlerAllowance.amount,
+        allowanceGeneralAdapterExpiration: permit2BundlerAllowance.expiration,
         nonce: permit2BundlerAllowance.nonce,
       });
     }
   }
 
-  return getApprovals({
+  return getRequirementsApproval({
     address,
     chainId,
-    args: { amount },
-    allowancesGeneralAdapter: erc20Allowances["bundler3.generalAdapter1"],
+    args: { amount, spender: generalAdapter1 },
+    allowances: erc20Allowances["bundler3.generalAdapter1"],
   });
 };
