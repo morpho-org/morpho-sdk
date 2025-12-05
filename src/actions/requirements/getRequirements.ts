@@ -47,7 +47,10 @@ export const getRequirements = async (
   if (viemClient.chain?.id !== chainId) {
     throw new ChainIdMismatchError(viemClient.chain?.id, chainId);
   }
-  const { permit2, bundler3: { generalAdapter1 } } = getChainAddresses(chainId);
+  const {
+    permit2,
+    bundler3: { generalAdapter1 },
+  } = getChainAddresses(chainId);
   const { erc20Allowances, erc2612Nonce, permit2BundlerAllowance } =
     await fetchHolding(from, address, viemClient);
 

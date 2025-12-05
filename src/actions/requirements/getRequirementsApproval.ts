@@ -9,7 +9,7 @@ import { encodeErc20Approval } from "./encode/encodeErc20Approval";
  * Verify if the allowance is enough on the spender contract.
  * => If not, approve the token to the spender contract with classic approval transaction on the required amount.
  * => If the allowance is enough, return an empty array.
- * 
+ *
  * Handle logic for reset approval before approving (if needed).
  *
  * @param params - Destructured object with:
@@ -24,7 +24,7 @@ import { encodeErc20Approval } from "./encode/encodeErc20Approval";
 export const getRequirementsApproval = (params: {
   address: Address;
   chainId: number;
-  args: { amount: bigint, spender: Address };
+  args: { amount: bigint; spender: Address };
   allowances: bigint;
 }): Readonly<Transaction<ERC20ApprovalAction>>[] => {
   const {
