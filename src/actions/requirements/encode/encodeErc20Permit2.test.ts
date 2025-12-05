@@ -40,28 +40,6 @@ describe("encodeErc20Permit2", () => {
       expect(signatureArgs.signature.length).toBe(132);
     });
 
-    test("should throw error if client account is missing", async ({
-      client,
-    }) => {
-      const clientWithoutAccount = {
-        ...client,
-        account: null,
-      } as unknown as typeof client;
-
-      const permit = encodeErc20Permit2({
-        token: usdc,
-        spender: generalAdapter1,
-        amount: mockAmount,
-        chainId: mainnet.id,
-        nonce: mockNonce,
-        expiration: mockExpiration,
-      });
-
-      await expect(
-        permit.sign(clientWithoutAccount, client.account.address),
-      ).rejects.toThrow(new MissingClientPropertyError("client.account"));
-    });
-
     test("should throw error if client account signTypedData is missing", async ({
       client,
     }) => {

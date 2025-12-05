@@ -5,7 +5,14 @@ import {
   getPermitTypedData,
 } from "@morpho-org/blue-sdk-viem";
 import { deepFreeze, Time } from "@morpho-org/morpho-ts";
-import { type Client, type Hex, verifyTypedData } from "viem";
+import {
+  type Account,
+  type Chain,
+  type Client,
+  type Hex,
+  type Transport,
+  verifyTypedData,
+} from "viem";
 import {
   AddressMismatchError,
   MissingClientPropertyError,
@@ -21,7 +28,7 @@ interface EncodeErc20PermitParams {
 }
 
 export const encodeErc20Permit = (
-  params: EncodeErc20PermitParams,
+  params: EncodeErc20PermitParams
 ): Requirement => {
   const { token, spender, amount, chainId, nonce } = params;
 
@@ -37,10 +44,10 @@ export const encodeErc20Permit = (
         deadline,
       },
     },
-    async sign(client: Client, userAddress: Address) {
-      if (!client.account) {
-        throw new MissingClientPropertyError("client.account");
-      }
+    async sign(
+      client: Client<Transport, Chain, Account>,
+      userAddress: Address
+    ) {
       if (!client.account.signTypedData) {
         throw new MissingClientPropertyError("client.account.signTypedData");
       }
@@ -62,7 +69,7 @@ export const encodeErc20Permit = (
             nonce,
             deadline,
           },
-          chainId,
+          chainId
         );
         signature = await client.account.signTypedData(typedData);
 
@@ -82,7 +89,7 @@ export const encodeErc20Permit = (
             nonce,
             deadline,
           },
-          chainId,
+          chainId
         );
 
         signature = await client.account.signTypedData(typedData);

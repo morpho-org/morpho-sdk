@@ -1,4 +1,4 @@
-import type { Address, Client, Hex } from "viem";
+import type { Account, Address, Chain, Client, Hex, Transport } from "viem";
 
 export interface BaseAction<
   TType extends string = string,
@@ -80,7 +80,7 @@ export interface Permit2Args {
 
 export interface Requirement {
   sign: (
-    client: Client,
+    client: Client<Transport, Chain, Account>,
     userAddress: Address,
   ) => Promise<PermitArgs | Permit2Args>;
   action: PermitAction | Permit2Action;
