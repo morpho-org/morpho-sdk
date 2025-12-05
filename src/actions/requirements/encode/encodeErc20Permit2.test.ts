@@ -1,4 +1,5 @@
 import { addressesRegistry, MathLib } from "@morpho-org/blue-sdk";
+import { Time } from "@morpho-org/morpho-ts";
 import { type Address, isHex } from "viem";
 import { mainnet } from "viem/chains";
 import { describe, expect } from "vitest";
@@ -8,7 +9,6 @@ import {
   MissingClientPropertyError,
 } from "../../../types";
 import { encodeErc20Permit2 } from "./encodeErc20Permit2";
-import { Time } from "@morpho-org/morpho-ts";
 
 describe("encodeErc20Permit2", () => {
   const {
