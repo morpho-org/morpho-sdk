@@ -25,11 +25,10 @@ jobs:
         with:
           path: ~/.foundry/cache/rpc
           key: foundry-${{ github.job }}-${{ github.sha }}
-          restore-keys: foundry-${{ github.job }}-
+          # restore-keys: foundry-${{ github.job }}-
 
       - uses: foundry-rs/foundry-toolchain@v1
         with:
-          version: nightly
           cache: false # Disable built-in cache to always save it.
 
       - run: pnpm install --frozen-lockfile
