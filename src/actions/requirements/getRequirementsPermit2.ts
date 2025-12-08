@@ -1,13 +1,12 @@
 import { type Address, MathLib } from "@morpho-org/blue-sdk";
 import { Time } from "@morpho-org/morpho-ts";
-import { APPROVE_ONLY_ONCE_TOKENS } from "@morpho-org/simulation-sdk";
 import type {
   ERC20ApprovalAction,
   Requirement,
   Transaction,
 } from "../../types";
-import { encodeErc20Approval } from "./encode/encodeErc20Approval";
 import { encodeErc20Permit2 } from "./encode/encodeErc20Permit2";
+import { getRequirementsApproval } from "./getRequirementsApproval";
 
 /**
  * Get token "requirement" for permit2.
@@ -53,30 +52,18 @@ export const getRequirementsPermit2 = (params: {
 
   const requirements: (Transaction<ERC20ApprovalAction> | Requirement)[] = [];
 
-  if (allowancesPermit2 < amount) {
-    if (
-      APPROVE_ONLY_ONCE_TOKENS[chainId]?.includes(address) &&
-      allowancesPermit2 > 0n
-    ) {
-      requirements.push(
-        encodeErc20Approval({
-          token: address,
-          spender: permit2,
-          amount: 0n,
-          chainId,
-        }),
-      );
-    }
+  const approvalRequirements = getRequirementsApproval({
+    address,
+    chainId,
+    args: {
+      approvalAmount: MathLib.MAX_UINT_160, // Always approve infinite.
+      spendAmount: amount,
+      spender: permit2,
+    },
+    allowances: allowancesPermit2,
+  });
 
-    requirements.push(
-      encodeErc20Approval({
-        token: address,
-        spender: permit2,
-        amount: MathLib.MAX_UINT_160, // Always approve infinite.
-        chainId,
-      }),
-    );
-  }
+  requirements.push(...approvalRequirements);
 
   if (
     allowanceGeneralAdapterPermit2 < amount ||

@@ -84,7 +84,11 @@ export const getRequirements = async (
   return getRequirementsApproval({
     address,
     chainId,
-    args: { amount, spender: generalAdapter1 },
+    args: {
+      spendAmount: amount,
+      approvalAmount: amount,
+      spender: generalAdapter1,
+    },
     allowances: erc20Allowances["bundler3.generalAdapter1"],
   });
 };

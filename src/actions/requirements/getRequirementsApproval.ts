@@ -16,7 +16,8 @@ import { encodeErc20Approval } from "./encode/encodeErc20Approval";
  * @param params.address - ERC20 token address.
  * @param params.chainId - Chain/network id.
  * @param params.args - Object with:
- * @param params.args.amount - Required token amount.
+ * @param params.args.spendAmount - Spend amount required for the action.
+ * @param params.args.approvalAmount - Approval amount to be approved.
  * @param params.args.spender - Spender contract address.
  * @param params.allowances - Allowance for the spender contract.
  * @returns An array of requirement transaction object.
@@ -24,19 +25,19 @@ import { encodeErc20Approval } from "./encode/encodeErc20Approval";
 export const getRequirementsApproval = (params: {
   address: Address;
   chainId: number;
-  args: { amount: bigint; spender: Address };
+  args: { approvalAmount: bigint; spendAmount: bigint; spender: Address };
   allowances: bigint;
 }): Readonly<Transaction<ERC20ApprovalAction>>[] => {
   const {
     address,
     chainId,
-    args: { amount, spender },
+    args: { spendAmount, approvalAmount, spender },
     allowances,
   } = params;
 
   const approvals: Transaction<ERC20ApprovalAction>[] = [];
 
-  if (allowances < amount) {
+  if (allowances < spendAmount) {
     if (
       APPROVE_ONLY_ONCE_TOKENS[chainId]?.includes(address) &&
       allowances > 0n
@@ -55,7 +56,7 @@ export const getRequirementsApproval = (params: {
       encodeErc20Approval({
         token: address,
         spender,
-        amount,
+        amount: approvalAmount,
         chainId,
       }),
     );
