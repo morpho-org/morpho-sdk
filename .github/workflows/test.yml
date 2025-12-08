@@ -24,8 +24,10 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: ~/.foundry/cache/rpc
-          key: foundry-${{ github.job }}-${{ github.sha }}
-          restore-keys: foundry-${{ github.job }}-
+          key: foundry-rpc-${{ runner.os }}-${{ steps.foundry.outputs.version }}-${{ github.job }}-${{ github.sha }}
+          restore-keys: |
+            foundry-rpc-${{ runner.os }}-${{ steps.foundry.outputs.version }}-${{ github.job }}-
+            foundry-rpc-${{ runner.os }}-${{ steps.foundry.outputs.version }}-
 
       - uses: foundry-rs/foundry-toolchain@v1
         with:
@@ -44,4 +46,4 @@ jobs:
         uses: actions/cache/save@v4
         with:
           path: ~/.foundry/cache/rpc
-          key: foundry-${{ github.job }}-${{ github.sha }}
+          key: foundry-rpc-${{ runner.os }}-${{ steps.foundry.outputs.version }}-${{ github.job }}-${{ github.sha }}
