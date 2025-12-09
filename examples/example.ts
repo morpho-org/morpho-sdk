@@ -64,10 +64,7 @@ async function main() {
   const requirements = await deposit.getRequirements();
   console.log(`Found ${requirements.length} requirement(s)`);
   requirements.forEach((req, index) => {
-    console.log(`  Requirement ${index + 1}:`, {
-      to: req.to,
-      action: req.action.type,
-    });
+    console.log(`  Requirement ${index + 1}:`, req);
   });
 
   // Example 2: Create a withdraw transaction

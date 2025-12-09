@@ -27,7 +27,6 @@ describe("Metadata", () => {
       },
       actionFn: async () => {
         const morpho = new MorphoClient(client, {
-          supportSignature: false,
           metadata: {
             origin: "25AFEA44",
             timestamp: true,
@@ -97,7 +96,6 @@ describe("Metadata", () => {
       },
       actionFn: async () => {
         const morpho = new MorphoClient(client, {
-          supportSignature: false,
           metadata: {
             origin: "25AFEA44",
           },

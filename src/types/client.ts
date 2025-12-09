@@ -5,9 +5,9 @@ import type { Metadata } from "./index";
 export interface MorphoClientType {
   readonly viemClient: Client;
   readonly options: {
-    supportSignature: boolean;
-    metadata?: Metadata;
-  };
+    readonly supportSignature: boolean;
+    readonly metadata?: Metadata;
+  }
 
   vaultV2: (vault: Address, chainId: number) => VaultV2Actions;
 }

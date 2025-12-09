@@ -26,10 +26,13 @@ import { MorphoClient } from "./morphoClient";
  * const deposit = await vault.deposit({ assets: 1000000000000000000n });
  * ```
  */
-export function morphoViemExtension(metadata?: Metadata) {
+export function morphoViemExtension(_options?: {
+  metadata?: Metadata;
+  supportSignature?: boolean;
+}) {
   return <TClient extends Client>(client: TClient) => {
     return {
-      morpho: new MorphoClient(client, metadata),
+      morpho: new MorphoClient(client, _options),
     };
   };
 }
