@@ -34,7 +34,10 @@ describe("depositVaultV2 unit tests", () => {
       throw new Error("Permit DAI requirement not found");
     }
 
-    const requirementSignature = await permitDai.sign(client, client.account.address);
+    const requirementSignature = await permitDai.sign(
+      client,
+      client.account.address,
+    );
 
     expect(requirementSignature.args.asset).toEqual(dai);
 
