@@ -33,11 +33,11 @@ describe("encodeErc20Permit2", () => {
         expiration: mockExpiration,
       });
 
-      const signatureArgs = await permit.sign(client, userAddress);
+      const signatureRequirement = await permit.sign(client, userAddress);
 
-      expect(signatureArgs.owner).toEqual(userAddress);
-      expect(isHex(signatureArgs.signature)).toBe(true);
-      expect(signatureArgs.signature.length).toBe(132);
+      expect(signatureRequirement.args.owner).toEqual(userAddress);
+      expect(isHex(signatureRequirement.args.signature)).toBe(true);
+      expect(signatureRequirement.args.signature.length).toBe(132);
     });
 
     test("should throw error if client account signTypedData is missing", async ({
@@ -99,24 +99,24 @@ describe("encodeErc20Permit2", () => {
         expiration: mockExpiration,
       });
 
-      const signatureArgs = await permit.sign(client, client.account.address);
+      const signatureRequirement = await permit.sign(client, client.account.address);
 
-      expect(signatureArgs).toHaveProperty("owner");
-      expect(signatureArgs).toHaveProperty("signature");
-      expect(signatureArgs).toHaveProperty("deadline");
-      expect(signatureArgs).toHaveProperty("amount");
-      expect(signatureArgs).toHaveProperty("asset");
-      expect(signatureArgs).toHaveProperty("nonce");
-      expect(signatureArgs).toHaveProperty("expiration");
-      expect(signatureArgs.owner).toEqual(client.account.address);
-      expect(signatureArgs.amount).toEqual(mockAmount);
-      expect(signatureArgs.asset).toEqual(usdc);
-      expect(signatureArgs.nonce).toEqual(mockNonce);
+      expect(signatureRequirement.args).toHaveProperty("owner");
+      expect(signatureRequirement.args).toHaveProperty("signature");
+      expect(signatureRequirement.args).toHaveProperty("deadline");
+      expect(signatureRequirement.args).toHaveProperty("amount");
+      expect(signatureRequirement.args).toHaveProperty("asset");
+      expect(signatureRequirement.args).toHaveProperty("nonce");
+      expect(signatureRequirement.args).toHaveProperty("expiration");
+      expect(signatureRequirement.args.owner).toEqual(client.account.address);
+      expect(signatureRequirement.args.amount).toEqual(mockAmount);
+      expect(signatureRequirement.args.asset).toEqual(usdc);
+      expect(signatureRequirement.args.nonce).toEqual(mockNonce);
 
-      if (!("expiration" in signatureArgs)) {
+      if (!("expiration" in signatureRequirement.args)) {
         throw new Error("Expiration is not defined");
       }
-      expect(signatureArgs.expiration).toEqual(mockExpiration);
+      expect(signatureRequirement.args.expiration).toEqual(mockExpiration);
     });
 
     test("should set deadline to approximately 2 hours in the future", async ({
@@ -133,18 +133,18 @@ describe("encodeErc20Permit2", () => {
         expiration: mockExpiration,
       });
 
-      const signatureArgs = await permit.sign(client, client.account.address);
+      const signatureRequirement = await permit.sign(client, client.account.address);
 
       // Deadline should be approximately 2 hours (7200 seconds) in the future
       // Allow 5 seconds tolerance for test execution time
       const expectedDeadline = now + 7200n;
       const tolerance = 5n;
 
-      expect(signatureArgs.deadline).toBeGreaterThan(now);
-      expect(signatureArgs.deadline).toBeGreaterThanOrEqual(
+      expect(signatureRequirement.args.deadline).toBeGreaterThan(now);
+      expect(signatureRequirement.args.deadline).toBeGreaterThanOrEqual(
         expectedDeadline - tolerance,
       );
-      expect(signatureArgs.deadline).toBeLessThanOrEqual(
+      expect(signatureRequirement.args.deadline).toBeLessThanOrEqual(
         expectedDeadline + tolerance,
       );
     });
