@@ -75,16 +75,13 @@ export const vaultV2Deposit = ({
   if (requirementSignature) {
     actions.push(...getRequirementsAction({ chainId, requirementSignature }));
   } else {
-    const { bundler3: { generalAdapter1 } } = getChainAddresses(chainId);
+    const {
+      bundler3: { generalAdapter1 },
+    } = getChainAddresses(chainId);
 
     actions.push({
       type: "erc20TransferFrom",
-      args: [
-        asset,
-        assets,
-        generalAdapter1,
-        false,
-      ],
+      args: [asset, assets, generalAdapter1, false],
     });
   }
 

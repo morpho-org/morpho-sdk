@@ -1,6 +1,6 @@
 import { getChainAddresses } from "@morpho-org/blue-sdk";
-import type { Permit2Action, PermitAction, PermitArgs } from "../../types";
 import type { Action } from "@morpho-org/bundler-sdk-viem";
+import type { Permit2Action, PermitAction, PermitArgs } from "../../types";
 
 interface GetRequirementsActionParams {
   chainId: number;

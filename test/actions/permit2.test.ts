@@ -85,7 +85,10 @@ describe("Permit2", () => {
           BigInt(Math.floor(Date.now() / 1000)),
         );
 
-        const tx = deposit.buildTx({ args: sig, action: signaturePermit2.action });
+        const tx = deposit.buildTx({
+          args: sig,
+          action: signaturePermit2.action,
+        });
 
         await client.sendTransaction(tx);
       },
