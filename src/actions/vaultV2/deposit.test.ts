@@ -34,9 +34,9 @@ describe("depositVaultV2 unit tests", () => {
       throw new Error("Permit DAI requirement not found");
     }
 
-    const signatureArgs = await permitDai.sign(client, client.account.address);
+    const requirementSignature = await permitDai.sign(client, client.account.address);
 
-    expect(signatureArgs.asset).toEqual(dai);
+    expect(requirementSignature.args.asset).toEqual(dai);
 
     // Create deposit transaction with DAI permit
     const tx = vaultV2Deposit({
@@ -49,12 +49,7 @@ describe("depositVaultV2 unit tests", () => {
         assets,
         maxSharePrice,
         recipient: client.account.address,
-        signatures: [
-          {
-            args: signatureArgs,
-            action: permitDai.action,
-          },
-        ],
+        requirementSignature,
       },
     });
 
