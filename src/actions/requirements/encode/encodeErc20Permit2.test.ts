@@ -99,7 +99,10 @@ describe("encodeErc20Permit2", () => {
         expiration: mockExpiration,
       });
 
-      const signatureRequirement = await permit.sign(client, client.account.address);
+      const signatureRequirement = await permit.sign(
+        client,
+        client.account.address,
+      );
 
       expect(signatureRequirement.args).toHaveProperty("owner");
       expect(signatureRequirement.args).toHaveProperty("signature");
@@ -133,7 +136,10 @@ describe("encodeErc20Permit2", () => {
         expiration: mockExpiration,
       });
 
-      const signatureRequirement = await permit.sign(client, client.account.address);
+      const signatureRequirement = await permit.sign(
+        client,
+        client.account.address,
+      );
 
       // Deadline should be approximately 2 hours (7200 seconds) in the future
       // Allow 5 seconds tolerance for test execution time
