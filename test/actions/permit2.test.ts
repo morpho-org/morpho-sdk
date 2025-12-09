@@ -75,7 +75,10 @@ describe("Permit2", () => {
           throw new Error("Permit2 requirement not found");
         }
 
-        const requirementSignature = await signaturePermit2.sign(client, client.account.address);
+        const requirementSignature = await signaturePermit2.sign(
+          client,
+          client.account.address,
+        );
 
         expect(requirementSignature.args.owner).toEqual(client.account.address);
         expect(isHex(requirementSignature.args.signature)).toBe(true);
@@ -145,7 +148,10 @@ describe("Permit2", () => {
           throw new Error("Permit2 requirement not found");
         }
 
-        const requirementSignature = await permit2.sign(client, client.account.address);
+        const requirementSignature = await permit2.sign(
+          client,
+          client.account.address,
+        );
 
         expect(requirementSignature.args.owner).toEqual(client.account.address);
         expect(isHex(requirementSignature.args.signature)).toBe(true);

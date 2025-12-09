@@ -25,7 +25,7 @@ interface EncodeErc20Permit2Params {
 }
 
 export const encodeErc20Permit2 = (
-  params: EncodeErc20Permit2Params
+  params: EncodeErc20Permit2Params,
 ): Requirement => {
   const {
     token,
@@ -53,7 +53,7 @@ export const encodeErc20Permit2 = (
     action,
     async sign(
       client: Client<Transport, Chain, Account>,
-      userAddress: Address
+      userAddress: Address,
     ) {
       if (!client.account.signTypedData) {
         throw new MissingClientPropertyError("client.account.signTypedData");
@@ -77,7 +77,7 @@ export const encodeErc20Permit2 = (
           deadline,
           expiration: Number(expiration),
         },
-        chainId
+        chainId,
       );
       const signature = await client.account.signTypedData(typedData);
 
