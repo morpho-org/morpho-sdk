@@ -7,7 +7,7 @@ export interface MorphoClientType {
   readonly options: {
     readonly supportSignature: boolean;
     readonly metadata?: Metadata;
-  }
+  };
 
   vaultV2: (vault: Address, chainId: number) => VaultV2Actions;
 }

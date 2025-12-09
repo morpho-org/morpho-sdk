@@ -7,13 +7,13 @@ export class MorphoClient implements MorphoClientType {
     readonly supportSignature: boolean;
     readonly metadata?: Metadata;
   };
-  
+
   constructor(
     public readonly viemClient: Client,
     readonly _options?: {
       readonly supportSignature?: boolean;
       readonly metadata?: Metadata;
-    }
+    },
   ) {
     this.options = {
       ..._options,
