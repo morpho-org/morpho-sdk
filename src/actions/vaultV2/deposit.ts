@@ -5,14 +5,13 @@ import type { Address } from "viem";
 import { addTransactionMetadata } from "../../helpers";
 import {
   type Metadata,
-  type Permit2Action,
-  type PermitAction,
-  type PermitArgs,
+  type RequirementSignature,
   type Transaction,
   type VaultV2DepositAction,
   ZeroAssetAmountError,
   ZeroMaxSharePriceError,
 } from "../../types";
+import { getRequirementsAction } from "../requirements/getRequirementsAction";
 
 export interface VaultV2DepositParams {
   vault: {
@@ -24,7 +23,7 @@ export interface VaultV2DepositParams {
     assets: bigint;
     maxSharePrice: bigint;
     recipient: Address;
-    signatures?: { args: PermitArgs; action: PermitAction | Permit2Action }[];
+    requirementSignature?: RequirementSignature;
   };
   metadata?: Metadata;
 }
@@ -51,13 +50,16 @@ export interface VaultV2DepositParams {
  * @param {bigint} params.args.assets - The amount of assets to deposit.
  * @param {bigint} params.args.maxSharePrice - The maximum share price to accept for the deposit.
  * @param {Address} params.args.recipient - The recipient address.
+ * @param {Object} params.args.requirementSignature - The requirement args and signature.
+ * @param {Object} params.args.requirementSignature.args - The requirement signature arguments.
+ * @param {Object} params.args.requirementSignature.action - The requirement signature action.
  * @param {Metadata} [params.metadata] - Optional the metadata.
  *
  * @returns {Readonly<Transaction<VaultV2DepositAction>>} The prepared deposit transaction.
  */
 export const vaultV2Deposit = ({
   vault: { chainId, address: vaultAddress, asset },
-  args: { assets, maxSharePrice, recipient, signatures },
+  args: { assets, maxSharePrice, recipient, requirementSignature },
   metadata,
 }: VaultV2DepositParams): Readonly<Transaction<VaultV2DepositAction>> => {
   if (assets === 0n) {
@@ -68,76 +70,25 @@ export const vaultV2Deposit = ({
     throw new ZeroMaxSharePriceError(vaultAddress);
   }
 
-  const {
-    bundler3: { generalAdapter1 },
-    dai,
-  } = getChainAddresses(chainId);
-
   const actions: Action[] = [];
 
-  let transferFromAction: Action = {
-    type: "erc20TransferFrom",
-    args: [asset, assets, generalAdapter1, false],
-  };
+  if (requirementSignature) {
+    actions.push(...getRequirementsAction({ chainId, requirementSignature }));
+  } else {
+    const { bundler3: { generalAdapter1 } } = getChainAddresses(chainId);
 
-  for (const signature of signatures ?? []) {
-    if (signature.action.type === "permit") {
-      const isDai = dai != null && signature.args.asset === dai;
-
-      const action: Action = isDai
-        ? {
-            type: "permitDai",
-            args: [
-              signature.args.owner,
-              signature.args.nonce,
-              signature.args.deadline,
-              signature.args.amount > 0n,
-              signature.args.signature,
-              false,
-            ],
-          }
-        : {
-            type: "permit",
-            args: [
-              signature.args.owner,
-              asset,
-              signature.args.amount,
-              signature.args.deadline,
-              signature.args.signature,
-              false,
-            ],
-          };
-
-      actions.push(action);
-    } else if (signature.action.type === "permit2") {
-      if (!("expiration" in signature.args)) {
-        throw new Error("Expiration is not defined");
-      }
-      actions.push({
-        type: "approve2",
-        args: [
-          signature.args.owner,
-          {
-            details: {
-              token: asset,
-              amount: signature.args.amount,
-              nonce: Number(signature.args.nonce),
-              expiration: Number(signature.args.expiration),
-            },
-            sigDeadline: signature.args.deadline,
-          },
-          signature.args.signature,
-          false,
-        ],
-      });
-      transferFromAction = {
-        type: "transferFrom2",
-        args: [asset, assets, generalAdapter1, false],
-      };
-    }
+    actions.push({
+      type: "erc20TransferFrom",
+      args: [
+        asset,
+        assets,
+        generalAdapter1,
+        false,
+      ],
+    });
   }
 
-  actions.push(transferFromAction, {
+  actions.push({
     type: "erc4626Deposit",
     args: [vaultAddress, assets, maxSharePrice, recipient, false],
   });

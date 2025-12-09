@@ -85,7 +85,7 @@ describe("Permit2", () => {
           BigInt(Math.floor(Date.now() / 1000)),
         );
 
-        const tx = deposit.buildTx();
+        const tx = deposit.buildTx({ args: sig, action: signaturePermit2.action });
 
         await client.sendTransaction(tx);
       },
@@ -132,7 +132,6 @@ describe("Permit2", () => {
 
         // USDT may require two signature requirements (approve permit2 + set allowance)
         expect(requirements.length).toBe(2);
-        console.log("2", requirements);
 
         const approval = requirements[0];
         if (!isRequirementApproval(approval)) {
@@ -156,7 +155,7 @@ describe("Permit2", () => {
           BigInt(Math.floor(Date.now() / 1000)),
         );
 
-        const tx = deposit.buildTx();
+        const tx = deposit.buildTx({ args: sig, action: permit2.action });
 
         await client.sendTransaction(tx);
       },

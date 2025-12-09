@@ -9,11 +9,9 @@ import {
 } from "../../actions";
 import {
   ChainIdMismatchError,
+  type RequirementSignature,
   type ERC20ApprovalAction,
   type MorphoClientType,
-  type Permit2Action,
-  type PermitAction,
-  type PermitArgs,
   type Requirement,
   type Transaction,
   type VaultV2DepositAction,
@@ -51,7 +49,9 @@ export interface VaultV2Actions {
     userAddress: Address;
     slippageTolerance?: bigint;
   }) => Promise<{
-    buildTx: () => Readonly<Transaction<VaultV2DepositAction>>;
+    buildTx: (
+      requirementSignature?: RequirementSignature
+    ) => Readonly<Transaction<VaultV2DepositAction>>;
     getRequirements: () => Promise<
       (Readonly<Transaction<ERC20ApprovalAction>> | Requirement)[]
     >;
@@ -90,7 +90,7 @@ export class MorphoVaultV2 implements VaultV2Actions {
   constructor(
     private readonly client: MorphoClientType,
     private readonly vault: Address,
-    private readonly chainId: number,
+    private readonly chainId: number
   ) {}
 
   async getData() {
@@ -109,7 +109,7 @@ export class MorphoVaultV2 implements VaultV2Actions {
     if (this.client.viemClient.chain?.id !== this.chainId) {
       throw new ChainIdMismatchError(
         this.client.viemClient.chain?.id,
-        this.chainId,
+        this.chainId
       );
     }
 
@@ -119,19 +119,14 @@ export class MorphoVaultV2 implements VaultV2Actions {
       MathLib.mulDivUp(
         assets,
         MathLib.wToRay(MathLib.WAD + slippageTolerance),
-        vaultData.toShares(assets),
+        vaultData.toShares(assets)
       ),
-      MathLib.RAY * 100n,
+      MathLib.RAY * 100n
     );
 
-    const signatures: {
-      args: PermitArgs;
-      action: PermitAction | Permit2Action;
-    }[] = [];
-
     return {
-      getRequirements: async () => {
-        const requirements = await getRequirements(this.client.viemClient, {
+      getRequirements: async () =>
+        await getRequirements(this.client.viemClient, {
           address: vaultData.asset,
           chainId: this.chainId,
           supportSignature: this.client.options.supportSignature,
@@ -139,26 +134,8 @@ export class MorphoVaultV2 implements VaultV2Actions {
             amount: assets,
             from: userAddress,
           },
-        });
-
-        // Wrap each requirement with a sign method that pushes the signature into the signatures array for final execution
-        for (const req of requirements) {
-          if ("sign" in req && typeof req.sign === "function") {
-            const originalSign = req.sign;
-            req.sign = async (...args: Parameters<typeof originalSign>) => {
-              const signatureArgs = await originalSign(...args);
-              signatures.push({
-                args: signatureArgs,
-                action: req.action,
-              });
-              return signatureArgs;
-            };
-          }
-        }
-
-        return requirements;
-      },
-      buildTx: () =>
+        }),
+      buildTx: (requirementSignature?: RequirementSignature) =>
         vaultV2Deposit({
           vault: {
             chainId: this.chainId,
@@ -169,7 +146,7 @@ export class MorphoVaultV2 implements VaultV2Actions {
             assets,
             maxSharePrice,
             recipient: userAddress,
-            signatures,
+            requirementSignature,
           },
           metadata: this.client.options.metadata,
         }),

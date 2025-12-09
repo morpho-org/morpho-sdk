@@ -98,6 +98,11 @@ export interface Permit2Action
     { spender: Address; amount: bigint; deadline: bigint; expiration: bigint }
   > {}
 
+export interface RequirementSignature {
+  args: PermitArgs;
+  action: PermitAction | Permit2Action;
+}
+
 export function isRequirementApproval(
   requirement: Transaction<ERC20ApprovalAction> | Requirement | undefined,
 ): requirement is Transaction<ERC20ApprovalAction> {
