@@ -38,22 +38,19 @@ describe("Permit", () => {
           throw new Error("Requirement is not a signature requirement");
         }
 
-        const signatureArgs = await requirements_1[0].sign(
+        const requirementSignature = await requirements_1[0].sign(
           client,
           client.account.address,
         );
 
-        expect(signatureArgs.owner).toEqual(client.account.address);
-        expect(isHex(signatureArgs.signature)).toBe(true);
-        expect(signatureArgs.signature.length).toBe(132);
-        expect(signatureArgs.deadline).toBeGreaterThan(
+        expect(requirementSignature.args.owner).toEqual(client.account.address);
+        expect(isHex(requirementSignature.args.signature)).toBe(true);
+        expect(requirementSignature.args.signature.length).toBe(132);
+        expect(requirementSignature.args.deadline).toBeGreaterThan(
           BigInt(Math.floor(Date.now() / 1000)),
         );
 
-        const tx_1 = deposit.buildTx({
-          args: signatureArgs,
-          action: requirements_1[0].action,
-        });
+        const tx_1 = deposit.buildTx(requirementSignature);
 
         await client.sendTransaction(tx_1);
       },

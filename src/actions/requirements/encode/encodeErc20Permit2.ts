@@ -11,6 +11,7 @@ import {
 import {
   AddressMismatchError,
   MissingClientPropertyError,
+  type Permit2Action,
   type Requirement,
 } from "../../../types";
 
@@ -24,7 +25,7 @@ interface EncodeErc20Permit2Params {
 }
 
 export const encodeErc20Permit2 = (
-  params: EncodeErc20Permit2Params,
+  params: EncodeErc20Permit2Params
 ): Requirement => {
   const {
     token,
@@ -38,19 +39,21 @@ export const encodeErc20Permit2 = (
   const now = Time.timestamp();
   const deadline = now + Time.s.from.h(2n);
 
-  return {
-    action: {
-      type: "permit2",
-      args: {
-        spender,
-        amount,
-        deadline,
-        expiration,
-      },
+  const action: Permit2Action = {
+    type: "permit2",
+    args: {
+      spender,
+      amount,
+      deadline,
+      expiration,
     },
+  };
+
+  return {
+    action,
     async sign(
       client: Client<Transport, Chain, Account>,
-      userAddress: Address,
+      userAddress: Address
     ) {
       if (!client.account.signTypedData) {
         throw new MissingClientPropertyError("client.account.signTypedData");
@@ -74,7 +77,7 @@ export const encodeErc20Permit2 = (
           deadline,
           expiration: Number(expiration),
         },
-        chainId,
+        chainId
       );
       const signature = await client.account.signTypedData(typedData);
 
@@ -85,13 +88,16 @@ export const encodeErc20Permit2 = (
       });
 
       return deepFreeze({
-        owner: userAddress,
-        signature,
-        deadline,
-        amount,
-        asset: token,
-        expiration,
-        nonce,
+        args: {
+          owner: userAddress,
+          signature,
+          deadline,
+          amount,
+          asset: token,
+          expiration,
+          nonce,
+        },
+        action,
       });
     },
   };

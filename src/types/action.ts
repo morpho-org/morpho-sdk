@@ -82,7 +82,7 @@ export interface Requirement {
   sign: (
     client: Client<Transport, Chain, Account>,
     userAddress: Address,
-  ) => Promise<PermitArgs | Permit2Args>;
+  ) => Promise<RequirementSignature>;
   action: PermitAction | Permit2Action;
 }
 
@@ -99,7 +99,7 @@ export interface Permit2Action
   > {}
 
 export interface RequirementSignature {
-  args: PermitArgs;
+  args: PermitArgs | Permit2Args;
   action: PermitAction | Permit2Action;
 }
 

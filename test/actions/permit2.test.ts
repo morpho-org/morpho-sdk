@@ -46,7 +46,6 @@ describe("Permit2", () => {
         });
 
         const requirements = await deposit.getRequirements();
-        console.log(requirements);
 
         // USDT may require two signature requirements (reset approval permit2 + approve permit2 + set allowance)
         expect(requirements.length).toBe(3);
@@ -76,19 +75,16 @@ describe("Permit2", () => {
           throw new Error("Permit2 requirement not found");
         }
 
-        const sig = await signaturePermit2.sign(client, client.account.address);
+        const requirementSignature = await signaturePermit2.sign(client, client.account.address);
 
-        expect(sig.owner).toEqual(client.account.address);
-        expect(isHex(sig.signature)).toBe(true);
-        expect(sig.signature.length).toBe(132);
-        expect(sig.deadline).toBeGreaterThan(
+        expect(requirementSignature.args.owner).toEqual(client.account.address);
+        expect(isHex(requirementSignature.args.signature)).toBe(true);
+        expect(requirementSignature.args.signature.length).toBe(132);
+        expect(requirementSignature.args.deadline).toBeGreaterThan(
           BigInt(Math.floor(Date.now() / 1000)),
         );
 
-        const tx = deposit.buildTx({
-          args: sig,
-          action: signaturePermit2.action,
-        });
+        const tx = deposit.buildTx(requirementSignature);
 
         await client.sendTransaction(tx);
       },
@@ -149,16 +145,16 @@ describe("Permit2", () => {
           throw new Error("Permit2 requirement not found");
         }
 
-        const sig = await permit2.sign(client, client.account.address);
+        const requirementSignature = await permit2.sign(client, client.account.address);
 
-        expect(sig.owner).toEqual(client.account.address);
-        expect(isHex(sig.signature)).toBe(true);
-        expect(sig.signature.length).toBe(132);
-        expect(sig.deadline).toBeGreaterThan(
+        expect(requirementSignature.args.owner).toEqual(client.account.address);
+        expect(isHex(requirementSignature.args.signature)).toBe(true);
+        expect(requirementSignature.args.signature.length).toBe(132);
+        expect(requirementSignature.args.deadline).toBeGreaterThan(
           BigInt(Math.floor(Date.now() / 1000)),
         );
 
-        const tx = deposit.buildTx({ args: sig, action: permit2.action });
+        const tx = deposit.buildTx(requirementSignature);
 
         await client.sendTransaction(tx);
       },
