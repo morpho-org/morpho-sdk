@@ -53,7 +53,7 @@ describe("encodeErc20Permit2", () => {
       });
 
       await expect(permit.sign(client, differentAddress)).rejects.toThrow(
-        new AddressMismatchError(client.account.address, differentAddress)
+        new AddressMismatchError(client.account.address, differentAddress),
       );
     });
 
@@ -71,7 +71,7 @@ describe("encodeErc20Permit2", () => {
 
       const signatureRequirement = await permit.sign(
         client,
-        client.account.address
+        client.account.address,
       );
 
       expect(signatureRequirement.args).toHaveProperty("owner");
@@ -108,7 +108,7 @@ describe("encodeErc20Permit2", () => {
 
       const signatureRequirement = await permit.sign(
         client,
-        client.account.address
+        client.account.address,
       );
 
       // Deadline should be approximately 2 hours (7200 seconds) in the future
@@ -118,10 +118,10 @@ describe("encodeErc20Permit2", () => {
 
       expect(signatureRequirement.args.deadline).toBeGreaterThan(now);
       expect(signatureRequirement.args.deadline).toBeGreaterThanOrEqual(
-        expectedDeadline - tolerance
+        expectedDeadline - tolerance,
       );
       expect(signatureRequirement.args.deadline).toBeLessThanOrEqual(
-        expectedDeadline + tolerance
+        expectedDeadline + tolerance,
       );
     });
 

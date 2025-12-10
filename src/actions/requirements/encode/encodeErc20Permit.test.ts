@@ -69,7 +69,7 @@ describe("encodeErc20Permit", () => {
       });
 
       await expect(permit.sign(client, differentAddress)).rejects.toThrow(
-        new AddressMismatchError(client.account.address, differentAddress)
+        new AddressMismatchError(client.account.address, differentAddress),
       );
     });
 
@@ -123,10 +123,10 @@ describe("encodeErc20Permit", () => {
 
       expect(signatureRequirement.args.deadline).toBeGreaterThan(now);
       expect(signatureRequirement.args.deadline).toBeGreaterThanOrEqual(
-        expectedDeadline - tolerance
+        expectedDeadline - tolerance,
       );
       expect(signatureRequirement.args.deadline).toBeLessThanOrEqual(
-        expectedDeadline + tolerance
+        expectedDeadline + tolerance,
       );
     });
 
