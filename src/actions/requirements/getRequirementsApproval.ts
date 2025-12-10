@@ -1,6 +1,10 @@
 import type { Address } from "@morpho-org/blue-sdk";
 import { APPROVE_ONLY_ONCE_TOKENS } from "@morpho-org/simulation-sdk";
-import { ApprovalAmountLessThanSpendAmountError, type ERC20ApprovalAction, type Transaction } from "../../types";
+import {
+  ApprovalAmountLessThanSpendAmountError,
+  type ERC20ApprovalAction,
+  type Transaction,
+} from "../../types";
 import { encodeErc20Approval } from "./encode/encodeErc20Approval";
 
 /**
