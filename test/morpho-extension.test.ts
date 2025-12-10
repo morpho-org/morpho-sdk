@@ -32,7 +32,7 @@ describe("Morpho viem extension", () => {
 
   test("should accept metadata parameter", ({ client }) => {
     const metadata = { origin: "test" };
-    const extendedClient = client.extend(morphoViemExtension(metadata));
+    const extendedClient = client.extend(morphoViemExtension({ metadata }));
 
     expect(extendedClient.morpho).toBeDefined();
     expect(extendedClient.morpho.vaultV2).toBeDefined();

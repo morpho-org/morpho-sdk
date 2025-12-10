@@ -1,9 +1,10 @@
-import { MorphoClient, Time } from "src";
+import { Time } from "@morpho-org/morpho-ts";
 import { KeyrockUsdcVaultV2 } from "test/fixtures/vaultV2";
 import { testInvariants } from "test/helpers/invariants";
 import { parseUnits } from "viem";
 import { mainnet } from "viem/chains";
 import { describe, expect } from "vitest";
+import { isRequirementApproval, MorphoClient } from "../../src";
 import { test } from "../setup";
 
 describe("Metadata", () => {
@@ -27,8 +28,10 @@ describe("Metadata", () => {
       },
       actionFn: async () => {
         const morpho = new MorphoClient(client, {
-          origin: "25AFEA44",
-          timestamp: true,
+          metadata: {
+            origin: "25AFEA44",
+            timestamp: true,
+          },
         });
         const vaultV2 = morpho.vaultV2(KeyrockUsdcVaultV2.address, mainnet.id);
         const deposit = await vaultV2.deposit({
@@ -52,6 +55,9 @@ describe("Metadata", () => {
         const approveTx = requirements[0];
         if (!approveTx) {
           throw new Error("Approve transaction not found");
+        }
+        if (!isRequirementApproval(approveTx)) {
+          throw new Error("Approve transaction is not an approval transaction");
         }
 
         const tx_2 = deposit.buildTx();
@@ -91,7 +97,9 @@ describe("Metadata", () => {
       },
       actionFn: async () => {
         const morpho = new MorphoClient(client, {
-          origin: "25AFEA44",
+          metadata: {
+            origin: "25AFEA44",
+          },
         });
         const vaultV2 = morpho.vaultV2(KeyrockUsdcVaultV2.address, mainnet.id);
         const deposit = await vaultV2.deposit({
@@ -112,6 +120,9 @@ describe("Metadata", () => {
         const approveTx = requirements[0];
         if (!approveTx) {
           throw new Error("Approve transaction not found");
+        }
+        if (!isRequirementApproval(approveTx)) {
+          throw new Error("Approve transaction is not an approval transaction");
         }
 
         await client.sendTransaction(approveTx);

@@ -11,6 +11,8 @@ import {
   ChainIdMismatchError,
   type ERC20ApprovalAction,
   type MorphoClientType,
+  type Requirement,
+  type RequirementSignature,
   type Transaction,
   type VaultV2DepositAction,
   type VaultV2RedeemAction,
@@ -47,9 +49,11 @@ export interface VaultV2Actions {
     userAddress: Address;
     slippageTolerance?: bigint;
   }) => Promise<{
-    buildTx: () => Readonly<Transaction<VaultV2DepositAction>>;
+    buildTx: (
+      requirementSignature?: RequirementSignature,
+    ) => Readonly<Transaction<VaultV2DepositAction>>;
     getRequirements: () => Promise<
-      Readonly<Transaction<ERC20ApprovalAction>[]>
+      (Readonly<Transaction<ERC20ApprovalAction>> | Requirement)[]
     >;
   }>;
   /**
@@ -121,7 +125,17 @@ export class MorphoVaultV2 implements VaultV2Actions {
     );
 
     return {
-      buildTx: () =>
+      getRequirements: async () =>
+        await getRequirements(this.client.viemClient, {
+          address: vaultData.asset,
+          chainId: this.chainId,
+          supportSignature: this.client.options.supportSignature,
+          args: {
+            amount: assets,
+            from: userAddress,
+          },
+        }),
+      buildTx: (requirementSignature?: RequirementSignature) =>
         vaultV2Deposit({
           vault: {
             chainId: this.chainId,
@@ -132,19 +146,10 @@ export class MorphoVaultV2 implements VaultV2Actions {
             assets,
             maxSharePrice,
             recipient: userAddress,
+            requirementSignature,
           },
-          metadata: this.client.metadata,
+          metadata: this.client.options.metadata,
         }),
-      getRequirements: async () => {
-        return getRequirements(this.client.viemClient, {
-          address: vaultData.asset,
-          chainId: this.chainId,
-          args: {
-            amount: assets,
-            from: userAddress,
-          },
-        });
-      },
     };
   }
 
@@ -158,7 +163,7 @@ export class MorphoVaultV2 implements VaultV2Actions {
             recipient: userAddress,
             onBehalf: userAddress,
           },
-          metadata: this.client.metadata,
+          metadata: this.client.options.metadata,
         }),
     };
   }
@@ -173,7 +178,7 @@ export class MorphoVaultV2 implements VaultV2Actions {
             recipient: userAddress,
             onBehalf: userAddress,
           },
-          metadata: this.client.metadata,
+          metadata: this.client.options.metadata,
         }),
     };
   }

@@ -5,11 +5,13 @@ import type { Address } from "viem";
 import { addTransactionMetadata } from "../../helpers";
 import {
   type Metadata,
+  type RequirementSignature,
   type Transaction,
   type VaultV2DepositAction,
   ZeroAssetAmountError,
   ZeroMaxSharePriceError,
 } from "../../types";
+import { getRequirementsAction } from "../requirements/getRequirementsAction";
 
 export interface VaultV2DepositParams {
   vault: {
@@ -21,6 +23,7 @@ export interface VaultV2DepositParams {
     assets: bigint;
     maxSharePrice: bigint;
     recipient: Address;
+    requirementSignature?: RequirementSignature;
   };
   metadata?: Metadata;
 }
@@ -47,13 +50,16 @@ export interface VaultV2DepositParams {
  * @param {bigint} params.args.assets - The amount of assets to deposit.
  * @param {bigint} params.args.maxSharePrice - The maximum share price to accept for the deposit.
  * @param {Address} params.args.recipient - The recipient address.
+ * @param {Object} params.args.requirementSignature - The requirement args and signature.
+ * @param {Object} params.args.requirementSignature.args - The requirement signature arguments.
+ * @param {Object} params.args.requirementSignature.action - The requirement signature action.
  * @param {Metadata} [params.metadata] - Optional the metadata.
  *
  * @returns {Readonly<Transaction<VaultV2DepositAction>>} The prepared deposit transaction.
  */
 export const vaultV2Deposit = ({
   vault: { chainId, address: vaultAddress, asset },
-  args: { assets, maxSharePrice, recipient },
+  args: { assets, maxSharePrice, recipient, requirementSignature },
   metadata,
 }: VaultV2DepositParams): Readonly<Transaction<VaultV2DepositAction>> => {
   if (assets === 0n) {
@@ -64,20 +70,25 @@ export const vaultV2Deposit = ({
     throw new ZeroMaxSharePriceError(vaultAddress);
   }
 
-  const {
-    bundler3: { generalAdapter1 },
-  } = getChainAddresses(chainId);
+  const actions: Action[] = [];
 
-  const actions: Action[] = [
-    {
+  if (requirementSignature) {
+    actions.push(...getRequirementsAction({ chainId, requirementSignature }));
+  } else {
+    const {
+      bundler3: { generalAdapter1 },
+    } = getChainAddresses(chainId);
+
+    actions.push({
       type: "erc20TransferFrom",
       args: [asset, assets, generalAdapter1, false],
-    },
-    {
-      type: "erc4626Deposit",
-      args: [vaultAddress, assets, maxSharePrice, recipient, false],
-    },
-  ];
+    });
+  }
+
+  actions.push({
+    type: "erc4626Deposit",
+    args: [vaultAddress, assets, maxSharePrice, recipient, false],
+  });
 
   let tx = BundlerAction.encodeBundle(chainId, actions);
 

@@ -2,7 +2,7 @@ import { type Address, MathLib } from "@morpho-org/blue-sdk";
 import { deepFreeze } from "@morpho-org/morpho-ts";
 import { MAX_TOKEN_APPROVALS } from "@morpho-org/simulation-sdk";
 import { encodeFunctionData, erc20Abi, maxUint256 } from "viem";
-import type { ERC20ApprovalAction, Transaction } from "../../types";
+import type { ERC20ApprovalAction, Transaction } from "../../../types";
 
 interface EncodeErc20ApprovalParams {
   token: Address;

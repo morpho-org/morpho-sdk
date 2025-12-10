@@ -1,17 +1,5 @@
 import type { Address } from "viem";
 
-export class MissingAddressError extends Error {
-  constructor() {
-    super("User address not found.");
-  }
-}
-
-export class MissingChainIdError extends Error {
-  constructor() {
-    super("Chain ID not found.");
-  }
-}
-
 export class ZeroAssetAmountError extends Error {
   constructor(asset: Address) {
     super(`Asset amount cannot be zero for address: ${asset}`);
@@ -30,10 +18,30 @@ export class ZeroMaxSharePriceError extends Error {
   }
 }
 
+export class AddressMismatchError extends Error {
+  constructor(clientAddress: Address, argsAddress: Address) {
+    super(
+      `Address mismatch between client: ${clientAddress} and args: ${argsAddress}`,
+    );
+  }
+}
+
 export class ChainIdMismatchError extends Error {
   constructor(clientChainId: number | undefined, argsChainId: number) {
     super(
       `Chain ID mismatch between client: ${clientChainId} and args: ${argsChainId}`,
     );
+  }
+}
+
+export class MissingClientPropertyError extends Error {
+  constructor(property: string) {
+    super(`A required ${property} is missing from the client.`);
+  }
+}
+
+export class ApprovalAmountLessThanSpendAmountError extends Error {
+  constructor() {
+    super("Approval amount is less than spend amount");
   }
 }
