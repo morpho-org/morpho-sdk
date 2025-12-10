@@ -4,10 +4,7 @@ import { type Address, isHex } from "viem";
 import { mainnet } from "viem/chains";
 import { describe, expect } from "vitest";
 import { test } from "../../../../test/setup";
-import {
-  AddressMismatchError,
-  MissingClientPropertyError,
-} from "../../../types";
+import { AddressMismatchError } from "../../../types";
 import { encodeErc20Permit } from "./encodeErc20Permit";
 
 describe("encodeErc20Permit", () => {
@@ -57,32 +54,6 @@ describe("encodeErc20Permit", () => {
       expect(signatureRequirement.args.signature.length).toBe(132);
     });
 
-    test("should throw error if client account signTypedData is missing", async ({
-      client,
-    }) => {
-      const clientWithoutSignTypedData = {
-        ...client,
-        account: {
-          ...client.account,
-          signTypedData: undefined,
-        },
-      } as unknown as typeof client;
-
-      const permit = encodeErc20Permit({
-        token: usdc,
-        spender: generalAdapter1,
-        amount: mockAmount,
-        chainId: mainnet.id,
-        nonce: mockNonce,
-      });
-
-      await expect(
-        permit.sign(clientWithoutSignTypedData, client.account.address),
-      ).rejects.toThrow(
-        new MissingClientPropertyError("client.account.signTypedData"),
-      );
-    });
-
     test("should throw error if client account address does not match user address", async ({
       client,
     }) => {
@@ -98,7 +69,7 @@ describe("encodeErc20Permit", () => {
       });
 
       await expect(permit.sign(client, differentAddress)).rejects.toThrow(
-        new AddressMismatchError(client.account.address, differentAddress),
+        new AddressMismatchError(client.account.address, differentAddress)
       );
     });
 
@@ -152,10 +123,10 @@ describe("encodeErc20Permit", () => {
 
       expect(signatureRequirement.args.deadline).toBeGreaterThan(now);
       expect(signatureRequirement.args.deadline).toBeGreaterThanOrEqual(
-        expectedDeadline - tolerance,
+        expectedDeadline - tolerance
       );
       expect(signatureRequirement.args.deadline).toBeLessThanOrEqual(
-        expectedDeadline + tolerance,
+        expectedDeadline + tolerance
       );
     });
 

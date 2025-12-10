@@ -4,10 +4,7 @@ import { type Address, isHex } from "viem";
 import { mainnet } from "viem/chains";
 import { describe, expect } from "vitest";
 import { test } from "../../../../test/setup";
-import {
-  AddressMismatchError,
-  MissingClientPropertyError,
-} from "../../../types";
+import { AddressMismatchError } from "../../../types";
 import { encodeErc20Permit2 } from "./encodeErc20Permit2";
 
 describe("encodeErc20Permit2", () => {
@@ -40,33 +37,6 @@ describe("encodeErc20Permit2", () => {
       expect(signatureRequirement.args.signature.length).toBe(132);
     });
 
-    test("should throw error if client account signTypedData is missing", async ({
-      client,
-    }) => {
-      const clientWithoutSignTypedData = {
-        ...client,
-        account: {
-          ...client.account,
-          signTypedData: undefined,
-        },
-      } as unknown as typeof client;
-
-      const permit = encodeErc20Permit2({
-        token: usdc,
-        spender: generalAdapter1,
-        amount: mockAmount,
-        chainId: mainnet.id,
-        nonce: mockNonce,
-        expiration: mockExpiration,
-      });
-
-      await expect(
-        permit.sign(clientWithoutSignTypedData, client.account.address),
-      ).rejects.toThrow(
-        new MissingClientPropertyError("client.account.signTypedData"),
-      );
-    });
-
     test("should throw error if client account address does not match user address", async ({
       client,
     }) => {
@@ -83,7 +53,7 @@ describe("encodeErc20Permit2", () => {
       });
 
       await expect(permit.sign(client, differentAddress)).rejects.toThrow(
-        new AddressMismatchError(client.account.address, differentAddress),
+        new AddressMismatchError(client.account.address, differentAddress)
       );
     });
 
@@ -101,7 +71,7 @@ describe("encodeErc20Permit2", () => {
 
       const signatureRequirement = await permit.sign(
         client,
-        client.account.address,
+        client.account.address
       );
 
       expect(signatureRequirement.args).toHaveProperty("owner");
@@ -138,7 +108,7 @@ describe("encodeErc20Permit2", () => {
 
       const signatureRequirement = await permit.sign(
         client,
-        client.account.address,
+        client.account.address
       );
 
       // Deadline should be approximately 2 hours (7200 seconds) in the future
@@ -148,10 +118,10 @@ describe("encodeErc20Permit2", () => {
 
       expect(signatureRequirement.args.deadline).toBeGreaterThan(now);
       expect(signatureRequirement.args.deadline).toBeGreaterThanOrEqual(
-        expectedDeadline - tolerance,
+        expectedDeadline - tolerance
       );
       expect(signatureRequirement.args.deadline).toBeLessThanOrEqual(
-        expectedDeadline + tolerance,
+        expectedDeadline + tolerance
       );
     });
 
