@@ -39,3 +39,9 @@ export class MissingClientPropertyError extends Error {
     super(`A required ${property} is missing from the client.`);
   }
 }
+
+export class ApprovalAmountLessThanSpendAmountError extends Error {
+  constructor() {
+    super("Approval amount is less than spend amount");
+  }
+}
