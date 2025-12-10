@@ -1,5 +1,13 @@
 # @morpho-org/consumer-sdk
 
+## 0.1.0
+
+### Minor Changes
+
+- 858f0e4: Introduce off-chain signature requirements: (permit, permit dai, permit2)
+  New e2e and unit test
+  Update viem to 2.41.2
+
 ## 0.0.4
 
 ### Patch Changes
