@@ -5,11 +5,7 @@ import {
   getPermitTypedData,
 } from "@morpho-org/blue-sdk-viem";
 import { deepFreeze, Time } from "@morpho-org/morpho-ts";
-import {
-  type Client,
-  type Hex,
-  verifyTypedData,
-} from "viem";
+import { type Client, type Hex, verifyTypedData } from "viem";
 import { signTypedData } from "viem/actions";
 import {
   AddressMismatchError,
@@ -27,7 +23,7 @@ interface EncodeErc20PermitParams {
 }
 
 export const encodeErc20Permit = (
-  params: EncodeErc20PermitParams
+  params: EncodeErc20PermitParams,
 ): Requirement => {
   const { token, spender, amount, chainId, nonce } = params;
 
@@ -45,10 +41,7 @@ export const encodeErc20Permit = (
 
   return {
     action,
-    async sign(
-      client: Client,
-      userAddress: Address
-    ) {
+    async sign(client: Client, userAddress: Address) {
       if (!client.account?.address) {
         throw new MissingClientPropertyError("client.account.address");
       }
@@ -70,7 +63,7 @@ export const encodeErc20Permit = (
             nonce,
             deadline,
           },
-          chainId
+          chainId,
         );
 
         signature = await signTypedData(client, {
@@ -94,7 +87,7 @@ export const encodeErc20Permit = (
             nonce,
             deadline,
           },
-          chainId
+          chainId,
         );
 
         signature = await signTypedData(client, {

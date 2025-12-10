@@ -1,10 +1,10 @@
+import { Time } from "@morpho-org/morpho-ts";
 import { KeyrockUsdcVaultV2 } from "test/fixtures/vaultV2";
 import { testInvariants } from "test/helpers/invariants";
 import { parseUnits } from "viem";
 import { mainnet } from "viem/chains";
 import { describe, expect } from "vitest";
 import { isRequirementApproval, MorphoClient } from "../../src";
-import { Time } from "@morpho-org/morpho-ts";
 import { test } from "../setup";
 
 describe("Metadata", () => {

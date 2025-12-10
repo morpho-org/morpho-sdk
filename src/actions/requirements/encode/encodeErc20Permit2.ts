@@ -2,13 +2,13 @@ import { type Address, getChainAddresses, MathLib } from "@morpho-org/blue-sdk";
 import { getPermit2PermitTypedData } from "@morpho-org/blue-sdk-viem";
 import { deepFreeze, Time } from "@morpho-org/morpho-ts";
 import { type Client, verifyTypedData } from "viem";
+import { signTypedData } from "viem/actions";
 import {
   AddressMismatchError,
   MissingClientPropertyError,
   type Permit2Action,
   type Requirement,
 } from "../../../types";
-import { signTypedData } from "viem/actions";
 
 interface EncodeErc20Permit2Params {
   token: Address;
@@ -20,7 +20,7 @@ interface EncodeErc20Permit2Params {
 }
 
 export const encodeErc20Permit2 = (
-  params: EncodeErc20Permit2Params
+  params: EncodeErc20Permit2Params,
 ): Requirement => {
   const {
     token,
@@ -69,7 +69,7 @@ export const encodeErc20Permit2 = (
           deadline,
           expiration: Number(expiration),
         },
-        chainId
+        chainId,
       );
       const signature = await signTypedData(client, {
         ...typedData,
