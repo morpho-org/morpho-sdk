@@ -20,7 +20,7 @@ describe("Morpho viem extension", () => {
 
     const vault = extendedClient.morpho.vaultV2(
       "0x04422053aDDbc9bB2759b248B574e3FCA76Bc145",
-      mainnet.id,
+      mainnet.id
     );
 
     expect(vault).toBeDefined();
@@ -32,7 +32,7 @@ describe("Morpho viem extension", () => {
 
   test("should accept metadata parameter", ({ client }) => {
     const metadata = { origin: "test" };
-    const extendedClient = client.extend(morphoViemExtension(metadata));
+    const extendedClient = client.extend(morphoViemExtension({ metadata }));
 
     expect(extendedClient.morpho).toBeDefined();
     expect(extendedClient.morpho.vaultV2).toBeDefined();

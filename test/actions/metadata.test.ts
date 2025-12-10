@@ -3,7 +3,8 @@ import { testInvariants } from "test/helpers/invariants";
 import { parseUnits } from "viem";
 import { mainnet } from "viem/chains";
 import { describe, expect } from "vitest";
-import { isRequirementApproval, MorphoClient, Time } from "../../src";
+import { isRequirementApproval, MorphoClient } from "../../src";
+import { Time } from "@morpho-org/morpho-ts";
 import { test } from "../setup";
 
 describe("Metadata", () => {

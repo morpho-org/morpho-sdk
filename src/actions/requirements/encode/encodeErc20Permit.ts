@@ -6,13 +6,11 @@ import {
 } from "@morpho-org/blue-sdk-viem";
 import { deepFreeze, Time } from "@morpho-org/morpho-ts";
 import {
-  type Account,
-  type Chain,
   type Client,
   type Hex,
-  type Transport,
   verifyTypedData,
 } from "viem";
+import { signTypedData } from "viem/actions";
 import {
   AddressMismatchError,
   MissingClientPropertyError,
@@ -29,7 +27,7 @@ interface EncodeErc20PermitParams {
 }
 
 export const encodeErc20Permit = (
-  params: EncodeErc20PermitParams,
+  params: EncodeErc20PermitParams
 ): Requirement => {
   const { token, spender, amount, chainId, nonce } = params;
 
@@ -48,11 +46,11 @@ export const encodeErc20Permit = (
   return {
     action,
     async sign(
-      client: Client<Transport, Chain, Account>,
-      userAddress: Address,
+      client: Client,
+      userAddress: Address
     ) {
-      if (!client.account.signTypedData) {
-        throw new MissingClientPropertyError("client.account.signTypedData");
+      if (!client.account?.address) {
+        throw new MissingClientPropertyError("client.account.address");
       }
       if (client.account.address !== userAddress) {
         throw new AddressMismatchError(client.account.address, userAddress);
@@ -72,9 +70,13 @@ export const encodeErc20Permit = (
             nonce,
             deadline,
           },
-          chainId,
+          chainId
         );
-        signature = await client.account.signTypedData(typedData);
+
+        signature = await signTypedData(client, {
+          ...typedData,
+          account: client.account,
+        });
 
         await verifyTypedData({
           ...typedData,
@@ -92,10 +94,13 @@ export const encodeErc20Permit = (
             nonce,
             deadline,
           },
-          chainId,
+          chainId
         );
 
-        signature = await client.account.signTypedData(typedData);
+        signature = await signTypedData(client, {
+          ...typedData,
+          account: client.account,
+        });
 
         await verifyTypedData({
           ...typedData,
