@@ -23,6 +23,7 @@ import { getRequirementsApproval } from "./getRequirementsApproval";
  * @param params.permit2 - Permit2 contract address.
  * @param params.args - Object with:
  * @param params.args.amount - Required token amount.
+ * @param params.allowancesGeneralAdapter - Allowance for general adapter from permit2 contract.
  * @param params.allowancesPermit2 - Allowance for permit2.
  * @param params.allowanceGeneralAdapterPermit2 - Allowance for general adapter from permit2 contract.
  * @param params.allowanceGeneralAdapterExpiration - Expiration for general adapter from permit2 contract.
@@ -35,6 +36,7 @@ export const getRequirementsPermit2 = (params: {
   permit2: Address;
   args: { amount: bigint };
   allowancesPermit2: bigint;
+  allowancesGeneralAdapter: bigint;
   allowanceGeneralAdapterPermit2: bigint;
   allowanceGeneralAdapterExpiration: bigint;
   nonce: bigint;
@@ -45,10 +47,15 @@ export const getRequirementsPermit2 = (params: {
     permit2,
     args: { amount },
     allowancesPermit2,
+    allowancesGeneralAdapter,
     allowanceGeneralAdapterPermit2,
     allowanceGeneralAdapterExpiration,
     nonce,
   } = params;
+
+  if (allowancesGeneralAdapter >= amount) {
+    return [];
+  }
 
   const requirements: (Transaction<ERC20ApprovalAction> | Requirement)[] = [];
 

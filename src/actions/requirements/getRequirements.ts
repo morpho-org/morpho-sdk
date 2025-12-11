@@ -73,6 +73,7 @@ export const getRequirements = async (
         chainId,
         permit2,
         args: { amount },
+        allowancesGeneralAdapter: erc20Allowances["bundler3.generalAdapter1"],
         allowancesPermit2: erc20Allowances.permit2,
         allowanceGeneralAdapterPermit2: permit2BundlerAllowance.amount,
         allowanceGeneralAdapterExpiration: permit2BundlerAllowance.expiration,
