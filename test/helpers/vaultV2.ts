@@ -1,7 +1,7 @@
 import { getChainAddresses } from "@morpho-org/blue-sdk";
 import { vaultV2FactoryAbi } from "@morpho-org/blue-sdk-viem";
-import { AnvilTestClient } from "@morpho-org/test";
-import { Address, decodeEventLog, parseEventLogs, toHex } from "viem";
+import type { AnvilTestClient } from "@morpho-org/test";
+import { type Address, decodeEventLog, parseEventLogs, toHex } from "viem";
 
 export async function createVaultV2(
   client: AnvilTestClient,
