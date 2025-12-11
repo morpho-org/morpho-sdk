@@ -1,5 +1,12 @@
 # @morpho-org/consumer-sdk
 
+## 0.1.1
+
+### Patch Changes
+
+- 93ccfc0: Fix sufficient allowant on permit2 flow
+- 5db470d: Update morpho sdks to latest version
+
 ## 0.1.0
 
 ### Minor Changes
