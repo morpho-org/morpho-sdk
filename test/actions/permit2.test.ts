@@ -4,7 +4,7 @@ import {
   isRequirementSignature,
   MorphoClient,
 } from "src";
-import { Re7UsdtVaultV2 } from "test/fixtures/vaultV2";
+import { KpkWETHVaultV2, Re7UsdtVaultV2 } from "test/fixtures/vaultV2";
 import { testInvariants } from "test/helpers/invariants";
 import { isHex, parseUnits } from "viem";
 import { mainnet } from "viem/chains";
@@ -12,7 +12,10 @@ import { describe, expect } from "vitest";
 import { test } from "../setup";
 
 describe("Permit2", () => {
-  const { permit2 } = addressesRegistry[mainnet.id];
+  const {
+    permit2,
+    bundler3: { generalAdapter1 },
+  } = addressesRegistry[mainnet.id];
 
   test("should deposit USDT with permit2 with prior reset", async ({
     client,
@@ -163,6 +166,58 @@ describe("Permit2", () => {
         const tx = deposit.buildTx(requirementSignature);
 
         await client.sendTransaction(tx);
+      },
+    });
+
+    expect(finalState.userAssetBalance).toEqual(
+      initialState.userAssetBalance - amount,
+    );
+    expect(finalState.morphoAssetBalance).toEqual(
+      initialState.morphoAssetBalance + amount,
+    );
+    expect(finalState.userSharesBalance).toBeGreaterThan(
+      initialState.userSharesBalance,
+    );
+  });
+
+  test("should deposit WETH approval already sufficient on general adapter", async ({
+    client,
+  }) => {
+    const { wNative } = addressesRegistry[mainnet.id];
+    const amount = parseUnits("0.5", 18);
+
+    await client.deal({
+      erc20: wNative,
+      amount: amount,
+    });
+
+    await client.approve({
+      address: wNative,
+      args: [generalAdapter1, MathLib.MAX_UINT_256],
+    });
+
+    const {
+      vaults: {
+        KpkWETHVaultV2: { initialState, finalState },
+      },
+    } = await testInvariants({
+      client,
+      params: {
+        vaults: { KpkWETHVaultV2 },
+      },
+      actionFn: async () => {
+        const morpho = new MorphoClient(client, { supportSignature: true });
+        const vault = morpho.vaultV2(KpkWETHVaultV2.address, mainnet.id);
+        const deposit = await vault.deposit({
+          userAddress: client.account.address,
+          assets: amount,
+        });
+
+        const requirements = await deposit.getRequirements();
+
+        expect(requirements.length).toBe(0);
+
+        await client.sendTransaction(deposit.buildTx());
       },
     });
 
