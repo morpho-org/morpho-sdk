@@ -1,11 +1,7 @@
-import { type Address, getChainAddresses } from "@morpho-org/blue-sdk";
-import {
-  fetchToken,
-  getDaiPermitTypedData,
-  getPermitTypedData,
-} from "@morpho-org/blue-sdk-viem";
+import { type Address } from "@morpho-org/blue-sdk";
+import { fetchToken, getPermitTypedData } from "@morpho-org/blue-sdk-viem";
 import { deepFreeze, Time } from "@morpho-org/morpho-ts";
-import { type Client, type Hex, verifyTypedData } from "viem";
+import { type Client, verifyTypedData } from "viem";
 import { signTypedData } from "viem/actions";
 import {
   AddressMismatchError,
@@ -49,58 +45,29 @@ export const encodeErc20Permit = (
         throw new AddressMismatchError(client.account.address, userAddress);
       }
 
-      const { dai } = getChainAddresses(chainId);
+      const tokenData = await fetchToken(token, client);
+      const typedData = getPermitTypedData(
+        {
+          erc20: tokenData,
+          owner: userAddress,
+          spender,
+          allowance: amount,
+          nonce,
+          deadline,
+        },
+        chainId,
+      );
 
-      const isDai = dai != null && token === dai;
+      const signature = await signTypedData(client, {
+        ...typedData,
+        account: client.account,
+      });
 
-      let signature: Hex;
-      if (isDai) {
-        const typedData = getDaiPermitTypedData(
-          {
-            owner: userAddress,
-            spender,
-            allowance: amount,
-            nonce,
-            deadline,
-          },
-          chainId,
-        );
-
-        signature = await signTypedData(client, {
-          ...typedData,
-          account: client.account,
-        });
-
-        await verifyTypedData({
-          ...typedData,
-          address: userAddress,
-          signature,
-        });
-      } else {
-        const tokenData = await fetchToken(token, client);
-        const typedData = getPermitTypedData(
-          {
-            erc20: tokenData,
-            owner: userAddress,
-            spender,
-            allowance: amount,
-            nonce,
-            deadline,
-          },
-          chainId,
-        );
-
-        signature = await signTypedData(client, {
-          ...typedData,
-          account: client.account,
-        });
-
-        await verifyTypedData({
-          ...typedData,
-          address: userAddress, // Verify against the permit's owner.
-          signature,
-        });
-      }
+      await verifyTypedData({
+        ...typedData,
+        address: userAddress, // Verify against the permit's owner.
+        signature,
+      });
 
       return deepFreeze({
         args: {

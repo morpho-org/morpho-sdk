@@ -79,7 +79,6 @@ export const getRequirementsPermit2 = (params: {
     requirements.push(
       encodeErc20Permit2({
         token: address,
-        spender: permit2,
         amount,
         chainId,
         nonce,

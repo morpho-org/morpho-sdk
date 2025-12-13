@@ -200,45 +200,6 @@ describe("getRequirements", () => {
 
         expect(requirements).toHaveLength(0);
       });
-
-      test("should return simple permit when DAI (supports EIP-2612) and allowance is insufficient", async () => {
-        vi.mocked(fetchHolding).mockResolvedValue(
-          new Holding({
-            user: mockFrom,
-            token: dai,
-            erc20Allowances: {
-              morpho: 0n,
-              "bundler3.generalAdapter1": 0n,
-              permit2: 0n,
-            },
-            permit2BundlerAllowance: {
-              amount: 0n,
-              expiration: 0n,
-              nonce: 0n,
-            },
-            erc2612Nonce: 0n,
-            canTransfer: false,
-            balance: 0n,
-          }),
-        );
-
-        const requirements = await getRequirements(mockClient, {
-          supportSignature: true,
-          address: dai,
-          chainId: mainnet.id,
-          args: { amount: mockAmount, from: mockFrom },
-        });
-
-        expect(requirements).toHaveLength(1);
-
-        const permitDai = requirements[0];
-        if (!isRequirementSignature(permitDai)) {
-          throw new Error("Requirement is not a permit transaction");
-        }
-        expect(permitDai.action.type).toBe("permit");
-        expect(permitDai.action.args.spender).toBe(generalAdapter1);
-        expect(permitDai.action.args.amount).toBe(mockAmount);
-      });
     });
 
     describe("Flow 3: Permit2", () => {
@@ -287,7 +248,7 @@ describe("getRequirements", () => {
           throw new Error("Requirement is not a requirement signature");
         }
         expect(permit2Requirement.action.type).toBe("permit2");
-        expect(permit2Requirement.action.args.spender).toBe(permit2);
+        expect(permit2Requirement.action.args.spender).toBe(generalAdapter1);
         expect(permit2Requirement.action.args.amount).toBe(mockAmount);
       });
 
@@ -325,7 +286,7 @@ describe("getRequirements", () => {
           throw new Error("Requirement is not a requirement signature");
         }
         expect(permit2Requirement.action.type).toBe("permit2");
-        expect(permit2Requirement.action.args.spender).toBe(permit2);
+        expect(permit2Requirement.action.args.spender).toBe(generalAdapter1);
         expect(permit2Requirement.action.args.amount).toBe(mockAmount);
       });
 
@@ -398,7 +359,54 @@ describe("getRequirements", () => {
           throw new Error("Requirement is not a requirement signature");
         }
         expect(permit2Requirement.action.type).toBe("permit2");
-        expect(permit2Requirement.action.args.spender).toBe(permit2);
+        expect(permit2Requirement.action.args.spender).toBe(generalAdapter1);
+        expect(permit2Requirement.action.args.amount).toBe(mockAmount);
+      });
+
+      test("should return permit2 requirement when DAI and allowance is insufficient", async () => {
+        vi.mocked(fetchHolding).mockResolvedValue(
+          new Holding({
+            user: mockFrom,
+            token: dai,
+            erc20Allowances: {
+              morpho: 0n,
+              "bundler3.generalAdapter1": 0n,
+              permit2: 0n,
+            },
+            permit2BundlerAllowance: {
+              amount: 0n,
+              expiration: 0n,
+              nonce: 0n,
+            },
+            erc2612Nonce: 0n,
+            canTransfer: false,
+            balance: 0n,
+          }),
+        );
+
+        const requirements = await getRequirements(mockClient, {
+          supportSignature: true,
+          address: dai,
+          chainId: mainnet.id,
+          args: { amount: mockAmount, from: mockFrom },
+        });
+
+        expect(requirements).toHaveLength(2);
+
+        const approvalPermit2 = requirements[0];
+        if (!isRequirementApproval(approvalPermit2)) {
+          throw new Error("Requirement is not an approval transaction");
+        }
+        expect(approvalPermit2.action.type).toBe("erc20Approval");
+        expect(approvalPermit2.action.args.spender).toBe(permit2);
+        expect(approvalPermit2.action.args.amount).toBe(MathLib.MAX_UINT_160);
+
+        const permit2Requirement = requirements[1];
+        if (!isRequirementSignature(permit2Requirement)) {
+          throw new Error("Requirement is not a permit transaction");
+        }
+        expect(permit2Requirement.action.type).toBe("permit2");
+        expect(permit2Requirement.action.args.spender).toBe(generalAdapter1);
         expect(permit2Requirement.action.args.amount).toBe(mockAmount);
       });
     });
