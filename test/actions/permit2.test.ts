@@ -235,7 +235,7 @@ describe("Permit2", () => {
     );
   });
 
-  test("should deposit DAI with permit DAI", async ({ client }) => {
+  test("should deposit DAI with permit2", async ({ client }) => {
     const amount = parseUnits("10", 18);
 
     await client.deal({
@@ -269,19 +269,30 @@ describe("Permit2", () => {
 
         const requirements = await deposit.getRequirements();
 
-        expect(requirements.length).toBe(1);
+        expect(requirements.length).toBe(2);
 
-        const permitDai = requirements[0];
+        const approvalPermit2 = requirements[0];
+        if (!isRequirementApproval(approvalPermit2)) {
+          throw new Error("Approval requirement not found");
+        }
 
-        if (!isRequirementSignature(permitDai)) {
+        expect(approvalPermit2.action.args.spender).toBe(permit2);
+        expect(approvalPermit2.action.args.amount).toBe(MathLib.MAX_UINT_160);
+        expect(approvalPermit2.action.type).toBe("erc20Approval");
+
+        await client.sendTransaction(approvalPermit2);
+
+        const permit2Requirement = requirements[1];
+
+        if (!isRequirementSignature(permit2Requirement)) {
           throw new Error("Requirement is not a signature requirement");
         }
 
-        expect(permitDai.action.type).toBe("permit");
-        expect(permitDai.action.args.amount).toBe(amount);
-        expect(permitDai.action.args.spender).toBe(generalAdapter1);
+        expect(permit2Requirement.action.type).toBe("permit2");
+        expect(permit2Requirement.action.args.spender).toBe(generalAdapter1);
+        expect(permit2Requirement.action.args.amount).toBe(amount);
 
-        const requirementSignature = await permitDai.sign(
+        const requirementSignature = await permit2Requirement.sign(
           client,
           client.account.address,
         );
