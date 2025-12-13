@@ -23,6 +23,7 @@ export interface MarketInvariant {
 
 export interface VaultInvariant {
   block: Block;
+  vaultBalance: bigint;
   morphoAssetBalance: bigint;
   morphoSharesBalance: bigint;
   userAssetBalance: bigint;
@@ -222,12 +223,13 @@ const _fetchVaultOperationState = async ({
     asset: Address;
   };
 }): Promise<VaultInvariant> => {
-  const { asset } = vault;
+  const { asset, address } = vault;
 
   const { morpho, bundler3 } = getChainAddresses(client.chain.id);
 
   const [
     block,
+    vaultBalance,
     morphoAssetBalance,
     morphoSharesBalance,
     userAssetBalance,
@@ -239,10 +241,11 @@ const _fetchVaultOperationState = async ({
     maxRedeem,
   ] = await Promise.all([
     client.getBlock(),
+    client.balanceOf({ erc20: asset, owner: address }),
     client.balanceOf({ erc20: asset, owner: morpho }),
-    client.balanceOf({ erc20: vault.address, owner: morpho }),
+    client.balanceOf({ erc20: address, owner: morpho }),
     client.balanceOf({ erc20: asset }),
-    client.balanceOf({ erc20: vault.address }),
+    client.balanceOf({ erc20: address }),
     client.balanceOf({}),
     Promise.all(
       entries(bundler3).map(([, value]) =>
@@ -251,10 +254,10 @@ const _fetchVaultOperationState = async ({
     ),
     Promise.all(
       entries(bundler3).map(([, value]) =>
-        client.balanceOf({ erc20: vault.address, owner: value }),
+        client.balanceOf({ erc20: address, owner: value }),
       ),
     ),
-    client.maxWithdraw({ erc4626: vault.address }),
+    client.maxWithdraw({ erc4626: address }),
     client.readContract({
       abi: erc4626Abi,
       address: vault.address,
@@ -277,6 +280,7 @@ const _fetchVaultOperationState = async ({
 
   return {
     block,
+    vaultBalance,
     morphoAssetBalance,
     morphoSharesBalance,
     userAssetBalance,
