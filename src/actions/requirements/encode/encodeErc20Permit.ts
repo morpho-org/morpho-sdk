@@ -1,4 +1,4 @@
-import { type Address } from "@morpho-org/blue-sdk";
+import type { Address } from "@morpho-org/blue-sdk";
 import { fetchToken, getPermitTypedData } from "@morpho-org/blue-sdk-viem";
 import { deepFreeze, Time } from "@morpho-org/morpho-ts";
 import { type Client, verifyTypedData } from "viem";
