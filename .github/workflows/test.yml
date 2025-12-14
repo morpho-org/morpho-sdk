@@ -20,6 +20,9 @@ jobs:
           node-version-file: .nvmrc
           cache: pnpm
 
+      - run: anvil --version
+      - run: forge --version
+
       - name: Restore Foundry cache
         uses: actions/cache/restore@v4
         with:
