@@ -25,9 +25,9 @@ jobs:
         with:
           path: ~/.foundry/cache/rpc
           key: foundry-rpc-${{ runner.os }}-${{ steps.foundry.outputs.version }}-${{ github.job }}-${{ github.sha }}
-          # restore-keys: |
-          #   foundry-rpc-${{ runner.os }}-${{ steps.foundry.outputs.version }}-${{ github.job }}-
-          #   foundry-rpc-${{ runner.os }}-${{ steps.foundry.outputs.version }}-
+          restore-keys: |
+            foundry-rpc-${{ runner.os }}-${{ steps.foundry.outputs.version }}-${{ github.job }}-
+            foundry-rpc-${{ runner.os }}-${{ steps.foundry.outputs.version }}-
 
       - uses: foundry-rs/foundry-toolchain@v1
         with:
