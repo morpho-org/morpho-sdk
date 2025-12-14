@@ -48,7 +48,7 @@ describe("depositVaultV2 unit tests", () => {
 
     expect(requirementSignature.args.asset).toEqual(dai);
 
-    // Create deposit transaction with DAI permit
+    // Create deposit transaction
     const tx = vaultV2Deposit({
       vault: {
         chainId: mainnet.id,
