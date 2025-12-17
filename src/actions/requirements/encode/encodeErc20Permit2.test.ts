@@ -23,7 +23,6 @@ describe("encodeErc20Permit2", () => {
 
       const permit = encodeErc20Permit2({
         token: usdc,
-        spender: generalAdapter1,
         amount: mockAmount,
         chainId: mainnet.id,
         nonce: mockNonce,
@@ -45,7 +44,6 @@ describe("encodeErc20Permit2", () => {
 
       const permit = encodeErc20Permit2({
         token: usdc,
-        spender: generalAdapter1,
         amount: mockAmount,
         chainId: mainnet.id,
         nonce: mockNonce,
@@ -62,7 +60,6 @@ describe("encodeErc20Permit2", () => {
     }) => {
       const permit = encodeErc20Permit2({
         token: usdc,
-        spender: generalAdapter1,
         amount: mockAmount,
         chainId: mainnet.id,
         nonce: mockNonce,
@@ -99,7 +96,6 @@ describe("encodeErc20Permit2", () => {
 
       const permit = encodeErc20Permit2({
         token: usdc,
-        spender: generalAdapter1,
         amount: mockAmount,
         chainId: mainnet.id,
         nonce: mockNonce,
@@ -128,7 +124,6 @@ describe("encodeErc20Permit2", () => {
     test("should have correct action structure", async () => {
       const permit = encodeErc20Permit2({
         token: usdc,
-        spender: generalAdapter1,
         amount: mockAmount,
         chainId: mainnet.id,
         nonce: mockNonce,

@@ -1,5 +1,5 @@
 import { addressesRegistry } from "@morpho-org/blue-sdk";
-import { isRequirementSignature } from "src/types";
+import { isRequirementApproval, isRequirementSignature } from "src/types";
 import type { Address } from "viem";
 import { parseUnits } from "viem";
 import { mainnet } from "viem/chains";
@@ -11,7 +11,9 @@ import { vaultV2Deposit } from "./deposit";
 
 describe("depositVaultV2 unit tests", () => {
   const { dai } = addressesRegistry[mainnet.id];
-  test("should create deposit bundle with DAI permit", async ({ client }) => {
+  test("should create deposit bundle with DAI via permit2", async ({
+    client,
+  }) => {
     // Use a mock vault address with DAI as asset
     const mockVaultAddress =
       "0x0000000000000000000000000000000000000001" as Address;
@@ -29,19 +31,24 @@ describe("depositVaultV2 unit tests", () => {
       },
     });
 
-    const permitDai = requirements[0];
-    if (!isRequirementSignature(permitDai)) {
-      throw new Error("Permit DAI requirement not found");
+    const approvalPermit2 = requirements[0];
+    if (!isRequirementApproval(approvalPermit2)) {
+      throw new Error("Approval requirement not found");
     }
 
-    const requirementSignature = await permitDai.sign(
+    const permit2Requirement = requirements[1];
+    if (!isRequirementSignature(permit2Requirement)) {
+      throw new Error("Permit2 requirement not found");
+    }
+
+    const requirementSignature = await permit2Requirement.sign(
       client,
       client.account.address,
     );
 
     expect(requirementSignature.args.asset).toEqual(dai);
 
-    // Create deposit transaction with DAI permit
+    // Create deposit transaction
     const tx = vaultV2Deposit({
       vault: {
         chainId: mainnet.id,

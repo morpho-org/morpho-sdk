@@ -18,7 +18,6 @@ export const getRequirementsAction = ({
   requirementSignature,
 }: GetRequirementsActionParams): Action[] => {
   const {
-    dai,
     bundler3: { generalAdapter1 },
   } = getChainAddresses(chainId);
 
@@ -46,33 +45,6 @@ export const getRequirementsAction = ({
       },
       {
         type: "transferFrom2",
-        args: [
-          requirementSignature.args.asset,
-          requirementSignature.args.amount,
-          generalAdapter1,
-          false,
-        ],
-      },
-    ];
-  }
-
-  const isDai = dai != null && requirementSignature.args.asset === dai;
-
-  if (isDai) {
-    return [
-      {
-        type: "permitDai",
-        args: [
-          requirementSignature.args.owner,
-          requirementSignature.args.nonce,
-          requirementSignature.args.deadline,
-          requirementSignature.args.amount > 0n,
-          requirementSignature.args.signature,
-          false,
-        ],
-      },
-      {
-        type: "erc20TransferFrom",
         args: [
           requirementSignature.args.asset,
           requirementSignature.args.amount,

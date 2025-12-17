@@ -12,7 +12,6 @@ import {
 
 interface EncodeErc20Permit2Params {
   token: Address;
-  spender: Address;
   amount: bigint;
   chainId: number;
   nonce: bigint;
@@ -24,7 +23,6 @@ export const encodeErc20Permit2 = (
 ): Requirement => {
   const {
     token,
-    spender,
     amount,
     chainId,
     nonce,
@@ -34,10 +32,14 @@ export const encodeErc20Permit2 = (
   const now = Time.timestamp();
   const deadline = now + Time.s.from.h(2n);
 
+  const {
+    bundler3: { generalAdapter1 },
+  } = getChainAddresses(chainId);
+
   const action: Permit2Action = {
     type: "permit2",
     args: {
-      spender,
+      spender: generalAdapter1,
       amount,
       deadline,
       expiration,
@@ -53,10 +55,6 @@ export const encodeErc20Permit2 = (
       if (client.account.address !== userAddress) {
         throw new AddressMismatchError(client.account.address, userAddress);
       }
-
-      const {
-        bundler3: { generalAdapter1 },
-      } = getChainAddresses(chainId);
 
       const typedData = getPermit2PermitTypedData(
         {

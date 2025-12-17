@@ -49,13 +49,14 @@ export const getRequirements = async (
   }
   const {
     permit2,
+    dai,
     bundler3: { generalAdapter1 },
   } = getChainAddresses(chainId);
   const { erc20Allowances, erc2612Nonce, permit2BundlerAllowance } =
     await fetchHolding(from, address, viemClient);
 
   if (supportSignature) {
-    const supportSimplePermit = isDefined(erc2612Nonce);
+    const supportSimplePermit = isDefined(erc2612Nonce) && address !== dai;
 
     if (supportSimplePermit) {
       return getRequirementsPermit({
