@@ -1,5 +1,11 @@
 # @morpho-org/consumer-sdk
 
+## 0.1.2
+
+### Patch Changes
+
+- 91cf75d: Remove specific permit dai flow and use permit2 instead
+
 ## 0.1.1
 
 ### Patch Changes
