@@ -1,5 +1,11 @@
 # @morpho-org/consumer-sdk
 
+## 0.1.3
+
+### Patch Changes
+
+- e36e454: fix use chainId in params for fetch data
+
 ## 0.1.2
 
 ### Patch Changes
