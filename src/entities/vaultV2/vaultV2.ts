@@ -94,7 +94,9 @@ export class MorphoVaultV2 implements VaultV2Actions {
   ) {}
 
   async getData() {
-    return fetchAccrualVaultV2(this.vault, this.client.viemClient);
+    return fetchAccrualVaultV2(this.vault, this.client.viemClient, {
+      chainId: this.chainId,
+    });
   }
 
   async deposit({
@@ -113,7 +115,9 @@ export class MorphoVaultV2 implements VaultV2Actions {
       );
     }
 
-    const vaultData = await fetchVaultV2(this.vault, this.client.viemClient);
+    const vaultData = await fetchVaultV2(this.vault, this.client.viemClient, {
+      chainId: this.chainId,
+    });
 
     const maxSharePrice = MathLib.min(
       MathLib.mulDivUp(
