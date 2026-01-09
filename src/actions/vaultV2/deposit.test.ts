@@ -4,13 +4,20 @@ import { KeyrockUsdcVaultV2, KpkWETHVaultV2 } from "test/fixtures/vaultV2";
 import type { Address } from "viem";
 import { parseUnits } from "viem";
 import { mainnet } from "viem/chains";
-import { describe, expect } from "vitest";
+import { describe, expect, vi } from "vitest";
 import { test } from "../../../test/setup";
 import { getRequirements } from "../requirements";
+import * as getRequirementsActionModule from "../requirements/getRequirementsAction";
 import { vaultV2Deposit } from "./deposit";
 
 describe("depositVaultV2 unit tests", () => {
   const { dai, usdc, wNative } = addressesRegistry[mainnet.id];
+
+  const getRequirementsActionSpy = vi.spyOn(
+    getRequirementsActionModule,
+    "getRequirementsAction",
+  );
+
   test("should create deposit bundle with DAI via permit2", async ({
     client,
   }) => {
@@ -75,7 +82,7 @@ describe("depositVaultV2 unit tests", () => {
     expect(tx.value).toBe(0n);
   });
 
-  test("should create deposit bundle with USDC via permit2", async ({
+  test("should create deposit bundle with USDC via simple permit", async ({
     client,
   }) => {
     const assets = parseUnits("1000", 6); // 1000 USDC
@@ -91,12 +98,7 @@ describe("depositVaultV2 unit tests", () => {
       },
     });
 
-    const approvalPermit2 = requirements[0];
-    if (!isRequirementApproval(approvalPermit2)) {
-      throw new Error("Approval requirement not found");
-    }
-
-    const permit2Requirement = requirements[1];
+    const permit2Requirement = requirements[0];
     if (!isRequirementSignature(permit2Requirement)) {
       throw new Error("Permit2 requirement not found");
     }
@@ -121,6 +123,8 @@ describe("depositVaultV2 unit tests", () => {
         requirementSignature,
       },
     });
+
+    expect(getRequirementsActionSpy).toHaveBeenCalled();
 
     expect(tx).toBeDefined();
     expect(tx.action.type).toBe("vaultV2Deposit");
@@ -183,6 +187,38 @@ describe("depositVaultV2 unit tests", () => {
     expect(tx).toBeDefined();
     expect(tx.action.type).toBe("vaultV2Deposit");
     expect(tx.action.args.vault).toBe(KpkWETHVaultV2.address);
+    expect(tx.action.args.assets).toBe(assets);
+    expect(tx.action.args.maxSharePrice).toBe(maxSharePrice);
+    expect(tx.action.args.recipient).toBe(client.account.address);
+    expect(tx.to).toBeDefined();
+    expect(tx.data).toBeDefined();
+    expect(tx.value).toBe(0n);
+  });
+
+  test("should create deposit bundle without requirement signature", async ({
+    client,
+  }) => {
+    const assets = parseUnits("500", 6); // 500 USDC
+    const maxSharePrice = 1000000n;
+
+    const tx = vaultV2Deposit({
+      vault: {
+        chainId: mainnet.id,
+        address: KeyrockUsdcVaultV2.address,
+        asset: usdc,
+      },
+      args: {
+        assets,
+        maxSharePrice,
+        recipient: client.account.address,
+      },
+    });
+
+    expect(getRequirementsActionSpy).not.toHaveBeenCalled();
+
+    expect(tx).toBeDefined();
+    expect(tx.action.type).toBe("vaultV2Deposit");
+    expect(tx.action.args.vault).toBe(KeyrockUsdcVaultV2.address);
     expect(tx.action.args.assets).toBe(assets);
     expect(tx.action.args.maxSharePrice).toBe(maxSharePrice);
     expect(tx.action.args.recipient).toBe(client.account.address);

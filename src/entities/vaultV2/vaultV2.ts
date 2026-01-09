@@ -1,5 +1,6 @@
 import { DEFAULT_SLIPPAGE_TOLERANCE, MathLib } from "@morpho-org/blue-sdk";
 import { fetchAccrualVaultV2, fetchVaultV2 } from "@morpho-org/blue-sdk-viem";
+import { MAX_SLIPPAGE_TOLERANCE } from "src/helpers/constant";
 import type { Address } from "viem";
 import {
   getRequirements,
@@ -10,6 +11,7 @@ import {
 import {
   ChainIdMismatchError,
   type ERC20ApprovalAction,
+  ExcessiveSlippageToleranceError,
   type MorphoClientType,
   type Requirement,
   type RequirementSignature,
@@ -39,7 +41,7 @@ export interface VaultV2Actions {
    * @param {Object} params - The deposit parameters.
    * @param {bigint} params.assets - The amount of assets to deposit.
    * @param {Address} [params.userAddress] - Optional user address initiating the deposit. Default is the client's user address is used.
-   * @param {bigint} [params.slippageTolerance=DEFAULT_SLIPPAGE_TOLERANCE] - Optional slippage tolerance value. Default is 0.03%.
+   * @param {bigint} [params.slippageTolerance=DEFAULT_SLIPPAGE_TOLERANCE] - Optional slippage tolerance value. Default is 0.03%. Slippage tolerance must be less than 10%.
    * @returns {Object} The result object.
    * @returns {Readonly<Transaction<VaultV2DepositAction>>} returns.tx The prepared deposit transaction.
    * @returns {Promise<Readonly<Transaction<ERC20ApprovalAction>[]>>} returns.getRequirements The function for retrieving all required approval transactions.
@@ -118,6 +120,10 @@ export class MorphoVaultV2 implements VaultV2Actions {
     const vaultData = await fetchVaultV2(this.vault, this.client.viemClient, {
       chainId: this.chainId,
     });
+
+    if (slippageTolerance > MAX_SLIPPAGE_TOLERANCE) {
+      throw new ExcessiveSlippageToleranceError(slippageTolerance);
+    }
 
     const maxSharePrice = MathLib.min(
       MathLib.mulDivUp(

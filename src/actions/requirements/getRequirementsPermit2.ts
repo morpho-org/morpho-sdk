@@ -59,6 +59,8 @@ export const getRequirementsPermit2 = (params: {
 
   const requirements: (Transaction<ERC20ApprovalAction> | Requirement)[] = [];
 
+  console.log("allowancesPermit2", allowancesPermit2);
+
   const approvalRequirements = getRequirementsApproval({
     address,
     chainId,
