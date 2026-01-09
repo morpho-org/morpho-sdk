@@ -39,8 +39,6 @@ export const getRequirementsApproval = (params: {
     allowances,
   } = params;
 
-  console.log("allowances", allowances, spendAmount);
-
   if (approvalAmount < spendAmount) {
     throw new ApprovalAmountLessThanSpendAmountError();
   }
