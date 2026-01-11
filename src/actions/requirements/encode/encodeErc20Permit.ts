@@ -5,6 +5,7 @@ import { type Client, verifyTypedData } from "viem";
 import { signTypedData } from "viem/actions";
 import {
   AddressMismatchError,
+  ChainIdMismatchError,
   MissingClientPropertyError,
   type PermitAction,
   type Requirement,
@@ -23,6 +24,10 @@ export const encodeErc20Permit = async (
   params: EncodeErc20PermitParams,
 ): Promise<Requirement> => {
   const { token, spender, amount, chainId, nonce } = params;
+
+  if (viemClient.chain?.id !== chainId) {
+    throw new ChainIdMismatchError(viemClient.chain?.id, chainId);
+  }
 
   const now = Time.timestamp();
   const deadline = now + Time.s.from.h(2n);
