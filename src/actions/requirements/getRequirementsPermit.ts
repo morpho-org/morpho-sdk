@@ -1,4 +1,4 @@
-import { type Address, getChainAddresses } from "@morpho-org/blue-sdk";
+import { getChainAddresses, type Token } from "@morpho-org/blue-sdk";
 import { encodeErc20Permit } from "./encode";
 
 /**
@@ -8,7 +8,7 @@ import { encodeErc20Permit } from "./encode";
  * => If not, approve the token to general adapter from permit via EIP-2612 with permit signature on the required amount.
  *
  * @param params - Destructured object with:
- * @param params.address - ERC20 token address.
+ * @param params.token - ERC20 token.
  * @param params.chainId - Chain/network id.
  * @param params.args - Object with:
  * @param params.args.amount - Required token amount.
@@ -17,14 +17,14 @@ import { encodeErc20Permit } from "./encode";
  * @returns An array of requirement signature object.
  */
 export const getRequirementsPermit = (params: {
-  address: Address;
+  token: Token;
   chainId: number;
   args: { amount: bigint };
   allowancesGeneralAdapter: bigint;
   nonce: bigint;
 }) => {
   const {
-    address,
+    token,
     chainId,
     args: { amount },
     allowancesGeneralAdapter,
@@ -38,7 +38,7 @@ export const getRequirementsPermit = (params: {
   if (allowancesGeneralAdapter < amount) {
     return [
       encodeErc20Permit({
-        token: address,
+        token,
         spender: generalAdapter1,
         amount,
         chainId,

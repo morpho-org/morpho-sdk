@@ -1,5 +1,5 @@
-import type { Address } from "@morpho-org/blue-sdk";
-import { fetchToken, getPermitTypedData } from "@morpho-org/blue-sdk-viem";
+import type { Address, Token } from "@morpho-org/blue-sdk";
+import { getPermitTypedData } from "@morpho-org/blue-sdk-viem";
 import { deepFreeze, Time } from "@morpho-org/morpho-ts";
 import { type Client, verifyTypedData } from "viem";
 import { signTypedData } from "viem/actions";
@@ -11,7 +11,7 @@ import {
 } from "../../../types";
 
 interface EncodeErc20PermitParams {
-  token: Address;
+  token: Token;
   spender: Address;
   amount: bigint;
   chainId: number;
@@ -44,11 +44,9 @@ export const encodeErc20Permit = (
       if (client.account.address !== userAddress) {
         throw new AddressMismatchError(client.account.address, userAddress);
       }
-
-      const tokenData = await fetchToken(token, client);
       const typedData = getPermitTypedData(
         {
-          erc20: tokenData,
+          erc20: token,
           owner: userAddress,
           spender,
           allowance: amount,
@@ -75,7 +73,7 @@ export const encodeErc20Permit = (
           signature,
           deadline,
           amount,
-          asset: token,
+          asset: token.address,
           nonce,
         },
         action,
