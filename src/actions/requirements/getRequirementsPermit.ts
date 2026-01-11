@@ -1,5 +1,5 @@
 import { getChainAddresses } from "@morpho-org/blue-sdk";
-import { type Address, type Client } from "viem";
+import type { Address, Client } from "viem";
 import { encodeErc20Permit } from "./encode";
 
 /**
