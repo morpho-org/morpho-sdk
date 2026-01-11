@@ -1,5 +1,5 @@
-import type { Address, Token } from "@morpho-org/blue-sdk";
-import { getPermitTypedData } from "@morpho-org/blue-sdk-viem";
+import type { Address } from "@morpho-org/blue-sdk";
+import { fetchToken, getPermitTypedData } from "@morpho-org/blue-sdk-viem";
 import { deepFreeze, Time } from "@morpho-org/morpho-ts";
 import { type Client, verifyTypedData } from "viem";
 import { signTypedData } from "viem/actions";
@@ -11,20 +11,23 @@ import {
 } from "../../../types";
 
 interface EncodeErc20PermitParams {
-  token: Token;
+  token: Address;
   spender: Address;
   amount: bigint;
   chainId: number;
   nonce: bigint;
 }
 
-export const encodeErc20Permit = (
+export const encodeErc20Permit = async (
+  viemClient: Client,
   params: EncodeErc20PermitParams,
-): Requirement => {
+): Promise<Requirement> => {
   const { token, spender, amount, chainId, nonce } = params;
 
   const now = Time.timestamp();
   const deadline = now + Time.s.from.h(2n);
+
+  const tokenData = await fetchToken(token, viemClient);
 
   const action: PermitAction = {
     type: "permit",
@@ -46,7 +49,7 @@ export const encodeErc20Permit = (
       }
       const typedData = getPermitTypedData(
         {
-          erc20: token,
+          erc20: tokenData,
           owner: userAddress,
           spender,
           allowance: amount,
@@ -73,7 +76,7 @@ export const encodeErc20Permit = (
           signature,
           deadline,
           amount,
-          asset: token.address,
+          asset: token,
           nonce,
         },
         action,

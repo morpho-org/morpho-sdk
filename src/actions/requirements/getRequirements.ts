@@ -1,5 +1,5 @@
 import { type Address, getChainAddresses } from "@morpho-org/blue-sdk";
-import { fetchHolding, fetchToken } from "@morpho-org/blue-sdk-viem";
+import { fetchHolding } from "@morpho-org/blue-sdk-viem";
 import { isDefined } from "@morpho-org/morpho-ts";
 import type { Client } from "viem";
 import {
@@ -52,20 +52,15 @@ export const getRequirements = async (
     dai,
     bundler3: { generalAdapter1 },
   } = getChainAddresses(chainId);
-  const [
-    { erc20Allowances, erc2612Nonce, permit2BundlerAllowance },
-    tokenData,
-  ] = await Promise.all([
-    fetchHolding(from, address, viemClient),
-    fetchToken(address, viemClient),
-  ]);
+  const { erc20Allowances, erc2612Nonce, permit2BundlerAllowance } =
+    await fetchHolding(from, address, viemClient);
 
   if (supportSignature) {
     const supportSimplePermit = isDefined(erc2612Nonce) && address !== dai;
 
     if (supportSimplePermit) {
-      return getRequirementsPermit({
-        token: tokenData,
+      return await getRequirementsPermit(viemClient, {
+        token: address,
         chainId,
         args: { amount },
         allowancesGeneralAdapter: erc20Allowances["bundler3.generalAdapter1"],
