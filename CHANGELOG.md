@@ -1,5 +1,11 @@
 # @morpho-org/consumer-sdk
 
+## 0.1.4
+
+### Patch Changes
+
+- dd9564a: fix: fetchToken for permit with viem client from morpho
+
 ## 0.1.3
 
 ### Patch Changes
