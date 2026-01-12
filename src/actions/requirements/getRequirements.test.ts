@@ -9,12 +9,14 @@ import {
 } from "../../types";
 import { getRequirements } from "./getRequirements";
 
-// Mock fetchHolding
-vi.mock("@morpho-org/blue-sdk-viem", () => ({
-  fetchHolding: vi.fn(),
-}));
+vi.mock("@morpho-org/blue-sdk-viem", async (importOriginal) => {
+  return {
+    fetchHolding: vi.fn(),
+    fetchToken: vi.fn(),
+  };
+});
 
-import { fetchHolding } from "@morpho-org/blue-sdk-viem";
+import { fetchHolding, fetchToken } from "@morpho-org/blue-sdk-viem";
 import { Time } from "@morpho-org/morpho-ts";
 
 describe("getRequirements", () => {
@@ -38,6 +40,16 @@ describe("getRequirements", () => {
         id: mainnet.id,
       },
     } as unknown as Client;
+
+    // Mock fetchToken to return token data required for permit signing
+    vi.mocked(fetchToken).mockResolvedValue({
+      address: usdc,
+      decimals: 6,
+      symbol: "USDC",
+      name: "USD Coin",
+      fromUsd: () => 0n,
+      toUsd: () => 0n,
+    });
   });
 
   describe("ChainId validation", () => {

@@ -1,4 +1,5 @@
-import { type Address, getChainAddresses } from "@morpho-org/blue-sdk";
+import { getChainAddresses } from "@morpho-org/blue-sdk";
+import type { Address, Client } from "viem";
 import { encodeErc20Permit } from "./encode";
 
 /**
@@ -7,8 +8,9 @@ import { encodeErc20Permit } from "./encode";
  * Verify if the allowance is enough on general adapter from permit (EIP-2612) contract.
  * => If not, approve the token to general adapter from permit via EIP-2612 with permit signature on the required amount.
  *
+ * @param viemClient - The viem Client instance
  * @param params - Destructured object with:
- * @param params.address - ERC20 token address.
+ * @param params.token - ERC20 token.
  * @param params.chainId - Chain/network id.
  * @param params.args - Object with:
  * @param params.args.amount - Required token amount.
@@ -16,15 +18,18 @@ import { encodeErc20Permit } from "./encode";
  * @param params.nonce - Nonce for permit (EIP-2612).
  * @returns An array of requirement signature object.
  */
-export const getRequirementsPermit = (params: {
-  address: Address;
-  chainId: number;
-  args: { amount: bigint };
-  allowancesGeneralAdapter: bigint;
-  nonce: bigint;
-}) => {
+export const getRequirementsPermit = async (
+  viemClient: Client,
+  params: {
+    token: Address;
+    chainId: number;
+    args: { amount: bigint };
+    allowancesGeneralAdapter: bigint;
+    nonce: bigint;
+  },
+) => {
   const {
-    address,
+    token,
     chainId,
     args: { amount },
     allowancesGeneralAdapter,
@@ -37,8 +42,8 @@ export const getRequirementsPermit = (params: {
 
   if (allowancesGeneralAdapter < amount) {
     return [
-      encodeErc20Permit({
-        token: address,
+      await encodeErc20Permit(viemClient, {
+        token,
         spender: generalAdapter1,
         amount,
         chainId,

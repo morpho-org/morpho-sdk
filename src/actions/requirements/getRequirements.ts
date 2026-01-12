@@ -59,8 +59,8 @@ export const getRequirements = async (
     const supportSimplePermit = isDefined(erc2612Nonce) && address !== dai;
 
     if (supportSimplePermit) {
-      return getRequirementsPermit({
-        address,
+      return await getRequirementsPermit(viemClient, {
+        token: address,
         chainId,
         args: { amount },
         allowancesGeneralAdapter: erc20Allowances["bundler3.generalAdapter1"],
