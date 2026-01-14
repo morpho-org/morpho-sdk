@@ -1,5 +1,11 @@
 # @morpho-org/consumer-sdk
 
+## 0.1.5
+
+### Patch Changes
+
+- 6f1fd28: Update morpho SDKs (fix maxDeposit with marketV1AdapterV2)
+
 ## 0.1.4
 
 ### Patch Changes
