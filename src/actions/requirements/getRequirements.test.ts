@@ -170,6 +170,7 @@ describe("getRequirements", () => {
           address: usdc,
           chainId: mainnet.id,
           args: { amount: mockAmount, from: mockFrom },
+          useSimplePermit: true,
         });
 
         expect(requirements).toHaveLength(1);
