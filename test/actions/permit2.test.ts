@@ -327,10 +327,10 @@ describe("Permit2", () => {
   test("should deposit USDC with permit2 with forcePermit2", async ({
     client,
   }) => {
-    const amount = parseUnits("10", 6);
+    const amount = parseUnits("1000", 6);
 
     await client.deal({
-      erc20: dai,
+      erc20: KeyrockUsdcVaultV2.asset,
       amount,
     });
 
@@ -401,7 +401,9 @@ describe("Permit2", () => {
     expect(finalState.userAssetBalance).toEqual(
       initialState.userAssetBalance - amount,
     );
-    expect(finalState.vaultBalance).toEqual(initialState.vaultBalance + amount);
+    expect(finalState.morphoAssetBalance).toEqual(
+      initialState.morphoAssetBalance + amount,
+    );
     expect(finalState.userSharesBalance).toBeGreaterThan(
       initialState.userSharesBalance,
     );
