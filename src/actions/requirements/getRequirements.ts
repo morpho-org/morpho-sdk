@@ -26,8 +26,8 @@ type GetRequirementsParams =
   | (GetRequirementsBaseParams & {
       /** Signature-based approvals are supported. Will try permit (EIP-2612), else fallback to permit2. */
       supportSignature: true;
-      /** Force use of permit2 even if simple permit (EIP-2612) is supported. Only applicable when `supportSignature` is `true`. */
-      forcePermit2?: boolean;
+      /** Allow simple permit if EIP-2612 is supported. Only applicable when `supportSignature` is `true`. */
+      useSimplePermit?: boolean;
     });
 
 /**
@@ -45,7 +45,7 @@ type GetRequirementsParams =
  * @param params.args.amount - Required token amount.
  * @param params.args.from - The account that will grant approval.
  * @param params.supportSignature - Whether signature-based approvals are supported. If true, will try to use permit or permit2.
- * @param params.forcePermit2 - Whether to force use of permit2 even if permit is supported. Only available when `supportSignature` is `true`.
+ * @param params.useSimplePermit - use simple permit if EIP-2612 is supported. Only available when `supportSignature` is `true`.
  * @returns Promise of array of approval transaction or requirement objects.
  */
 export const getRequirements = async (
@@ -70,10 +70,10 @@ export const getRequirements = async (
     await fetchHolding(from, address, viemClient);
 
   if (supportSignature) {
-    const { forcePermit2 } = params;
+    const { useSimplePermit } = params;
     const supportSimplePermit = isDefined(erc2612Nonce) && address !== dai;
 
-    if (supportSimplePermit && !forcePermit2) {
+    if (supportSimplePermit && useSimplePermit) {
       return await getRequirementsPermit(viemClient, {
         token: address,
         chainId,

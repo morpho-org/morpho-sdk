@@ -2,4 +2,4 @@
 "@morpho-org/consumer-sdk": patch
 ---
 
-Introduce forcePermit2 in getRequirements
+Introduce useSimplePermit in getRequirements

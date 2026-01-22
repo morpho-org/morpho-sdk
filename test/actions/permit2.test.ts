@@ -324,7 +324,7 @@ describe("Permit2", () => {
     );
   });
 
-  test("should deposit USDC with permit2 with forcePermit2", async ({
+  test("should deposit USDC with permit2 with useSimplePermit to false", async ({
     client,
   }) => {
     const amount = parseUnits("1000", 6);
@@ -353,7 +353,7 @@ describe("Permit2", () => {
         });
 
         const requirements = await deposit.getRequirements({
-          forcePermit2: true,
+          useSimplePermit: false,
         });
 
         expect(requirements.length).toBe(2);
