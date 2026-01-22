@@ -387,7 +387,7 @@ describe("Permit2", () => {
         expect(requirementSignature.args.owner).toEqual(client.account.address);
         expect(isHex(requirementSignature.args.signature)).toBe(true);
         expect(requirementSignature.args.signature.length).toBe(132);
-        expect(requirementSignature.args.asset).toBe(dai);
+        expect(requirementSignature.args.asset).toBe(KeyrockUsdcVaultV2.asset);
         expect(requirementSignature.args.deadline).toBeGreaterThan(
           BigInt(Math.floor(Date.now() / 1000)),
         );
