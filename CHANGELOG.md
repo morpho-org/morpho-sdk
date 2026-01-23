@@ -1,5 +1,11 @@
 # @morpho-org/consumer-sdk
 
+## 0.1.6
+
+### Patch Changes
+
+- 0f55974: Introduce useSimplePermit in getRequirements
+
 ## 0.1.5
 
 ### Patch Changes
