@@ -12,6 +12,24 @@ import { getRequirementsApproval } from "./getRequirementsApproval";
 import { getRequirementsPermit } from "./getRequirementsPermit";
 import { getRequirementsPermit2 } from "./getRequirementsPermit2";
 
+type GetRequirementsBaseParams = {
+  address: Address;
+  chainId: number;
+  args: { amount: bigint; from: Address };
+};
+
+type GetRequirementsParams =
+  | (GetRequirementsBaseParams & {
+      /** Signature-based approvals are not supported. Classic approval (transaction) will be used. */
+      supportSignature: false;
+    })
+  | (GetRequirementsBaseParams & {
+      /** Signature-based approvals are supported. Will try permit (EIP-2612), else fallback to permit2. */
+      supportSignature: true;
+      /** Allow simple permit if EIP-2612 is supported. Only applicable when `supportSignature` is `true`. */
+      useSimplePermit?: boolean;
+    });
+
 /**
  * Get token "requirement" for approval/permit before interacting with protocol.
  *
@@ -26,17 +44,13 @@ import { getRequirementsPermit2 } from "./getRequirementsPermit2";
  * @param params.args - Object with:
  * @param params.args.amount - Required token amount.
  * @param params.args.from - The account that will grant approval.
- * @param supportSignature - Whether signature-based approvals are supported. If true, will try to use permit or permit2.
+ * @param params.supportSignature - Whether signature-based approvals are supported. If true, will try to use permit or permit2.
+ * @param params.useSimplePermit - use simple permit if EIP-2612 is supported. Only available when `supportSignature` is `true`.
  * @returns Promise of array of approval transaction or requirement objects.
  */
 export const getRequirements = async (
   viemClient: Client,
-  params: {
-    address: Address;
-    chainId: number;
-    supportSignature: boolean;
-    args: { amount: bigint; from: Address };
-  },
+  params: GetRequirementsParams,
 ): Promise<(Readonly<Transaction<ERC20ApprovalAction>> | Requirement)[]> => {
   const {
     address,
@@ -56,9 +70,10 @@ export const getRequirements = async (
     await fetchHolding(from, address, viemClient);
 
   if (supportSignature) {
+    const { useSimplePermit } = params;
     const supportSimplePermit = isDefined(erc2612Nonce) && address !== dai;
 
-    if (supportSimplePermit) {
+    if (supportSimplePermit && useSimplePermit) {
       return await getRequirementsPermit(viemClient, {
         token: address,
         chainId,

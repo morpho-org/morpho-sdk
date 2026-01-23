@@ -52,9 +52,9 @@ export interface VaultV2Actions {
     buildTx: (
       requirementSignature?: RequirementSignature,
     ) => Readonly<Transaction<VaultV2DepositAction>>;
-    getRequirements: () => Promise<
-      (Readonly<Transaction<ERC20ApprovalAction>> | Requirement)[]
-    >;
+    getRequirements: (params?: {
+      useSimplePermit?: boolean;
+    }) => Promise<(Readonly<Transaction<ERC20ApprovalAction>> | Requirement)[]>;
   }>;
   /**
    * Prepares a withdraw transaction for the VaultV2 contract.
@@ -129,11 +129,12 @@ export class MorphoVaultV2 implements VaultV2Actions {
     );
 
     return {
-      getRequirements: async () =>
+      getRequirements: async (params?: { useSimplePermit?: boolean }) =>
         await getRequirements(this.client.viemClient, {
           address: vaultData.asset,
           chainId: this.chainId,
           supportSignature: this.client.options.supportSignature,
+          useSimplePermit: params?.useSimplePermit,
           args: {
             amount: assets,
             from: userAddress,
