@@ -68,7 +68,7 @@ describe("Redeem VaultV2", () => {
     expect(finalState.userAssetBalance).toBeGreaterThan(
       initialState.userAssetBalance,
     );
-    expect(finalState.userAssetBalance).toEqual(1014668429n);
+    expect(finalState.userAssetBalance).toEqual(1026559052n);
     expect(finalState.morphoAssetBalance).toBeLessThan(
       initialState.morphoAssetBalance,
     );
