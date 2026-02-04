@@ -136,6 +136,7 @@ export class MorphoVaultV2 implements VaultV2Actions {
           address: vaultData.asset,
           chainId: this.chainId,
           supportSignature: this.client.options.supportSignature,
+          supportDeployless: this.client.options.supportDeployless,
           useSimplePermit: params?.useSimplePermit,
           args: {
             amount: assets,
