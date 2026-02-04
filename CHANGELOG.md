@@ -1,5 +1,11 @@
 # @morpho-org/consumer-sdk
 
+## 0.1.8
+
+### Patch Changes
+
+- 8fc6bb5: Add supportDeployless option in morpho client
+
 ## 0.1.7
 
 ### Patch Changes
