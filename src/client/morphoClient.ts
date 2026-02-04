@@ -5,6 +5,7 @@ import type { Metadata, MorphoClientType } from "../types";
 export class MorphoClient implements MorphoClientType {
   readonly options: {
     readonly supportSignature: boolean;
+    readonly supportDeployless?: boolean;
     readonly metadata?: Metadata;
   };
 
@@ -12,12 +13,14 @@ export class MorphoClient implements MorphoClientType {
     public readonly viemClient: Client,
     readonly _options?: {
       readonly supportSignature?: boolean;
+      readonly supportDeployless?: boolean;
       readonly metadata?: Metadata;
     },
   ) {
     this.options = {
       ..._options,
       supportSignature: _options?.supportSignature ?? false,
+      supportDeployless: _options?.supportDeployless,
     };
   }
 

@@ -6,6 +6,7 @@ export interface MorphoClientType {
   readonly viemClient: Client;
   readonly options: {
     readonly supportSignature: boolean;
+    readonly supportDeployless?: boolean;
     readonly metadata?: Metadata;
   };
 

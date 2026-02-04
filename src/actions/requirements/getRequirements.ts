@@ -15,6 +15,7 @@ import { getRequirementsPermit2 } from "./getRequirementsPermit2";
 type GetRequirementsBaseParams = {
   address: Address;
   chainId: number;
+  supportDeployless?: boolean;
   args: { amount: bigint; from: Address };
 };
 
@@ -45,6 +46,7 @@ type GetRequirementsParams =
  * @param params.args.amount - Required token amount.
  * @param params.args.from - The account that will grant approval.
  * @param params.supportSignature - Whether signature-based approvals are supported. If true, will try to use permit or permit2.
+ * @param params.supportDeployless - Whether to use deployless mode.
  * @param params.useSimplePermit - use simple permit if EIP-2612 is supported. Only available when `supportSignature` is `true`.
  * @returns Promise of array of approval transaction or requirement objects.
  */
@@ -67,7 +69,9 @@ export const getRequirements = async (
     bundler3: { generalAdapter1 },
   } = getChainAddresses(chainId);
   const { erc20Allowances, erc2612Nonce, permit2BundlerAllowance } =
-    await fetchHolding(from, address, viemClient);
+    await fetchHolding(from, address, viemClient, {
+      deployless: params.supportDeployless,
+    });
 
   if (supportSignature) {
     const { useSimplePermit } = params;
@@ -80,6 +84,7 @@ export const getRequirements = async (
         args: { amount },
         allowancesGeneralAdapter: erc20Allowances["bundler3.generalAdapter1"],
         nonce: erc2612Nonce,
+        supportDeployless: params.supportDeployless,
       });
     }
 
