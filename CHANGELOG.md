@@ -1,5 +1,11 @@
 # @morpho-org/consumer-sdk
 
+## 0.1.7
+
+### Patch Changes
+
+- 0f25e4a: Update morpho SDKs
+
 ## 0.1.6
 
 ### Patch Changes
