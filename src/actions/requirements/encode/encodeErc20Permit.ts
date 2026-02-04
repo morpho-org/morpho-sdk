@@ -17,13 +17,14 @@ interface EncodeErc20PermitParams {
   amount: bigint;
   chainId: number;
   nonce: bigint;
+  supportDeployless?: boolean;
 }
 
 export const encodeErc20Permit = async (
   viemClient: Client,
   params: EncodeErc20PermitParams,
 ): Promise<Requirement> => {
-  const { token, spender, amount, chainId, nonce } = params;
+  const { token, spender, amount, chainId, nonce, supportDeployless } = params;
 
   if (viemClient.chain?.id !== chainId) {
     throw new ChainIdMismatchError(viemClient.chain?.id, chainId);
@@ -32,7 +33,9 @@ export const encodeErc20Permit = async (
   const now = Time.timestamp();
   const deadline = now + Time.s.from.h(2n);
 
-  const tokenData = await fetchToken(token, viemClient);
+  const tokenData = await fetchToken(token, viemClient, {
+    deployless: supportDeployless,
+  });
 
   const action: PermitAction = {
     type: "permit",

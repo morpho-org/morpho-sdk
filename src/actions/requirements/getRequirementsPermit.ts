@@ -16,6 +16,7 @@ import { encodeErc20Permit } from "./encode";
  * @param params.args.amount - Required token amount.
  * @param params.allowancesGeneralAdapter - Allowance for general adapter from permit contract.
  * @param params.nonce - Nonce for permit (EIP-2612).
+ * @param params.supportDeployless - Whether to use deployless mode.
  * @returns An array of requirement signature object.
  */
 export const getRequirementsPermit = async (
@@ -26,6 +27,7 @@ export const getRequirementsPermit = async (
     args: { amount: bigint };
     allowancesGeneralAdapter: bigint;
     nonce: bigint;
+    supportDeployless?: boolean;
   },
 ) => {
   const {
@@ -34,6 +36,7 @@ export const getRequirementsPermit = async (
     args: { amount },
     allowancesGeneralAdapter,
     nonce,
+    supportDeployless,
   } = params;
 
   const {
@@ -48,6 +51,7 @@ export const getRequirementsPermit = async (
         amount,
         chainId,
         nonce,
+        supportDeployless,
       }),
     ];
   }
