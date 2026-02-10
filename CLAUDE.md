@@ -1,54 +1,49 @@
-# CLAUDE.md
+# Consumer SDK
 
-> Instructions for Claude Code and Codex working on this repository.
-> Read [CONVENTIONS.md](./CONVENTIONS.md) for full project knowledge.
+Morpho Consumer SDK — TypeScript SDK that provides an abstraction layer over the Morpho Protocol.
+It simplifies building transactions for **VaultV2** operations (deposit, withdraw, redeem) on EVM-compatible chains.
 
-## Essential Commands
+## Intent Layer
 
-```bash
-pnpm install          # Install dependencies
-pnpm build            # Type-check (noEmit) then compile to lib/
-pnpm test             # Run tests (needs MAINNET_RPC_URL in .env)
-pnpm lint             # Biome linter check
-```
+This repo uses a layered documentation approach. Before working in any directory:
 
-Always run `pnpm lint` and `pnpm build` after making changes. Fix any errors before considering work complete.
+- `AGENTS.md` mirrors this file for non-Claude agents.
+- After significant changes, update `CONVENTIONS.md` if patterns or pitfalls changed.
+
+## Non-Negotiables
+
+- **Validate before done.** After every change: `pnpm lint && pnpm build`. Fix errors before stopping.
+- **Never bypass the general adapter for deposits.** It enforces `maxSharePrice` — inflation attack vector otherwise.
+- Always validate `chainId` match before any on-chain call between client and params.
+- **Immutability.** Every returned `Transaction` object must be `deepFreeze`-d. No exceptions.
+- **Strict TypeScript.** Zero `any`. All strict flags enabled. Use `type` imports, `readonly` properties.
+- **Do not commit** without explicit user request.
+- **Do not modify tests** without understanding what they validate and why.
 
 ## Architecture
 
-```
-src/client/     → MorphoClient (wraps viem Client)
-src/entities/   → MorphoVaultV2 (implements VaultV2Actions: deposit, withdraw, redeem)
-src/actions/    → Pure transaction builders (vaultV2Deposit, vaultV2Withdraw, vaultV2Redeem)
-src/actions/requirements/ → Approval/permit requirement resolution
-src/types/      → All type definitions, custom errors, interfaces
-src/helpers/    → Utility functions (metadata)
-```
+Strict layering: **Client → Entity → Action**. Never skip a layer.
 
-## Key Patterns
+| Layer        | Location                    | Role                                                                |
+| ------------ | --------------------------- | ------------------------------------------------------------------- |
+| Client       | `src/client/`               | Wraps viem `Client`, manages options, provides vault access         |
+| Entity       | `src/entities/vaultV2/`     | Fetches on-chain data, delegates to action builders                 |
+| Actions      | `src/actions/vaultV2/`      | Pure functions → `Transaction<TAction>` (deep-frozen)               |
+| Requirements | `src/actions/requirements/` | Resolves approval / permit / permit2 needs                          |
+| Types        | `src/types/`                | All type definitions, custom errors. Barrel-exported via `index.ts` |
+| Helpers      | `src/helpers/`              | Utility functions (metadata handling)                               |
 
-- All actions extend `BaseAction<TType, TArgs>` with a string discriminant `type` field.
-- Transactions are `{ to, value, data, action }` and always deep-frozen (immutable).
-- Requirements can be `Transaction<ERC20ApprovalAction>` (classic approval) or `Requirement` (signature-based permit/permit2).
-- Deposit uses the bundler for atomic execution; withdraw and redeem are direct vault calls.
-- Custom error classes in `src/types/error.ts` for each failure case.
+Current VaultV2 operations:
 
-## Code Style
+- **deposit** → `vaultV2Deposit()` — routed through bundler3 (never bypass general adapter)
+- **withdraw** → `vaultV2Withdraw()` — direct vault call
+- **redeem** → `vaultV2Redeem()` — direct vault call
 
-- TypeScript strict mode (all flags enabled)
-- Double quotes, 2-space indentation (Biome)
-- No unused imports or variables (Biome error)
-- Use `readonly` on interface/class properties
-- Use `type` imports for type-only imports
-- JSDoc on all public functions and interfaces
+## Code Standards
 
-## Rules
-
-1. Read existing code before modifying - understand the pattern first.
-2. Never use `any` - this project uses strict TypeScript.
-3. Always `deepFreeze` transaction return values.
-4. Never bypass the general adapter for deposits (security: inflation attack prevention).
-5. New error cases require dedicated custom error classes.
-6. All public API must be re-exported via barrel `index.ts` files.
-7. Follow the Client -> Entity -> Action layered architecture.
-8. Do not commit without explicit user request.
+- Biome: double quotes, 2-space indent, no unused imports/variables
+- All actions extend `BaseAction<TType, TArgs>` — discriminated union on `type`
+- New error cases require a dedicated class in `src/types/error.ts`
+- All public API re-exported through barrel `index.ts` files
+- JSDoc on every exported function and interface
+- Read existing code before modifying — follow neighboring patterns

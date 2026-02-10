@@ -1,38 +1,24 @@
-# AGENTS.md
+# Consumer SDK
 
-> Instructions for AI agents working on this repository.
-> For full project conventions, see [CONVENTIONS.md](./CONVENTIONS.md).
+> Full conventions and architecture: [CLAUDE.md](CLAUDE.md)
 
-## Quick Setup
+Morpho Consumer SDK — builds transactions for VaultV2 operations (deposit, withdraw, redeem).
 
-```bash
-pnpm install
-pnpm build          # Type-check + compile
-pnpm test           # Run tests (requires MAINNET_RPC_URL in .env)
-pnpm lint           # Biome linter
-```
+## Layer Intents
 
-## Architecture Summary
+Each layer has its own `AGENTS.md` with scoped context:
 
-```
-MorphoClient → MorphoVaultV2 (entity) → Action functions (pure)
-                                           └── Requirements (approval/permit/permit2)
-```
+| Layer | File | Role |
+|-------|------|------|
+| Client | [`src/client/AGENTS.md`](src/client/AGENTS.md) | Wraps viem Client, manages options, factory for entities |
+| Entity | [`src/entities/AGENTS.md`](src/entities/AGENTS.md) | Fetches on-chain data, delegates to actions |
+| Actions | [`src/actions/AGENTS.md`](src/actions/AGENTS.md) | Pure tx builders (vault ops + approval resolution) |
+| Types | [`src/types/AGENTS.md`](src/types/AGENTS.md) | All type definitions, custom errors |
+| Helpers | [`src/helpers/AGENTS.md`](src/helpers/AGENTS.md) | Metadata utilities |
 
-- **Client** (`src/client/`): Wraps viem Client, provides vault access.
-- **Entities** (`src/entities/`): VaultV2 entity with deposit/withdraw/redeem methods.
-- **Actions** (`src/actions/`): Pure functions building transaction objects.
-- **Types** (`src/types/`): All type definitions, custom errors.
+## Non-Negotiables
 
-## Critical Rules
-
-1. **Read `CONVENTIONS.md`** before making any changes - it contains all project patterns and conventions.
-2. **Strict TypeScript**: Never use `any`. All strict flags are enabled.
-3. **Immutability**: All transaction objects must be deep-frozen via `deepFreeze`.
-4. **Action pattern**: New actions must extend `BaseAction<TType, TArgs>` and return `Transaction<TAction>`.
-5. **Error handling**: Use custom error classes from `src/types/error.ts`.
-6. **Formatting**: Biome enforces double quotes, 2-space indentation, no unused imports/variables.
-7. **Security**: Never bypass the bundler/general adapter for deposits (inflation attack protection).
-8. **Barrel exports**: All public API is re-exported through `index.ts` files.
-9. **Run validation**: After changes, run `pnpm lint` and `pnpm build`.
-10. **Do not modify tests** without understanding what they validate and why.
+- `pnpm lint && pnpm build` after every change.
+- Never bypass the general adapter for deposits.
+- All returned `Transaction` objects must be `deepFreeze`-d.
+- Zero `any`. Strict TypeScript.
