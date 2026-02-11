@@ -1,9 +1,5 @@
 import { DEFAULT_SLIPPAGE_TOLERANCE, MathLib } from "@morpho-org/blue-sdk";
-import {
-  type DeploylessFetchParameters,
-  fetchAccrualVaultV2,
-  fetchVaultV2,
-} from "@morpho-org/blue-sdk-viem";
+import { fetchAccrualVaultV2, fetchVaultV2 } from "@morpho-org/blue-sdk-viem";
 import type { Address } from "viem";
 import {
   getRequirements,
@@ -22,16 +18,20 @@ import {
   type VaultV2RedeemAction,
   type VaultV2WithdrawAction,
 } from "../../types";
+import type { FetchParameters } from "../../types/data";
 
 export interface VaultV2Actions {
   /**
    * Fetches the latest vault data.
    *
    * This function fetches the latest vault data from the blockchain.
+   * @param {FetchParameters} [parameters] - The parameters for the fetch operation.
    *
    * @returns {Promise<Awaited<ReturnType<typeof fetchAccrualVaultV2>>>} The latest vault data.
    */
-  getData: () => Promise<Awaited<ReturnType<typeof fetchAccrualVaultV2>>>;
+  getData: (
+    parameters?: FetchParameters,
+  ) => Promise<Awaited<ReturnType<typeof fetchAccrualVaultV2>>>;
   /**
    * Prepares a deposit transaction for the VaultV2 contract.
    *
@@ -97,7 +97,7 @@ export class MorphoVaultV2 implements VaultV2Actions {
     private readonly chainId: number,
   ) {}
 
-  async getData(parameters?: DeploylessFetchParameters) {
+  async getData(parameters?: FetchParameters) {
     return fetchAccrualVaultV2(this.vault, this.client.viemClient, {
       ...parameters,
       chainId: this.chainId,
