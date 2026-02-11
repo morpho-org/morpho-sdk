@@ -51,10 +51,6 @@ Derive all PR content from the changes:
 ## Solution
 
 [Describe WHAT was changed and HOW it addresses the motivation]
-
-## How to test
-
-[Provide specific steps to verify the changes work correctly]
 ```
 
 ### Step 3: Output and Offer to Update
