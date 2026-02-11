@@ -1,5 +1,9 @@
 import { DEFAULT_SLIPPAGE_TOLERANCE, MathLib } from "@morpho-org/blue-sdk";
-import { fetchAccrualVaultV2, fetchVaultV2 } from "@morpho-org/blue-sdk-viem";
+import {
+  type DeploylessFetchParameters,
+  fetchAccrualVaultV2,
+  fetchVaultV2,
+} from "@morpho-org/blue-sdk-viem";
 import type { Address } from "viem";
 import {
   getRequirements,
@@ -93,8 +97,9 @@ export class MorphoVaultV2 implements VaultV2Actions {
     private readonly chainId: number,
   ) {}
 
-  async getData() {
+  async getData(parameters?: DeploylessFetchParameters) {
     return fetchAccrualVaultV2(this.vault, this.client.viemClient, {
+      ...parameters,
       chainId: this.chainId,
       deployless: this.client.options.supportDeployless,
     });
