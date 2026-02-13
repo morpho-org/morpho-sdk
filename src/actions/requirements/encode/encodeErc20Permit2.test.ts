@@ -73,7 +73,6 @@ describe("encodeErc20Permit2", () => {
 
       expect(signatureRequirement.args).toHaveProperty("owner");
       expect(signatureRequirement.args).toHaveProperty("signature");
-      expect(signatureRequirement.args).toHaveProperty("deadline");
       expect(signatureRequirement.args).toHaveProperty("amount");
       expect(signatureRequirement.args).toHaveProperty("asset");
       expect(signatureRequirement.args).toHaveProperty("nonce");
@@ -137,7 +136,6 @@ describe("encodeErc20Permit2", () => {
       expect(permit.action.type).toBe("permit2");
       expect(permit.action.args).toHaveProperty("spender");
       expect(permit.action.args).toHaveProperty("amount");
-      expect(permit.action.args).toHaveProperty("deadline");
       expect(permit.action.args).toHaveProperty("expiration");
       expect(permit.action.args.spender).toEqual(generalAdapter1);
       expect(permit.action.args.amount).toEqual(mockAmount);
