@@ -12,15 +12,25 @@ Generate a PR description for the current branch.
 
 You are helping the user generate a PR description. Derive all information from the current changes - do not ask the user any questions.
 
-### Step 1: Check Current Branch and Analyze Changes
+### Step 1: Check Current Branch, Determine Base, and Analyze Changes
 
-First, check what branch the user is on and gather context:
+First, check what branch the user is on and determine the base branch:
 
 ```bash
 git rev-parse --abbrev-ref HEAD
 gh pr view --json number,title,url,baseRefName 2>/dev/null || echo "No PR exists"
-git diff main --stat
-git diff main
+```
+
+Determine the base branch to diff against:
+
+- If a PR already exists, use `baseRefName` from the PR view output.
+- If no PR exists, fall back to the repo's default branch: `gh repo view --json defaultBranchRef -q .defaultBranchRef.name`
+
+Then diff against the resolved base branch:
+
+```bash
+git diff <base-branch> --stat
+git diff <base-branch>
 ```
 
 Analyze the changes to understand:
