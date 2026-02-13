@@ -84,15 +84,12 @@ export interface Requirement {
 }
 
 export interface PermitAction
-  extends BaseAction<
-    "permit",
-    { spender: Address; amount: bigint; deadline: bigint }
-  > {}
+  extends BaseAction<"permit", { spender: Address; amount: bigint }> {}
 
 export interface Permit2Action
   extends BaseAction<
     "permit2",
-    { spender: Address; amount: bigint; deadline: bigint; expiration: bigint }
+    { spender: Address; amount: bigint; expiration: bigint }
   > {}
 
 export interface RequirementSignature {

@@ -30,9 +30,6 @@ export const encodeErc20Permit = async (
     throw new ChainIdMismatchError(viemClient.chain?.id, chainId);
   }
 
-  const now = Time.timestamp();
-  const deadline = now + Time.s.from.h(2n);
-
   const tokenData = await fetchToken(token, viemClient, {
     deployless: supportDeployless,
   });
@@ -42,7 +39,6 @@ export const encodeErc20Permit = async (
     args: {
       spender,
       amount,
-      deadline,
     },
   };
 
@@ -55,6 +51,10 @@ export const encodeErc20Permit = async (
       if (client.account.address !== userAddress) {
         throw new AddressMismatchError(client.account.address, userAddress);
       }
+
+      const now = Time.timestamp();
+      const deadline = now + Time.s.from.h(2n);
+
       const typedData = getPermitTypedData(
         {
           erc20: tokenData,
