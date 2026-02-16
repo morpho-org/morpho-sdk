@@ -1,5 +1,11 @@
 # @morpho-org/consumer-sdk
 
+## 0.2.0
+
+### Minor Changes
+
+- c499a72: Add fetch parameters
+
 ## 0.1.8
 
 ### Patch Changes
