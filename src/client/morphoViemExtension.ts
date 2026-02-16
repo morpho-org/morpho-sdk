@@ -7,6 +7,8 @@ import { MorphoClient } from "./morphoClient";
  * Adds `morpho` namespace to viem clients with vaultV2 actions.
  *
  * @param metadata - (Optional) Metadata object that will be passed to all morpho actions. If provided, this metadata can be used for analytics, logging, or to carry additional information with each action.
+ * @param supportSignature - (Optional) Whether to support off-chain signature requirements. If true, the SDK will try to use permit or permit2 if the token supports it.
+ * @param supportDeployless - (Optional) Whether to support deployless mode. If true, the SDK will use the deployless mode to fetch data.
  * @returns Extension function that adds morpho namespace to viem clients
  *
  * @example
@@ -27,8 +29,9 @@ import { MorphoClient } from "./morphoClient";
  * ```
  */
 export function morphoViemExtension(_options?: {
-  metadata?: Metadata;
-  supportSignature?: boolean;
+  readonly metadata?: Metadata;
+  readonly supportSignature?: boolean;
+  readonly supportDeployless?: boolean;
 }) {
   return <TClient extends Client>(client: TClient) => {
     return {
