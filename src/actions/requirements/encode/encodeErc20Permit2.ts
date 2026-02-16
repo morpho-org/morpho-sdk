@@ -55,6 +55,8 @@ export const encodeErc20Permit2 = (
       const now = Time.timestamp();
       const deadline = now + Time.s.from.h(2n);
 
+      action.args.deadline = deadline;
+
       const typedData = getPermit2PermitTypedData(
         {
           // Never permit any other address than the GeneralAdapter1 otherwise

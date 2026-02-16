@@ -55,6 +55,8 @@ export const encodeErc20Permit = async (
       const now = Time.timestamp();
       const deadline = now + Time.s.from.h(2n);
 
+      action.args.deadline = deadline;
+
       const typedData = getPermitTypedData(
         {
           erc20: tokenData,
