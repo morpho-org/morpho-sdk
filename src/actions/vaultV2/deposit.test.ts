@@ -1,11 +1,14 @@
 import { addressesRegistry } from "@morpho-org/blue-sdk";
-import { isRequirementApproval, isRequirementSignature } from "src/types";
-import { KeyrockUsdcVaultV2, KpkWETHVaultV2 } from "test/fixtures/vaultV2";
 import type { Address } from "viem";
 import { parseUnits } from "viem";
 import { mainnet } from "viem/chains";
-import { describe, expect, vi } from "vitest";
+import { beforeEach, describe, expect, vi } from "vitest";
+import {
+  KeyrockUsdcVaultV2,
+  KpkWETHVaultV2,
+} from "../../../test/fixtures/vaultV2";
 import { test } from "../../../test/setup";
+import { isRequirementApproval, isRequirementSignature } from "../../types";
 import { getRequirements } from "../requirements";
 import * as getRequirementsActionModule from "../requirements/getRequirementsAction";
 import { vaultV2Deposit } from "./deposit";
@@ -17,6 +20,10 @@ describe("depositVaultV2 unit tests", () => {
     getRequirementsActionModule,
     "getRequirementsAction",
   );
+
+  beforeEach(() => {
+    getRequirementsActionSpy.mockClear();
+  });
 
   test("should create deposit bundle with DAI via permit2", async ({
     client,
