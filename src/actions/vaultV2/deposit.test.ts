@@ -1,11 +1,10 @@
 import { addressesRegistry } from "@morpho-org/blue-sdk";
-import { isRequirementApproval, isRequirementSignature } from "src/types";
 import type { Address } from "viem";
 import { parseUnits } from "viem";
 import { mainnet } from "viem/chains";
 import { describe, expect } from "vitest";
-
 import { test } from "../../../test/setup";
+import { isRequirementApproval, isRequirementSignature } from "../../types";
 import { getRequirements } from "../requirements";
 import { vaultV2Deposit } from "./deposit";
 
