@@ -1,6 +1,5 @@
 import { DEFAULT_SLIPPAGE_TOLERANCE, MathLib } from "@morpho-org/blue-sdk";
 import { fetchAccrualVaultV2, fetchVaultV2 } from "@morpho-org/blue-sdk-viem";
-import { MAX_SLIPPAGE_TOLERANCE } from "src/helpers/constant";
 import type { Address } from "viem";
 import {
   getRequirements,
@@ -8,6 +7,7 @@ import {
   vaultV2Redeem,
   vaultV2Withdraw,
 } from "../../actions";
+import { MAX_SLIPPAGE_TOLERANCE } from "../../helpers/constant";
 import {
   ChainIdMismatchError,
   type ERC20ApprovalAction,
@@ -19,6 +19,7 @@ import {
   type VaultV2DepositAction,
   type VaultV2RedeemAction,
   type VaultV2WithdrawAction,
+  ZeroSharesAmountError,
 } from "../../types";
 import type { FetchParameters } from "../../types/data";
 
@@ -69,7 +70,7 @@ export interface VaultV2Actions {
    *
    * @param {Object} params - The withdraw parameters.
    * @param {bigint} params.assets - The amount of assets to withdraw.
-   * @param {Address} [params.userAddress] - Optional user address initiating the withdraw.
+   * @param {Address} params.userAddress - User address initiating the withdraw.
    * @returns {Object} The result object.
    * @returns {Readonly<Transaction<VaultV2WithdrawAction>>} returns.tx The prepared withdraw transaction.
    */
@@ -83,7 +84,7 @@ export interface VaultV2Actions {
    *
    * @param {Object} params - The redeem parameters.
    * @param {bigint} params.shares - The amount of shares to redeem.
-   * @param {Address} [params.userAddress] - Optional user address initiating the redeem.
+   * @param {Address} params.userAddress - User address initiating the redeem.
    * @returns {Object} The result object.
    * @returns {Readonly<Transaction<VaultV2RedeemAction>>} returns.tx The prepared redeem transaction.
    */
@@ -132,11 +133,16 @@ export class MorphoVaultV2 implements VaultV2Actions {
       throw new ExcessiveSlippageToleranceError(slippageTolerance);
     }
 
+    const shares = vaultData.toShares(assets);
+    if (shares === 0n) {
+      throw new ZeroSharesAmountError(this.vault);
+    }
+
     const maxSharePrice = MathLib.min(
       MathLib.mulDivUp(
         assets,
         MathLib.wToRay(MathLib.WAD + slippageTolerance),
-        vaultData.toShares(assets),
+        shares,
       ),
       MathLib.RAY * 100n,
     );
@@ -173,6 +179,13 @@ export class MorphoVaultV2 implements VaultV2Actions {
   }
 
   withdraw({ assets, userAddress }: { assets: bigint; userAddress: Address }) {
+    if (this.client.viemClient.chain?.id !== this.chainId) {
+      throw new ChainIdMismatchError(
+        this.client.viemClient.chain?.id,
+        this.chainId,
+      );
+    }
+
     return {
       buildTx: () =>
         vaultV2Withdraw({
@@ -188,6 +201,13 @@ export class MorphoVaultV2 implements VaultV2Actions {
   }
 
   redeem({ shares, userAddress }: { shares: bigint; userAddress: Address }) {
+    if (this.client.viemClient.chain?.id !== this.chainId) {
+      throw new ChainIdMismatchError(
+        this.client.viemClient.chain?.id,
+        this.chainId,
+      );
+    }
+
     return {
       buildTx: () =>
         vaultV2Redeem({
