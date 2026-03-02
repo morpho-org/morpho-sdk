@@ -1,4 +1,4 @@
 export interface Metadata {
-  origin?: string;
+  origin: string;
   timestamp?: boolean;
 }
