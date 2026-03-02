@@ -1,5 +1,35 @@
 # @morpho-org/consumer-sdk
 
+## 0.1.8
+
+### Patch Changes
+
+- 8fc6bb5: Add supportDeployless option in morpho client
+
+## 0.1.7
+
+### Patch Changes
+
+- 0f25e4a: Update morpho SDKs
+
+## 0.1.6
+
+### Patch Changes
+
+- 0f55974: Introduce useSimplePermit in getRequirements
+
+## 0.1.5
+
+### Patch Changes
+
+- 6f1fd28: Update morpho SDKs (fix maxDeposit with marketV1AdapterV2)
+
+## 0.1.4
+
+### Patch Changes
+
+- dd9564a: fix: fetchToken for permit with viem client from morpho
+
 ## 0.1.3
 
 ### Patch Changes

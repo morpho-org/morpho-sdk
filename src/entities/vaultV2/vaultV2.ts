@@ -20,16 +20,20 @@ import {
   type VaultV2RedeemAction,
   type VaultV2WithdrawAction,
 } from "../../types";
+import type { FetchParameters } from "../../types/data";
 
 export interface VaultV2Actions {
   /**
    * Fetches the latest vault data.
    *
    * This function fetches the latest vault data from the blockchain.
+   * @param {FetchParameters} [parameters] - The parameters for the fetch operation.
    *
    * @returns {Promise<Awaited<ReturnType<typeof fetchAccrualVaultV2>>>} The latest vault data.
    */
-  getData: () => Promise<Awaited<ReturnType<typeof fetchAccrualVaultV2>>>;
+  getData: (
+    parameters?: FetchParameters,
+  ) => Promise<Awaited<ReturnType<typeof fetchAccrualVaultV2>>>;
   /**
    * Prepares a deposit transaction for the VaultV2 contract.
    *
@@ -54,9 +58,9 @@ export interface VaultV2Actions {
     buildTx: (
       requirementSignature?: RequirementSignature,
     ) => Readonly<Transaction<VaultV2DepositAction>>;
-    getRequirements: () => Promise<
-      (Readonly<Transaction<ERC20ApprovalAction>> | Requirement)[]
-    >;
+    getRequirements: (params?: {
+      useSimplePermit?: boolean;
+    }) => Promise<(Readonly<Transaction<ERC20ApprovalAction>> | Requirement)[]>;
   }>;
   /**
    * Prepares a withdraw transaction for the VaultV2 contract.
@@ -95,9 +99,11 @@ export class MorphoVaultV2 implements VaultV2Actions {
     private readonly chainId: number,
   ) {}
 
-  async getData() {
+  async getData(parameters?: FetchParameters) {
     return fetchAccrualVaultV2(this.vault, this.client.viemClient, {
+      ...parameters,
       chainId: this.chainId,
+      deployless: this.client.options.supportDeployless,
     });
   }
 
@@ -119,6 +125,7 @@ export class MorphoVaultV2 implements VaultV2Actions {
 
     const vaultData = await fetchVaultV2(this.vault, this.client.viemClient, {
       chainId: this.chainId,
+      deployless: this.client.options.supportDeployless,
     });
 
     if (slippageTolerance > MAX_SLIPPAGE_TOLERANCE) {
@@ -135,11 +142,13 @@ export class MorphoVaultV2 implements VaultV2Actions {
     );
 
     return {
-      getRequirements: async () =>
+      getRequirements: async (params?: { useSimplePermit?: boolean }) =>
         await getRequirements(this.client.viemClient, {
           address: vaultData.asset,
           chainId: this.chainId,
           supportSignature: this.client.options.supportSignature,
+          supportDeployless: this.client.options.supportDeployless,
+          useSimplePermit: params?.useSimplePermit,
           args: {
             amount: assets,
             from: userAddress,

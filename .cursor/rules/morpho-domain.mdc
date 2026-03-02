@@ -1,0 +1,68 @@
+---
+description: Morpho Protocol domain knowledge and DeFi concepts
+globs: src/actions/**/*.ts, src/entities/**/*.ts
+alwaysApply: false
+---
+
+# Morpho Protocol Domain Knowledge
+
+## Core Concepts
+
+- **Vault (VaultV2)**: A Morpho vault contract. Users deposit assets and receive shares proportional to their ownership.
+- **Assets**: The underlying ERC20 token (e.g., USDC, WETH) deposited into a vault.
+- **Shares**: Tokens representing proportional ownership of a vault's assets.
+
+## Vault Operations
+
+### Deposit
+
+- Converts assets into vault shares.
+- **Routed through the bundler** for atomicity (transfer + deposit in one tx).
+- Enforces `maxSharePrice` via the general adapter to prevent inflation attacks.
+- Default slippage tolerance: 0.03%.
+- CRITICAL: Never bypass the general adapter. It protects against inflation attacks on vaults without dead deposit protection.
+
+### Withdraw
+
+- Converts a specific amount of assets out of the vault (burns shares).
+- Direct vault call (no bundler needed).
+
+### Redeem
+
+- Converts a specific amount of shares back into assets.
+- Direct vault call (no bundler needed).
+
+## Requirements System
+
+Before vault operations, users may need to approve token spending. The SDK resolves this automatically:
+
+```
+Check allowances → Determine requirement type → Return approval or permit
+
+Requirement types:
+1. ERC20 Approval  — Classic approve() transaction (when signatures not supported)
+2. EIP-2612 Permit — Signature-based approval (gasless, if token supports it)
+3. Permit2         — Universal permit system (fallback when EIP-2612 unsupported)
+```
+
+Flow controlled by `supportSignature` option on MorphoClient:
+- `false` (default): Returns `Transaction<ERC20ApprovalAction>` (classic approval tx).
+- `true`: Tries permit, then permit2. Returns `Requirement` with a `sign()` method.
+
+## Key Contracts
+
+- **Bundler**: Atomically executes multiple actions in one transaction.
+- **General Adapter**: Part of bundler, enforces `maxSharePrice` constraint.
+- **Permit2**: Uniswap's universal permit contract, used as fallback.
+
+## Metadata
+
+Optional `{ origin: string, timestamp?: boolean }` appended to transaction calldata for analytics and traceability. Applied via `addTransactionMetadata()` helper.
+
+## Security Rules
+
+1. Always validate `maxSharePrice > 0` for deposits.
+2. Always validate `assets > 0` or `shares > 0` for operations.
+3. Always check chain ID matches between client and vault.
+4. All returned transactions must be deep-frozen (immutable).
+5. Signatures are used-and-discarded, never stored.

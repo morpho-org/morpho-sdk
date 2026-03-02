@@ -1,0 +1,78 @@
+---
+description: Code style and TypeScript conventions for the consumer-sdk
+globs: src/**/*.ts
+alwaysApply: false
+---
+
+# Code Style Conventions
+
+## Biome Formatter
+
+- **Indentation**: 2 spaces (no tabs)
+- **Quotes**: Double quotes (`"`)
+- **Unused imports**: Error — will be auto-removed
+- **Unused variables**: Error
+- **Import organization**: Automatic via Biome assist
+
+## TypeScript Patterns
+
+### Type Imports
+
+Use `type` keyword for type-only imports:
+
+```typescript
+import type { Address, Client, Hex } from "viem";
+import type { Metadata, MorphoClientType } from "../types";
+```
+
+### Readonly Properties
+
+Mark interface and class properties as `readonly` when they should not be reassigned:
+
+```typescript
+export interface Transaction<TAction extends BaseAction> {
+  readonly to: Address;
+  readonly value: bigint;
+  readonly data: Hex;
+  readonly action: TAction;
+}
+```
+
+### Discriminated Unions
+
+Actions use the `BaseAction<TType, TArgs>` pattern with `type` as discriminant:
+
+```typescript
+export interface VaultV2DepositAction
+  extends BaseAction<"vaultV2Deposit", { vault: Address; assets: bigint; ... }> {}
+```
+
+### Custom Errors
+
+Create specific error classes in `src/types/error.ts`:
+
+```typescript
+export class ZeroAssetAmountError extends Error {
+  constructor(asset: Address) {
+    super(`Asset amount cannot be zero for address: ${asset}`);
+  }
+}
+```
+
+### JSDoc
+
+All public functions and interfaces must have JSDoc documentation with `@param` and `@returns` tags.
+
+### Barrel Exports
+
+Every directory with public API has an `index.ts` that re-exports:
+
+```typescript
+export * from "./action";
+export * from "./client";
+export * from "./entity";
+```
+
+## Strict Mode Flags
+
+All strict TypeScript flags are enabled: `noImplicitAny`, `strictNullChecks`, `strictFunctionTypes`, `strictPropertyInitialization`, `noImplicitThis`, `noUncheckedIndexedAccess`.

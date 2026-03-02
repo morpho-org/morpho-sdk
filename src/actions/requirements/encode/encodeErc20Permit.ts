@@ -5,6 +5,7 @@ import { type Client, verifyTypedData } from "viem";
 import { signTypedData } from "viem/actions";
 import {
   AddressMismatchError,
+  ChainIdMismatchError,
   MissingClientPropertyError,
   type PermitAction,
   type Requirement,
@@ -16,15 +17,25 @@ interface EncodeErc20PermitParams {
   amount: bigint;
   chainId: number;
   nonce: bigint;
+  supportDeployless?: boolean;
 }
 
-export const encodeErc20Permit = (
+export const encodeErc20Permit = async (
+  viemClient: Client,
   params: EncodeErc20PermitParams,
-): Requirement => {
-  const { token, spender, amount, chainId, nonce } = params;
+): Promise<Requirement> => {
+  const { token, spender, amount, chainId, nonce, supportDeployless } = params;
+
+  if (viemClient.chain?.id !== chainId) {
+    throw new ChainIdMismatchError(viemClient.chain?.id, chainId);
+  }
 
   const now = Time.timestamp();
   const deadline = now + Time.s.from.h(2n);
+
+  const tokenData = await fetchToken(token, viemClient, {
+    deployless: supportDeployless,
+  });
 
   const action: PermitAction = {
     type: "permit",
@@ -44,8 +55,6 @@ export const encodeErc20Permit = (
       if (client.account.address !== userAddress) {
         throw new AddressMismatchError(client.account.address, userAddress);
       }
-
-      const tokenData = await fetchToken(token, client);
       const typedData = getPermitTypedData(
         {
           erc20: tokenData,

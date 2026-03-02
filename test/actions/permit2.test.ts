@@ -4,7 +4,11 @@ import {
   isRequirementSignature,
   MorphoClient,
 } from "src";
-import { KpkWETHVaultV2, Re7UsdtVaultV2 } from "test/fixtures/vaultV2";
+import {
+  KeyrockUsdcVaultV2,
+  KpkWETHVaultV2,
+  Re7UsdtVaultV2,
+} from "test/fixtures/vaultV2";
 import { testInvariants } from "test/helpers/invariants";
 import { createVaultV2 } from "test/helpers/vaultV2";
 import { isHex, parseUnits } from "viem";
@@ -315,6 +319,91 @@ describe("Permit2", () => {
       initialState.userAssetBalance - amount,
     );
     expect(finalState.vaultBalance).toEqual(initialState.vaultBalance + amount);
+    expect(finalState.userSharesBalance).toBeGreaterThan(
+      initialState.userSharesBalance,
+    );
+  });
+
+  test("should deposit USDC with permit2 with useSimplePermit to false", async ({
+    client,
+  }) => {
+    const amount = parseUnits("1000", 6);
+
+    await client.deal({
+      erc20: KeyrockUsdcVaultV2.asset,
+      amount,
+    });
+
+    const morpho = new MorphoClient(client, { supportSignature: true });
+    const vault = morpho.vaultV2(KeyrockUsdcVaultV2.address, mainnet.id);
+
+    const {
+      vaults: {
+        KeyrockUsdcVaultV2: { initialState, finalState },
+      },
+    } = await testInvariants({
+      client,
+      params: {
+        vaults: { KeyrockUsdcVaultV2 },
+      },
+      actionFn: async () => {
+        const deposit = await vault.deposit({
+          userAddress: client.account.address,
+          assets: amount,
+        });
+
+        const requirements = await deposit.getRequirements({
+          useSimplePermit: false,
+        });
+
+        expect(requirements.length).toBe(2);
+
+        const approvalPermit2 = requirements[0];
+        if (!isRequirementApproval(approvalPermit2)) {
+          throw new Error("Approval requirement not found");
+        }
+
+        expect(approvalPermit2.action.args.spender).toBe(permit2);
+        expect(approvalPermit2.action.args.amount).toBe(MathLib.MAX_UINT_160);
+        expect(approvalPermit2.action.type).toBe("erc20Approval");
+
+        await client.sendTransaction(approvalPermit2);
+
+        const permit2Requirement = requirements[1];
+
+        if (!isRequirementSignature(permit2Requirement)) {
+          throw new Error("Requirement is not a signature requirement");
+        }
+
+        expect(permit2Requirement.action.type).toBe("permit2");
+        expect(permit2Requirement.action.args.spender).toBe(generalAdapter1);
+        expect(permit2Requirement.action.args.amount).toBe(amount);
+
+        const requirementSignature = await permit2Requirement.sign(
+          client,
+          client.account.address,
+        );
+
+        expect(requirementSignature.args.owner).toEqual(client.account.address);
+        expect(isHex(requirementSignature.args.signature)).toBe(true);
+        expect(requirementSignature.args.signature.length).toBe(132);
+        expect(requirementSignature.args.asset).toBe(KeyrockUsdcVaultV2.asset);
+        expect(requirementSignature.args.deadline).toBeGreaterThan(
+          BigInt(Math.floor(Date.now() / 1000)),
+        );
+
+        const tx = deposit.buildTx(requirementSignature);
+
+        await client.sendTransaction(tx);
+      },
+    });
+
+    expect(finalState.userAssetBalance).toEqual(
+      initialState.userAssetBalance - amount,
+    );
+    expect(finalState.morphoAssetBalance).toEqual(
+      initialState.morphoAssetBalance + amount,
+    );
     expect(finalState.userSharesBalance).toBeGreaterThan(
       initialState.userSharesBalance,
     );

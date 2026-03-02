@@ -32,7 +32,9 @@ describe("Permit", () => {
           userAddress: client.account.address,
           assets: amount,
         });
-        const requirements_1 = await deposit.getRequirements();
+        const requirements_1 = await deposit.getRequirements({
+          useSimplePermit: true,
+        });
 
         if (!isRequirementSignature(requirements_1[0])) {
           throw new Error("Requirement is not a signature requirement");

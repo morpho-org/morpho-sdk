@@ -21,7 +21,7 @@ describe("encodeErc20Permit", () => {
     test("should sign permit for non-DAI token", async ({ client }) => {
       const userAddress = client.account.address;
 
-      const permit = encodeErc20Permit({
+      const permit = await encodeErc20Permit(client, {
         token: usdc,
         spender: generalAdapter1,
         amount: mockAmount,
@@ -39,7 +39,7 @@ describe("encodeErc20Permit", () => {
     test("should sign permit for DAI token", async ({ client }) => {
       const userAddress = client.account.address;
 
-      const permit = encodeErc20Permit({
+      const permit = await encodeErc20Permit(client, {
         token: dai,
         spender: generalAdapter1,
         amount: mockAmount,
@@ -60,7 +60,7 @@ describe("encodeErc20Permit", () => {
       const differentAddress =
         "0x0000000000000000000000000000000000000001" as Address;
 
-      const permit = encodeErc20Permit({
+      const permit = await encodeErc20Permit(client, {
         token: usdc,
         spender: generalAdapter1,
         amount: mockAmount,
@@ -78,7 +78,7 @@ describe("encodeErc20Permit", () => {
     }) => {
       const userAddress = client.account.address;
 
-      const permit = encodeErc20Permit({
+      const permit = await encodeErc20Permit(client, {
         token: usdc,
         spender: generalAdapter1,
         amount: mockAmount,
@@ -106,7 +106,7 @@ describe("encodeErc20Permit", () => {
       const userAddress = client.account.address;
       const now = Time.timestamp();
 
-      const permit = encodeErc20Permit({
+      const permit = await encodeErc20Permit(client, {
         token: usdc,
         spender: generalAdapter1,
         amount: mockAmount,
@@ -130,8 +130,8 @@ describe("encodeErc20Permit", () => {
       );
     });
 
-    test("should have correct action structure", async () => {
-      const permit = encodeErc20Permit({
+    test("should have correct action structure", async ({ client }) => {
+      const permit = await encodeErc20Permit(client, {
         token: usdc,
         spender: generalAdapter1,
         amount: mockAmount,
