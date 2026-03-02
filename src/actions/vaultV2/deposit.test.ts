@@ -99,6 +99,7 @@ describe("depositVaultV2 unit tests", () => {
       address: usdc,
       chainId: mainnet.id,
       supportSignature: true,
+      useSimplePermit: true,
       args: {
         amount: assets,
         from: client.account.address,
