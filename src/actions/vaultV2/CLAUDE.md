@@ -73,11 +73,38 @@ Builds a redeem transaction as a **direct vault call** (no bundler).
 
 **Returns:** `Readonly<Transaction<VaultV2RedeemAction>>`
 
+### `vaultV2ForceWithdraw`
+
+Builds a force withdraw transaction routed through the **bundler**.
+
+Bundles one or more on-chain `forceDeallocate` calls followed by a single `withdraw`, executed atomically.
+This allows a user to free liquidity from multiple illiquid markets and withdraw the resulting assets in one transaction.
+
+| Param                       | Type                          | Description                                             |
+| --------------------------- | ----------------------------- | ------------------------------------------------------- |
+| `vault.chainId`             | `number`                      | Chain ID (used to resolve bundler addresses)            |
+| `vault.address`             | `Address`                     | Vault contract address                                  |
+| `args.deallocations`        | `ForceDeallocateEntry[]`      | List of `{ adapter, data, assets }` to force-deallocate |
+| `args.withdraw.assets`      | `bigint`                      | Amount of assets to withdraw after deallocations        |
+| `args.withdraw.recipient`   | `Address`                     | Recipient of the withdrawn assets                       |
+| `args.onBehalf`             | `Address`                     | Address from which the penalty is taken (share owner)   |
+| `metadata`                  | optional                      | Analytics metadata to append                            |
+
+**Validation:** Throws `ZeroAssetAmountError` if `withdraw.assets === 0n`.
+
+**Penalty mechanism:** For each deallocation, a penalty (proportional to `forceDeallocatePenalty[adapter]`) is taken from `onBehalf` as a share burn. The withdrawn penalty assets are returned to the vault, so `totalAssets` and `totalSupply` decrease but the vault's actual controlled assets do not.
+
+**Bundler routing:** Uses `BundlerAction.encodeBundle` to atomically execute all deallocations + withdraw. The `forceDeallocate` bundler action type is pending SDK support — only the `erc4626Withdraw` step is currently encoded.
+
+**Returns:** `Readonly<Transaction<VaultV2ForceWithdrawAction>>`
+
+---
+
 ## Common Pattern
 
-All three functions follow the same structure:
+All four functions follow the same structure:
 
 1. **Validate** inputs (throw dedicated errors).
-2. **Encode** calldata (`BundlerAction.encodeBundle` for deposit, `encodeFunctionData` for withdraw/redeem).
+2. **Encode** calldata (`BundlerAction.encodeBundle` for deposit and forceWithdraw, `encodeFunctionData` for withdraw/redeem).
 3. **Append metadata** if provided via `addTransactionMetadata`.
 4. **Deep-freeze** and return `{ ...tx, action: { type, args } }`.

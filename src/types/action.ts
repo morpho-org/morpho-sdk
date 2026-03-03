@@ -46,11 +46,23 @@ export interface VaultV2RedeemAction
     }
   > {}
 
+export interface VaultV2ForceWithdrawAction
+  extends BaseAction<
+    "vaultV2ForceWithdraw",
+    {
+      vault: Address;
+      deallocations: readonly { adapter: Address; assets: bigint }[];
+      withdraw: { assets: bigint; recipient: Address };
+      onBehalf: Address;
+    }
+  > {}
+
 export type TransactionAction =
   | ERC20ApprovalAction
   | VaultV2DepositAction
   | VaultV2WithdrawAction
-  | VaultV2RedeemAction;
+  | VaultV2RedeemAction
+  | VaultV2ForceWithdrawAction;
 
 export interface Transaction<TAction extends BaseAction = TransactionAction> {
   readonly to: Address;

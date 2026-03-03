@@ -32,6 +32,12 @@ alwaysApply: false
 - Converts a specific amount of shares back into assets.
 - Direct vault call (no bundler needed).
 
+### Force Withdraw
+
+- Bundles one or more on-chain `forceDeallocate` calls + a final `withdraw` to exit illiquid vaults.
+- A penalty is taken as a share burn for each deallocation; withdrawn assets are returned to the vault (share price stays stable).
+- **Routed through the bundler** for atomic execution.
+
 ## Requirements System
 
 Before vault operations, users may need to approve token spending. The SDK resolves this automatically:
@@ -46,6 +52,7 @@ Requirement types:
 ```
 
 Flow controlled by `supportSignature` option on MorphoClient:
+
 - `false` (default): Returns `Transaction<ERC20ApprovalAction>` (classic approval tx).
 - `true`: Tries permit, then permit2. Returns `Requirement` with a `sign()` method.
 

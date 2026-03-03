@@ -15,4 +15,4 @@
 
 - Validate `chainId` match before any on-chain call.
 - Never encode calldata here — that belongs in Actions.
-- Deposit always goes through bundler (via `vaultV2Deposit`). Withdraw/redeem are direct vault calls.
+- Deposit and forceWithdraw go through the bundler (via `vaultV2Deposit` / `vaultV2ForceWithdraw`). Withdraw/redeem are direct vault calls.

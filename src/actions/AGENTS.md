@@ -8,7 +8,7 @@ Pure functions that build deep-frozen `Transaction<TAction>` objects. No side ef
 
 | Sub-layer | Path | Role | Docs |
 |-----------|------|------|------|
-| **Vault Operations** | `vaultV2/` | Build deposit / withdraw / redeem transactions | [`vaultV2/AGENTS.md`](vaultV2/AGENTS.md) |
+| **Vault Operations** | `vaultV2/` | Build deposit / withdraw / redeem / forceWithdraw transactions | [`vaultV2/AGENTS.md`](vaultV2/AGENTS.md) |
 | **Requirements** | `requirements/` | Resolve token approval needs before a deposit | [`requirements/AGENTS.md`](requirements/AGENTS.md) |
 
 ## Data Flow
@@ -16,9 +16,10 @@ Pure functions that build deep-frozen `Transaction<TAction>` objects. No side ef
 ```
 Entity (MorphoVaultV2)
   │
-  ├─ deposit ──► vaultV2Deposit()  ← may include requirementSignature
-  ├─ withdraw ─► vaultV2Withdraw()
-  └─ redeem ──► vaultV2Redeem()
+  ├─ deposit ──────────► vaultV2Deposit()           ← bundler (may include requirementSignature)
+  ├─ withdraw ─────────► vaultV2Withdraw()          ← direct vault call
+  ├─ redeem ───────────► vaultV2Redeem()            ← direct vault call
+  └─ forceWithdraw ────► vaultV2ForceWithdraw()      ← bundler (N forceDeallocate + 1 withdraw)
                     │
                     ▼
          Readonly<Transaction<TAction>>  (deep-frozen)
