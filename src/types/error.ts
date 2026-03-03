@@ -45,3 +45,11 @@ export class ApprovalAmountLessThanSpendAmountError extends Error {
     super("Approval amount is less than spend amount");
   }
 }
+
+export class ExcessiveSlippageToleranceError extends Error {
+  constructor(slippageTolerance: bigint) {
+    super(
+      `Slippage tolerance ${slippageTolerance} exceeds maximum allowed (10%)`,
+    );
+  }
+}
