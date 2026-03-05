@@ -11,7 +11,7 @@ import {
   WithdrawExceedsDeallocationsError,
   ZeroAssetAmountError,
 } from "../../types";
-import { encodeForceDeallocateCall } from "./encodeDeallocation";
+import { encodeForceDeallocateCall } from "../../helpers/encodeDeallocation";
 
 export interface VaultV2ForceWithdrawParams {
   vault: {
