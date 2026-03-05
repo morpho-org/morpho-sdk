@@ -66,10 +66,7 @@ export const vaultV2ForceWithdraw = ({
     throw new ZeroAssetAmountError(vaultAddress);
   }
 
-  const totalDeallocated = deallocations.reduce(
-    (sum, d) => sum + d.assets,
-    0n,
-  );
+  const totalDeallocated = deallocations.reduce((sum, d) => sum + d.assets, 0n);
   if (withdraw.assets > totalDeallocated) {
     throw new WithdrawExceedsDeallocationsError(
       vaultAddress,
