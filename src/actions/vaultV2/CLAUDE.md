@@ -75,26 +75,25 @@ Builds a redeem transaction as a **direct vault call** (no bundler).
 
 ### `vaultV2ForceWithdraw`
 
-Builds a force withdraw transaction routed through the **bundler**.
+Builds a force withdraw transaction using VaultV2's native **multicall**.
 
-Bundles one or more on-chain `forceDeallocate` calls followed by a single `withdraw`, executed atomically.
+Encodes one or more `forceDeallocate` calls followed by a single `withdraw`, executed atomically via `multicall` on the VaultV2 contract.
 This allows a user to free liquidity from multiple illiquid markets and withdraw the resulting assets in one transaction.
 
 | Param                       | Type                          | Description                                             |
 | --------------------------- | ----------------------------- | ------------------------------------------------------- |
-| `vault.chainId`             | `number`                      | Chain ID (used to resolve bundler addresses)            |
 | `vault.address`             | `Address`                     | Vault contract address                                  |
-| `args.deallocations`        | `ForceDeallocateEntry[]`      | List of `{ adapter, data, assets }` to force-deallocate |
+| `args.deallocations`        | `Deallocation[]`              | List of `{ adapter, marketParams?, assets }` to force-deallocate |
 | `args.withdraw.assets`      | `bigint`                      | Amount of assets to withdraw after deallocations        |
 | `args.withdraw.recipient`   | `Address`                     | Recipient of the withdrawn assets                       |
 | `args.onBehalf`             | `Address`                     | Address from which the penalty is taken (share owner)   |
 | `metadata`                  | optional                      | Analytics metadata to append                            |
 
-**Validation:** Throws `ZeroAssetAmountError` if `withdraw.assets === 0n`.
+**Validation:** Throws `EmptyDeallocationsError` if `deallocations` is empty. Throws `ZeroAssetAmountError` if `withdraw.assets === 0n`.
+
+**Deallocation data encoding:** When `marketParams` is provided (Morpho Market V1 adapter), the data is ABI-encoded from the `MarketParams`. When `marketParams` is omitted (e.g. Vault V1 adapter), empty bytes (`0x`) are passed.
 
 **Penalty mechanism:** For each deallocation, a penalty (proportional to `forceDeallocatePenalty[adapter]`) is taken from `onBehalf` as a share burn. The withdrawn penalty assets are returned to the vault, so `totalAssets` and `totalSupply` decrease but the vault's actual controlled assets do not.
-
-**Bundler routing:** Uses `BundlerAction.encodeBundle` to atomically execute all deallocations + withdraw. The `forceDeallocate` bundler action type is pending SDK support — only the `erc4626Withdraw` step is currently encoded.
 
 **Returns:** `Readonly<Transaction<VaultV2ForceWithdrawAction>>`
 
@@ -105,6 +104,6 @@ This allows a user to free liquidity from multiple illiquid markets and withdraw
 All four functions follow the same structure:
 
 1. **Validate** inputs (throw dedicated errors).
-2. **Encode** calldata (`BundlerAction.encodeBundle` for deposit and forceWithdraw, `encodeFunctionData` for withdraw/redeem).
+2. **Encode** calldata (`BundlerAction.encodeBundle` for deposit, `encodeFunctionData` + `multicall` for forceWithdraw, `encodeFunctionData` for withdraw/redeem).
 3. **Append metadata** if provided via `addTransactionMetadata`.
 4. **Deep-freeze** and return `{ ...tx, action: { type, args } }`.

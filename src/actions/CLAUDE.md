@@ -11,7 +11,7 @@ Pure functions that build deep-frozen `Transaction<TAction>` objects. Two sub-la
 | `vaultV2Deposit`          | Bundler (general adapter) | Enforces `maxSharePrice` — inflation attack prevention |
 | `vaultV2Withdraw`         | Direct vault call         | No attack surface, simpler UX                          |
 | `vaultV2Redeem`           | Direct vault call         | No attack surface, simpler UX                          |
-| `vaultV2ForceWithdraw`    | Bundler                   | Bundles N forceDeallocate + 1 withdraw to exit illiquid positions |
+| `vaultV2ForceWithdraw`    | VaultV2 multicall         | Bundles N forceDeallocate + 1 withdraw to exit illiquid positions |
 
 ## `requirements/` — Approval Resolution
 

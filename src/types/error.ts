@@ -53,3 +53,21 @@ export class ExcessiveSlippageToleranceError extends Error {
     );
   }
 }
+
+export class EmptyDeallocationsError extends Error {
+  constructor(vault: Address) {
+    super(`Deallocations list cannot be empty for vault: ${vault}`);
+  }
+}
+
+export class WithdrawExceedsDeallocationsError extends Error {
+  constructor(
+    vault: Address,
+    withdrawAssets: bigint,
+    totalDeallocated: bigint,
+  ) {
+    super(
+      `Withdraw amount (${withdrawAssets}) exceeds total deallocated assets (${totalDeallocated}) for vault: ${vault}`,
+    );
+  }
+}

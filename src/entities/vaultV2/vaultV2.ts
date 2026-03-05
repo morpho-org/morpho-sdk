@@ -1,6 +1,6 @@
 import { DEFAULT_SLIPPAGE_TOLERANCE, MathLib } from "@morpho-org/blue-sdk";
 import { fetchAccrualVaultV2, fetchVaultV2 } from "@morpho-org/blue-sdk-viem";
-import type { Address, Hex } from "viem";
+import type { Address } from "viem";
 import {
   getRequirements,
   vaultV2Deposit,
@@ -11,6 +11,7 @@ import {
 import { MAX_SLIPPAGE_TOLERANCE } from "../../helpers/constant";
 import {
   ChainIdMismatchError,
+  type Deallocation,
   type ERC20ApprovalAction,
   ExcessiveSlippageToleranceError,
   type MorphoClientType,
@@ -94,22 +95,22 @@ export interface VaultV2Actions {
     buildTx: () => Readonly<Transaction<VaultV2RedeemAction>>;
   };
   /**
-   * Prepares a force withdraw transaction for the VaultV2 contract, routed through the bundler.
+   * Prepares a force withdraw transaction for the VaultV2 contract using the vault's native multicall.
    *
-   * This function bundles one or more on-chain forceDeallocate calls followed by a single withdraw,
-   * executed atomically. This allows a user to free liquidity from multiple illiquid markets
-   * and withdraw the resulting assets in one transaction.
+   * This function encodes one or more on-chain forceDeallocate calls followed by a single withdraw,
+   * executed atomically via VaultV2's multicall. This allows a user to free liquidity from multiple
+   * illiquid markets and withdraw the resulting assets in one transaction.
    *
    * @param {Object} params - The force withdraw parameters.
-   * @param {readonly {adapter: Address; data: Hex; assets: bigint}[]} params.deallocations - The list of deallocations to perform.
+   * @param {readonly Deallocation[]} params.deallocations - The typed list of deallocations to perform.
    * @param {Object} params.withdraw - The withdraw parameters applied after deallocations.
    * @param {bigint} params.withdraw.assets - The amount of assets to withdraw.
    * @param {Address} params.userAddress - User address (penalty source and withdraw recipient).
    * @returns {Object} The result object.
-   * @returns {Readonly<Transaction<VaultV2ForceWithdrawAction>>} returns.buildTx The prepared bundled transaction.
+   * @returns {Readonly<Transaction<VaultV2ForceWithdrawAction>>} returns.buildTx The prepared multicall transaction.
    */
   forceWithdraw: (params: {
-    deallocations: readonly { adapter: Address; data: Hex; assets: bigint }[];
+    deallocations: readonly Deallocation[];
     withdraw: { assets: bigint };
     userAddress: Address;
   }) => {
@@ -251,7 +252,7 @@ export class MorphoVaultV2 implements VaultV2Actions {
     withdraw,
     userAddress,
   }: {
-    deallocations: readonly { adapter: Address; data: Hex; assets: bigint }[];
+    deallocations: readonly Deallocation[];
     withdraw: { assets: bigint };
     userAddress: Address;
   }) {
@@ -265,7 +266,7 @@ export class MorphoVaultV2 implements VaultV2Actions {
     return {
       buildTx: () =>
         vaultV2ForceWithdraw({
-          vault: { chainId: this.chainId, address: this.vault },
+          vault: { address: this.vault },
           args: {
             deallocations,
             withdraw: {

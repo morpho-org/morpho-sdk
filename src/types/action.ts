@@ -1,4 +1,5 @@
 import type { Address, Client, Hex } from "viem";
+import type { Deallocation } from "./deallocation";
 
 export interface BaseAction<
   TType extends string = string,
@@ -51,7 +52,7 @@ export interface VaultV2ForceWithdrawAction
     "vaultV2ForceWithdraw",
     {
       vault: Address;
-      deallocations: readonly { adapter: Address; assets: bigint }[];
+      deallocations: readonly Deallocation[];
       withdraw: { assets: bigint; recipient: Address };
       onBehalf: Address;
     }

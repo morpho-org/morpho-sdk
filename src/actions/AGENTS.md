@@ -19,7 +19,7 @@ Entity (MorphoVaultV2)
   ├─ deposit ──────────► vaultV2Deposit()           ← bundler (may include requirementSignature)
   ├─ withdraw ─────────► vaultV2Withdraw()          ← direct vault call
   ├─ redeem ───────────► vaultV2Redeem()            ← direct vault call
-  └─ forceWithdraw ────► vaultV2ForceWithdraw()      ← bundler (N forceDeallocate + 1 withdraw)
+  └─ forceWithdraw ────► vaultV2ForceWithdraw()      ← multicall on VaultV2 (N forceDeallocate + 1 withdraw)
                     │
                     ▼
          Readonly<Transaction<TAction>>  (deep-frozen)
