@@ -217,11 +217,11 @@ describe("forceWithdrawVaultV2 unit tests", () => {
     ).toThrow(ZeroAssetAmountError);
   });
 
-  test("should throw WithdrawExceedsDeallocationsError when withdraw exceeds total deallocated", ({
+  test("should throw WithdrawExceedsDeallocationsError when total deallocated exceeds withdraw", ({
     client,
   }) => {
-    const deallocatedAssets = parseUnits("50", 18);
-    const withdrawAssets = parseUnits("100", 18);
+    const deallocatedAssets = parseUnits("100", 18);
+    const withdrawAssets = parseUnits("50", 18);
 
     expect(() =>
       vaultV2ForceWithdraw({
