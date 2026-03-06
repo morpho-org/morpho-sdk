@@ -1,17 +1,14 @@
 import { MarketParams } from "@morpho-org/blue-sdk";
-import { type Address, getAddress, parseUnits } from "viem";
+import { getAddress, parseUnits } from "viem";
 import { mainnet } from "viem/chains";
 import { describe, expect } from "vitest";
 import { MorphoClient } from "../../src";
 import { vaultV2ForceWithdraw } from "../../src/actions/vaultV2/forceWithdraw";
-import { KeyrockUsdcVaultV2 } from "../fixtures/vaultV2";
+import { ReEcosystemUsdcVaultV2 } from "../fixtures/vaultV2";
 import { testInvariants } from "../helpers/invariants";
 import { test } from "../setup";
 
 describe("ForceWithdraw VaultV2", () => {
-  const mockAdapterAddress: Address =
-    "0x0000000000000000000000000000000000000002";
-
   const mockMarketParams = new MarketParams({
     loanToken: getAddress("0x000000000000000000000000000000000000000A"),
     collateralToken: getAddress("0x000000000000000000000000000000000000000B"),
@@ -25,6 +22,15 @@ describe("ForceWithdraw VaultV2", () => {
   }) => {
     const morpho = new MorphoClient(client);
     const assets = parseUnits("100", 18);
+
+    const vaultV2 = morpho.vaultV2(ReEcosystemUsdcVaultV2.address, mainnet.id);
+
+    const vaultV2Data = await vaultV2.getData();
+
+    vaultV2Data.adapters.forEach((adapter) => {
+      console.log(adapter);
+    });
+
     const deallocations = [
       {
         adapter: mockAdapterAddress,
@@ -33,17 +39,15 @@ describe("ForceWithdraw VaultV2", () => {
       },
     ] as const;
 
-    const forceWithdraw = morpho
-      .vaultV2(KeyrockUsdcVaultV2.address, mainnet.id)
-      .forceWithdraw({
-        deallocations,
-        withdraw: { assets },
-        userAddress: client.account.address,
-      });
+    const forceWithdraw = vaultV2.forceWithdraw({
+      deallocations,
+      withdraw: { assets },
+      userAddress: client.account.address,
+    });
     const tx_1 = forceWithdraw.buildTx();
 
     const tx_2 = vaultV2ForceWithdraw({
-      vault: { address: KeyrockUsdcVaultV2.address },
+      vault: { address: ReEcosystemUsdcVaultV2.address },
       args: {
         deallocations,
         withdraw: { assets, recipient: client.account.address },
@@ -56,12 +60,12 @@ describe("ForceWithdraw VaultV2", () => {
 
     const {
       vaults: {
-        KeyrockUsdcVaultV2: { initialState, finalState },
+        ReEcosystemUsdcVaultV2: { initialState, finalState },
       },
     } = await testInvariants({
       client,
       params: {
-        vaults: { KeyrockUsdcVaultV2 },
+        vaults: { ReEcosystemUsdcVaultV2 },
       },
       actionFn: async () => {
         await client.sendTransaction(tx_1);
@@ -81,7 +85,7 @@ describe("ForceWithdraw VaultV2", () => {
     const deallocations = [{ adapter: mockAdapterAddress, assets }] as const;
 
     const forceWithdraw = morpho
-      .vaultV2(KeyrockUsdcVaultV2.address, mainnet.id)
+      .vaultV2(ReEcosystemUsdcVaultV2.address, mainnet.id)
       .forceWithdraw({
         deallocations,
         withdraw: { assets },
@@ -91,12 +95,12 @@ describe("ForceWithdraw VaultV2", () => {
 
     const {
       vaults: {
-        KeyrockUsdcVaultV2: { initialState, finalState },
+        ReEcosystemUsdcVaultV2: { initialState, finalState },
       },
     } = await testInvariants({
       client,
       params: {
-        vaults: { KeyrockUsdcVaultV2 },
+        vaults: { ReEcosystemUsdcVaultV2 },
       },
       actionFn: async () => {
         await client.sendTransaction(tx);
@@ -130,7 +134,7 @@ describe("ForceWithdraw VaultV2", () => {
     ] as const;
 
     const forceWithdraw = morpho
-      .vaultV2(KeyrockUsdcVaultV2.address, mainnet.id)
+      .vaultV2(ReEcosystemUsdcVaultV2.address, mainnet.id)
       .forceWithdraw({
         deallocations,
         withdraw: { assets: withdrawAssets },
@@ -140,12 +144,12 @@ describe("ForceWithdraw VaultV2", () => {
 
     const {
       vaults: {
-        KeyrockUsdcVaultV2: { initialState, finalState },
+        ReEcosystemUsdcVaultV2: { initialState, finalState },
       },
     } = await testInvariants({
       client,
       params: {
-        vaults: { KeyrockUsdcVaultV2 },
+        vaults: { ReEcosystemUsdcVaultV2 },
       },
       actionFn: async () => {
         await client.sendTransaction(tx);
