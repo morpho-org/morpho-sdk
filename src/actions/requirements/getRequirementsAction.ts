@@ -1,9 +1,18 @@
 import { getChainAddresses } from "@morpho-org/blue-sdk";
 import type { Action } from "@morpho-org/bundler-sdk-viem";
-import type { Permit2Action, PermitAction, PermitArgs } from "../../types";
+import type { Address } from "viem";
+import {
+  DepositAmountMismatchError,
+  DepositAssetMismatchError,
+  type Permit2Action,
+  type PermitAction,
+  type PermitArgs,
+} from "../../types";
 
 interface GetRequirementsActionParams {
   chainId: number;
+  asset: Address;
+  assets: bigint;
   requirementSignature: {
     args: PermitArgs;
     action: PermitAction | Permit2Action;
@@ -15,8 +24,21 @@ interface GetRequirementsActionParams {
  */
 export const getRequirementsAction = ({
   chainId,
+  asset,
+  assets,
   requirementSignature,
 }: GetRequirementsActionParams): Action[] => {
+  if (requirementSignature.args.asset !== asset) {
+    throw new DepositAssetMismatchError(asset, requirementSignature.args.asset);
+  }
+
+  if (requirementSignature.args.amount !== assets) {
+    throw new DepositAmountMismatchError(
+      assets,
+      requirementSignature.args.amount,
+    );
+  }
+
   const {
     bundler3: { generalAdapter1 },
   } = getChainAddresses(chainId);
@@ -45,12 +67,7 @@ export const getRequirementsAction = ({
       },
       {
         type: "transferFrom2",
-        args: [
-          requirementSignature.args.asset,
-          requirementSignature.args.amount,
-          generalAdapter1,
-          false,
-        ],
+        args: [asset, assets, generalAdapter1, false],
       },
     ];
   }
@@ -69,12 +86,7 @@ export const getRequirementsAction = ({
     },
     {
       type: "erc20TransferFrom",
-      args: [
-        requirementSignature.args.asset,
-        requirementSignature.args.amount,
-        generalAdapter1,
-        false,
-      ],
+      args: [asset, assets, generalAdapter1, false],
     },
   ];
 };
