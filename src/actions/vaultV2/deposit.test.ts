@@ -2,7 +2,7 @@ import { addressesRegistry } from "@morpho-org/blue-sdk";
 import type { Address } from "viem";
 import { parseUnits } from "viem";
 import { mainnet } from "viem/chains";
-import { beforeEach, describe, expect, vi } from "vitest";
+import { describe, expect, vi } from "vitest";
 import {
   KeyrockUsdcVaultV2,
   KpkWETHVaultV2,
@@ -19,15 +19,6 @@ import { vaultV2Deposit } from "./deposit";
 
 describe("depositVaultV2 unit tests", () => {
   const { dai, usdc, wNative } = addressesRegistry[mainnet.id];
-
-  const getRequirementsActionSpy = vi.spyOn(
-    getRequirementsActionModule,
-    "getRequirementsAction",
-  );
-
-  beforeEach(() => {
-    getRequirementsActionSpy.mockClear();
-  });
 
   test("should create deposit bundle with DAI via permit2", async ({
     client,
@@ -122,6 +113,11 @@ describe("depositVaultV2 unit tests", () => {
 
     expect(requirementSignature.args.asset).toEqual(usdc);
 
+    const localSpy = vi.spyOn(
+      getRequirementsActionModule,
+      "getRequirementsAction",
+    );
+
     const tx = vaultV2Deposit({
       vault: {
         chainId: mainnet.id,
@@ -136,7 +132,7 @@ describe("depositVaultV2 unit tests", () => {
       },
     });
 
-    expect(getRequirementsActionSpy).toHaveBeenCalled();
+    expect(localSpy).toHaveBeenCalled();
 
     expect(tx).toBeDefined();
     expect(tx.action.type).toBe("vaultV2Deposit");
@@ -258,6 +254,11 @@ describe("depositVaultV2 unit tests", () => {
     const assets = parseUnits("500", 6); // 500 USDC
     const maxSharePrice = 1000000n;
 
+    const localSpy = vi.spyOn(
+      getRequirementsActionModule,
+      "getRequirementsAction",
+    );
+
     const tx = vaultV2Deposit({
       vault: {
         chainId: mainnet.id,
@@ -271,7 +272,7 @@ describe("depositVaultV2 unit tests", () => {
       },
     });
 
-    expect(getRequirementsActionSpy).not.toHaveBeenCalled();
+    expect(localSpy).not.toHaveBeenCalled();
 
     expect(tx).toBeDefined();
     expect(tx.action.type).toBe("vaultV2Deposit");
