@@ -8,7 +8,11 @@ import {
   KpkWETHVaultV2,
 } from "../../../test/fixtures/vaultV2";
 import { test } from "../../../test/setup";
-import { isRequirementApproval, isRequirementSignature } from "../../types";
+import {
+  DepositAmountMismatchError,
+  isRequirementApproval,
+  isRequirementSignature,
+} from "../../types";
 import { getRequirements } from "../requirements";
 import * as getRequirementsActionModule from "../requirements/getRequirementsAction";
 import { vaultV2Deposit } from "./deposit";
@@ -201,6 +205,51 @@ describe("depositVaultV2 unit tests", () => {
     expect(tx.to).toBeDefined();
     expect(tx.data).toBeDefined();
     expect(tx.value).toBe(0n);
+  });
+
+  test("should throw when signature amount does not match deposit amount", async ({
+    client,
+  }) => {
+    const signatureAmount = parseUnits("5000", 6);
+    const depositAmount = parseUnits("1000", 6);
+    const maxSharePrice = 1000000n;
+
+    const requirements = await getRequirements(client, {
+      address: usdc,
+      chainId: mainnet.id,
+      supportSignature: true,
+      useSimplePermit: true,
+      args: {
+        amount: signatureAmount,
+        from: client.account.address,
+      },
+    });
+
+    const permit2Requirement = requirements[0];
+    if (!isRequirementSignature(permit2Requirement)) {
+      throw new Error("Permit2 requirement not found");
+    }
+
+    const requirementSignature = await permit2Requirement.sign(
+      client,
+      client.account.address,
+    );
+
+    expect(() =>
+      vaultV2Deposit({
+        vault: {
+          chainId: mainnet.id,
+          address: KeyrockUsdcVaultV2.address,
+          asset: usdc,
+        },
+        args: {
+          assets: depositAmount,
+          maxSharePrice,
+          recipient: client.account.address,
+          requirementSignature,
+        },
+      }),
+    ).toThrow(DepositAmountMismatchError);
   });
 
   test("should create deposit bundle without requirement signature", async ({
