@@ -1,6 +1,6 @@
 import { getChainAddresses } from "@morpho-org/blue-sdk";
 import type { Action } from "@morpho-org/bundler-sdk-viem";
-import type { Address } from "viem";
+import { type Address, isAddressEqual } from "viem";
 import {
   DepositAmountMismatchError,
   DepositAssetMismatchError,
@@ -28,7 +28,7 @@ export const getRequirementsAction = ({
   assets,
   requirementSignature,
 }: GetRequirementsActionParams): Action[] => {
-  if (requirementSignature.args.asset !== asset) {
+  if (!isAddressEqual(requirementSignature.args.asset, asset)) {
     throw new DepositAssetMismatchError(asset, requirementSignature.args.asset);
   }
 
