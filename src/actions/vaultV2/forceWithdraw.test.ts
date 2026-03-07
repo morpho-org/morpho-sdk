@@ -179,6 +179,7 @@ describe("forceWithdrawVaultV2 unit tests", () => {
     });
 
     expect(txWith.data.length).toBeGreaterThan(txWithout.data.length);
+    expect(txWith.data).toContain("a1b2c3d4");
   });
 
   test("should throw EmptyDeallocationsError when deallocations is empty", ({
