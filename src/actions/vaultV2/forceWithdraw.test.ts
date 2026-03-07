@@ -18,10 +18,10 @@ describe("forceWithdrawVaultV2 unit tests", () => {
     "0x0000000000000000000000000000000000000003";
 
   const mockMarketParams = new MarketParams({
-    loanToken: "0x000000000000000000000000000000000000000A",
-    collateralToken: "0x000000000000000000000000000000000000000B",
-    oracle: "0x000000000000000000000000000000000000000C",
-    irm: "0x000000000000000000000000000000000000000D",
+    loanToken: "0x000000000000000000000000000000000000000a",
+    collateralToken: "0x000000000000000000000000000000000000000b",
+    oracle: "0x000000000000000000000000000000000000000c",
+    irm: "0x000000000000000000000000000000000000000d",
     lltv: parseUnits("0.8", 18),
   });
 
@@ -175,7 +175,7 @@ describe("forceWithdrawVaultV2 unit tests", () => {
         withdraw: { assets, recipient: client.account.address },
         onBehalf: client.account.address,
       },
-      metadata: { origin: "test" },
+      metadata: { origin: "a1b2c3d4" },
     });
 
     expect(txWith.data.length).toBeGreaterThan(txWithout.data.length);
