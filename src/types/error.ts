@@ -60,14 +60,14 @@ export class EmptyDeallocationsError extends Error {
   }
 }
 
-export class WithdrawExceedsDeallocationsError extends Error {
+export class DeallocationsExceedWithdrawError extends Error {
   constructor(
     vault: Address,
     withdrawAssets: bigint,
     totalDeallocated: bigint,
   ) {
     super(
-      `Withdraw amount (${withdrawAssets}) exceeds total deallocated assets (${totalDeallocated}) for vault: ${vault}`,
+      `Total deallocated assets (${totalDeallocated}) exceed withdraw amount (${withdrawAssets}) for vault: ${vault}`,
     );
   }
 }

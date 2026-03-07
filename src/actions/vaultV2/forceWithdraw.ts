@@ -9,7 +9,7 @@ import {
   type Metadata,
   type Transaction,
   type VaultV2ForceWithdrawAction,
-  WithdrawExceedsDeallocationsError,
+  DeallocationsExceedWithdrawError,
   ZeroAssetAmountError,
 } from "../../types";
 
@@ -68,7 +68,7 @@ export const vaultV2ForceWithdraw = ({
 
   const totalDeallocated = deallocations.reduce((sum, d) => sum + d.assets, 0n);
   if (withdraw.assets < totalDeallocated) {
-    throw new WithdrawExceedsDeallocationsError(
+    throw new DeallocationsExceedWithdrawError(
       vaultAddress,
       withdraw.assets,
       totalDeallocated,

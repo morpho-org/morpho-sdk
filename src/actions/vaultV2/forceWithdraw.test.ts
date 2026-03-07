@@ -4,7 +4,7 @@ import { describe, expect } from "vitest";
 import { test } from "../../../test/setup";
 import {
   EmptyDeallocationsError,
-  WithdrawExceedsDeallocationsError,
+  DeallocationsExceedWithdrawError,
   ZeroAssetAmountError,
 } from "../../types";
 import { vaultV2ForceWithdraw } from "./forceWithdraw";
@@ -217,7 +217,7 @@ describe("forceWithdrawVaultV2 unit tests", () => {
     ).toThrow(ZeroAssetAmountError);
   });
 
-  test("should throw WithdrawExceedsDeallocationsError when total deallocated exceeds withdraw", ({
+  test("should throw DeallocationsExceedWithdrawError when total deallocated exceeds withdraw", ({
     client,
   }) => {
     const deallocatedAssets = parseUnits("100", 18);
@@ -237,6 +237,6 @@ describe("forceWithdrawVaultV2 unit tests", () => {
           onBehalf: client.account.address,
         },
       }),
-    ).toThrow(WithdrawExceedsDeallocationsError);
+    ).toThrow(DeallocationsExceedWithdrawError);
   });
 });
