@@ -27,7 +27,7 @@ describe("DepositVaultV2", () => {
       },
       args: {
         assets: 1000000000000000000n,
-        maxSharePrice: 1026867018959452n,
+        maxSharePrice: 1030789509859687n,
         recipient: client.account.address,
       },
     });

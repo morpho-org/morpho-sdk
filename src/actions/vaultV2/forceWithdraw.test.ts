@@ -1,5 +1,5 @@
 import { MarketParams } from "@morpho-org/blue-sdk";
-import { getAddress, isHex, parseUnits } from "viem";
+import { type Address, isHex, parseUnits } from "viem";
 import { describe, expect } from "vitest";
 import { test } from "../../../test/setup";
 import {
@@ -10,21 +10,18 @@ import {
 import { vaultV2ForceWithdraw } from "./forceWithdraw";
 
 describe("forceWithdrawVaultV2 unit tests", () => {
-  const mockVaultAddress = getAddress(
-    "0x0000000000000000000000000000000000000001",
-  );
-  const mockAdapterAddress = getAddress(
-    "0x0000000000000000000000000000000000000002",
-  );
-  const mockAdapterAddress2 = getAddress(
-    "0x0000000000000000000000000000000000000003",
-  );
+  const mockVaultAddress: Address =
+    "0x0000000000000000000000000000000000000001";
+  const mockAdapterAddress: Address =
+    "0x0000000000000000000000000000000000000002";
+  const mockAdapterAddress2: Address =
+    "0x0000000000000000000000000000000000000003";
 
   const mockMarketParams = new MarketParams({
-    loanToken: getAddress("0x000000000000000000000000000000000000000A"),
-    collateralToken: getAddress("0x000000000000000000000000000000000000000B"),
-    oracle: getAddress("0x000000000000000000000000000000000000000C"),
-    irm: getAddress("0x000000000000000000000000000000000000000D"),
+    loanToken: "0x000000000000000000000000000000000000000A",
+    collateralToken: "0x000000000000000000000000000000000000000B",
+    oracle: "0x000000000000000000000000000000000000000C",
+    irm: "0x000000000000000000000000000000000000000D",
     lltv: parseUnits("0.8", 18),
   });
 
@@ -122,9 +119,11 @@ describe("forceWithdrawVaultV2 unit tests", () => {
     expect(tx.value).toBe(0n);
   });
 
-  test("should allow withdraw less than total deallocated", ({ client }) => {
-    const deallocatedAssets = parseUnits("100", 18);
-    const withdrawAssets = parseUnits("50", 18);
+  test("should allow deallocated assets less than total withdraw assets", ({
+    client,
+  }) => {
+    const deallocatedAssets = parseUnits("50", 18);
+    const withdrawAssets = parseUnits("100", 18);
 
     const tx = vaultV2ForceWithdraw({
       vault: { address: mockVaultAddress },
