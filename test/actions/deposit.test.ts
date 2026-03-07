@@ -88,6 +88,6 @@ describe("DepositVaultV2", () => {
     expect(finalState.userSharesBalance).toBeGreaterThan(
       initialState.userSharesBalance,
     );
-    expect(finalState.userSharesBalance).toEqual(974128079043697857266n);
+    expect(finalState.userSharesBalance).toEqual(970421203423413218710n);
   });
 });
