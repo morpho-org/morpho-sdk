@@ -5,11 +5,11 @@ import { addTransactionMetadata } from "../../helpers";
 import { encodeForceDeallocateCall } from "../../helpers/encodeDeallocation";
 import {
   type Deallocation,
+  DeallocationsExceedWithdrawError,
   EmptyDeallocationsError,
   type Metadata,
   type Transaction,
   type VaultV2ForceWithdrawAction,
-  DeallocationsExceedWithdrawError,
   ZeroAssetAmountError,
 } from "../../types";
 
