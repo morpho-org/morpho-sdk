@@ -1,2 +1,6 @@
-pnpm exec biome check --write .
-git add .
+FILES=$(git diff --cached --name-only --diff-filter=d | grep -E '\.(ts|tsx|js|jsx|json|css)$' || true)
+
+if [ -n "$FILES" ]; then
+  echo "$FILES" | xargs pnpm exec biome check --write
+  echo "$FILES" | xargs git add
+fi
