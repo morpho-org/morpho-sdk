@@ -109,7 +109,7 @@ export const vaultV2ForceWithdraw = ({
       type: "vaultV2ForceWithdraw",
       args: {
         vault: vaultAddress,
-        deallocations,
+        deallocations: deallocations.map((d) => ({ ...d })),
         withdraw: {
           assets: withdraw.assets,
           recipient: withdraw.recipient,
