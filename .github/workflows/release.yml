@@ -74,7 +74,7 @@ jobs:
         uses: changesets/action@v1
         with:
           setupGitUser: false
-          publish: pnpm release --access public
+          publish: ${{ github.ref == 'refs/heads/main' && 'pnpm release --access public' || '' }}
         env:
           GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
