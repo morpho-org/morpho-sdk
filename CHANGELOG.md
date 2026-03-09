@@ -1,5 +1,15 @@
 # @morpho-org/consumer-sdk
 
+## 0.2.0
+
+### Minor Changes
+
+- c499a72: Add fetch parameters
+
+### Patch Changes
+
+- 824ba5a: fix: prevent fund loss in deposit flow when signature params diverge from deposit params
+
 ## 0.1.8
 
 ### Patch Changes
