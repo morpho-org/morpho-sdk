@@ -1,6 +1,6 @@
-FILES=$(git diff --cached --name-only --diff-filter=d | grep -E '\.(ts|tsx|js|jsx|json|css)$' || true)
+STAGED_FILES=$(git diff --staged --name-only --diff-filter=d | grep -E '\.(js|jsx|mjs|cjs|ts|tsx|mts|cts|json|css|scss|yml|yaml|md|mdx|gql|graphql|html)$' | xargs || true)
 
-if [ -n "$FILES" ]; then
-  echo "$FILES" | xargs pnpm exec biome check --write
-  echo "$FILES" | xargs git add
+if [ -n "$STAGED_FILES" ]; then
+    pnpm exec biome check --write --no-errors-on-unmatched $STAGED_FILES
+    git add $STAGED_FILES
 fi
