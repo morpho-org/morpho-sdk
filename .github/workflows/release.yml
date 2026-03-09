@@ -1,6 +1,9 @@
 name: Release
 
 on:
+  push:
+    branches:
+      - test-release
   workflow_dispatch:
   workflow_run:
     workflows: ["CI"]
@@ -19,7 +22,7 @@ permissions:
 jobs:
   release:
     name: Release
-    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
+    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     env:
       CI: true
