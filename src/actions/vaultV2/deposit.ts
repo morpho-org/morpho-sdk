@@ -73,7 +73,14 @@ export const vaultV2Deposit = ({
   const actions: Action[] = [];
 
   if (requirementSignature) {
-    actions.push(...getRequirementsAction({ chainId, requirementSignature }));
+    actions.push(
+      ...getRequirementsAction({
+        chainId,
+        asset,
+        assets,
+        requirementSignature,
+      }),
+    );
   } else {
     const {
       bundler3: { generalAdapter1 },
