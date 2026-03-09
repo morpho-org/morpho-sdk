@@ -60,14 +60,6 @@ export class EmptyDeallocationsError extends Error {
   }
 }
 
-export class DeallocationsExceedWithdrawError extends Error {
-  constructor(
-    vault: Address,
-    withdrawAssets: bigint,
-    totalDeallocated: bigint,
-  ) {
-    super(
-      `Total deallocated assets (${totalDeallocated}) exceed withdraw amount (${withdrawAssets}) for vault: ${vault}`,
 export class DepositAmountMismatchError extends Error {
   constructor(depositAmount: bigint, signatureAmount: bigint) {
     super(
@@ -80,6 +72,18 @@ export class DepositAssetMismatchError extends Error {
   constructor(depositAsset: Address, signatureAsset: Address) {
     super(
       `Deposit asset ${depositAsset} does not match requirement signature asset ${signatureAsset}`,
+    );
+  }
+}
+
+export class DeallocationsExceedWithdrawError extends Error {
+  constructor(
+    vault: Address,
+    withdrawAssets: bigint,
+    totalDeallocated: bigint,
+  ) {
+    super(
+      `Total deallocated assets (${totalDeallocated}) exceed withdraw amount (${withdrawAssets}) for vault: ${vault}`,
     );
   }
 }
