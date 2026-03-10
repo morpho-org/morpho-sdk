@@ -39,6 +39,7 @@ Current VaultV2 operations:
 - **withdraw** → `vaultV2Withdraw()` — direct vault call
 - **redeem** → `vaultV2Redeem()` — direct vault call
 - **forceWithdraw** → `vaultV2ForceWithdraw()` — bundled via multicall on VaultV2 contract (N forceDeallocate + 1 withdraw)
+- **forceRedeem** → `vaultV2ForceRedeem()` — bundled via multicall on VaultV2 contract (N forceDeallocate + 1 redeem)
 
 ## Code Standards
 

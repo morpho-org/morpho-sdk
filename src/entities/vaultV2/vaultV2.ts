@@ -4,6 +4,7 @@ import type { Address } from "viem";
 import {
   getRequirements,
   vaultV2Deposit,
+  vaultV2ForceRedeem,
   vaultV2ForceWithdraw,
   vaultV2Redeem,
   vaultV2Withdraw,
@@ -19,6 +20,7 @@ import {
   type RequirementSignature,
   type Transaction,
   type VaultV2DepositAction,
+  type VaultV2ForceRedeemAction,
   type VaultV2ForceWithdrawAction,
   type VaultV2RedeemAction,
   type VaultV2WithdrawAction,
@@ -115,6 +117,35 @@ export interface VaultV2Actions {
     userAddress: Address;
   }) => {
     buildTx: () => Readonly<Transaction<VaultV2ForceWithdrawAction>>;
+  };
+  /**
+   * Prepares a force redeem transaction for the VaultV2 contract using the vault's native multicall.
+   *
+   * This function encodes one or more on-chain forceDeallocate calls followed by a single redeem,
+   * executed atomically via VaultV2's multicall. This allows a user to free liquidity from multiple
+   * illiquid markets and redeem all their shares in one transaction.
+   *
+   * This is the share-based counterpart to forceWithdraw, useful for maximum withdrawal scenarios
+   * where specifying an exact asset amount is impractical.
+   *
+   * The total assets passed to forceDeallocate calls must be greater than or equal to the
+   * asset-equivalent of the redeemed shares. The caller should apply a buffer on the deallocated
+   * amounts to account for share-price drift between submission and execution.
+   *
+   * @param {Object} params - The force redeem parameters.
+   * @param {readonly Deallocation[]} params.deallocations - The typed list of deallocations to perform.
+   * @param {Object} params.redeem - The redeem parameters applied after deallocations.
+   * @param {bigint} params.redeem.shares - The amount of shares to redeem.
+   * @param {Address} params.userAddress - User address (penalty source and redeem recipient).
+   * @returns {Object} The result object.
+   * @returns {Readonly<Transaction<VaultV2ForceRedeemAction>>} returns.buildTx The prepared multicall transaction.
+   */
+  forceRedeem: (params: {
+    deallocations: readonly Deallocation[];
+    redeem: { shares: bigint };
+    userAddress: Address;
+  }) => {
+    buildTx: () => Readonly<Transaction<VaultV2ForceRedeemAction>>;
   };
 }
 
@@ -271,6 +302,39 @@ export class MorphoVaultV2 implements VaultV2Actions {
             deallocations,
             withdraw: {
               assets: withdraw.assets,
+              recipient: userAddress,
+            },
+            onBehalf: userAddress,
+          },
+          metadata: this.client.options.metadata,
+        }),
+    };
+  }
+
+  forceRedeem({
+    deallocations,
+    redeem,
+    userAddress,
+  }: {
+    deallocations: readonly Deallocation[];
+    redeem: { shares: bigint };
+    userAddress: Address;
+  }) {
+    if (this.client.viemClient.chain?.id !== this.chainId) {
+      throw new ChainIdMismatchError(
+        this.client.viemClient.chain?.id,
+        this.chainId,
+      );
+    }
+
+    return {
+      buildTx: () =>
+        vaultV2ForceRedeem({
+          vault: { address: this.vault },
+          args: {
+            deallocations,
+            redeem: {
+              shares: redeem.shares,
               recipient: userAddress,
             },
             onBehalf: userAddress,
