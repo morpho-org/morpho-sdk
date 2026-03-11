@@ -38,7 +38,7 @@ describe("ForceRedeem VaultV2", () => {
 
     await client.deal({
       erc20: ReEcosystemUsdcVaultV2.address,
-      amount: redeemShares + redeemShares,
+      amount: redeemShares,
     });
 
     const deallocations = [
