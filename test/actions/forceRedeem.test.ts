@@ -84,16 +84,14 @@ describe("ForceRedeem VaultV2", () => {
     expect(finalState.morphoAssetBalance).toEqual(
       initialState.morphoAssetBalance - assetsDeallocate,
     );
-    expect(finalState.userSharesBalance).toBeLessThan(
-      initialState.userSharesBalance,
-    );
+    expect(finalState.userSharesBalance).toEqual(0n);
   });
 
   test("should force redeem transaction from adapter vault V1", async ({
     client,
   }) => {
     const morpho = new MorphoClient(client);
-    const assets = 1n;
+    const assets = 100n;
 
     const vaultV2 = morpho.vaultV2(ReEcosystemUsdcVaultV2.address, mainnet.id);
 
@@ -102,7 +100,7 @@ describe("ForceRedeem VaultV2", () => {
 
     await client.deal({
       erc20: ReEcosystemUsdcVaultV2.address,
-      amount: redeemShares + redeemShares,
+      amount: redeemShares,
     });
 
     const deallocations = [{ adapter: adapterAddress2, assets }] as const;
@@ -136,11 +134,9 @@ describe("ForceRedeem VaultV2", () => {
       initialState.morphoAssetBalance - assets,
     );
     expect(finalStateVaultV1.userAssetBalance).toEqual(
-      initialStateVaultV1.userAssetBalance + assets,
+      initialStateVaultV1.userAssetBalance + assets - 1n, // -1 rounding
     );
-    expect(finalState.userSharesBalance).toBeLessThan(
-      initialState.userSharesBalance,
-    );
+    expect(finalState.userSharesBalance).toEqual(0n);
   });
 
   test("should force redeem transaction with multiple deallocations", async ({
@@ -148,7 +144,7 @@ describe("ForceRedeem VaultV2", () => {
   }) => {
     const morpho = new MorphoClient(client);
     const assetsDeallocate1 = parseUnits("1", 6);
-    const assetsDeallocate2 = 1n;
+    const assetsDeallocate2 = 100n;
     const totalDeallocated = assetsDeallocate1 + assetsDeallocate2;
 
     const vaultV2 = morpho.vaultV2(ReEcosystemUsdcVaultV2.address, mainnet.id);
@@ -158,7 +154,7 @@ describe("ForceRedeem VaultV2", () => {
 
     await client.deal({
       erc20: ReEcosystemUsdcVaultV2.address,
-      amount: redeemShares + redeemShares,
+      amount: redeemShares,
     });
 
     const deallocations = [
@@ -194,8 +190,6 @@ describe("ForceRedeem VaultV2", () => {
     expect(finalState.morphoAssetBalance).toEqual(
       initialState.morphoAssetBalance - assetsDeallocate1 - assetsDeallocate2,
     );
-    expect(finalState.userSharesBalance).toBeLessThan(
-      initialState.userSharesBalance,
-    );
+    expect(finalState.userSharesBalance).toEqual(0n);
   });
 });
