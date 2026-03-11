@@ -1,6 +1,9 @@
-import { KeyrockUsdcVaultV2, KpkWETHVaultV2 } from "test/fixtures/vaultV2";
 import { parseUnits } from "viem";
 import { describe, expect } from "vitest";
+import {
+  KeyrockUsdcVaultV2,
+  KpkWETHVaultV2,
+} from "../../../test/fixtures/vaultV2";
 import { test } from "../../../test/setup";
 import { ZeroAssetAmountError } from "../../types";
 import { vaultV2Withdraw } from "./withdraw";

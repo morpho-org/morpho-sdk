@@ -29,13 +29,14 @@ describe("ForceWithdraw VaultV2", () => {
     client,
   }) => {
     const morpho = new MorphoClient(client);
+    const initialAssetPosition = parseUnits("200", 6);
     const assetsDeallocate = parseUnits("100", 6);
     const assetsWithdraw = parseUnits("100", 6);
 
     const vaultV2 = morpho.vaultV2(ReEcosystemUsdcVaultV2.address, mainnet.id);
 
     const vaultV2Data = await vaultV2.getData();
-    const share = vaultV2Data.toShares(assetsWithdraw + assetsWithdraw);
+    const share = vaultV2Data.toShares(initialAssetPosition);
 
     await client.deal({
       erc20: ReEcosystemUsdcVaultV2.address,
@@ -98,12 +99,13 @@ describe("ForceWithdraw VaultV2", () => {
   }) => {
     const morpho = new MorphoClient(client);
     // on the fork, this vault v1 has small allocation
-    const assets = 1n;
+    const initialAssetPosition = parseUnits("200", 6);
+    const assets = 100n;
 
     const vaultV2 = morpho.vaultV2(ReEcosystemUsdcVaultV2.address, mainnet.id);
 
     const vaultV2Data = await vaultV2.getData();
-    const share = vaultV2Data.toShares(assets + assets);
+    const share = vaultV2Data.toShares(initialAssetPosition);
 
     await client.deal({
       erc20: ReEcosystemUsdcVaultV2.address,

@@ -1,8 +1,8 @@
 import type { Address } from "viem";
 
 export class ZeroAssetAmountError extends Error {
-  constructor(asset: Address) {
-    super(`Asset amount cannot be zero for address: ${asset}`);
+  constructor(origin: Address) {
+    super(`Asset amount cannot be zero for address ${origin}`);
   }
 }
 
