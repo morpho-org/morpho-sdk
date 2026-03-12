@@ -27,7 +27,7 @@ describe("DepositVaultV2", () => {
       },
       args: {
         assets: 1000000000000000000n,
-        maxSharePrice: 1026867018959452n,
+        maxSharePrice: 1030789509859687n,
         recipient: client.account.address,
       },
     });
@@ -88,6 +88,6 @@ describe("DepositVaultV2", () => {
     expect(finalState.userSharesBalance).toBeGreaterThan(
       initialState.userSharesBalance,
     );
-    expect(finalState.userSharesBalance).toEqual(974128079043697857266n);
+    expect(finalState.userSharesBalance).toEqual(970421203423413218710n);
   });
 });

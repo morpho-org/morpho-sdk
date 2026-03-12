@@ -1,8 +1,8 @@
 import type { Address } from "viem";
 
 export class ZeroAssetAmountError extends Error {
-  constructor(asset: Address) {
-    super(`Asset amount cannot be zero for address: ${asset}`);
+  constructor(origin: Address) {
+    super(`Asset amount cannot be zero for address ${origin}`);
   }
 }
 
@@ -54,6 +54,12 @@ export class ExcessiveSlippageToleranceError extends Error {
   }
 }
 
+export class EmptyDeallocationsError extends Error {
+  constructor(vault: Address) {
+    super(`Deallocations list cannot be empty for vault: ${vault}`);
+  }
+}
+
 export class DepositAmountMismatchError extends Error {
   constructor(depositAmount: bigint, signatureAmount: bigint) {
     super(
@@ -66,6 +72,18 @@ export class DepositAssetMismatchError extends Error {
   constructor(depositAsset: Address, signatureAsset: Address) {
     super(
       `Deposit asset ${depositAsset} does not match requirement signature asset ${signatureAsset}`,
+    );
+  }
+}
+
+export class DeallocationsExceedWithdrawError extends Error {
+  constructor(
+    vault: Address,
+    withdrawAssets: bigint,
+    totalDeallocated: bigint,
+  ) {
+    super(
+      `Total deallocated assets (${totalDeallocated}) exceed withdraw amount (${withdrawAssets}) for vault: ${vault}`,
     );
   }
 }

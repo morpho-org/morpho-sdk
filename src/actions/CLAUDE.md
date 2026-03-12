@@ -6,11 +6,13 @@ Pure functions that build deep-frozen `Transaction<TAction>` objects. Two sub-la
 
 ## `vaultV2/` — Vault Operations
 
-| Function          | Route                     | Why                                                    |
-| ----------------- | ------------------------- | ------------------------------------------------------ |
-| `vaultV2Deposit`  | Bundler (general adapter) | Enforces `maxSharePrice` — inflation attack prevention |
-| `vaultV2Withdraw` | Direct vault call         | No attack surface, simpler UX                          |
-| `vaultV2Redeem`   | Direct vault call         | No attack surface, simpler UX                          |
+| Function                  | Route                     | Why                                                    |
+| ------------------------- | ------------------------- | ------------------------------------------------------ |
+| `vaultV2Deposit`          | Bundler (general adapter) | Enforces `maxSharePrice` — inflation attack prevention |
+| `vaultV2Withdraw`         | Direct vault call         | No attack surface, simpler UX                          |
+| `vaultV2Redeem`           | Direct vault call         | No attack surface, simpler UX                          |
+| `vaultV2ForceWithdraw`    | VaultV2 multicall         | Bundles N forceDeallocate + 1 withdraw to exit illiquid positions |
+| `vaultV2ForceRedeem`      | VaultV2 multicall         | Bundles N forceDeallocate + 1 redeem for maximum withdrawal scenarios |
 
 ## `requirements/` — Approval Resolution
 

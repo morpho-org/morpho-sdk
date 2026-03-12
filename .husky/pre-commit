@@ -1,1 +1,6 @@
-pnpm exec biome check --write .
+STAGED_FILES=$(git diff --staged --name-only --diff-filter=d | grep -E '\.(js|jsx|mjs|cjs|ts|tsx|mts|cts|json|css|scss|yml|yaml|md|mdx|gql|graphql|html)$' | xargs || true)
+
+if [ -n "$STAGED_FILES" ]; then
+    pnpm exec biome check --write --no-errors-on-unmatched $STAGED_FILES
+    git add $STAGED_FILES
+fi

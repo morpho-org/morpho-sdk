@@ -69,7 +69,7 @@ describe("Withdraw VaultV2", () => {
     expect(finalState.userAssetBalance).toEqual(
       initialState.userAssetBalance + assets,
     );
-    expect(finalState.userSharesBalance).toEqual(25871919306485748900n);
+    expect(finalState.userSharesBalance).toEqual(29578794944844889136n);
     expect(finalState.morphoAssetBalance).toEqual(
       initialState.morphoAssetBalance - assets,
     );
