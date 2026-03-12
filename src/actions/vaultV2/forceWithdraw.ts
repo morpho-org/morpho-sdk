@@ -33,7 +33,7 @@ export interface VaultV2ForceWithdrawParams {
  *
  * This function encodes one or more `forceDeallocate` calls followed by a single `withdraw`,
  * executed atomically via VaultV2's `multicall`. This allows a user to free liquidity from
- * multiple illiquid markets and withdraw the resulting assets in one transaction.
+ * adapters other than the liquidity adapter and withdraw the resulting assets in one transaction.
  *
  * A penalty is taken from `onBehalf` for each deallocation to discourage allocation manipulations.
  * The penalty is applied as a share burn where assets are returned to the vault, so the share price

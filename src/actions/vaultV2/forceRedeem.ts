@@ -32,7 +32,8 @@ export interface VaultV2ForceRedeemParams {
  *
  * This function encodes one or more `forceDeallocate` calls followed by a single `redeem`,
  * executed atomically via VaultV2's `multicall`. This allows a user to free liquidity from
- * multiple illiquid markets and redeem all their shares in one transaction.
+ * adapters other than the liquidity adapter and redeem all their shares in one transaction.
+
  *
  * This is the share-based counterpart to `vaultV2ForceWithdraw`, useful when the user wants
  * to redeem a maximum amount of shares rather than specifying an exact asset amount.

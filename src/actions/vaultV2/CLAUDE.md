@@ -78,7 +78,7 @@ Builds a redeem transaction as a **direct vault call** (no bundler).
 Builds a force withdraw transaction using VaultV2's native **multicall**.
 
 Encodes one or more `forceDeallocate` calls followed by a single `withdraw`, executed atomically via `multicall` on the VaultV2 contract.
-This allows a user to free liquidity from multiple illiquid markets and withdraw the resulting assets in one transaction.
+This allows a user to free liquidity from adapters other than the liquidity adapter and withdraw the resulting assets in one transaction.
 
 | Param                     | Type             | Description                                                      |
 | ------------------------- | ---------------- | ---------------------------------------------------------------- |
