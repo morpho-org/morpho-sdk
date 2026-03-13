@@ -1,5 +1,15 @@
 # @morpho-org/consumer-sdk
 
+## 0.3.0
+
+### Minor Changes
+
+- eb449d8: Add release command for automated npm release preparation
+
+### Patch Changes
+
+- b3d8e9a: Update release command documentation and workflow
+
 ## 0.2.0
 
 ### Minor Changes

@@ -85,7 +85,30 @@ npm version <patch|minor|major> --no-git-tag-version
 
 Verify the version was updated correctly by reading `package.json`.
 
-### Step 7: Run Validation
+### Step 7: Update CHANGELOG.md
+
+Prepend a new entry to `CHANGELOG.md`, right after the `# @morpho-org/consumer-sdk` title line, following the existing format:
+
+```markdown
+## <new-version>
+
+### Minor Changes
+
+- <short-hash>: <description>
+
+### Patch Changes
+
+- <short-hash>: <description>
+```
+
+Rules:
+
+- Only include sections that have entries (e.g., omit `### Minor Changes` if there are none).
+- Use the 7-char short commit hash.
+- Group commits into `### Breaking Changes`, `### Minor Changes`, and `### Patch Changes` based on their conventional commit prefix (see Step 4 table).
+- `docs`/`chore`/`test` commits that were skipped for bump purposes should still appear under `### Patch Changes` if the user chose to release them.
+
+### Step 8: Run Validation
 
 ```bash
 pnpm lint && pnpm build
@@ -93,11 +116,11 @@ pnpm lint && pnpm build
 
 Both must pass. Fix any issues before continuing.
 
-### Step 8: Create Release Branch and PR
+### Step 9: Create Release Branch and PR
 
 ```bash
 git checkout -b chore/release-v<new-version>
-git add package.json
+git add package.json CHANGELOG.md
 git commit -m "chore(release): v<new-version>"
 git push -u origin chore/release-v<new-version>
 ```
@@ -128,7 +151,7 @@ EOF
 )"
 ```
 
-### Step 9: Final Output
+### Step 10: Final Output
 
 Return to the user:
 
