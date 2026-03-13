@@ -1,6 +1,6 @@
 # release
 
-Prepare an npm release by analyzing commits since the last tag, creating a changeset, and opening a release PR.
+Prepare and open a release PR that, once merged to `main`, triggers npm publish via CI.
 
 ## Usage
 
@@ -10,7 +10,7 @@ Prepare an npm release by analyzing commits since the last tag, creating a chang
 
 ## Instructions
 
-You are helping the user prepare a release. The workflow analyzes changes since the last published version, creates a changeset file, and opens a PR that triggers CI/CD to publish on npm.
+You are helping the user prepare a release. The workflow analyzes changes since the last published version, bumps the version in `package.json`, and opens a PR on a `chore/release-v<version>` branch. Merging the PR to `main` triggers CI to publish on npm.
 
 ### Step 1: Validate Working Tree
 
@@ -71,35 +71,21 @@ Before proceeding, present the user with:
 1. **Commits included** — list of commits grouped by category
 2. **Proposed bump** — patch / minor / major
 3. **New version** — computed from current version + bump
-4. **Changeset summary** — the description that will go in the changeset file
+4. **Changelog summary** — the description that will go in the PR body
 
 Ask the user to confirm or adjust (e.g., override bump level, edit summary).
 
-### Step 6: Clean Existing Changesets
+### Step 6: Bump Version in package.json
 
-Remove any existing changeset markdown files (NOT `config.json`):
+Use `npm version <bump> --no-git-tag-version` to update `package.json` (and `package-lock.json` if present) without creating a git tag or commit:
 
-Find `.changeset/*.md` files and delete each one. **Never delete `.changeset/config.json`**.
-
-### Step 7: Create the Changeset File
-
-Write a new file `.changeset/<generated-name>.md`:
-
-```markdown
----
-"@morpho-org/consumer-sdk": <bump>
----
-
-<summary>
+```bash
+npm version <patch|minor|major> --no-git-tag-version
 ```
 
-Where:
+Verify the version was updated correctly by reading `package.json`.
 
-- `<bump>` is `patch`, `minor`, or `major`
-- `<summary>` is a concise description of all changes (multi-line if needed)
-- `<generated-name>` is a kebab-case slug (e.g., `release-v0-3-0`)
-
-### Step 8: Run Validation
+### Step 7: Run Validation
 
 ```bash
 pnpm lint && pnpm build
@@ -107,13 +93,13 @@ pnpm lint && pnpm build
 
 Both must pass. Fix any issues before continuing.
 
-### Step 9: Create Release Branch and PR
+### Step 8: Create Release Branch and PR
 
 ```bash
-git checkout -b release/v<new-version>
-git add .changeset/
-git commit -m "chore(release): prepare v<new-version>"
-git push -u origin release/v<new-version>
+git checkout -b chore/release-v<new-version>
+git add package.json
+git commit -m "chore(release): v<new-version>"
+git push -u origin chore/release-v<new-version>
 ```
 
 Then create the PR:
@@ -142,17 +128,16 @@ EOF
 )"
 ```
 
-### Step 10: Final Output
+### Step 9: Final Output
 
 Return to the user:
 
 - Link to the created PR
 - Summary of what was included
-- Reminder: merging this PR to `main` will trigger CI → changesets action → npm publish
+- Reminder: merging this PR to `main` will trigger CI → git tag → npm publish
 
 ### Important Notes
 
 - Never force-push or push directly to `main`.
-- The changeset action in CI handles the actual version bump in `package.json` and npm publish.
-- If the user wants to adjust the changeset after PR creation, they can edit the `.md` file on the branch.
+- The release workflow in CI handles creating the git tag and publishing to npm when the release PR is merged.
 - Always run `pnpm lint && pnpm build` before committing.
