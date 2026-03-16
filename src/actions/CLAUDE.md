@@ -2,9 +2,17 @@
 
 > Full context: [CLAUDE.md](../../CLAUDE.md)
 
-Pure functions that build deep-frozen `Transaction<TAction>` objects. Two sub-layers:
+Pure functions that build deep-frozen `Transaction<TAction>` objects. Three sub-layers:
 
-## `vaultV2/` — Vault Operations
+## `vaultV1/` — VaultV1 (MetaMorpho) Operations
+
+| Function           | Route                     | Why                                                    |
+| ------------------ | ------------------------- | ------------------------------------------------------ |
+| `vaultV1Deposit`   | Bundler (general adapter) | Enforces `maxSharePrice` — inflation attack prevention |
+| `vaultV1Withdraw`  | Direct vault call         | No attack surface, simpler UX                          |
+| `vaultV1Redeem`    | Direct vault call         | No attack surface, simpler UX                          |
+
+## `vaultV2/` — VaultV2 Operations
 
 | Function                  | Route                     | Why                                                    |
 | ------------------------- | ------------------------- | ------------------------------------------------------ |

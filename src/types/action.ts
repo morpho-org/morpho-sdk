@@ -69,13 +69,47 @@ export interface VaultV2ForceRedeemAction
     }
   > {}
 
+export interface VaultV1DepositAction
+  extends BaseAction<
+    "vaultV1Deposit",
+    {
+      vault: Address;
+      assets: bigint;
+      maxSharePrice: bigint;
+      recipient: Address;
+    }
+  > {}
+
+export interface VaultV1WithdrawAction
+  extends BaseAction<
+    "vaultV1Withdraw",
+    {
+      vault: Address;
+      assets: bigint;
+      recipient: Address;
+    }
+  > {}
+
+export interface VaultV1RedeemAction
+  extends BaseAction<
+    "vaultV1Redeem",
+    {
+      vault: Address;
+      shares: bigint;
+      recipient: Address;
+    }
+  > {}
+
 export type TransactionAction =
   | ERC20ApprovalAction
   | VaultV2DepositAction
   | VaultV2WithdrawAction
   | VaultV2RedeemAction
   | VaultV2ForceWithdrawAction
-  | VaultV2ForceRedeemAction;
+  | VaultV2ForceRedeemAction
+  | VaultV1DepositAction
+  | VaultV1WithdrawAction
+  | VaultV1RedeemAction;
 
 export interface Transaction<TAction extends BaseAction = TransactionAction> {
   readonly to: Address;

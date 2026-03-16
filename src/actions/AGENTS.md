@@ -8,19 +8,20 @@ Pure functions that build deep-frozen `Transaction<TAction>` objects. No side ef
 
 | Sub-layer | Path | Role | Docs |
 |-----------|------|------|------|
-| **Vault Operations** | `vaultV2/` | Build deposit / withdraw / redeem / forceWithdraw / forceRedeem transactions | [`vaultV2/AGENTS.md`](vaultV2/AGENTS.md) |
+| **VaultV1 Operations** | `vaultV1/` | Build VaultV1 (MetaMorpho) deposit / withdraw / redeem transactions | [`vaultV1/AGENTS.md`](vaultV1/AGENTS.md) |
+| **VaultV2 Operations** | `vaultV2/` | Build VaultV2 deposit / withdraw / redeem / forceWithdraw / forceRedeem transactions | [`vaultV2/AGENTS.md`](vaultV2/AGENTS.md) |
 | **Requirements** | `requirements/` | Resolve token approval needs before a deposit | [`requirements/AGENTS.md`](requirements/AGENTS.md) |
 
 ## Data Flow
 
 ```
-Entity (MorphoVaultV2)
-  │
-  ├─ deposit ──────────► vaultV2Deposit()           ← bundler (may include requirementSignature)
-  ├─ withdraw ─────────► vaultV2Withdraw()          ← direct vault call
-  ├─ redeem ───────────► vaultV2Redeem()            ← direct vault call
-  ├─ forceWithdraw ────► vaultV2ForceWithdraw()      ← multicall on VaultV2 (N forceDeallocate + 1 withdraw)
-  └─ forceRedeem ──────► vaultV2ForceRedeem()        ← multicall on VaultV2 (N forceDeallocate + 1 redeem)
+Entity (MorphoVaultV1)                          Entity (MorphoVaultV2)
+  │                                               │
+  ├─ deposit ──► vaultV1Deposit()  ← bundler      ├─ deposit ──────────► vaultV2Deposit()           ← bundler
+  ├─ withdraw ─► vaultV1Withdraw() ← direct       ├─ withdraw ─────────► vaultV2Withdraw()          ← direct
+  └─ redeem ──► vaultV1Redeem()   ← direct        ├─ redeem ───────────► vaultV2Redeem()            ← direct
+                                                   ├─ forceWithdraw ────► vaultV2ForceWithdraw()      ← multicall
+                                                   └─ forceRedeem ──────► vaultV2ForceRedeem()        ← multicall
                     │
                     ▼
          Readonly<Transaction<TAction>>  (deep-frozen)
@@ -36,9 +37,10 @@ Entity (MorphoVaultV2)
 
 ## Exports
 
-Barrel `index.ts` re-exports both sub-layers:
+Barrel `index.ts` re-exports all sub-layers:
 
 ```typescript
 export * from "./requirements";
+export * from "./vaultV1";
 export * from "./vaultV2";
 ```

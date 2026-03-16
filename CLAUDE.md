@@ -1,7 +1,7 @@
 # Consumer SDK
 
 Morpho Consumer SDK — TypeScript SDK that provides an abstraction layer over the Morpho Protocol.
-It simplifies building transactions for **VaultV2** operations (deposit, withdraw, redeem) on EVM-compatible chains.
+It simplifies building transactions for **VaultV1** (MetaMorpho) and **VaultV2** operations on EVM-compatible chains.
 
 ## Intent Layer
 
@@ -27,13 +27,21 @@ Strict layering: **Client → Entity → Action**. Never skip a layer.
 | Layer        | Location                    | Role                                                                |
 | ------------ | --------------------------- | ------------------------------------------------------------------- |
 | Client       | `src/client/`               | Wraps viem `Client`, manages options, provides vault access         |
-| Entity       | `src/entities/vaultV2/`     | Fetches on-chain data, delegates to action builders                 |
-| Actions      | `src/actions/vaultV2/`      | Pure functions → `Transaction<TAction>` (deep-frozen)               |
+| Entity       | `src/entities/vaultV1/`     | VaultV1 (MetaMorpho): fetches on-chain data, delegates to actions   |
+| Entity       | `src/entities/vaultV2/`     | VaultV2: fetches on-chain data, delegates to actions                |
+| Actions      | `src/actions/vaultV1/`      | VaultV1 pure tx builders (deposit, withdraw, redeem)                |
+| Actions      | `src/actions/vaultV2/`      | VaultV2 pure tx builders (deposit, withdraw, redeem, force ops)     |
 | Requirements | `src/actions/requirements/` | Resolves approval / permit / permit2 needs                          |
 | Types        | `src/types/`                | All type definitions, custom errors. Barrel-exported via `index.ts` |
 | Helpers      | `src/helpers/`              | Utility functions (metadata handling)                               |
 
-Current VaultV2 operations:
+VaultV1 (MetaMorpho) operations:
+
+- **deposit** → `vaultV1Deposit()` — routed through bundler3 (never bypass general adapter)
+- **withdraw** → `vaultV1Withdraw()` — direct vault call
+- **redeem** → `vaultV1Redeem()` — direct vault call
+
+VaultV2 operations:
 
 - **deposit** → `vaultV2Deposit()` — routed through bundler3 (never bypass general adapter)
 - **withdraw** → `vaultV2Withdraw()` — direct vault call
