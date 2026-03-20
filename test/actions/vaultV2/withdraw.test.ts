@@ -1,40 +1,41 @@
-import { MorphoClient, vaultV2Redeem } from "src";
+import { MorphoClient, vaultV2Withdraw } from "src";
 import { KeyrockUsdcVaultV2 } from "test/fixtures/vaultV2";
 import { testInvariants } from "test/helpers/invariants";
 import { parseUnits } from "viem";
 import { mainnet } from "viem/chains";
 import { describe, expect } from "vitest";
-import { test } from "../setup";
+import { test } from "../../setup";
 
-describe("Redeem VaultV2", () => {
+describe("Withdraw VaultV2", () => {
   test("should create redeem transaction", async ({ client }) => {
     const morpho = new MorphoClient(client);
 
-    const redeem = morpho
+    const withdraw = morpho
       .vaultV2(KeyrockUsdcVaultV2.address, mainnet.id)
-      .redeem({
+      .withdraw({
         userAddress: client.account.address,
-        shares: 1000000000000000000n,
+        assets: 1000000000000000000n,
       });
-    const tx_1 = redeem.buildTx();
+    const tx_1 = withdraw.buildTx();
 
-    const tx_2 = vaultV2Redeem({
+    const tx_2 = vaultV2Withdraw({
       vault: {
         address: KeyrockUsdcVaultV2.address,
       },
       args: {
-        shares: 1000000000000000000n,
+        assets: 1000000000000000000n,
         recipient: client.account.address,
         onBehalf: client.account.address,
       },
     });
 
-    expect(redeem).toBeDefined();
+    expect(withdraw).toBeDefined();
     expect(tx_1).toStrictEqual(tx_2);
   });
 
-  test("should redeem 1K USDC in vaultV2", async ({ client }) => {
+  test("should withdraw 1K assets in vaultV2", async ({ client }) => {
     const shares = parseUnits("1000", 18);
+    const assets = parseUnits("1000", 6);
     await client.deal({
       erc20: KeyrockUsdcVaultV2.address,
       amount: shares,
@@ -52,25 +53,25 @@ describe("Redeem VaultV2", () => {
       actionFn: async () => {
         const morpho = new MorphoClient(client);
         const vaultV2 = morpho.vaultV2(KeyrockUsdcVaultV2.address, mainnet.id);
-        const redeem = vaultV2.redeem({
+        const withdraw = vaultV2.withdraw({
           userAddress: client.account.address,
-          shares,
+          assets,
         });
-        const tx = redeem.buildTx();
+        const tx = withdraw.buildTx();
 
         await client.sendTransaction(tx);
       },
     });
 
-    expect(finalState.userSharesBalance).toEqual(
-      initialState.userSharesBalance - shares,
+    expect(finalState.userSharesBalance).toBeLessThan(
+      initialState.userSharesBalance,
     );
-    expect(finalState.userAssetBalance).toBeGreaterThan(
-      initialState.userAssetBalance,
+    expect(finalState.userAssetBalance).toEqual(
+      initialState.userAssetBalance + assets,
     );
-    expect(finalState.userAssetBalance).toEqual(1030480367n);
-    expect(finalState.morphoAssetBalance).toBeLessThan(
-      initialState.morphoAssetBalance,
+    expect(finalState.userSharesBalance).toEqual(29578794944844889136n);
+    expect(finalState.morphoAssetBalance).toEqual(
+      initialState.morphoAssetBalance - assets,
     );
   });
 });

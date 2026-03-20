@@ -14,7 +14,7 @@ import { createVaultV2 } from "test/helpers/vaultV2";
 import { isHex, parseUnits } from "viem";
 import { mainnet } from "viem/chains";
 import { describe, expect } from "vitest";
-import { test } from "../setup";
+import { test } from "../../setup";
 
 describe("Permit2", () => {
   const {

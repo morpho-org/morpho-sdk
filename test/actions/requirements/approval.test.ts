@@ -4,8 +4,8 @@ import { testInvariants } from "test/helpers/invariants";
 import { parseUnits } from "viem";
 import { mainnet } from "viem/chains";
 import { describe, expect } from "vitest";
-import { isRequirementApproval, MorphoClient } from "../../src";
-import { test } from "../setup";
+import { isRequirementApproval, MorphoClient } from "../../../src";
+import { test } from "../../setup";
 
 describe("Approval", () => {
   test("should approve once for USDT vaultV2 with allowance 0", async ({

@@ -3,8 +3,12 @@ import { testInvariants } from "test/helpers/invariants";
 import { parseUnits } from "viem";
 import { mainnet } from "viem/chains";
 import { describe, expect } from "vitest";
-import { isRequirementApproval, MorphoClient, vaultV2Deposit } from "../../src";
-import { test } from "../setup";
+import {
+  isRequirementApproval,
+  MorphoClient,
+  vaultV2Deposit,
+} from "../../../src";
+import { test } from "../../setup";
 
 describe("DepositVaultV2", () => {
   test("should create deposit bundle", async ({ client }) => {

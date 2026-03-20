@@ -4,7 +4,7 @@ import { testInvariants } from "test/helpers/invariants";
 import { isHex, parseUnits } from "viem";
 import { mainnet } from "viem/chains";
 import { describe, expect } from "vitest";
-import { test } from "../setup";
+import { test } from "../../setup";
 
 describe("Permit", () => {
   test("should deposit USDC with permit version 2", async ({ client }) => {

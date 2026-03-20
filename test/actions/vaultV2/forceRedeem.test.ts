@@ -2,12 +2,12 @@ import { MarketParams } from "@morpho-org/blue-sdk";
 import { type Address, parseUnits } from "viem";
 import { mainnet } from "viem/chains";
 import { describe, expect } from "vitest";
-import { MorphoClient, vaultV2ForceWithdraw } from "../../src";
-import { ReEcosystemUsdcVaultV2 } from "../fixtures/vaultV2";
-import { testInvariants } from "../helpers/invariants";
-import { test } from "../setup";
+import { MorphoClient, vaultV2ForceRedeem } from "../../../src";
+import { ReEcosystemUsdcVaultV2 } from "../../fixtures/vaultV2";
+import { testInvariants } from "../../helpers/invariants";
+import { test } from "../../setup";
 
-describe("ForceWithdraw VaultV2", () => {
+describe("ForceRedeem VaultV2", () => {
   // MarketV1 adapter addresses
   const adapterAddress1: Address = "0xBf3a9504d555752ae12d2c482E957C66C4A32131";
   const marketParams = new MarketParams({
@@ -25,22 +25,20 @@ describe("ForceWithdraw VaultV2", () => {
     asset: "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
   } as const;
 
-  test("should create force withdraw transaction from adapter market V1", async ({
+  test("should create force redeem transaction from adapter market V1", async ({
     client,
   }) => {
     const morpho = new MorphoClient(client);
-    const initialAssetPosition = parseUnits("200", 6);
     const assetsDeallocate = parseUnits("100", 6);
-    const assetsWithdraw = parseUnits("100", 6);
 
     const vaultV2 = morpho.vaultV2(ReEcosystemUsdcVaultV2.address, mainnet.id);
 
     const vaultV2Data = await vaultV2.getData();
-    const share = vaultV2Data.toShares(initialAssetPosition);
+    const redeemShares = vaultV2Data.toShares(assetsDeallocate);
 
     await client.deal({
       erc20: ReEcosystemUsdcVaultV2.address,
-      amount: share,
+      amount: redeemShares,
     });
 
     const deallocations = [
@@ -51,18 +49,18 @@ describe("ForceWithdraw VaultV2", () => {
       },
     ] as const;
 
-    const forceWithdraw = vaultV2.forceWithdraw({
+    const forceRedeem = vaultV2.forceRedeem({
       deallocations,
-      withdraw: { assets: assetsWithdraw },
+      redeem: { shares: redeemShares },
       userAddress: client.account.address,
     });
-    const tx_1 = forceWithdraw.buildTx();
+    const tx_1 = forceRedeem.buildTx();
 
-    const tx_2 = vaultV2ForceWithdraw({
+    const tx_2 = vaultV2ForceRedeem({
       vault: { address: ReEcosystemUsdcVaultV2.address },
       args: {
         deallocations,
-        withdraw: { assets: assetsWithdraw, recipient: client.account.address },
+        redeem: { shares: redeemShares, recipient: client.account.address },
         onBehalf: client.account.address,
       },
     });
@@ -86,40 +84,33 @@ describe("ForceWithdraw VaultV2", () => {
     expect(finalState.morphoAssetBalance).toEqual(
       initialState.morphoAssetBalance - assetsDeallocate,
     );
-    expect(finalState.vaultBalance).toEqual(
-      initialState.vaultBalance + assetsDeallocate - assetsWithdraw,
-    );
-    expect(finalState.userAssetBalance).toEqual(
-      initialState.userAssetBalance + assetsWithdraw,
-    );
+    expect(finalState.userSharesBalance).toEqual(0n);
   });
 
-  test("should force withdraw transaction from adapter vault V1", async ({
+  test("should force redeem transaction from adapter vault V1", async ({
     client,
   }) => {
     const morpho = new MorphoClient(client);
-    // on the fork, this vault v1 has small allocation
-    const initialAssetPosition = parseUnits("200", 6);
     const assets = 100n;
 
     const vaultV2 = morpho.vaultV2(ReEcosystemUsdcVaultV2.address, mainnet.id);
 
     const vaultV2Data = await vaultV2.getData();
-    const share = vaultV2Data.toShares(initialAssetPosition);
+    const redeemShares = vaultV2Data.toShares(assets);
 
     await client.deal({
       erc20: ReEcosystemUsdcVaultV2.address,
-      amount: share,
+      amount: redeemShares,
     });
 
     const deallocations = [{ adapter: adapterAddress2, assets }] as const;
 
-    const forceWithdraw = vaultV2.forceWithdraw({
+    const forceRedeem = vaultV2.forceRedeem({
       deallocations,
-      withdraw: { assets },
+      redeem: { shares: redeemShares },
       userAddress: client.account.address,
     });
-    const tx = forceWithdraw.buildTx();
+    const tx = forceRedeem.buildTx();
 
     const {
       vaults: {
@@ -143,32 +134,27 @@ describe("ForceWithdraw VaultV2", () => {
       initialState.morphoAssetBalance - assets,
     );
     expect(finalStateVaultV1.userAssetBalance).toEqual(
-      initialStateVaultV1.userAssetBalance + assets,
+      initialStateVaultV1.userAssetBalance + assets - 1n, // -1 rounding
     );
-    expect(finalState.vaultBalance).toEqual(
-      initialState.vaultBalance + assets - assets,
-    );
-    expect(finalState.userAssetBalance).toEqual(
-      initialState.userAssetBalance + assets,
-    );
+    expect(finalState.userSharesBalance).toEqual(0n);
   });
 
-  test("should force withdraw transaction with multiple deallocations", async ({
+  test("should force redeem transaction with multiple deallocations", async ({
     client,
   }) => {
     const morpho = new MorphoClient(client);
     const assetsDeallocate1 = parseUnits("1", 6);
-    const assetsDeallocate2 = 1n;
-    const withdrawAssets = assetsDeallocate1 + assetsDeallocate2;
+    const assetsDeallocate2 = 100n;
+    const totalDeallocated = assetsDeallocate1 + assetsDeallocate2;
 
     const vaultV2 = morpho.vaultV2(ReEcosystemUsdcVaultV2.address, mainnet.id);
 
     const vaultV2Data = await vaultV2.getData();
-    const share = vaultV2Data.toShares(withdrawAssets + withdrawAssets);
+    const redeemShares = vaultV2Data.toShares(totalDeallocated);
 
     await client.deal({
       erc20: ReEcosystemUsdcVaultV2.address,
-      amount: share,
+      amount: redeemShares,
     });
 
     const deallocations = [
@@ -180,12 +166,12 @@ describe("ForceWithdraw VaultV2", () => {
       { adapter: adapterAddress2, assets: assetsDeallocate2 },
     ] as const;
 
-    const forceWithdraw = vaultV2.forceWithdraw({
+    const forceRedeem = vaultV2.forceRedeem({
       deallocations,
-      withdraw: { assets: withdrawAssets },
+      redeem: { shares: redeemShares },
       userAddress: client.account.address,
     });
-    const tx = forceWithdraw.buildTx();
+    const tx = forceRedeem.buildTx();
 
     const {
       vaults: {
@@ -204,13 +190,6 @@ describe("ForceWithdraw VaultV2", () => {
     expect(finalState.morphoAssetBalance).toEqual(
       initialState.morphoAssetBalance - assetsDeallocate1 - assetsDeallocate2,
     );
-    expect(finalState.vaultBalance).toEqual(
-      initialState.vaultBalance +
-        (assetsDeallocate1 + assetsDeallocate2) -
-        withdrawAssets,
-    );
-    expect(finalState.userAssetBalance).toEqual(
-      initialState.userAssetBalance + withdrawAssets,
-    );
+    expect(finalState.userSharesBalance).toEqual(0n);
   });
 });
