@@ -5,11 +5,11 @@ import type { Address } from "viem";
 import { addTransactionMetadata } from "../../helpers";
 import {
   type Metadata,
+  NonPositiveAssetAmountError,
+  NonPositiveMaxSharePriceError,
   type RequirementSignature,
   type Transaction,
   type VaultV2DepositAction,
-  ZeroAssetAmountError,
-  ZeroMaxSharePriceError,
 } from "../../types";
 import { getRequirementsAction } from "../requirements/getRequirementsAction";
 
@@ -62,12 +62,12 @@ export const vaultV2Deposit = ({
   args: { assets, maxSharePrice, recipient, requirementSignature },
   metadata,
 }: VaultV2DepositParams): Readonly<Transaction<VaultV2DepositAction>> => {
-  if (assets === 0n) {
-    throw new ZeroAssetAmountError(asset);
+  if (assets <= 0n) {
+    throw new NonPositiveAssetAmountError(asset);
   }
 
-  if (maxSharePrice === 0n) {
-    throw new ZeroMaxSharePriceError(vaultAddress);
+  if (maxSharePrice <= 0n) {
+    throw new NonPositiveMaxSharePriceError(vaultAddress);
   }
 
   const actions: Action[] = [];

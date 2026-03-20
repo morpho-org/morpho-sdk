@@ -5,7 +5,7 @@ import {
   KpkWETHVaultV2,
 } from "../../../test/fixtures/vaultV2";
 import { test } from "../../../test/setup";
-import { ZeroAssetAmountError } from "../../types";
+import { NonPositiveAssetAmountError } from "../../types";
 import { vaultV2Withdraw } from "./withdraw";
 
 describe("withdrawVaultV2 unit tests", () => {
@@ -61,7 +61,7 @@ describe("withdrawVaultV2 unit tests", () => {
     expect(tx.value).toBe(0n);
   });
 
-  test("should throw ZeroAssetAmountError when assets is zero", async () => {
+  test("should throw NonPositiveAssetAmountError when assets is zero", async () => {
     expect(() =>
       vaultV2Withdraw({
         vault: {
@@ -73,6 +73,6 @@ describe("withdrawVaultV2 unit tests", () => {
           onBehalf: "0x1234567890123456789012345678901234567890",
         },
       }),
-    ).toThrow(ZeroAssetAmountError);
+    ).toThrow(NonPositiveAssetAmountError);
   });
 });

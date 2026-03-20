@@ -8,9 +8,9 @@ import {
   DeallocationsExceedWithdrawError,
   EmptyDeallocationsError,
   type Metadata,
+  NonPositiveAssetAmountError,
   type Transaction,
   type VaultV2ForceWithdrawAction,
-  ZeroAssetAmountError,
 } from "../../types";
 
 export interface VaultV2ForceWithdrawParams {
@@ -62,8 +62,8 @@ export const vaultV2ForceWithdraw = ({
     throw new EmptyDeallocationsError(vaultAddress);
   }
 
-  if (withdraw.assets === 0n) {
-    throw new ZeroAssetAmountError(vaultAddress);
+  if (withdraw.assets <= 0n) {
+    throw new NonPositiveAssetAmountError(vaultAddress);
   }
 
   const totalDeallocated = deallocations.reduce((sum, d) => sum + d.assets, 0n);

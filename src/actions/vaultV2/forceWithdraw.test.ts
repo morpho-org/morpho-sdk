@@ -5,7 +5,7 @@ import { test } from "../../../test/setup";
 import {
   DeallocationsExceedWithdrawError,
   EmptyDeallocationsError,
-  ZeroAssetAmountError,
+  NonPositiveAssetAmountError,
 } from "../../types";
 import { vaultV2ForceWithdraw } from "./forceWithdraw";
 
@@ -200,7 +200,7 @@ describe("forceWithdrawVaultV2 unit tests", () => {
     ).toThrow(EmptyDeallocationsError);
   });
 
-  test("should throw ZeroAssetAmountError when withdraw assets is zero", ({
+  test("should throw NonPositiveAssetAmountError when withdraw assets is zero", ({
     client,
   }) => {
     expect(() =>
@@ -214,7 +214,7 @@ describe("forceWithdrawVaultV2 unit tests", () => {
           onBehalf: client.account.address,
         },
       }),
-    ).toThrow(ZeroAssetAmountError);
+    ).toThrow(NonPositiveAssetAmountError);
   });
 
   test("should throw DeallocationsExceedWithdrawError when total deallocated exceeds withdraw", ({

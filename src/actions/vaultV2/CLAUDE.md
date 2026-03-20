@@ -27,7 +27,7 @@ Builds a deposit transaction routed through the **bundler** (general adapter).
 - If no signature → `erc20TransferFrom` to general adapter, then `erc4626Deposit`.
 - Actions are bundled atomically via `BundlerAction.encodeBundle()`.
 
-**Validation:** Throws `ZeroAssetAmountError` if `assets === 0n`, `ZeroMaxSharePriceError` if `maxSharePrice === 0n`.
+**Validation:** Throws `NonPositiveAssetAmountError` if `assets <= 0n`, `NonPositiveMaxSharePriceError` if `maxSharePrice <= 0n`.
 
 **Security:** The general adapter enforces `maxSharePrice` on-chain. **Never bypass it** — vaults without dead deposit protection are vulnerable to inflation attacks.
 
@@ -47,7 +47,7 @@ Builds a withdraw transaction as a **direct vault call** (no bundler).
 | `args.onBehalf`  | `Address` | Address whose shares are burned |
 | `metadata`       | optional  | Analytics metadata to append    |
 
-**Validation:** Throws `ZeroAssetAmountError` if `assets === 0n`.
+**Validation:** Throws `NonPositiveAssetAmountError` if `assets <= 0n`.
 
 **Why no bundler?** Withdraw has no inflation attack surface. Direct call avoids unnecessary approval overhead.
 
@@ -67,7 +67,7 @@ Builds a redeem transaction as a **direct vault call** (no bundler).
 | `args.onBehalf`  | `Address` | Address whose shares are burned |
 | `metadata`       | optional  | Analytics metadata to append    |
 
-**Validation:** Throws `ZeroSharesAmountError` if `shares === 0n`.
+**Validation:** Throws `NonPositiveSharesAmountError` if `shares <= 0n`.
 
 **Why no bundler?** Same rationale as withdraw — no attack surface.
 
@@ -89,7 +89,7 @@ This allows a user to free liquidity from adapters other than the liquidity adap
 | `args.onBehalf`           | `Address`        | Address from which the penalty is taken (share owner)            |
 | `metadata`                | optional         | Analytics metadata to append                                     |
 
-**Validation:** Throws `EmptyDeallocationsError` if `deallocations` is empty. Throws `ZeroAssetAmountError` if `withdraw.assets === 0n`.
+**Validation:** Throws `EmptyDeallocationsError` if `deallocations` is empty. Throws `NonPositiveAssetAmountError` if `withdraw.assets <= 0n`.
 
 **Deallocation data encoding:** When `marketParams` is provided (Morpho Market V1 adapter), the data is ABI-encoded from the `MarketParams`. When `marketParams` is omitted (e.g. Vault V1 adapter), empty bytes (`0x`) are passed.
 
@@ -115,7 +115,7 @@ This is the share-based counterpart to `vaultV2ForceWithdraw`, useful for maximu
 | `args.onBehalf`         | `Address`        | Address from which the penalty is taken (share owner)            |
 | `metadata`              | optional         | Analytics metadata to append                                     |
 
-**Validation:** Throws `EmptyDeallocationsError` if `deallocations` is empty. Throws `ZeroSharesAmountError` if `redeem.shares === 0n`.
+**Validation:** Throws `EmptyDeallocationsError` if `deallocations` is empty. Throws `NonPositiveSharesAmountError` if `redeem.shares <= 0n`.
 
 **Deallocation data encoding:** Same as `vaultV2ForceWithdraw` — when `marketParams` is provided (Morpho Market V1 adapter), the data is ABI-encoded from the `MarketParams`. When `marketParams` is omitted (e.g. Vault V1 adapter), empty bytes (`0x`) are passed.
 

@@ -61,10 +61,10 @@ Detect your environment to determine the review mode:
    **Morpho Protocol Security** (CRITICAL — review these FIRST):
 
    - **General adapter for deposits**: Deposits MUST go through the general adapter (bundler3). It enforces `maxSharePrice` — bypassing it opens an inflation attack vector
-   - **`maxSharePrice` validation**: Every deposit must include a non-zero `maxSharePrice`. Check for `ZeroMaxSharePriceError` usage
+   - **`maxSharePrice` validation**: Every deposit must include a positive `maxSharePrice`. Check for `NonPositiveMaxSharePriceError` usage
    - **`chainId` match**: Verify that `chainId` is validated between client and action params before any on-chain call. Check for `ChainIdMismatchError` usage
    - **Address validation**: Client address and args address must match. Check for `AddressMismatchError` usage
-   - **Zero-amount guards**: Assets and shares amounts must be validated (non-zero). Check for `ZeroAssetAmountError` / `ZeroSharesAmountError`
+   - **Positive-amount guards**: Assets and shares amounts must be validated (positive). Check for `NonPositiveAssetAmountError` / `NonPositiveSharesAmountError`
    - **Approval flow correctness**: Approval amounts must be >= spend amounts. Permit / Permit2 signature flows must be correct
 
    **Immutability** (CRITICAL):

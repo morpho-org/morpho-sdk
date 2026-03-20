@@ -4,9 +4,9 @@ import { type Address, encodeFunctionData } from "viem";
 import { addTransactionMetadata } from "../../helpers";
 import {
   type Metadata,
+  NonPositiveSharesAmountError,
   type Transaction,
   type VaultV2RedeemAction,
-  ZeroSharesAmountError,
 } from "../../types";
 
 export interface VaultV2RedeemParams {
@@ -44,8 +44,8 @@ export const vaultV2Redeem = ({
   args: { shares, recipient, onBehalf },
   metadata,
 }: VaultV2RedeemParams): Readonly<Transaction<VaultV2RedeemAction>> => {
-  if (shares === 0n) {
-    throw new ZeroSharesAmountError(vaultAddress);
+  if (shares <= 0n) {
+    throw new NonPositiveSharesAmountError(vaultAddress);
   }
 
   let tx = {

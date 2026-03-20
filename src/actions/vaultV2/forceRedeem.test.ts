@@ -2,7 +2,10 @@ import { MarketParams } from "@morpho-org/blue-sdk";
 import { type Address, isHex, parseUnits } from "viem";
 import { describe, expect } from "vitest";
 import { test } from "../../../test/setup";
-import { EmptyDeallocationsError, ZeroSharesAmountError } from "../../types";
+import {
+  EmptyDeallocationsError,
+  NonPositiveSharesAmountError,
+} from "../../types";
 import { vaultV2ForceRedeem } from "./forceRedeem";
 
 describe("forceRedeemVaultV2 unit tests", () => {
@@ -174,7 +177,7 @@ describe("forceRedeemVaultV2 unit tests", () => {
     ).toThrow(EmptyDeallocationsError);
   });
 
-  test("should throw ZeroSharesAmountError when redeem shares is zero", ({
+  test("should throw NonPositiveSharesAmountError when redeem shares is zero", ({
     client,
   }) => {
     expect(() =>
@@ -188,6 +191,6 @@ describe("forceRedeemVaultV2 unit tests", () => {
           onBehalf: client.account.address,
         },
       }),
-    ).toThrow(ZeroSharesAmountError);
+    ).toThrow(NonPositiveSharesAmountError);
   });
 });

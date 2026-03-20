@@ -12,6 +12,7 @@ import {
   DepositAmountMismatchError,
   isRequirementApproval,
   isRequirementSignature,
+  NonPositiveAssetAmountError,
 } from "../../types";
 import { getRequirements } from "../requirements";
 import * as getRequirementsActionModule from "../requirements/getRequirementsAction";
@@ -246,6 +247,25 @@ describe("depositVaultV2 unit tests", () => {
         },
       }),
     ).toThrow(DepositAmountMismatchError);
+  });
+
+  test("should throw NonPositiveAssetAmountError when assets is negative", async ({
+    client,
+  }) => {
+    expect(() =>
+      vaultV2Deposit({
+        vault: {
+          chainId: mainnet.id,
+          address: KeyrockUsdcVaultV2.address,
+          asset: KeyrockUsdcVaultV2.asset,
+        },
+        args: {
+          assets: -1n,
+          maxSharePrice: 1000000n,
+          recipient: client.account.address,
+        },
+      }),
+    ).toThrow(NonPositiveAssetAmountError);
   });
 
   test("should create deposit bundle without requirement signature", async ({

@@ -16,6 +16,7 @@ import {
   type ERC20ApprovalAction,
   ExcessiveSlippageToleranceError,
   type MorphoClientType,
+  NonPositiveSharesAmountError,
   type Requirement,
   type RequirementSignature,
   type Transaction,
@@ -24,7 +25,6 @@ import {
   type VaultV2ForceWithdrawAction,
   type VaultV2RedeemAction,
   type VaultV2WithdrawAction,
-  ZeroSharesAmountError,
 } from "../../types";
 import type { FetchParameters } from "../../types/data";
 
@@ -190,8 +190,8 @@ export class MorphoVaultV2 implements VaultV2Actions {
     }
 
     const shares = vaultData.toShares(assets);
-    if (shares === 0n) {
-      throw new ZeroSharesAmountError(this.vault);
+    if (shares <= 0n) {
+      throw new NonPositiveSharesAmountError(this.vault);
     }
 
     const maxSharePrice = MathLib.min(

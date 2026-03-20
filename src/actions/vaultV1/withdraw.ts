@@ -4,9 +4,9 @@ import { type Address, encodeFunctionData } from "viem";
 import { addTransactionMetadata } from "../../helpers";
 import {
   type Metadata,
+  NonPositiveAssetAmountError,
   type Transaction,
   type VaultV1WithdrawAction,
-  ZeroAssetAmountError,
 } from "../../types";
 
 export interface VaultV1WithdrawParams {
@@ -41,8 +41,8 @@ export const vaultV1Withdraw = ({
   args: { assets, recipient, onBehalf },
   metadata,
 }: VaultV1WithdrawParams): Readonly<Transaction<VaultV1WithdrawAction>> => {
-  if (assets === 0n) {
-    throw new ZeroAssetAmountError(vaultAddress);
+  if (assets <= 0n) {
+    throw new NonPositiveAssetAmountError(vaultAddress);
   }
 
   let tx = {

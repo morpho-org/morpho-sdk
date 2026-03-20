@@ -6,7 +6,7 @@ import {
   encodeFunctionData,
   type Hex,
 } from "viem";
-import { type Deallocation, ZeroAssetAmountError } from "../types";
+import { type Deallocation, NonPositiveAssetAmountError } from "../types";
 
 /**
  * Encodes the adapter-specific `data` bytes for a `forceDeallocate` call.
@@ -33,8 +33,8 @@ export function encodeForceDeallocateCall(
   deallocation: Deallocation,
   onBehalf: Address,
 ): Hex {
-  if (deallocation.assets === 0n) {
-    throw new ZeroAssetAmountError(deallocation.adapter);
+  if (deallocation.assets <= 0n) {
+    throw new NonPositiveAssetAmountError(deallocation.adapter);
   }
 
   const data = encodeDeallocateData(deallocation);

@@ -1,20 +1,20 @@
 import type { Address } from "viem";
 
-export class ZeroAssetAmountError extends Error {
+export class NonPositiveAssetAmountError extends Error {
   constructor(origin: Address) {
-    super(`Asset amount cannot be zero for address ${origin}`);
+    super(`Asset amount must be positive for address ${origin}`);
   }
 }
 
-export class ZeroSharesAmountError extends Error {
+export class NonPositiveSharesAmountError extends Error {
   constructor(vault: Address) {
-    super(`Shares amount cannot be zero for address: ${vault}`);
+    super(`Shares amount must be positive for address: ${vault}`);
   }
 }
 
-export class ZeroMaxSharePriceError extends Error {
+export class NonPositiveMaxSharePriceError extends Error {
   constructor(vault: Address) {
-    super(`Max share price cannot be zero for vault: ${vault}`);
+    super(`Max share price must be positive for vault: ${vault}`);
   }
 }
 
