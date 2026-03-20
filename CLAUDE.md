@@ -24,16 +24,16 @@ This repo uses a layered documentation approach. Before working in any directory
 
 Strict layering: **Client → Entity → Action**. Never skip a layer.
 
-| Layer        | Location                    | Role                                                                |
-| ------------ | --------------------------- | ------------------------------------------------------------------- |
-| Client       | `src/client/`               | Wraps viem `Client`, manages options, provides vault access         |
-| Entity       | `src/entities/vaultV1/`     | VaultV1 (MetaMorpho): fetches on-chain data, delegates to actions   |
-| Entity       | `src/entities/vaultV2/`     | VaultV2: fetches on-chain data, delegates to actions                |
-| Actions      | `src/actions/vaultV1/`      | VaultV1 pure tx builders (deposit, withdraw, redeem)                |
-| Actions      | `src/actions/vaultV2/`      | VaultV2 pure tx builders (deposit, withdraw, redeem, force ops)     |
-| Requirements | `src/actions/requirements/` | Resolves approval / permit / permit2 needs                          |
-| Types        | `src/types/`                | All type definitions, custom errors. Barrel-exported via `index.ts` |
-| Helpers      | `src/helpers/`              | Utility functions (metadata handling)                               |
+| Layer        | Location                    | Role                                                                         |
+| ------------ | --------------------------- | ---------------------------------------------------------------------------- |
+| Client       | `src/client/`               | Wraps viem `Client`, manages options, provides vault access                  |
+| Entity       | `src/entities/vaultV1/`     | VaultV1 (MetaMorpho): fetches on-chain data, delegates to actions            |
+| Entity       | `src/entities/vaultV2/`     | VaultV2: fetches on-chain data, delegates to actions                         |
+| Actions      | `src/actions/vaultV1/`      | VaultV1 pure tx builders (deposit, withdraw, redeem)                         |
+| Actions      | `src/actions/vaultV2/`      | VaultV2 pure tx builders (deposit, withdraw, redeem, force deallocation ops) |
+| Requirements | `src/actions/requirements/` | Resolves approval / permit / permit2 needs                                   |
+| Types        | `src/types/`                | All type definitions, custom errors. Barrel-exported via `index.ts`          |
+| Helpers      | `src/helpers/`              | Utility functions (metadata handling)                                        |
 
 VaultV1 (MetaMorpho) operations:
 

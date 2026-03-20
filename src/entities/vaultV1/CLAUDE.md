@@ -2,7 +2,7 @@
 
 > Parent: [`src/entities/CLAUDE.md`](../CLAUDE.md)
 
-`MorphoVaultV1` implements `VaultV1Actions`. Bridges Client → Actions for MetaMorpho vaults.
+`MorphoVaultV1` implements `VaultV1Actions`. Client → Actions for MetaMorpho vaults.
 
 ## Intent
 

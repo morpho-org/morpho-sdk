@@ -2,7 +2,7 @@
 
 > Full context: [CLAUDE.md](../../CLAUDE.md)
 
-`MorphoVaultV1` implements `VaultV1Actions`. `MorphoVaultV2` implements `VaultV2Actions`. Both bridge Client → Actions.
+`MorphoVaultV1` implements `VaultV1Actions`. `MorphoVaultV2`.
 
 ## Intent
 
