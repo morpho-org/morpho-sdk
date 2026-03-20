@@ -13,6 +13,7 @@ import {
   type ERC20ApprovalAction,
   ExcessiveSlippageToleranceError,
   type MorphoClientType,
+  NegativeSlippageToleranceError,
   NonPositiveSharesAmountError,
   type Requirement,
   type RequirementSignature,
@@ -117,6 +118,9 @@ export class MorphoVaultV1 implements VaultV1Actions {
       deployless: this.client.options.supportDeployless,
     });
 
+    if (slippageTolerance < 0n) {
+      throw new NegativeSlippageToleranceError(slippageTolerance);
+    }
     if (slippageTolerance > MAX_SLIPPAGE_TOLERANCE) {
       throw new ExcessiveSlippageToleranceError(slippageTolerance);
     }

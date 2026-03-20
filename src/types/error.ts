@@ -46,6 +46,12 @@ export class ApprovalAmountLessThanSpendAmountError extends Error {
   }
 }
 
+export class NegativeSlippageToleranceError extends Error {
+  constructor(slippageTolerance: bigint) {
+    super(`Slippage tolerance ${slippageTolerance} must not be negative`);
+  }
+}
+
 export class ExcessiveSlippageToleranceError extends Error {
   constructor(slippageTolerance: bigint) {
     super(
