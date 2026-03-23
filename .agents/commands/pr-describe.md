@@ -37,31 +37,61 @@ Analyze the changes to understand:
 
 - What type of change this is (feat, fix, or chore)
 - What the change does (for the PR title and description)
-- How critical the change is (low, medium, high, or critical)
 
 ### Step 2: Generate PR Content
 
 Derive all PR content from the changes:
 
-- **Title**: Use conventional commits format: `<type>: <short description>`
+- **Title**: Use conventional commits format: `<type>: <short description>` — no emoji in the title.
   - Examples: `feat: add dark mode toggle`, `fix: resolve login redirect issue`, `chore: update dependencies`
-- **Label**: `criticality:<level>` - derive from the scope and risk of the changes:
-  - `low`: Minor changes, cosmetic updates, documentation
-  - `medium`: Standard feature work, non-critical bug fixes
-  - `high`: Changes affecting core functionality, security-related
-  - `critical`: Breaking changes, critical security fixes
 
-**PR Body** - Generate content based on the actual changes:
+**PR Body** — High-level, concise, precise. No file-level details. Every word must earn its place.
 
-```markdown
+````markdown
 ## Motivation
 
-[Explain WHY this change is needed based on the code changes]
+[WHY in one or two sentences — the problem or need, not the implementation]
 
 ## Solution
 
-[Describe WHAT was changed and HOW it addresses the motivation]
-```
+[WHAT changed at a conceptual level — no file names, no line-by-line commentary]
+
+## What's New (feat PRs only)
+
+[Include ONLY for `feat` PRs. List new capabilities in a table.
+Each row gets a circle emoji (🟣🔴🟤🟠🟡🔵🟢) to draw attention.
+Pick a different color per row. Keep descriptions ultra-short.]
+
+| | Feature | Description |
+|---|---------|-------------|
+| 🟣 | deposit | Route deposits through bundler3 via general adapter |
+| 🔵 | withdraw | Direct vault withdrawal with share-to-asset conversion |
+
+## Architecture (optional)
+
+[Include ONLY if the change introduces or modifies architectural relationships.
+Use a mermaid diagram to illustrate the new/changed structure.]
+
+<!--
+Example:
+```mermaid
+graph LR
+  Client --> Entity --> Action
+````
+
+-->
+
+## DevEx (optional)
+
+[Include ONLY if the change affects developer usage: new APIs, changed signatures,
+new CLI flags, migration steps, etc. Present as a short bullet list.]
+
+### Writing Rules
+
+- Stay high-level: describe intent and concepts, not individual file changes.
+- Fewer words = better. Cut every word that doesn't add meaning.
+- Use the most precise term available — avoid vague fillers.
+- Never list modified files in the description.
 
 ### Step 3: Output and Offer to Update
 
@@ -83,7 +113,6 @@ After the PR is updated/created, output:
 2. A summary of what was done:
    - Branch name
    - PR title
-   - Criticality label
 
 ### Important Notes
 
