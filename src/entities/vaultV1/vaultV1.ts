@@ -14,6 +14,7 @@ import {
   ExcessiveSlippageToleranceError,
   type MorphoClientType,
   NegativeSlippageToleranceError,
+  NonPositiveAssetAmountError,
   NonPositiveSharesAmountError,
   type Requirement,
   type RequirementSignature,
@@ -90,6 +91,13 @@ export class MorphoVaultV1 implements VaultV1Actions {
   ) {}
 
   async getData(parameters?: FetchParameters) {
+    if (this.client.viemClient.chain?.id !== this.chainId) {
+      throw new ChainIdMismatchError(
+        this.client.viemClient.chain?.id,
+        this.chainId,
+      );
+    }
+
     return fetchAccrualVault(this.vault, this.client.viemClient, {
       ...parameters,
       chainId: this.chainId,
@@ -113,10 +121,9 @@ export class MorphoVaultV1 implements VaultV1Actions {
       );
     }
 
-    const vaultData = await fetchVault(this.vault, this.client.viemClient, {
-      chainId: this.chainId,
-      deployless: this.client.options.supportDeployless,
-    });
+    if (assets <= 0n) {
+      throw new NonPositiveAssetAmountError(this.vault);
+    }
 
     if (slippageTolerance < 0n) {
       throw new NegativeSlippageToleranceError(slippageTolerance);
@@ -124,6 +131,11 @@ export class MorphoVaultV1 implements VaultV1Actions {
     if (slippageTolerance > MAX_SLIPPAGE_TOLERANCE) {
       throw new ExcessiveSlippageToleranceError(slippageTolerance);
     }
+
+    const vaultData = await fetchVault(this.vault, this.client.viemClient, {
+      chainId: this.chainId,
+      deployless: this.client.options.supportDeployless,
+    });
 
     const shares = vaultData.toShares(assets);
     if (shares <= 0n) {
