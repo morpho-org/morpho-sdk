@@ -62,12 +62,12 @@ export const getRequirementsAction = ({
             sigDeadline: requirementSignature.args.deadline,
           },
           requirementSignature.args.signature,
-          false,
+          false /* skipRevert */,
         ],
       },
       {
         type: "transferFrom2",
-        args: [asset, assets, generalAdapter1, false],
+        args: [asset, assets, generalAdapter1, false /* skipRevert */],
       },
     ];
   }
@@ -81,12 +81,12 @@ export const getRequirementsAction = ({
         requirementSignature.args.amount,
         requirementSignature.args.deadline,
         requirementSignature.args.signature,
-        false,
+        false /* skipRevert */,
       ],
     },
     {
       type: "erc20TransferFrom",
-      args: [asset, assets, generalAdapter1, false],
+      args: [asset, assets, generalAdapter1, false /* skipRevert */],
     },
   ];
 };

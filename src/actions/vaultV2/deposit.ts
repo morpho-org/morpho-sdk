@@ -88,13 +88,19 @@ export const vaultV2Deposit = ({
 
     actions.push({
       type: "erc20TransferFrom",
-      args: [asset, assets, generalAdapter1, false],
+      args: [asset, assets, generalAdapter1, false /* skipRevert */],
     });
   }
 
   actions.push({
     type: "erc4626Deposit",
-    args: [vaultAddress, assets, maxSharePrice, recipient, false],
+    args: [
+      vaultAddress,
+      assets,
+      maxSharePrice,
+      recipient,
+      false /* skipRevert */,
+    ],
   });
 
   let tx = BundlerAction.encodeBundle(chainId, actions);
