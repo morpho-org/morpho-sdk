@@ -75,4 +75,19 @@ describe("withdrawVaultV2 unit tests", () => {
       }),
     ).toThrow(NonPositiveAssetAmountError);
   });
+
+  test("should throw NonPositiveAssetAmountError when assets is negative", async () => {
+    expect(() =>
+      vaultV2Withdraw({
+        vault: {
+          address: KeyrockUsdcVaultV2.address,
+        },
+        args: {
+          assets: -1n,
+          recipient: "0x1234567890123456789012345678901234567890",
+          onBehalf: "0x1234567890123456789012345678901234567890",
+        },
+      }),
+    ).toThrow(NonPositiveAssetAmountError);
+  });
 });

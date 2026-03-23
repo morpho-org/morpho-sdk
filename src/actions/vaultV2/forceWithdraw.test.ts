@@ -217,6 +217,23 @@ describe("forceWithdrawVaultV2 unit tests", () => {
     ).toThrow(NonPositiveAssetAmountError);
   });
 
+  test("should throw NonPositiveAssetAmountError when withdraw assets is negative", ({
+    client,
+  }) => {
+    expect(() =>
+      vaultV2ForceWithdraw({
+        vault: { address: mockVaultAddress },
+        args: {
+          deallocations: [
+            { adapter: mockAdapterAddress, assets: parseUnits("100", 18) },
+          ],
+          withdraw: { assets: -1n, recipient: client.account.address },
+          onBehalf: client.account.address,
+        },
+      }),
+    ).toThrow(NonPositiveAssetAmountError);
+  });
+
   test("should throw DeallocationsExceedWithdrawError when total deallocated exceeds withdraw", ({
     client,
   }) => {

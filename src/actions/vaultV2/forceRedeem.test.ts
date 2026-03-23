@@ -193,4 +193,21 @@ describe("forceRedeemVaultV2 unit tests", () => {
       }),
     ).toThrow(NonPositiveSharesAmountError);
   });
+
+  test("should throw NonPositiveSharesAmountError when redeem shares is negative", ({
+    client,
+  }) => {
+    expect(() =>
+      vaultV2ForceRedeem({
+        vault: { address: mockVaultAddress },
+        args: {
+          deallocations: [
+            { adapter: mockAdapterAddress, assets: parseUnits("100", 18) },
+          ],
+          redeem: { shares: -1n, recipient: client.account.address },
+          onBehalf: client.account.address,
+        },
+      }),
+    ).toThrow(NonPositiveSharesAmountError);
+  });
 });

@@ -10,9 +10,11 @@ import {
 import { test } from "../../../test/setup";
 import {
   DepositAmountMismatchError,
+  DepositAssetMismatchError,
   isRequirementApproval,
   isRequirementSignature,
   NonPositiveAssetAmountError,
+  NonPositiveMaxSharePriceError,
 } from "../../types";
 import { getRequirements } from "../requirements";
 import * as getRequirementsActionModule from "../requirements/getRequirementsAction";
@@ -303,5 +305,110 @@ describe("depositVaultV2 unit tests", () => {
     expect(tx.to).toBeDefined();
     expect(tx.data).toBeDefined();
     expect(tx.value).toBe(0n);
+  });
+
+  test("should throw NonPositiveAssetAmountError when assets is zero", async ({
+    client,
+  }) => {
+    expect(() =>
+      vaultV2Deposit({
+        vault: {
+          chainId: mainnet.id,
+          address: KeyrockUsdcVaultV2.address,
+          asset: KeyrockUsdcVaultV2.asset,
+        },
+        args: {
+          assets: 0n,
+          maxSharePrice: 1000000n,
+          recipient: client.account.address,
+        },
+      }),
+    ).toThrow(NonPositiveAssetAmountError);
+  });
+
+  test("should throw NonPositiveMaxSharePriceError when maxSharePrice is zero", async ({
+    client,
+  }) => {
+    expect(() =>
+      vaultV2Deposit({
+        vault: {
+          chainId: mainnet.id,
+          address: KeyrockUsdcVaultV2.address,
+          asset: KeyrockUsdcVaultV2.asset,
+        },
+        args: {
+          assets: parseUnits("100", 6),
+          maxSharePrice: 0n,
+          recipient: client.account.address,
+        },
+      }),
+    ).toThrow(NonPositiveMaxSharePriceError);
+  });
+
+  test("should throw NonPositiveMaxSharePriceError when maxSharePrice is negative", async ({
+    client,
+  }) => {
+    expect(() =>
+      vaultV2Deposit({
+        vault: {
+          chainId: mainnet.id,
+          address: KeyrockUsdcVaultV2.address,
+          asset: KeyrockUsdcVaultV2.asset,
+        },
+        args: {
+          assets: parseUnits("100", 6),
+          maxSharePrice: -1n,
+          recipient: client.account.address,
+        },
+      }),
+    ).toThrow(NonPositiveMaxSharePriceError);
+  });
+
+  test("should throw DepositAssetMismatchError when signature asset does not match deposit asset", async ({
+    client,
+  }) => {
+    const assets = parseUnits("100", 18);
+    const maxSharePrice = 1000000000000000000n;
+
+    const requirements = await getRequirements(client, {
+      address: dai,
+      chainId: mainnet.id,
+      supportSignature: true,
+      args: {
+        amount: assets,
+        from: client.account.address,
+      },
+    });
+
+    const approvalPermit2 = requirements[0];
+    if (!isRequirementApproval(approvalPermit2)) {
+      throw new Error("Approval requirement not found");
+    }
+
+    const permit2Requirement = requirements[1];
+    if (!isRequirementSignature(permit2Requirement)) {
+      throw new Error("Permit2 requirement not found");
+    }
+
+    const requirementSignature = await permit2Requirement.sign(
+      client,
+      client.account.address,
+    );
+
+    expect(() =>
+      vaultV2Deposit({
+        vault: {
+          chainId: mainnet.id,
+          address: KpkWETHVaultV2.address,
+          asset: wNative,
+        },
+        args: {
+          assets,
+          maxSharePrice,
+          recipient: client.account.address,
+          requirementSignature,
+        },
+      }),
+    ).toThrow(DepositAssetMismatchError);
   });
 });
