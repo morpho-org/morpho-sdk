@@ -10,9 +10,23 @@ permissions:
   contents: write
 
 jobs:
+  lint:
+    if: github.event.pull_request.merged == true && startsWith(github.event.pull_request.head.ref, 'chore/release-')
+    uses: ./.github/workflows/lint.yml
+
+  build:
+    if: github.event.pull_request.merged == true && startsWith(github.event.pull_request.head.ref, 'chore/release-')
+    uses: ./.github/workflows/build.yml
+
+  test:
+    if: github.event.pull_request.merged == true && startsWith(github.event.pull_request.head.ref, 'chore/release-')
+    uses: ./.github/workflows/test.yml
+    secrets:
+      MAINNET_RPC_URL: ${{ secrets.MAINNET_RPC_URL }}
+
   release:
     name: Publish to npm
-    if: github.event.pull_request.merged == true && startsWith(github.event.pull_request.head.ref, 'chore/release-')
+    needs: [lint, build, test]
     runs-on: ubuntu-latest
     env:
       CI: true
@@ -53,15 +67,15 @@ jobs:
         id: version
         run: echo "version=$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
 
+      - name: Publish to npm
+        run: pnpm publish --access public --no-git-checks
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
       - name: Create Git Tag
         run: |
           git tag v${{ steps.version.outputs.version }}
           git push origin v${{ steps.version.outputs.version }}
         env:
           GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
-
-      - name: Publish to npm
-        run: pnpm publish --access public --no-git-checks
-        env:
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

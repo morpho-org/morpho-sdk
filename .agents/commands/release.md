@@ -22,16 +22,35 @@ If output is non-empty, warn the user and ask whether to proceed or abort.
 
 ### Step 2: Identify the Last Release
 
+Fetch tags from the remote first to ensure the local clone is up to date:
+
+```bash
+git fetch --tags
+```
+
+Then resolve the latest version tag:
+
 ```bash
 git tag --sort=-version:refname | head -1
 ```
 
-Store as `$LAST_TAG`. Read the current version from `package.json` → `version` field.
+Store the result as `$LAST_TAG`. Read the current version from `package.json` → `version` field.
+
+**Bootstrap (no tags exist):** If `git tag` returns nothing, this is the first release.
+Set `$LAST_TAG` to empty and continue — Step 3 will use the full commit history.
 
 ### Step 3: Collect Commits Since Last Release
 
+If `$LAST_TAG` is set:
+
 ```bash
 git log $LAST_TAG..HEAD --oneline --no-merges
+```
+
+If `$LAST_TAG` is empty (bootstrap / first release), list all commits on the current branch:
+
+```bash
+git log HEAD --oneline --no-merges
 ```
 
 If there are zero commits, inform the user there is nothing to release and stop.
@@ -40,16 +59,16 @@ If there are zero commits, inform the user there is nothing to release and stop.
 
 Read each commit message. Classify using conventional commit prefixes:
 
-| Prefix | Category | Bump |
-|--------|----------|------|
-| `feat` | Feature | minor |
-| `fix` | Bug fix | patch |
-| `perf` | Performance | patch |
-| `refactor` | Refactor | patch |
-| `docs` | Documentation | — (skip) |
-| `chore` | Chore | — (skip) |
-| `test` | Test | — (skip) |
-| `BREAKING CHANGE` or `!` after type | Breaking | major |
+| Prefix                              | Category      | Bump     |
+| ----------------------------------- | ------------- | -------- |
+| `feat`                              | Feature       | minor    |
+| `fix`                               | Bug fix       | patch    |
+| `perf`                              | Performance   | patch    |
+| `refactor`                          | Refactor      | patch    |
+| `docs`                              | Documentation | — (skip) |
+| `chore`                             | Chore         | — (skip) |
+| `test`                              | Test          | — (skip) |
+| `BREAKING CHANGE` or `!` after type | Breaking      | major    |
 
 Rules for determining the bump:
 
@@ -61,7 +80,8 @@ Rules for determining the bump:
 Also read the diff for each non-trivial commit to write an accurate summary:
 
 ```bash
-git diff $LAST_TAG..HEAD --stat
+git diff $LAST_TAG..HEAD --stat       # when $LAST_TAG is set
+git diff --stat $(git rev-list --max-parents=0 HEAD)..HEAD  # bootstrap: diff from root commit
 ```
 
 ### Step 5: Present the Release Plan
@@ -108,7 +128,7 @@ Then create the PR:
 gh pr create --base main --title "chore(release): v<new-version>" --body "$(cat <<'EOF'
 ## Release v<new-version>
 
-### Changes since v<old-version>
+### Changes since v<old-version> (or "Initial release" if bootstrap)
 
 #### Features
 - ...
