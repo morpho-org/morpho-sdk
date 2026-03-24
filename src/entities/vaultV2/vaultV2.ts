@@ -16,7 +16,6 @@ import {
   type Deallocation,
   type ERC20ApprovalAction,
   ExcessiveSlippageToleranceError,
-  MissingAccrualVaultError,
   type MorphoClientType,
   NegativeSlippageToleranceError,
   NonPositiveAssetAmountError,
@@ -196,10 +195,6 @@ export class MorphoVaultV2 implements VaultV2Actions {
         this.client.viemClient.chain?.id,
         this.chainId,
       );
-    }
-
-    if (!accrualVault) {
-      throw new MissingAccrualVaultError(this.vault);
     }
 
     if (assets <= 0n) {

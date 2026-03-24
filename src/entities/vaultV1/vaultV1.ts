@@ -129,10 +129,6 @@ export class MorphoVaultV1 implements VaultV1Actions {
       );
     }
 
-    if (!accrualVault) {
-      throw new MissingAccrualVaultError(this.vault);
-    }
-
     if (assets <= 0n) {
       throw new NonPositiveAssetAmountError(this.vault);
     }

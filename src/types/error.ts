@@ -82,12 +82,6 @@ export class DepositAssetMismatchError extends Error {
   }
 }
 
-export class MissingAccrualVaultError extends Error {
-  constructor(vault: Address) {
-    super(`Accrual vault data is required for deposit on vault: ${vault}`);
-  }
-}
-
 export class DeallocationsExceedWithdrawError extends Error {
   constructor(
     vault: Address,
