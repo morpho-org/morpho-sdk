@@ -49,9 +49,11 @@ describe("Permit2", () => {
       actionFn: async () => {
         const morpho = new MorphoClient(client, { supportSignature: true });
         const vault = morpho.vaultV2(Re7UsdtVaultV2.address, mainnet.id);
-        const deposit = await vault.deposit({
+        const accrualVault = await vault.getData();
+        const deposit = vault.deposit({
           userAddress: client.account.address,
           assets: amount,
+          accrualVault,
         });
 
         const requirements = await deposit.getRequirements();
@@ -135,9 +137,11 @@ describe("Permit2", () => {
       actionFn: async () => {
         const morpho = new MorphoClient(client, { supportSignature: true });
         const vault = morpho.vaultV2(Re7UsdtVaultV2.address, mainnet.id);
-        const deposit = await vault.deposit({
+        const accrualVault = await vault.getData();
+        const deposit = vault.deposit({
           userAddress: client.account.address,
           assets: amount,
+          accrualVault,
         });
 
         const requirements = await deposit.getRequirements();
@@ -215,9 +219,11 @@ describe("Permit2", () => {
       actionFn: async () => {
         const morpho = new MorphoClient(client, { supportSignature: true });
         const vault = morpho.vaultV2(KpkWETHVaultV2.address, mainnet.id);
-        const deposit = await vault.deposit({
+        const accrualVault = await vault.getData();
+        const deposit = vault.deposit({
           userAddress: client.account.address,
           assets: amount,
+          accrualVault,
         });
 
         const requirements = await deposit.getRequirements();
@@ -266,9 +272,11 @@ describe("Permit2", () => {
         vaults: { DaiVaultV2 },
       },
       actionFn: async () => {
-        const deposit = await vault.deposit({
+        const accrualVault = await vault.getData();
+        const deposit = vault.deposit({
           userAddress: client.account.address,
           assets: amount,
+          accrualVault,
         });
 
         const requirements = await deposit.getRequirements();
@@ -347,9 +355,11 @@ describe("Permit2", () => {
         vaults: { KeyrockUsdcVaultV2 },
       },
       actionFn: async () => {
-        const deposit = await vault.deposit({
+        const accrualVault = await vault.getData();
+        const deposit = vault.deposit({
           userAddress: client.account.address,
           assets: amount,
+          accrualVault,
         });
 
         const requirements = await deposit.getRequirements({

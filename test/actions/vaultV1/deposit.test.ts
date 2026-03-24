@@ -25,12 +25,13 @@ describe("DepositVaultV1", () => {
     const morpho = new MorphoClient(client);
 
     const vault = morpho.vaultV1(SteakhouseUsdcVaultV1.address, mainnet.id);
-    const deposit = await vault.deposit({
+    const accrualVault = await vault.getData();
+    const deposit = vault.deposit({
       userAddress: client.account.address,
       assets: 1000000000000000000n,
+      accrualVault,
     });
     const requirements_1 = await deposit.getRequirements();
-    const data = await vault.getData();
     const tx_1 = deposit.buildTx();
 
     const tx_2 = vaultV1Deposit({
@@ -49,8 +50,8 @@ describe("DepositVaultV1", () => {
     expect(deposit).toBeDefined();
     expect(requirements_1).toBeDefined();
     expect(tx_1).toStrictEqual(tx_2);
-    expect(data.asset).toStrictEqual(SteakhouseUsdcVaultV1.asset);
-    expect(data.address).toStrictEqual(SteakhouseUsdcVaultV1.address);
+    expect(accrualVault.asset).toStrictEqual(SteakhouseUsdcVaultV1.asset);
+    expect(accrualVault.address).toStrictEqual(SteakhouseUsdcVaultV1.address);
   });
 
   test("should deposit 1K USDC in vaultV1", async ({ client }) => {
@@ -75,9 +76,11 @@ describe("DepositVaultV1", () => {
           SteakhouseUsdcVaultV1.address,
           mainnet.id,
         );
-        const deposit = await vaultV1.deposit({
+        const accrualVault = await vaultV1.getData();
+        const deposit = vaultV1.deposit({
           userAddress: client.account.address,
           assets: amount,
+          accrualVault,
         });
 
         const tx = deposit.buildTx();
@@ -141,9 +144,11 @@ describe("DepositVaultV1", () => {
           SteakhouseUSDTVaultV1.address,
           mainnet.id,
         );
-        const deposit = await vaultV1.deposit({
+        const accrualVault = await vaultV1.getData();
+        const deposit = vaultV1.deposit({
           userAddress: client.account.address,
           assets: amount,
+          accrualVault,
         });
 
         const tx = deposit.buildTx();
@@ -203,9 +208,11 @@ describe("DepositVaultV1", () => {
         const morpho = new MorphoClient(client, { supportSignature: true });
 
         const vault = morpho.vaultV1(SteakhouseUsdcVaultV1.address, mainnet.id);
-        const deposit = await vault.deposit({
+        const accrualVault = await vault.getData();
+        const deposit = vault.deposit({
           userAddress: client.account.address,
           assets: amount,
+          accrualVault,
         });
         const requirements = await deposit.getRequirements({
           useSimplePermit: true,
@@ -275,9 +282,11 @@ describe("DepositVaultV1", () => {
         vaults: { SteakhouseUsdcVaultV1 },
       },
       actionFn: async () => {
-        const deposit = await vault.deposit({
+        const accrualVault = await vault.getData();
+        const deposit = vault.deposit({
           userAddress: client.account.address,
           assets: amount,
+          accrualVault,
         });
 
         const requirements = await deposit.getRequirements({
@@ -371,9 +380,11 @@ describe("DepositVaultV1", () => {
       actionFn: async () => {
         const morpho = new MorphoClient(client, { supportSignature: true });
         const vault = morpho.vaultV1(GauntletWethVaultV1.address, mainnet.id);
-        const deposit = await vault.deposit({
+        const accrualVault = await vault.getData();
+        const deposit = vault.deposit({
           userAddress: client.account.address,
           assets: amount,
+          accrualVault,
         });
 
         const requirements = await deposit.getRequirements();
@@ -421,9 +432,11 @@ describe("DepositVaultV1", () => {
           mainnet.id,
         );
 
-        const deposit = await vaultV1.deposit({
+        const accrualVault = await vaultV1.getData();
+        const deposit = vaultV1.deposit({
           userAddress: client.account.address,
           assets: amount,
+          accrualVault,
         });
         const requirements = await deposit.getRequirements();
         const approveTx = requirements[0];

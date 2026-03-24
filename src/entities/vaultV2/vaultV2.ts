@@ -1,5 +1,5 @@
 import { DEFAULT_SLIPPAGE_TOLERANCE, MathLib } from "@morpho-org/blue-sdk";
-import { fetchAccrualVaultV2, fetchVaultV2 } from "@morpho-org/blue-sdk-viem";
+import { fetchAccrualVaultV2 } from "@morpho-org/blue-sdk-viem";
 import type { Address } from "viem";
 import {
   getRequirements,
@@ -11,10 +11,12 @@ import {
 } from "../../actions";
 import { MAX_SLIPPAGE_TOLERANCE } from "../../helpers/constant";
 import {
+  type AccrualVaultData,
   ChainIdMismatchError,
   type Deallocation,
   type ERC20ApprovalAction,
   ExcessiveSlippageToleranceError,
+  MissingAccrualVaultError,
   type MorphoClientType,
   NegativeSlippageToleranceError,
   NonPositiveAssetAmountError,
@@ -46,13 +48,14 @@ export interface VaultV2Actions {
    * Prepares a deposit transaction for the VaultV2 contract.
    *
    * This function constructs the transaction data required to deposit a specified amount of assets into the vault.
-   * The function asynchronously fetches the latest vault data to ensure accurate calculations for slippage and asset address,
+   * Uses pre-fetched accrual vault data for accurate calculations of slippage and asset address,
    * then returns the prepared deposit transaction and a function for retrieving all required approval transactions.
    * Bundler Integration: This flow uses the bundler to atomically execute the user's asset transfer and vault deposit in a single transaction for slippage protection.
    *
    * @param {Object} params - The deposit parameters.
    * @param {bigint} params.assets - The amount of assets to deposit.
-   * @param {Address} [params.userAddress] - Optional user address initiating the deposit. Default is the client's user address is used.
+   * @param {Address} params.userAddress - User address initiating the deposit.
+   * @param {AccrualVaultData} params.accrualVault - Pre-fetched vault data with asset address and share conversion.
    * @param {bigint} [params.slippageTolerance=DEFAULT_SLIPPAGE_TOLERANCE] - Optional slippage tolerance value. Default is 0.03%. Slippage tolerance must be less than 10%.
    * @returns {Object} The result object.
    * @returns {Readonly<Transaction<VaultV2DepositAction>>} returns.tx The prepared deposit transaction.
@@ -61,15 +64,16 @@ export interface VaultV2Actions {
   deposit: (params: {
     assets: bigint;
     userAddress: Address;
+    accrualVault: AccrualVaultData;
     slippageTolerance?: bigint;
-  }) => Promise<{
+  }) => {
     buildTx: (
       requirementSignature?: RequirementSignature,
     ) => Readonly<Transaction<VaultV2DepositAction>>;
     getRequirements: (params?: {
       useSimplePermit?: boolean;
     }) => Promise<(Readonly<Transaction<ERC20ApprovalAction>> | Requirement)[]>;
-  }>;
+  };
   /**
    * Prepares a withdraw transaction for the VaultV2 contract.
    *
@@ -176,13 +180,15 @@ export class MorphoVaultV2 implements VaultV2Actions {
     });
   }
 
-  async deposit({
+  deposit({
     assets,
     userAddress,
+    accrualVault,
     slippageTolerance = DEFAULT_SLIPPAGE_TOLERANCE,
   }: {
     assets: bigint;
     userAddress: Address;
+    accrualVault: AccrualVaultData;
     slippageTolerance?: bigint;
   }) {
     if (this.client.viemClient.chain?.id !== this.chainId) {
@@ -190,6 +196,10 @@ export class MorphoVaultV2 implements VaultV2Actions {
         this.client.viemClient.chain?.id,
         this.chainId,
       );
+    }
+
+    if (!accrualVault) {
+      throw new MissingAccrualVaultError(this.vault);
     }
 
     if (assets <= 0n) {
@@ -203,12 +213,7 @@ export class MorphoVaultV2 implements VaultV2Actions {
       throw new ExcessiveSlippageToleranceError(slippageTolerance);
     }
 
-    const vaultData = await fetchVaultV2(this.vault, this.client.viemClient, {
-      chainId: this.chainId,
-      deployless: this.client.options.supportDeployless,
-    });
-
-    const shares = vaultData.toShares(assets);
+    const shares = accrualVault.toShares(assets);
     if (shares <= 0n) {
       throw new NonPositiveSharesAmountError(this.vault);
     }
@@ -225,7 +230,7 @@ export class MorphoVaultV2 implements VaultV2Actions {
     return {
       getRequirements: async (params?: { useSimplePermit?: boolean }) =>
         await getRequirements(this.client.viemClient, {
-          address: vaultData.asset,
+          address: accrualVault.asset,
           chainId: this.chainId,
           supportSignature: this.client.options.supportSignature,
           supportDeployless: this.client.options.supportDeployless,
@@ -240,7 +245,7 @@ export class MorphoVaultV2 implements VaultV2Actions {
           vault: {
             chainId: this.chainId,
             address: this.vault,
-            asset: vaultData.asset,
+            asset: accrualVault.asset,
           },
           args: {
             assets,

@@ -1,5 +1,5 @@
 import { DEFAULT_SLIPPAGE_TOLERANCE, MathLib } from "@morpho-org/blue-sdk";
-import { fetchAccrualVault, fetchVault } from "@morpho-org/blue-sdk-viem";
+import { fetchAccrualVault } from "@morpho-org/blue-sdk-viem";
 import type { Address } from "viem";
 import {
   getRequirements,
@@ -9,6 +9,7 @@ import {
 } from "../../actions";
 import { MAX_SLIPPAGE_TOLERANCE } from "../../helpers/constant";
 import {
+  type AccrualVaultData,
   ChainIdMismatchError,
   type ERC20ApprovalAction,
   ExcessiveSlippageToleranceError,
@@ -38,27 +39,29 @@ export interface VaultV1Actions {
   /**
    * Prepares a deposit into a VaultV1 (MetaMorpho) contract.
    *
-   * Fetches on-chain vault data to compute `maxSharePrice` with slippage tolerance,
+   * Uses pre-fetched accrual vault data to compute `maxSharePrice` with slippage tolerance,
    * then returns `buildTx` and `getRequirements` for lazy evaluation.
    *
    * @param {Object} params - The deposit parameters.
    * @param {bigint} params.assets - Amount of assets to deposit.
    * @param {Address} params.userAddress - User address initiating the deposit.
+   * @param {AccrualVaultData} params.accrualVault - Pre-fetched vault data with asset address and share conversion.
    * @param {bigint} [params.slippageTolerance=DEFAULT_SLIPPAGE_TOLERANCE] - Slippage tolerance (default 0.03%, max 10%).
-   * @returns {Promise<Object>} Object with `buildTx` and `getRequirements`.
+   * @returns {Object} Object with `buildTx` and `getRequirements`.
    */
   deposit: (params: {
     assets: bigint;
     userAddress: Address;
+    accrualVault: AccrualVaultData;
     slippageTolerance?: bigint;
-  }) => Promise<{
+  }) => {
     buildTx: (
       requirementSignature?: RequirementSignature,
     ) => Readonly<Transaction<VaultV1DepositAction>>;
     getRequirements: (params?: {
       useSimplePermit?: boolean;
     }) => Promise<(Readonly<Transaction<ERC20ApprovalAction>> | Requirement)[]>;
-  }>;
+  };
   /**
    * Prepares a withdraw from a VaultV1 (MetaMorpho) contract.
    *
@@ -108,13 +111,15 @@ export class MorphoVaultV1 implements VaultV1Actions {
     });
   }
 
-  async deposit({
+  deposit({
     assets,
     userAddress,
+    accrualVault,
     slippageTolerance = DEFAULT_SLIPPAGE_TOLERANCE,
   }: {
     assets: bigint;
     userAddress: Address;
+    accrualVault: AccrualVaultData;
     slippageTolerance?: bigint;
   }) {
     if (this.client.viemClient.chain?.id !== this.chainId) {
@@ -122,6 +127,10 @@ export class MorphoVaultV1 implements VaultV1Actions {
         this.client.viemClient.chain?.id,
         this.chainId,
       );
+    }
+
+    if (!accrualVault) {
+      throw new MissingAccrualVaultError(this.vault);
     }
 
     if (assets <= 0n) {
@@ -135,12 +144,7 @@ export class MorphoVaultV1 implements VaultV1Actions {
       throw new ExcessiveSlippageToleranceError(slippageTolerance);
     }
 
-    const vaultData = await fetchVault(this.vault, this.client.viemClient, {
-      chainId: this.chainId,
-      deployless: this.client.options.supportDeployless,
-    });
-
-    const shares = vaultData.toShares(assets);
+    const shares = accrualVault.toShares(assets);
     if (shares <= 0n) {
       throw new NonPositiveSharesAmountError(this.vault);
     }
@@ -157,7 +161,7 @@ export class MorphoVaultV1 implements VaultV1Actions {
     return {
       getRequirements: async (params?: { useSimplePermit?: boolean }) =>
         await getRequirements(this.client.viemClient, {
-          address: vaultData.asset,
+          address: accrualVault.asset,
           chainId: this.chainId,
           supportSignature: this.client.options.supportSignature,
           supportDeployless: this.client.options.supportDeployless,
@@ -172,7 +176,7 @@ export class MorphoVaultV1 implements VaultV1Actions {
           vault: {
             chainId: this.chainId,
             address: this.vault,
-            asset: vaultData.asset,
+            asset: accrualVault.asset,
           },
           args: {
             assets,
