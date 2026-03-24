@@ -1,5 +1,5 @@
 import {
-  type AccrualVault,
+  type AccrualVaultV2,
   DEFAULT_SLIPPAGE_TOLERANCE,
   MathLib,
 } from "@morpho-org/blue-sdk";
@@ -66,7 +66,7 @@ export interface VaultV2Actions {
   deposit: (params: {
     assets: bigint;
     userAddress: Address;
-    accrualVault: AccrualVault;
+    accrualVault: AccrualVaultV2;
     slippageTolerance?: bigint;
   }) => {
     buildTx: (
@@ -190,7 +190,7 @@ export class MorphoVaultV2 implements VaultV2Actions {
   }: {
     assets: bigint;
     userAddress: Address;
-    accrualVault: AccrualVault;
+    accrualVault: AccrualVaultV2;
     slippageTolerance?: bigint;
   }) {
     if (this.client.viemClient.chain?.id !== this.chainId) {
