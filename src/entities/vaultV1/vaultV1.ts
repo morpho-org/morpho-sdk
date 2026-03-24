@@ -1,4 +1,8 @@
-import { DEFAULT_SLIPPAGE_TOLERANCE, MathLib } from "@morpho-org/blue-sdk";
+import {
+  type AccrualVault,
+  DEFAULT_SLIPPAGE_TOLERANCE,
+  MathLib,
+} from "@morpho-org/blue-sdk";
 import { fetchAccrualVault } from "@morpho-org/blue-sdk-viem";
 import type { Address } from "viem";
 import {
@@ -9,7 +13,6 @@ import {
 } from "../../actions";
 import { MAX_SLIPPAGE_TOLERANCE } from "../../helpers/constant";
 import {
-  type AccrualVaultData,
   ChainIdMismatchError,
   type ERC20ApprovalAction,
   ExcessiveSlippageToleranceError,
@@ -45,14 +48,14 @@ export interface VaultV1Actions {
    * @param {Object} params - The deposit parameters.
    * @param {bigint} params.assets - Amount of assets to deposit.
    * @param {Address} params.userAddress - User address initiating the deposit.
-   * @param {AccrualVaultData} params.accrualVault - Pre-fetched vault data with asset address and share conversion.
+   * @param {AccrualVault} params.accrualVault - Pre-fetched vault data with asset address and share conversion.
    * @param {bigint} [params.slippageTolerance=DEFAULT_SLIPPAGE_TOLERANCE] - Slippage tolerance (default 0.03%, max 10%).
    * @returns {Object} Object with `buildTx` and `getRequirements`.
    */
   deposit: (params: {
     assets: bigint;
     userAddress: Address;
-    accrualVault: AccrualVaultData;
+    accrualVault: AccrualVault;
     slippageTolerance?: bigint;
   }) => {
     buildTx: (
@@ -119,7 +122,7 @@ export class MorphoVaultV1 implements VaultV1Actions {
   }: {
     assets: bigint;
     userAddress: Address;
-    accrualVault: AccrualVaultData;
+    accrualVault: AccrualVault;
     slippageTolerance?: bigint;
   }) {
     if (this.client.viemClient.chain?.id !== this.chainId) {
