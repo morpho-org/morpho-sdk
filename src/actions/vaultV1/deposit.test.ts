@@ -15,6 +15,7 @@ import {
   isRequirementSignature,
   NonPositiveAssetAmountError,
   NonPositiveMaxSharePriceError,
+  ZeroDepositAmountError,
 } from "../../types";
 import { getRequirements } from "../requirements";
 import * as getRequirementsActionModule from "../requirements/getRequirementsAction";
@@ -303,7 +304,7 @@ describe("depositVaultV1 unit tests", () => {
     ).toThrow(NonPositiveAssetAmountError);
   });
 
-  test("should throw NonPositiveAssetAmountError when assets is zero", async ({
+  test("should throw ZeroDepositAmountError when assets and nativeAmount are both zero", async ({
     client,
   }) => {
     expect(() =>
@@ -319,7 +320,7 @@ describe("depositVaultV1 unit tests", () => {
           recipient: client.account.address,
         },
       }),
-    ).toThrow(NonPositiveAssetAmountError);
+    ).toThrow(ZeroDepositAmountError);
   });
 
   test("should throw NonPositiveMaxSharePriceError when maxSharePrice is zero", async ({

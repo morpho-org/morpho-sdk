@@ -13,6 +13,7 @@ import {
   type RequirementSignature,
   type Transaction,
   type VaultV1DepositAction,
+  ZeroDepositAmountError,
 } from "../../types";
 import { getRequirementsAction } from "../requirements/getRequirementsAction";
 
@@ -120,6 +121,10 @@ export const vaultV1Deposit = ({
   }
 
   const totalAssets = assets + (nativeAmount ?? 0n);
+
+  if (totalAssets === 0n) {
+    throw new ZeroDepositAmountError(vaultAddress);
+  }
 
   actions.push({
     type: "erc4626Deposit",

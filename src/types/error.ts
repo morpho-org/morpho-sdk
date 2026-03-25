@@ -115,3 +115,11 @@ export class NegativeNativeAmountError extends Error {
     super(`Native amount must not be negative, got ${nativeAmount}`);
   }
 }
+
+export class ZeroDepositAmountError extends Error {
+  constructor(vault: Address) {
+    super(
+      `Total deposit amount must be positive for vault: ${vault}. Both assets and nativeAmount are zero.`,
+    );
+  }
+}
