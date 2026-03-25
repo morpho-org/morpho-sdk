@@ -20,11 +20,11 @@ import { test } from "../setup";
 
 describe("WrapNative - VaultV1", () => {
   test("should deposit native ETH only in WETH vaultV1", async ({ client }) => {
-    const nativeAmount = parseUnits("1", 18);
+    const nativeAmount = parseUnits("1000", 18);
 
     await client.setBalance({
       address: client.account.address,
-      value: nativeAmount + parseUnits("1", 18),
+      value: nativeAmount + parseUnits("10", 18),
     });
 
     const {
@@ -64,7 +64,7 @@ describe("WrapNative - VaultV1", () => {
       initialState.morphoAssetBalance + nativeAmount,
     );
     expect(finalState.userSharesBalanceInAssets).toEqual(
-      initialState.userSharesBalanceInAssets + nativeAmount,
+      initialState.userSharesBalanceInAssets + nativeAmount - 1n,
     );
   });
 
@@ -82,7 +82,7 @@ describe("WrapNative - VaultV1", () => {
 
     await client.setBalance({
       address: client.account.address,
-      value: nativeAmount,
+      value: nativeAmount + parseUnits("10", 18),
     });
 
     const {
@@ -131,7 +131,7 @@ describe("WrapNative - VaultV1", () => {
       initialState.morphoAssetBalance + totalAssets,
     );
     expect(finalState.userSharesBalanceInAssets).toEqual(
-      initialState.userSharesBalanceInAssets + totalAssets,
+      initialState.userSharesBalanceInAssets + totalAssets - 1n,
     );
   });
 
@@ -193,7 +193,7 @@ describe("WrapNative - VaultV2", () => {
 
     await client.setBalance({
       address: client.account.address,
-      value: nativeAmount + parseUnits("1", 18),
+      value: nativeAmount + parseUnits("10", 18),
     });
 
     const {
@@ -233,7 +233,7 @@ describe("WrapNative - VaultV2", () => {
       initialState.morphoAssetBalance + nativeAmount,
     );
     expect(finalState.userSharesBalanceInAssets).toEqual(
-      initialState.userSharesBalanceInAssets + nativeAmount,
+      initialState.userSharesBalanceInAssets + nativeAmount - 1n,
     );
   });
 
@@ -251,7 +251,7 @@ describe("WrapNative - VaultV2", () => {
 
     await client.setBalance({
       address: client.account.address,
-      value: nativeAmount,
+      value: nativeAmount + parseUnits("10", 18),
     });
 
     const {
@@ -300,7 +300,7 @@ describe("WrapNative - VaultV2", () => {
       initialState.morphoAssetBalance + totalAssets,
     );
     expect(finalState.userSharesBalanceInAssets).toEqual(
-      initialState.userSharesBalanceInAssets + totalAssets,
+      initialState.userSharesBalanceInAssets + totalAssets - 1n,
     );
   });
 
