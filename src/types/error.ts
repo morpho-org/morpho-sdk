@@ -93,3 +93,11 @@ export class DeallocationsExceedWithdrawError extends Error {
     );
   }
 }
+
+export class VaultAddressMismatchError extends Error {
+  constructor(vaultAddress: Address, argsVaultAddress: Address) {
+    super(
+      `Vault address mismatch between vault: ${vaultAddress} and args: ${argsVaultAddress}`,
+    );
+  }
+}

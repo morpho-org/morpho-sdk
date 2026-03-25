@@ -26,6 +26,7 @@ import {
   type Requirement,
   type RequirementSignature,
   type Transaction,
+  VaultAddressMismatchError,
   type VaultV2DepositAction,
   type VaultV2ForceRedeemAction,
   type VaultV2ForceWithdrawAction,
@@ -198,6 +199,10 @@ export class MorphoVaultV2 implements VaultV2Actions {
         this.client.viemClient.chain?.id,
         this.chainId,
       );
+    }
+
+    if (accrualVault.address !== this.vault) {
+      throw new VaultAddressMismatchError(this.vault, accrualVault.address);
     }
 
     if (assets <= 0n) {
