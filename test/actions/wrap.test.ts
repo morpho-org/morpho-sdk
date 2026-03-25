@@ -193,7 +193,7 @@ describe("WrapNative - VaultV2", () => {
 
     await client.setBalance({
       address: client.account.address,
-      value: nativeAmount,
+      value: nativeAmount + parseUnits("1", 18),
     });
 
     const {
