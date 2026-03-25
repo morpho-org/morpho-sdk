@@ -1,7 +1,7 @@
 import { getChainAddresses } from "@morpho-org/blue-sdk";
 import { type Action, BundlerAction } from "@morpho-org/bundler-sdk-viem";
 import { deepFreeze, isDefined } from "@morpho-org/morpho-ts";
-import type { Address } from "viem";
+import { type Address, isAddressEqual } from "viem";
 import { addTransactionMetadata } from "../../helpers";
 import {
   ChainWNativeMissingError,
@@ -91,7 +91,7 @@ export const vaultV1Deposit = ({
     if (!isDefined(wNative)) {
       throw new ChainWNativeMissingError(chainId);
     }
-    if (asset !== wNative) {
+    if (!isAddressEqual(asset, wNative)) {
       throw new NativeAmountOnNonWNativeVaultError(asset, wNative);
     }
 
