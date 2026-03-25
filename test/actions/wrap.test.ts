@@ -188,9 +188,7 @@ describe("WrapNative - VaultV1", () => {
 });
 
 describe("WrapNative - VaultV2", () => {
-  test("should deposit native ETH only  in WETH vaultV2", async ({
-    client,
-  }) => {
+  test("should deposit native ETH only in WETH vaultV2", async ({ client }) => {
     const nativeAmount = parseUnits("1", 18);
 
     await client.setBalance({

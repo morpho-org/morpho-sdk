@@ -149,12 +149,12 @@ export class MorphoVaultV1 implements VaultV1Actions {
       deployless: this.client.options.supportDeployless,
     });
 
-    const shares = vaultData.toShares(amount);
+    const totalAssets = amount + (nativeAmount ?? 0n);
+
+    const shares = vaultData.toShares(totalAssets);
     if (shares <= 0n) {
       throw new NonPositiveSharesAmountError(this.vault);
     }
-
-    const totalAssets = amount + (nativeAmount ?? 0n);
 
     const maxSharePrice = MathLib.min(
       MathLib.mulDivUp(
