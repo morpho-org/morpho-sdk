@@ -5,6 +5,7 @@ import type { Address } from "viem";
 import { addTransactionMetadata } from "../../helpers";
 import {
   ChainWNativeMissingError,
+  type DepositAmountArgs,
   type Metadata,
   NativeAmountOnNonWNativeVaultError,
   NegativeNativeAmountError,
@@ -23,12 +24,10 @@ export interface VaultV1DepositParams {
     address: Address;
     asset: Address;
   };
-  args: {
-    assets: bigint;
+  args: DepositAmountArgs & {
     maxSharePrice: bigint;
     recipient: Address;
     requirementSignature?: RequirementSignature;
-    nativeAmount?: bigint;
   };
   metadata?: Metadata;
 }
@@ -61,7 +60,7 @@ export interface VaultV1DepositParams {
 export const vaultV1Deposit = ({
   vault: { chainId, address: vaultAddress, asset },
   args: {
-    assets,
+    assets = 0n,
     maxSharePrice,
     recipient,
     requirementSignature,

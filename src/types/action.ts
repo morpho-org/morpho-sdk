@@ -120,6 +120,17 @@ export interface Transaction<TAction extends BaseAction = TransactionAction> {
   readonly action: TAction;
 }
 
+/**
+ * Enforces that at least one deposit amount source is provided.
+ *
+ * - `assets` alone: standard ERC20 deposit.
+ * - `nativeAmount` alone: pure native-wrap deposit (vault asset must be wNative).
+ * - Both: mixed deposit (ERC20 transfer + native wrap).
+ */
+export type DepositAmountArgs =
+  | { assets: bigint; nativeAmount?: bigint }
+  | { nativeAmount: bigint; assets?: bigint };
+
 export interface PermitArgs {
   owner: Address;
   nonce: bigint;
