@@ -8,18 +8,23 @@ Pure transaction builders for VaultV1 (MetaMorpho) vault interactions. Each func
 
 ### `vaultV1Deposit`
 
-Builds a deposit transaction routed through the **bundler** (general adapter).
+Builds a deposit transaction routed through the **bundler** (general adapter). Supports native token wrapping for wNative vaults.
 
-| Param                       | Type      | Description                                      |
-| --------------------------- | --------- | ------------------------------------------------ |
-| `vault.chainId`             | `number`  | Chain ID (used to resolve bundler addresses)     |
-| `vault.address`             | `Address` | Vault contract address                           |
-| `vault.asset`               | `Address` | Underlying ERC20 token address                   |
-| `args.assets`               | `bigint`  | Amount of assets to deposit                      |
-| `args.maxSharePrice`        | `bigint`  | Max acceptable share price (slippage protection) |
-| `args.recipient`            | `Address` | Receives the vault shares                        |
-| `args.requirementSignature` | optional  | Pre-signed permit/permit2 approval               |
-| `metadata`                  | optional  | Analytics metadata to append                     |
+| Param                       | Type      | Description                                                      |
+| --------------------------- | --------- | ---------------------------------------------------------------- |
+| `vault.chainId`             | `number`  | Chain ID (used to resolve bundler addresses)                     |
+| `vault.address`             | `Address` | Vault contract address                                           |
+| `vault.asset`               | `Address` | Underlying ERC20 token address                                   |
+| `args.amount`               | `bigint?` | Amount of ERC-20 assets to deposit                               |
+| `args.nativeAmount`         | `bigint?` | Amount of native token to wrap and deposit (wNative vaults only) |
+| `args.maxSharePrice`        | `bigint`  | Max acceptable share price (slippage protection)                 |
+| `args.recipient`            | `Address` | Receives the vault shares                                        |
+| `args.requirementSignature` | optional  | Pre-signed permit/permit2 approval                               |
+| `metadata`                  | optional  | Analytics metadata to append                                     |
+
+At least one of `amount` or `nativeAmount` must be provided.
+
+**Native wrapping flow:** When `nativeAmount` is provided, the bundler prepends `nativeTransfer` (token native → Bundler3 → GeneralAdapter1) + `wrapNative` (wNative wrapping) before the `erc4626Deposit` action. `tx.value` is set to `nativeAmount`. Validates that `vault.asset` matches the chain's `wNative` address.
 
 **Routing logic:** Same as VaultV2 — bundler with `erc4626Deposit`. Never bypass the general adapter.
 

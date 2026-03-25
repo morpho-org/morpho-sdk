@@ -8,16 +8,16 @@
 
 ## Entities & Actions
 
-| Entity      | Action          | Route                     | Why                                                    |
-| ----------- | --------------- | ------------------------- | ------------------------------------------------------ |
-| **VaultV2** | `deposit`       | Bundler (general adapter) | Enforces `maxSharePrice` — inflation attack prevention |
-|             | `withdraw`      | Direct vault call         | No attack surface, no bundler overhead needed          |
-|             | `redeem`        | Direct vault call         | No attack surface, no bundler overhead needed          |
-|             | `forceWithdraw` | Vault `multicall`         | N `forceDeallocate` + 1 `withdraw` in a single tx      |
-|             | `forceRedeem`   | Vault `multicall`         | N `forceDeallocate` + 1 `redeem` in a single tx        |
-| **VaultV1** | `deposit`       | Bundler (general adapter) | Same ERC-4626 inflation attack prevention as V2        |
-|             | `withdraw`      | Direct vault call         | No attack surface                                      |
-|             | `redeem`        | Direct vault call         | No attack surface                                      |
+| Entity      | Action          | Route                     | Why                                                                                     |
+| ----------- | --------------- | ------------------------- | --------------------------------------------------------------------------------------- |
+| **VaultV2** | `deposit`       | Bundler (general adapter) | Enforces `maxSharePrice` — inflation attack prevention. Supports native token wrapping. |
+|             | `withdraw`      | Direct vault call         | No attack surface, no bundler overhead needed                                           |
+|             | `redeem`        | Direct vault call         | No attack surface, no bundler overhead needed                                           |
+|             | `forceWithdraw` | Vault `multicall`         | N `forceDeallocate` + 1 `withdraw` in a single tx                                       |
+|             | `forceRedeem`   | Vault `multicall`         | N `forceDeallocate` + 1 `redeem` in a single tx                                         |
+| **VaultV1** | `deposit`       | Bundler (general adapter) | Same ERC-4626 inflation attack prevention as V2. Supports native token wrapping.        |
+|             | `withdraw`      | Direct vault call         | No attack surface                                                                       |
+|             | `redeem`        | Direct vault call         | No attack surface                                                                       |
 
 ## VaultV2
 
@@ -36,13 +36,34 @@ const vault = morpho.vaultV2("0xVault...", 1);
 
 ```typescript
 const { buildTx, getRequirements } = await vault.deposit({
-  assets: 1000000000000000000n,
+  amount: 1000000000000000000n,
   userAddress: "0xUser...",
 });
 
 const requirements = await getRequirements();
 const tx = buildTx(requirementSignature);
 ```
+
+#### Deposit with native native token wrapping
+
+For vaults whose underlying asset is wNative, you can deposit native token that will be automatically wrapped:
+
+```typescript
+// Native ETH only — wraps 1 ETH to WETH and deposits
+const { buildTx, getRequirements } = await vault.deposit({
+  nativeAmount: 1000000000000000000n,
+  userAddress: "0xUser...",
+});
+
+// Mixed — 0.5 WETH (ERC-20) + 0.5 native ETH wrapped to WETH
+const { buildTx, getRequirements } = await vault.deposit({
+  amount: 500000000000000000n,
+  nativeAmount: 500000000000000000n,
+  userAddress: "0xUser...",
+});
+```
+
+The bundler atomically transfers native token, wraps it to wNative, and deposits alongside any ERC-20 amount. The transaction's `value` field is set to `nativeAmount`.
 
 ### Withdraw
 
@@ -100,7 +121,7 @@ const vault = morpho.vaultV1("0xVault...", 1);
 
 ```typescript
 const { buildTx, getRequirements } = await vault.deposit({
-  assets: 1000000000000000000n,
+  amount: 1000000000000000000n,
   userAddress: "0xUser...",
 });
 
@@ -145,7 +166,7 @@ graph LR
         MV1 --> V1W[vaultV1Withdraw]
         MV1 --> V1R[vaultV1Redeem]
 
-        V1D -->|erc4626Deposit| B1[Bundler3]
+        V1D -->|nativeTransfer + wrapNative + erc4626Deposit| B1[Bundler3]
         V1W -->|direct call| MM[MetaMorpho]
         V1R -->|direct call| MM
     end
@@ -158,7 +179,7 @@ graph LR
         MV2 --> V2FW[vaultV2ForceWithdraw]
         MV2 --> V2FR[vaultV2ForceRedeem]
 
-        V2D -->|erc4626Deposit| B2[Bundler3]
+        V2D -->|nativeTransfer + wrapNative + erc4626Deposit| B2[Bundler3]
         V2W -->|direct call| V2C[VaultV2 Contract]
         V2R -->|direct call| V2C
         V2FW -->|multicall| V2C

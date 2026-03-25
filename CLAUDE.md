@@ -37,13 +37,13 @@ Strict layering: **Client → Entity → Action**. Never skip a layer.
 
 VaultV1 (MetaMorpho) operations:
 
-- **deposit** → `vaultV1Deposit()` — routed through bundler3 (never bypass general adapter)
+- **deposit** → `vaultV1Deposit()` — routed through bundler3 (never bypass general adapter). Supports optional `nativeAmount` for native token wrapping on wNative vaults.
 - **withdraw** → `vaultV1Withdraw()` — direct vault call
 - **redeem** → `vaultV1Redeem()` — direct vault call
 
 VaultV2 operations:
 
-- **deposit** → `vaultV2Deposit()` — routed through bundler3 (never bypass general adapter)
+- **deposit** → `vaultV2Deposit()` — routed through bundler3 (never bypass general adapter). Supports optional `nativeAmount` for native token wrapping on wNative vaults.
 - **withdraw** → `vaultV2Withdraw()` — direct vault call
 - **redeem** → `vaultV2Redeem()` — direct vault call
 - **forceWithdraw** → `vaultV2ForceWithdraw()` — bundled via multicall on VaultV2 contract (N forceDeallocate + 1 withdraw)
