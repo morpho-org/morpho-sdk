@@ -51,7 +51,7 @@ describe("Permit2", () => {
         const vault = morpho.vaultV2(Re7UsdtVaultV2.address, mainnet.id);
         const deposit = await vault.deposit({
           userAddress: client.account.address,
-          assets: amount,
+          amount,
         });
 
         const requirements = await deposit.getRequirements();
@@ -137,7 +137,7 @@ describe("Permit2", () => {
         const vault = morpho.vaultV2(Re7UsdtVaultV2.address, mainnet.id);
         const deposit = await vault.deposit({
           userAddress: client.account.address,
-          assets: amount,
+          amount,
         });
 
         const requirements = await deposit.getRequirements();
@@ -217,7 +217,7 @@ describe("Permit2", () => {
         const vault = morpho.vaultV2(KpkWETHVaultV2.address, mainnet.id);
         const deposit = await vault.deposit({
           userAddress: client.account.address,
-          assets: amount,
+          amount,
         });
 
         const requirements = await deposit.getRequirements();
@@ -268,7 +268,7 @@ describe("Permit2", () => {
       actionFn: async () => {
         const deposit = await vault.deposit({
           userAddress: client.account.address,
-          assets: amount,
+          amount,
         });
 
         const requirements = await deposit.getRequirements();
@@ -349,7 +349,7 @@ describe("Permit2", () => {
       actionFn: async () => {
         const deposit = await vault.deposit({
           userAddress: client.account.address,
-          assets: amount,
+          amount,
         });
 
         const requirements = await deposit.getRequirements({

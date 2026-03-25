@@ -27,7 +27,7 @@ describe("DepositVaultV1", () => {
     const vault = morpho.vaultV1(SteakhouseUsdcVaultV1.address, mainnet.id);
     const deposit = await vault.deposit({
       userAddress: client.account.address,
-      assets: 1000000000000000000n,
+      amount: 1000000000000000000n,
     });
     const requirements_1 = await deposit.getRequirements();
     const data = await vault.getData();
@@ -40,7 +40,7 @@ describe("DepositVaultV1", () => {
         asset: SteakhouseUsdcVaultV1.asset,
       },
       args: {
-        assets: 1000000000000000000n,
+        amount: 1000000000000000000n,
         maxSharePrice: tx_1.action.args.maxSharePrice,
         recipient: client.account.address,
       },
@@ -77,7 +77,7 @@ describe("DepositVaultV1", () => {
         );
         const deposit = await vaultV1.deposit({
           userAddress: client.account.address,
-          assets: amount,
+          amount: amount,
         });
 
         const tx = deposit.buildTx();
@@ -143,7 +143,7 @@ describe("DepositVaultV1", () => {
         );
         const deposit = await vaultV1.deposit({
           userAddress: client.account.address,
-          assets: amount,
+          amount: amount,
         });
 
         const tx = deposit.buildTx();
@@ -205,7 +205,7 @@ describe("DepositVaultV1", () => {
         const vault = morpho.vaultV1(SteakhouseUsdcVaultV1.address, mainnet.id);
         const deposit = await vault.deposit({
           userAddress: client.account.address,
-          assets: amount,
+          amount: amount,
         });
         const requirements = await deposit.getRequirements({
           useSimplePermit: true,
@@ -277,7 +277,7 @@ describe("DepositVaultV1", () => {
       actionFn: async () => {
         const deposit = await vault.deposit({
           userAddress: client.account.address,
-          assets: amount,
+          amount: amount,
         });
 
         const requirements = await deposit.getRequirements({
@@ -373,7 +373,7 @@ describe("DepositVaultV1", () => {
         const vault = morpho.vaultV1(GauntletWethVaultV1.address, mainnet.id);
         const deposit = await vault.deposit({
           userAddress: client.account.address,
-          assets: amount,
+          amount: amount,
         });
 
         const requirements = await deposit.getRequirements();
@@ -423,7 +423,7 @@ describe("DepositVaultV1", () => {
 
         const deposit = await vaultV1.deposit({
           userAddress: client.account.address,
-          assets: amount,
+          amount: amount,
         });
         const requirements = await deposit.getRequirements();
         const approveTx = requirements[0];
@@ -436,7 +436,7 @@ describe("DepositVaultV1", () => {
 
         const withdraw = vaultV1.withdraw({
           userAddress: client.account.address,
-          assets: amount,
+          amount: amount,
         });
 
         const withdrawTx = withdraw.buildTx();

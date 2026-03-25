@@ -12,14 +12,14 @@ describe("withdrawVaultV1 unit tests", () => {
   test("should create withdraw transaction with USDC vault", async ({
     client,
   }) => {
-    const assets = parseUnits("1000", 6);
+    const amount = parseUnits("1000", 6);
 
     const tx = vaultV1Withdraw({
       vault: {
         address: SteakhouseUsdcVaultV1.address,
       },
       args: {
-        assets,
+        amount,
         recipient: client.account.address,
         onBehalf: client.account.address,
       },
@@ -28,7 +28,7 @@ describe("withdrawVaultV1 unit tests", () => {
     expect(tx).toBeDefined();
     expect(tx.action.type).toBe("vaultV1Withdraw");
     expect(tx.action.args.vault).toBe(SteakhouseUsdcVaultV1.address);
-    expect(tx.action.args.assets).toBe(assets);
+    expect(tx.action.args.amount).toBe(amount);
     expect(tx.action.args.recipient).toBe(client.account.address);
     expect(tx.to).toBe(SteakhouseUsdcVaultV1.address);
     expect(tx.data).toBeDefined();
@@ -38,14 +38,14 @@ describe("withdrawVaultV1 unit tests", () => {
   test("should create withdraw transaction with WETH vault", async ({
     client,
   }) => {
-    const assets = parseUnits("5", 18);
+    const amount = parseUnits("5", 18);
 
     const tx = vaultV1Withdraw({
       vault: {
         address: GauntletWethVaultV1.address,
       },
       args: {
-        assets,
+        amount,
         recipient: client.account.address,
         onBehalf: client.account.address,
       },
@@ -54,7 +54,7 @@ describe("withdrawVaultV1 unit tests", () => {
     expect(tx).toBeDefined();
     expect(tx.action.type).toBe("vaultV1Withdraw");
     expect(tx.action.args.vault).toBe(GauntletWethVaultV1.address);
-    expect(tx.action.args.assets).toBe(assets);
+    expect(tx.action.args.amount).toBe(amount);
     expect(tx.action.args.recipient).toBe(client.account.address);
     expect(tx.to).toBe(GauntletWethVaultV1.address);
     expect(tx.data).toBeDefined();
@@ -64,7 +64,7 @@ describe("withdrawVaultV1 unit tests", () => {
   test("should allow different recipient and onBehalf addresses", async ({
     client,
   }) => {
-    const assets = parseUnits("500", 6);
+    const amount = parseUnits("500", 6);
     const differentRecipient =
       "0x1234567890123456789012345678901234567890" as const;
 
@@ -73,7 +73,7 @@ describe("withdrawVaultV1 unit tests", () => {
         address: SteakhouseUsdcVaultV1.address,
       },
       args: {
-        assets,
+        amount,
         recipient: differentRecipient,
         onBehalf: client.account.address,
       },
@@ -90,7 +90,7 @@ describe("withdrawVaultV1 unit tests", () => {
           address: SteakhouseUsdcVaultV1.address,
         },
         args: {
-          assets: 0n,
+          amount: 0n,
           recipient: "0x1234567890123456789012345678901234567890",
           onBehalf: "0x1234567890123456789012345678901234567890",
         },
@@ -105,7 +105,7 @@ describe("withdrawVaultV1 unit tests", () => {
           address: SteakhouseUsdcVaultV1.address,
         },
         args: {
-          assets: -1n,
+          amount: -1n,
           recipient: "0x1234567890123456789012345678901234567890",
           onBehalf: "0x1234567890123456789012345678901234567890",
         },
@@ -119,7 +119,7 @@ describe("withdrawVaultV1 unit tests", () => {
         address: SteakhouseUsdcVaultV1.address,
       },
       args: {
-        assets: parseUnits("100", 6),
+        amount: parseUnits("100", 6),
         recipient: client.account.address,
         onBehalf: client.account.address,
       },
@@ -133,14 +133,14 @@ describe("withdrawVaultV1 unit tests", () => {
   test("should append metadata to transaction data when provided", async ({
     client,
   }) => {
-    const assets = parseUnits("100", 6);
+    const amount = parseUnits("100", 6);
 
     const txWithout = vaultV1Withdraw({
       vault: {
         address: SteakhouseUsdcVaultV1.address,
       },
       args: {
-        assets,
+        amount,
         recipient: client.account.address,
         onBehalf: client.account.address,
       },
@@ -151,7 +151,7 @@ describe("withdrawVaultV1 unit tests", () => {
         address: SteakhouseUsdcVaultV1.address,
       },
       args: {
-        assets,
+        amount,
         recipient: client.account.address,
         onBehalf: client.account.address,
       },
@@ -170,7 +170,7 @@ describe("withdrawVaultV1 unit tests", () => {
         address: SteakhouseUsdcVaultV1.address,
       },
       args: {
-        assets: parseUnits("1000", 6),
+        amount: parseUnits("1000", 6),
         recipient: client.account.address,
         onBehalf: client.account.address,
       },

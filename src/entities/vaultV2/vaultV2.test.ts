@@ -24,7 +24,7 @@ describe("MorphoVaultV2 entity tests", () => {
       );
 
       const result = await vault.deposit({
-        assets: parseUnits("100", 6),
+        amount: parseUnits("100", 6),
         userAddress: client.account.address,
         slippageTolerance: 0n,
       });
@@ -49,7 +49,7 @@ describe("MorphoVaultV2 entity tests", () => {
       );
 
       const result = await vault.deposit({
-        assets: parseUnits("100", 6),
+        amount: parseUnits("100", 6),
         userAddress: client.account.address,
         slippageTolerance: MAX_SLIPPAGE_TOLERANCE,
       });
@@ -75,7 +75,7 @@ describe("MorphoVaultV2 entity tests", () => {
 
       await expect(
         vault.deposit({
-          assets: parseUnits("100", 6),
+          amount: parseUnits("100", 6),
           userAddress: client.account.address,
           slippageTolerance: MAX_SLIPPAGE_TOLERANCE + 1n,
         }),
@@ -95,7 +95,7 @@ describe("MorphoVaultV2 entity tests", () => {
 
       await expect(
         vault.deposit({
-          assets: parseUnits("100", 6),
+          amount: parseUnits("100", 6),
           userAddress: client.account.address,
           slippageTolerance: -1n,
         }),

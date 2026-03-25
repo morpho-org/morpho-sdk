@@ -85,11 +85,11 @@ export class DepositAssetMismatchError extends Error {
 export class DeallocationsExceedWithdrawError extends Error {
   constructor(
     vault: Address,
-    withdrawAssets: bigint,
+    withdrawAmount: bigint,
     totalDeallocated: bigint,
   ) {
     super(
-      `Total deallocated assets (${totalDeallocated}) exceed withdraw amount (${withdrawAssets}) for vault: ${vault}`,
+      `Total deallocated amount (${totalDeallocated}) exceed withdraw amount (${withdrawAmount}) for vault: ${vault}`,
     );
   }
 }
@@ -119,7 +119,7 @@ export class NegativeNativeAmountError extends Error {
 export class ZeroDepositAmountError extends Error {
   constructor(vault: Address) {
     super(
-      `Total deposit amount must be positive for vault: ${vault}. Both assets and nativeAmount are zero.`,
+      `Total deposit amount must be positive for vault: ${vault}. Both amount and nativeAmount are zero.`,
     );
   }
 }

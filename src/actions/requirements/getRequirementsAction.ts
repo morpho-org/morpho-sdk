@@ -12,7 +12,7 @@ import {
 interface GetRequirementsActionParams {
   chainId: number;
   asset: Address;
-  assets: bigint;
+  amount: bigint;
   requirementSignature: {
     args: PermitArgs;
     action: PermitAction | Permit2Action;
@@ -25,16 +25,16 @@ interface GetRequirementsActionParams {
 export const getRequirementsAction = ({
   chainId,
   asset,
-  assets,
+  amount,
   requirementSignature,
 }: GetRequirementsActionParams): Action[] => {
   if (!isAddressEqual(requirementSignature.args.asset, asset)) {
     throw new DepositAssetMismatchError(asset, requirementSignature.args.asset);
   }
 
-  if (requirementSignature.args.amount !== assets) {
+  if (requirementSignature.args.amount !== amount) {
     throw new DepositAmountMismatchError(
-      assets,
+      amount,
       requirementSignature.args.amount,
     );
   }
@@ -67,7 +67,7 @@ export const getRequirementsAction = ({
       },
       {
         type: "transferFrom2",
-        args: [asset, assets, generalAdapter1, false /* skipRevert */],
+        args: [asset, amount, generalAdapter1, false /* skipRevert */],
       },
     ];
   }
@@ -86,7 +86,7 @@ export const getRequirementsAction = ({
     },
     {
       type: "erc20TransferFrom",
-      args: [asset, assets, generalAdapter1, false /* skipRevert */],
+      args: [asset, amount, generalAdapter1, false /* skipRevert */],
     },
   ];
 };

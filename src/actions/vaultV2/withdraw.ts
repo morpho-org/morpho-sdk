@@ -14,7 +14,7 @@ export interface VaultV2WithdrawParams {
     address: Address;
   };
   args: {
-    assets: bigint;
+    amount: bigint;
     recipient: Address;
     onBehalf: Address;
   };
@@ -33,7 +33,7 @@ export interface VaultV2WithdrawParams {
  * @param {Object} params.vault - The vault related parameters.
  * @param {Address} params.vault.address - The vault address.
  * @param {Object} params.args - The withdraw related parameters.
- * @param {bigint} params.args.assets - The amount of assets to withdraw.
+ * @param {bigint} params.args.amount - The amount of assets to withdraw.
  * @param {Address} params.args.recipient - The recipient address.
  * @param {Address} params.args.onBehalf - The address on behalf of which the withdraw is made.
  * @param {Metadata} [params.metadata] - Optional the metadata.
@@ -41,10 +41,10 @@ export interface VaultV2WithdrawParams {
  */
 export const vaultV2Withdraw = ({
   vault: { address: vaultAddress },
-  args: { assets, recipient, onBehalf },
+  args: { amount, recipient, onBehalf },
   metadata,
 }: VaultV2WithdrawParams): Readonly<Transaction<VaultV2WithdrawAction>> => {
-  if (assets <= 0n) {
+  if (amount <= 0n) {
     throw new NonPositiveAssetAmountError(vaultAddress);
   }
 
@@ -53,7 +53,7 @@ export const vaultV2Withdraw = ({
     data: encodeFunctionData({
       abi: vaultV2Abi,
       functionName: "withdraw",
-      args: [assets, recipient, onBehalf],
+      args: [amount, recipient, onBehalf],
     }),
     value: 0n,
   };
@@ -66,7 +66,7 @@ export const vaultV2Withdraw = ({
     ...tx,
     action: {
       type: "vaultV2Withdraw",
-      args: { vault: vaultAddress, assets, recipient },
+      args: { vault: vaultAddress, amount, recipient },
     },
   });
 };

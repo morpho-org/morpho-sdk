@@ -21,7 +21,7 @@ export interface VaultV2DepositAction
     "vaultV2Deposit",
     {
       vault: Address;
-      assets: bigint;
+      amount: bigint;
       maxSharePrice: bigint;
       recipient: Address;
       nativeAmount?: bigint;
@@ -33,7 +33,7 @@ export interface VaultV2WithdrawAction
     "vaultV2Withdraw",
     {
       vault: Address;
-      assets: bigint;
+      amount: bigint;
       recipient: Address;
     }
   > {}
@@ -54,7 +54,7 @@ export interface VaultV2ForceWithdrawAction
     {
       vault: Address;
       deallocations: readonly Deallocation[];
-      withdraw: { assets: bigint; recipient: Address };
+      withdraw: { amount: bigint; recipient: Address };
       onBehalf: Address;
     }
   > {}
@@ -75,7 +75,7 @@ export interface VaultV1DepositAction
     "vaultV1Deposit",
     {
       vault: Address;
-      assets: bigint;
+      amount: bigint;
       maxSharePrice: bigint;
       recipient: Address;
       nativeAmount?: bigint;
@@ -87,7 +87,7 @@ export interface VaultV1WithdrawAction
     "vaultV1Withdraw",
     {
       vault: Address;
-      assets: bigint;
+      amount: bigint;
       recipient: Address;
     }
   > {}
@@ -123,13 +123,13 @@ export interface Transaction<TAction extends BaseAction = TransactionAction> {
 /**
  * Enforces that at least one deposit amount source is provided.
  *
- * - `assets` alone: standard ERC20 deposit.
+ * - `amount` alone: standard ERC20 deposit.
  * - `nativeAmount` alone: pure native-wrap deposit (vault asset must be wNative).
  * - Both: mixed deposit (ERC20 transfer + native wrap).
  */
 export type DepositAmountArgs =
-  | { assets: bigint; nativeAmount?: bigint }
-  | { nativeAmount: bigint; assets?: bigint };
+  | { amount: bigint; nativeAmount?: bigint }
+  | { nativeAmount: bigint; amount?: bigint };
 
 export interface PermitArgs {
   owner: Address;

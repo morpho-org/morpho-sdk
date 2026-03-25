@@ -49,7 +49,7 @@ export interface VaultV1DepositParams {
  * @param {Address} params.vault.address - The vault address.
  * @param {Address} params.vault.asset - The underlying ERC20 asset address.
  * @param {Object} params.args - The deposit arguments.
- * @param {bigint} params.args.assets - Amount of assets to deposit.
+ * @param {bigint} params.args.amount - Amount of assets to deposit.
  * @param {bigint} params.args.maxSharePrice - Maximum acceptable share price (slippage protection).
  * @param {Address} params.args.recipient - Receives the vault shares.
  * @param {RequirementSignature} [params.args.requirementSignature] - Pre-signed permit/permit2 approval.
@@ -60,7 +60,7 @@ export interface VaultV1DepositParams {
 export const vaultV1Deposit = ({
   vault: { chainId, address: vaultAddress, asset },
   args: {
-    assets = 0n,
+    amount = 0n,
     maxSharePrice,
     recipient,
     requirementSignature,
@@ -68,7 +68,7 @@ export const vaultV1Deposit = ({
   },
   metadata,
 }: VaultV1DepositParams): Readonly<Transaction<VaultV1DepositAction>> => {
-  if (assets < 0n) {
+  if (amount < 0n) {
     throw new NonPositiveAssetAmountError(asset);
   }
 
@@ -101,25 +101,25 @@ export const vaultV1Deposit = ({
     });
   }
 
-  if (assets > 0n) {
+  if (amount > 0n) {
     if (requirementSignature) {
       actions.push(
         ...getRequirementsAction({
           chainId,
           asset,
-          assets,
+          amount,
           requirementSignature,
         }),
       );
     } else {
       actions.push({
         type: "erc20TransferFrom",
-        args: [asset, assets, generalAdapter1, false /* skipRevert */],
+        args: [asset, amount, generalAdapter1, false /* skipRevert */],
       });
     }
   }
 
-  const totalAssets = assets + (nativeAmount ?? 0n);
+  const totalAssets = amount + (nativeAmount ?? 0n);
 
   if (totalAssets === 0n) {
     throw new ZeroDepositAmountError(vaultAddress);
@@ -152,7 +152,7 @@ export const vaultV1Deposit = ({
       type: "vaultV1Deposit",
       args: {
         vault: vaultAddress,
-        assets,
+        amount,
         maxSharePrice,
         recipient,
         nativeAmount,

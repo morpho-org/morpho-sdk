@@ -69,7 +69,7 @@ describe("depositVaultV2 unit tests", () => {
         asset: dai,
       },
       args: {
-        assets,
+        amount: assets,
         maxSharePrice,
         recipient: client.account.address,
         requirementSignature,
@@ -80,7 +80,7 @@ describe("depositVaultV2 unit tests", () => {
     expect(tx).toBeDefined();
     expect(tx.action.type).toBe("vaultV2Deposit");
     expect(tx.action.args.vault).toBe(mockVaultAddress);
-    expect(tx.action.args.assets).toBe(assets);
+    expect(tx.action.args.amount).toBe(assets);
     expect(tx.action.args.maxSharePrice).toBe(maxSharePrice);
     expect(tx.action.args.recipient).toBe(client.account.address);
     expect(tx.to).toBeDefined();
@@ -129,7 +129,7 @@ describe("depositVaultV2 unit tests", () => {
         asset: usdc,
       },
       args: {
-        assets,
+        amount: assets,
         maxSharePrice,
         recipient: client.account.address,
         requirementSignature,
@@ -141,7 +141,7 @@ describe("depositVaultV2 unit tests", () => {
     expect(tx).toBeDefined();
     expect(tx.action.type).toBe("vaultV2Deposit");
     expect(tx.action.args.vault).toBe(KeyrockUsdcVaultV2.address);
-    expect(tx.action.args.assets).toBe(assets);
+    expect(tx.action.args.amount).toBe(assets);
     expect(tx.action.args.maxSharePrice).toBe(maxSharePrice);
     expect(tx.action.args.recipient).toBe(client.account.address);
     expect(tx.to).toBeDefined();
@@ -189,7 +189,7 @@ describe("depositVaultV2 unit tests", () => {
         asset: wNative,
       },
       args: {
-        assets,
+        amount: assets,
         maxSharePrice,
         recipient: client.account.address,
         requirementSignature,
@@ -199,7 +199,7 @@ describe("depositVaultV2 unit tests", () => {
     expect(tx).toBeDefined();
     expect(tx.action.type).toBe("vaultV2Deposit");
     expect(tx.action.args.vault).toBe(KpkWETHVaultV2.address);
-    expect(tx.action.args.assets).toBe(assets);
+    expect(tx.action.args.amount).toBe(assets);
     expect(tx.action.args.maxSharePrice).toBe(maxSharePrice);
     expect(tx.action.args.recipient).toBe(client.account.address);
     expect(tx.to).toBeDefined();
@@ -243,7 +243,7 @@ describe("depositVaultV2 unit tests", () => {
           asset: usdc,
         },
         args: {
-          assets: depositAmount,
+          amount: depositAmount,
           maxSharePrice,
           recipient: client.account.address,
           requirementSignature,
@@ -263,7 +263,7 @@ describe("depositVaultV2 unit tests", () => {
           asset: KeyrockUsdcVaultV2.asset,
         },
         args: {
-          assets: -1n,
+          amount: -1n,
           maxSharePrice: 1000000n,
           recipient: client.account.address,
         },
@@ -289,7 +289,7 @@ describe("depositVaultV2 unit tests", () => {
         asset: usdc,
       },
       args: {
-        assets,
+        amount: assets,
         maxSharePrice,
         recipient: client.account.address,
       },
@@ -300,7 +300,7 @@ describe("depositVaultV2 unit tests", () => {
     expect(tx).toBeDefined();
     expect(tx.action.type).toBe("vaultV2Deposit");
     expect(tx.action.args.vault).toBe(KeyrockUsdcVaultV2.address);
-    expect(tx.action.args.assets).toBe(assets);
+    expect(tx.action.args.amount).toBe(assets);
     expect(tx.action.args.maxSharePrice).toBe(maxSharePrice);
     expect(tx.action.args.recipient).toBe(client.account.address);
     expect(tx.to).toBeDefined();
@@ -319,7 +319,7 @@ describe("depositVaultV2 unit tests", () => {
           asset: KeyrockUsdcVaultV2.asset,
         },
         args: {
-          assets: 0n,
+          amount: 0n,
           maxSharePrice: 1000000n,
           recipient: client.account.address,
         },
@@ -338,7 +338,7 @@ describe("depositVaultV2 unit tests", () => {
           asset: KeyrockUsdcVaultV2.asset,
         },
         args: {
-          assets: parseUnits("100", 6),
+          amount: parseUnits("100", 6),
           maxSharePrice: 0n,
           recipient: client.account.address,
         },
@@ -357,7 +357,7 @@ describe("depositVaultV2 unit tests", () => {
           asset: KeyrockUsdcVaultV2.asset,
         },
         args: {
-          assets: parseUnits("100", 6),
+          amount: parseUnits("100", 6),
           maxSharePrice: -1n,
           recipient: client.account.address,
         },
@@ -404,7 +404,7 @@ describe("depositVaultV2 unit tests", () => {
           asset: wNative,
         },
         args: {
-          assets,
+          amount: assets,
           maxSharePrice,
           recipient: client.account.address,
           requirementSignature,
