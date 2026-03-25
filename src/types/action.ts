@@ -24,6 +24,7 @@ export interface VaultV2DepositAction
       assets: bigint;
       maxSharePrice: bigint;
       recipient: Address;
+      nativeAmount?: bigint;
     }
   > {}
 
@@ -77,6 +78,7 @@ export interface VaultV1DepositAction
       assets: bigint;
       maxSharePrice: bigint;
       recipient: Address;
+      nativeAmount?: bigint;
     }
   > {}
 

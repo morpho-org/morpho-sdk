@@ -16,6 +16,7 @@ import {
   type ERC20ApprovalAction,
   ExcessiveSlippageToleranceError,
   type MorphoClientType,
+  NegativeNativeAmountError,
   NegativeSlippageToleranceError,
   NonPositiveAssetAmountError,
   NonPositiveSharesAmountError,
@@ -54,6 +55,7 @@ export interface VaultV2Actions {
    * @param {bigint} params.assets - The amount of assets to deposit.
    * @param {Address} [params.userAddress] - Optional user address initiating the deposit. Default is the client's user address is used.
    * @param {bigint} [params.slippageTolerance=DEFAULT_SLIPPAGE_TOLERANCE] - Optional slippage tolerance value. Default is 0.03%. Slippage tolerance must be less than 10%.
+   * @param {bigint} [params.nativeAmount] - Amount of native ETH to wrap into WETH. Vault asset must be wNative.
    * @returns {Object} The result object.
    * @returns {Readonly<Transaction<VaultV2DepositAction>>} returns.tx The prepared deposit transaction.
    * @returns {Promise<Readonly<Transaction<ERC20ApprovalAction>[]>>} returns.getRequirements The function for retrieving all required approval transactions.
@@ -62,6 +64,7 @@ export interface VaultV2Actions {
     assets: bigint;
     userAddress: Address;
     slippageTolerance?: bigint;
+    nativeAmount?: bigint;
   }) => Promise<{
     buildTx: (
       requirementSignature?: RequirementSignature,
@@ -180,10 +183,12 @@ export class MorphoVaultV2 implements VaultV2Actions {
     assets,
     userAddress,
     slippageTolerance = DEFAULT_SLIPPAGE_TOLERANCE,
+    nativeAmount,
   }: {
     assets: bigint;
     userAddress: Address;
     slippageTolerance?: bigint;
+    nativeAmount?: bigint;
   }) {
     if (this.client.viemClient.chain?.id !== this.chainId) {
       throw new ChainIdMismatchError(
@@ -192,8 +197,12 @@ export class MorphoVaultV2 implements VaultV2Actions {
       );
     }
 
-    if (assets <= 0n) {
+    if (assets < 0n) {
       throw new NonPositiveAssetAmountError(this.vault);
+    }
+
+    if (nativeAmount && nativeAmount < 0n) {
+      throw new NegativeNativeAmountError(nativeAmount);
     }
 
     if (slippageTolerance < 0n) {
@@ -213,9 +222,11 @@ export class MorphoVaultV2 implements VaultV2Actions {
       throw new NonPositiveSharesAmountError(this.vault);
     }
 
+    const totalAssets = assets + (nativeAmount ?? 0n);
+
     const maxSharePrice = MathLib.min(
       MathLib.mulDivUp(
-        assets,
+        totalAssets,
         MathLib.wToRay(MathLib.WAD + slippageTolerance),
         shares,
       ),
@@ -235,6 +246,7 @@ export class MorphoVaultV2 implements VaultV2Actions {
             from: userAddress,
           },
         }),
+
       buildTx: (requirementSignature?: RequirementSignature) =>
         vaultV2Deposit({
           vault: {
@@ -247,6 +259,7 @@ export class MorphoVaultV2 implements VaultV2Actions {
             maxSharePrice,
             recipient: userAddress,
             requirementSignature,
+            nativeAmount,
           },
           metadata: this.client.options.metadata,
         }),

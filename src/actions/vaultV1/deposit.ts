@@ -1,10 +1,13 @@
 import { getChainAddresses } from "@morpho-org/blue-sdk";
 import { type Action, BundlerAction } from "@morpho-org/bundler-sdk-viem";
-import { deepFreeze } from "@morpho-org/morpho-ts";
+import { deepFreeze, isDefined } from "@morpho-org/morpho-ts";
 import type { Address } from "viem";
 import { addTransactionMetadata } from "../../helpers";
 import {
+  ChainWNativeMissingError,
   type Metadata,
+  NativeAmountOnNonWNativeVaultError,
+  NegativeNativeAmountError,
   NonPositiveAssetAmountError,
   NonPositiveMaxSharePriceError,
   type RequirementSignature,
@@ -24,6 +27,7 @@ export interface VaultV1DepositParams {
     maxSharePrice: bigint;
     recipient: Address;
     requirementSignature?: RequirementSignature;
+    nativeAmount?: bigint;
   };
   metadata?: Metadata;
 }
@@ -35,6 +39,10 @@ export interface VaultV1DepositParams {
  * The general adapter enforces `maxSharePrice` on-chain to prevent inflation attacks.
  * Never bypass the general adapter.
  *
+ * When `nativeAmount` is provided, that amount of native ETH is sent as `msg.value`
+ * to the Bundler3 multicall and wrapped into WETH via `GeneralAdapter1.wrapNative()`.
+ * The vault's underlying asset must be the chain's wrapped native token (wNative).
+ *
  * @param {Object} params - The deposit parameters.
  * @param {Object} params.vault - The vault identifiers.
  * @param {number} params.vault.chainId - The chain ID.
@@ -45,15 +53,22 @@ export interface VaultV1DepositParams {
  * @param {bigint} params.args.maxSharePrice - Maximum acceptable share price (slippage protection).
  * @param {Address} params.args.recipient - Receives the vault shares.
  * @param {RequirementSignature} [params.args.requirementSignature] - Pre-signed permit/permit2 approval.
+ * @param {bigint} [params.args.nativeAmount] - Amount of native ETH to wrap into WETH for the deposit.
  * @param {Metadata} [params.metadata] - Optional analytics metadata.
  * @returns {Readonly<Transaction<VaultV1DepositAction>>} The prepared deposit transaction.
  */
 export const vaultV1Deposit = ({
   vault: { chainId, address: vaultAddress, asset },
-  args: { assets, maxSharePrice, recipient, requirementSignature },
+  args: {
+    assets,
+    maxSharePrice,
+    recipient,
+    requirementSignature,
+    nativeAmount,
+  },
   metadata,
 }: VaultV1DepositParams): Readonly<Transaction<VaultV1DepositAction>> => {
-  if (assets <= 0n) {
+  if (assets < 0n) {
     throw new NonPositiveAssetAmountError(asset);
   }
 
@@ -63,31 +78,54 @@ export const vaultV1Deposit = ({
 
   const actions: Action[] = [];
 
-  if (requirementSignature) {
-    actions.push(
-      ...getRequirementsAction({
-        chainId,
-        asset,
-        assets,
-        requirementSignature,
-      }),
-    );
-  } else {
-    const {
-      bundler3: { generalAdapter1 },
-    } = getChainAddresses(chainId);
+  const {
+    bundler3: { generalAdapter1 },
+    wNative,
+  } = getChainAddresses(chainId);
+
+  if (nativeAmount) {
+    if (nativeAmount < 0n) {
+      throw new NegativeNativeAmountError(nativeAmount);
+    }
+
+    if (!isDefined(wNative)) {
+      throw new ChainWNativeMissingError(chainId);
+    }
+    if (asset !== wNative) {
+      throw new NativeAmountOnNonWNativeVaultError(asset, wNative);
+    }
 
     actions.push({
-      type: "erc20TransferFrom",
-      args: [asset, assets, generalAdapter1, false /* skipRevert */],
+      type: "wrapNative",
+      args: [nativeAmount, generalAdapter1, false /* skipRevert */],
     });
   }
+
+  if (assets > 0n) {
+    if (requirementSignature) {
+      actions.push(
+        ...getRequirementsAction({
+          chainId,
+          asset,
+          assets,
+          requirementSignature,
+        }),
+      );
+    } else {
+      actions.push({
+        type: "erc20TransferFrom",
+        args: [asset, assets, generalAdapter1, false /* skipRevert */],
+      });
+    }
+  }
+
+  const totalAssets = assets + (nativeAmount ?? 0n);
 
   actions.push({
     type: "erc4626Deposit",
     args: [
       vaultAddress,
-      assets,
+      totalAssets,
       maxSharePrice,
       recipient,
       false /* skipRevert */,
@@ -95,6 +133,10 @@ export const vaultV1Deposit = ({
   });
 
   let tx = BundlerAction.encodeBundle(chainId, actions);
+
+  if (nativeAmount) {
+    tx = { ...tx, value: nativeAmount };
+  }
 
   if (metadata) {
     tx = addTransactionMetadata(tx, metadata);
@@ -104,7 +146,13 @@ export const vaultV1Deposit = ({
     ...tx,
     action: {
       type: "vaultV1Deposit",
-      args: { vault: vaultAddress, assets, maxSharePrice, recipient },
+      args: {
+        vault: vaultAddress,
+        assets,
+        maxSharePrice,
+        recipient,
+        nativeAmount,
+      },
     },
   });
 };
