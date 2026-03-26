@@ -30,7 +30,7 @@ describe("Permit", () => {
         const vault = morpho.vaultV2(KeyrockUsdcVaultV2.address, mainnet.id);
         const deposit = await vault.deposit({
           userAddress: client.account.address,
-          assets: amount,
+          amount,
         });
         const requirements_1 = await deposit.getRequirements({
           useSimplePermit: true,

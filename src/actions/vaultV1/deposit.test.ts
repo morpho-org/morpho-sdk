@@ -15,6 +15,7 @@ import {
   isRequirementSignature,
   NonPositiveAssetAmountError,
   NonPositiveMaxSharePriceError,
+  ZeroDepositAmountError,
 } from "../../types";
 import { getRequirements } from "../requirements";
 import * as getRequirementsActionModule from "../requirements/getRequirementsAction";
@@ -65,7 +66,7 @@ describe("depositVaultV1 unit tests", () => {
         asset: dai,
       },
       args: {
-        assets,
+        amount: assets,
         maxSharePrice,
         recipient: client.account.address,
         requirementSignature,
@@ -75,7 +76,7 @@ describe("depositVaultV1 unit tests", () => {
     expect(tx).toBeDefined();
     expect(tx.action.type).toBe("vaultV1Deposit");
     expect(tx.action.args.vault).toBe(mockVaultAddress);
-    expect(tx.action.args.assets).toBe(assets);
+    expect(tx.action.args.amount).toBe(assets);
     expect(tx.action.args.maxSharePrice).toBe(maxSharePrice);
     expect(tx.action.args.recipient).toBe(client.account.address);
     expect(tx.to).toBeDefined();
@@ -86,7 +87,7 @@ describe("depositVaultV1 unit tests", () => {
   test("should create deposit bundle with USDC via simple permit", async ({
     client,
   }) => {
-    const assets = parseUnits("1000", 6);
+    const amount = parseUnits("1000", 6);
     const maxSharePrice = 1000000n;
 
     const requirements = await getRequirements(client, {
@@ -95,7 +96,7 @@ describe("depositVaultV1 unit tests", () => {
       supportSignature: true,
       useSimplePermit: true,
       args: {
-        amount: assets,
+        amount,
         from: client.account.address,
       },
     });
@@ -124,7 +125,7 @@ describe("depositVaultV1 unit tests", () => {
         asset: usdc,
       },
       args: {
-        assets,
+        amount,
         maxSharePrice,
         recipient: client.account.address,
         requirementSignature,
@@ -136,7 +137,7 @@ describe("depositVaultV1 unit tests", () => {
     expect(tx).toBeDefined();
     expect(tx.action.type).toBe("vaultV1Deposit");
     expect(tx.action.args.vault).toBe(SteakhouseUsdcVaultV1.address);
-    expect(tx.action.args.assets).toBe(assets);
+    expect(tx.action.args.amount).toBe(amount);
     expect(tx.action.args.maxSharePrice).toBe(maxSharePrice);
     expect(tx.action.args.recipient).toBe(client.account.address);
     expect(tx.to).toBeDefined();
@@ -147,7 +148,7 @@ describe("depositVaultV1 unit tests", () => {
   test("should create deposit bundle with WETH via permit2", async ({
     client,
   }) => {
-    const assets = parseUnits("5", 18);
+    const amount = parseUnits("5", 18);
     const maxSharePrice = 1000000000000000000n;
 
     const requirements = await getRequirements(client, {
@@ -155,7 +156,7 @@ describe("depositVaultV1 unit tests", () => {
       chainId: mainnet.id,
       supportSignature: true,
       args: {
-        amount: assets,
+        amount,
         from: client.account.address,
       },
     });
@@ -184,7 +185,7 @@ describe("depositVaultV1 unit tests", () => {
         asset: wNative,
       },
       args: {
-        assets,
+        amount,
         maxSharePrice,
         recipient: client.account.address,
         requirementSignature,
@@ -194,7 +195,7 @@ describe("depositVaultV1 unit tests", () => {
     expect(tx).toBeDefined();
     expect(tx.action.type).toBe("vaultV1Deposit");
     expect(tx.action.args.vault).toBe(GauntletWethVaultV1.address);
-    expect(tx.action.args.assets).toBe(assets);
+    expect(tx.action.args.amount).toBe(amount);
     expect(tx.action.args.maxSharePrice).toBe(maxSharePrice);
     expect(tx.action.args.recipient).toBe(client.account.address);
     expect(tx.to).toBeDefined();
@@ -220,7 +221,7 @@ describe("depositVaultV1 unit tests", () => {
         asset: usdc,
       },
       args: {
-        assets,
+        amount: assets,
         maxSharePrice,
         recipient: client.account.address,
       },
@@ -231,7 +232,7 @@ describe("depositVaultV1 unit tests", () => {
     expect(tx).toBeDefined();
     expect(tx.action.type).toBe("vaultV1Deposit");
     expect(tx.action.args.vault).toBe(SteakhouseUsdcVaultV1.address);
-    expect(tx.action.args.assets).toBe(assets);
+    expect(tx.action.args.amount).toBe(assets);
     expect(tx.action.args.maxSharePrice).toBe(maxSharePrice);
     expect(tx.action.args.recipient).toBe(client.account.address);
     expect(tx.to).toBeDefined();
@@ -275,7 +276,7 @@ describe("depositVaultV1 unit tests", () => {
           asset: usdc,
         },
         args: {
-          assets: depositAmount,
+          amount: depositAmount,
           maxSharePrice,
           recipient: client.account.address,
           requirementSignature,
@@ -295,7 +296,7 @@ describe("depositVaultV1 unit tests", () => {
           asset: SteakhouseUsdcVaultV1.asset,
         },
         args: {
-          assets: -1n,
+          amount: -1n,
           maxSharePrice: 1000000n,
           recipient: client.account.address,
         },
@@ -303,7 +304,7 @@ describe("depositVaultV1 unit tests", () => {
     ).toThrow(NonPositiveAssetAmountError);
   });
 
-  test("should throw NonPositiveAssetAmountError when assets is zero", async ({
+  test("should throw ZeroDepositAmountError when assets and nativeAmount are both zero", async ({
     client,
   }) => {
     expect(() =>
@@ -314,12 +315,12 @@ describe("depositVaultV1 unit tests", () => {
           asset: SteakhouseUsdcVaultV1.asset,
         },
         args: {
-          assets: 0n,
+          amount: 0n,
           maxSharePrice: 1000000n,
           recipient: client.account.address,
         },
       }),
-    ).toThrow(NonPositiveAssetAmountError);
+    ).toThrow(ZeroDepositAmountError);
   });
 
   test("should throw NonPositiveMaxSharePriceError when maxSharePrice is zero", async ({
@@ -333,7 +334,7 @@ describe("depositVaultV1 unit tests", () => {
           asset: SteakhouseUsdcVaultV1.asset,
         },
         args: {
-          assets: parseUnits("100", 6),
+          amount: parseUnits("100", 6),
           maxSharePrice: 0n,
           recipient: client.account.address,
         },
@@ -352,7 +353,7 @@ describe("depositVaultV1 unit tests", () => {
           asset: SteakhouseUsdcVaultV1.asset,
         },
         args: {
-          assets: parseUnits("100", 6),
+          amount: parseUnits("100", 6),
           maxSharePrice: -1n,
           recipient: client.account.address,
         },
@@ -368,7 +369,7 @@ describe("depositVaultV1 unit tests", () => {
         asset: usdc,
       },
       args: {
-        assets: parseUnits("100", 6),
+        amount: parseUnits("100", 6),
         maxSharePrice: 1000000n,
         recipient: client.account.address,
       },
@@ -392,7 +393,7 @@ describe("depositVaultV1 unit tests", () => {
         asset: usdc,
       },
       args: {
-        assets,
+        amount: assets,
         maxSharePrice,
         recipient: client.account.address,
       },
@@ -405,7 +406,7 @@ describe("depositVaultV1 unit tests", () => {
         asset: usdc,
       },
       args: {
-        assets,
+        amount: assets,
         maxSharePrice,
         recipient: client.account.address,
       },
@@ -455,7 +456,7 @@ describe("depositVaultV1 unit tests", () => {
           asset: wNative,
         },
         args: {
-          assets,
+          amount: assets,
           maxSharePrice,
           recipient: client.account.address,
           requirementSignature,

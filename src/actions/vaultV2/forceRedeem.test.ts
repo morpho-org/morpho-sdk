@@ -37,7 +37,7 @@ describe("forceRedeemVaultV2 unit tests", () => {
           {
             adapter: mockAdapterAddress,
             marketParams: mockMarketParams,
-            assets,
+            amount: assets,
           },
         ],
         redeem: { shares, recipient: client.account.address },
@@ -50,7 +50,7 @@ describe("forceRedeemVaultV2 unit tests", () => {
     expect(tx.action.args.vault).toBe(mockVaultAddress);
     expect(tx.action.args.deallocations).toHaveLength(1);
     expect(tx.action.args.deallocations[0]?.adapter).toBe(mockAdapterAddress);
-    expect(tx.action.args.deallocations[0]?.assets).toBe(assets);
+    expect(tx.action.args.deallocations[0]?.amount).toBe(assets);
     expect(tx.action.args.redeem.shares).toBe(shares);
     expect(tx.action.args.redeem.recipient).toBe(client.account.address);
     expect(tx.action.args.onBehalf).toBe(client.account.address);
@@ -68,7 +68,7 @@ describe("forceRedeemVaultV2 unit tests", () => {
     const tx = vaultV2ForceRedeem({
       vault: { address: mockVaultAddress },
       args: {
-        deallocations: [{ adapter: mockAdapterAddress, assets }],
+        deallocations: [{ adapter: mockAdapterAddress, amount: assets }],
         redeem: { shares, recipient: client.account.address },
         onBehalf: client.account.address,
       },
@@ -98,9 +98,9 @@ describe("forceRedeemVaultV2 unit tests", () => {
           {
             adapter: mockAdapterAddress,
             marketParams: mockMarketParams,
-            assets: assets1,
+            amount: assets1,
           },
-          { adapter: mockAdapterAddress2, assets: assets2 },
+          { adapter: mockAdapterAddress2, amount: assets2 },
         ],
         redeem: { shares, recipient: client.account.address },
         onBehalf: client.account.address,
@@ -111,9 +111,9 @@ describe("forceRedeemVaultV2 unit tests", () => {
     expect(tx.action.type).toBe("vaultV2ForceRedeem");
     expect(tx.action.args.deallocations).toHaveLength(2);
     expect(tx.action.args.deallocations[0]?.adapter).toBe(mockAdapterAddress);
-    expect(tx.action.args.deallocations[0]?.assets).toBe(assets1);
+    expect(tx.action.args.deallocations[0]?.amount).toBe(assets1);
     expect(tx.action.args.deallocations[1]?.adapter).toBe(mockAdapterAddress2);
-    expect(tx.action.args.deallocations[1]?.assets).toBe(assets2);
+    expect(tx.action.args.deallocations[1]?.amount).toBe(assets2);
     expect(tx.action.args.redeem.shares).toBe(shares);
     expect(tx.to).toBe(mockVaultAddress);
     expect(isHex(tx.data)).toBe(true);
@@ -131,7 +131,7 @@ describe("forceRedeemVaultV2 unit tests", () => {
           {
             adapter: mockAdapterAddress,
             marketParams: mockMarketParams,
-            assets,
+            amount: assets,
           },
         ],
         redeem: { shares, recipient: client.account.address },
@@ -146,7 +146,7 @@ describe("forceRedeemVaultV2 unit tests", () => {
           {
             adapter: mockAdapterAddress,
             marketParams: mockMarketParams,
-            assets,
+            amount: assets,
           },
         ],
         redeem: { shares, recipient: client.account.address },
@@ -185,7 +185,7 @@ describe("forceRedeemVaultV2 unit tests", () => {
         vault: { address: mockVaultAddress },
         args: {
           deallocations: [
-            { adapter: mockAdapterAddress, assets: parseUnits("100", 18) },
+            { adapter: mockAdapterAddress, amount: parseUnits("100", 18) },
           ],
           redeem: { shares: 0n, recipient: client.account.address },
           onBehalf: client.account.address,
@@ -202,7 +202,7 @@ describe("forceRedeemVaultV2 unit tests", () => {
         vault: { address: mockVaultAddress },
         args: {
           deallocations: [
-            { adapter: mockAdapterAddress, assets: parseUnits("100", 18) },
+            { adapter: mockAdapterAddress, amount: parseUnits("100", 18) },
           ],
           redeem: { shares: -1n, recipient: client.account.address },
           onBehalf: client.account.address,

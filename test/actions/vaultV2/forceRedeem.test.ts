@@ -45,7 +45,7 @@ describe("ForceRedeem VaultV2", () => {
       {
         adapter: adapterAddress1,
         marketParams,
-        assets: assetsDeallocate,
+        amount: assetsDeallocate,
       },
     ] as const;
 
@@ -103,7 +103,9 @@ describe("ForceRedeem VaultV2", () => {
       amount: redeemShares,
     });
 
-    const deallocations = [{ adapter: adapterAddress2, assets }] as const;
+    const deallocations = [
+      { adapter: adapterAddress2, amount: assets },
+    ] as const;
 
     const forceRedeem = vaultV2.forceRedeem({
       deallocations,
@@ -161,9 +163,9 @@ describe("ForceRedeem VaultV2", () => {
       {
         adapter: adapterAddress1,
         marketParams: marketParams,
-        assets: assetsDeallocate1,
+        amount: assetsDeallocate1,
       },
-      { adapter: adapterAddress2, assets: assetsDeallocate2 },
+      { adapter: adapterAddress2, amount: assetsDeallocate2 },
     ] as const;
 
     const forceRedeem = vaultV2.forceRedeem({

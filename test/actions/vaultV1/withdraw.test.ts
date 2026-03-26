@@ -14,7 +14,7 @@ describe("Withdraw VaultV1", () => {
       .vaultV1(SteakhouseUsdcVaultV1.address, mainnet.id)
       .withdraw({
         userAddress: client.account.address,
-        assets: 1000000000000000000n,
+        amount: 1000000000000000000n,
       });
     const tx_1 = withdraw.buildTx();
 
@@ -23,7 +23,7 @@ describe("Withdraw VaultV1", () => {
         address: SteakhouseUsdcVaultV1.address,
       },
       args: {
-        assets: 1000000000000000000n,
+        amount: 1000000000000000000n,
         recipient: client.account.address,
         onBehalf: client.account.address,
       },
@@ -58,7 +58,7 @@ describe("Withdraw VaultV1", () => {
         );
         const withdraw = vaultV1.withdraw({
           userAddress: client.account.address,
-          assets,
+          amount: assets,
         });
         const tx = withdraw.buildTx();
 
@@ -105,13 +105,13 @@ describe("Withdraw VaultV1", () => {
 
         const withdraw1 = vaultV1.withdraw({
           userAddress: client.account.address,
-          assets: firstWithdraw,
+          amount: firstWithdraw,
         });
         await client.sendTransaction(withdraw1.buildTx());
 
         const withdraw2 = vaultV1.withdraw({
           userAddress: client.account.address,
-          assets: secondWithdraw,
+          amount: secondWithdraw,
         });
         await client.sendTransaction(withdraw2.buildTx());
       },

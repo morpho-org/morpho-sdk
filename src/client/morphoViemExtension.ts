@@ -25,7 +25,7 @@ import { MorphoClient } from "./morphoClient";
  *
  * // VaultV1 (MetaMorpho)
  * const vaultV1 = client.morpho.vaultV1('0x...', 1);
- * const depositV1 = await vaultV1.deposit({ assets: 1000000000000000000n, userAddress: '0x...' });
+ * const depositV1 = await vaultV1.deposit({ amount: 1000000000000000000n, userAddress: '0x...' });
  *
  * // VaultV2
  * const vaultV2 = client.morpho.vaultV2('0x...', 1);

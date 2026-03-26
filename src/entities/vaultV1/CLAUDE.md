@@ -7,7 +7,8 @@
 ## Intent
 
 - Fetches on-chain vault data (`fetchVault`, `fetchAccrualVault`).
-- Computes `maxSharePrice` with slippage tolerance for deposits.
+- Computes `maxSharePrice` with slippage tolerance for deposits, using `totalAssets = amount + nativeAmount`.
+- Validates `nativeAmount` constraints: vault asset must be `wNative`, chain must have `wNative` configured, amount must be non-negative.
 - Delegates transaction building to pure action functions in `src/actions/vaultV1/`.
 - Returns `{ buildTx, getRequirements }` — lazy evaluation, no side effects at construction.
 

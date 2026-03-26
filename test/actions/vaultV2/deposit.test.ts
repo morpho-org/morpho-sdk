@@ -17,7 +17,7 @@ describe("DepositVaultV2", () => {
     const vault = morpho.vaultV2(KeyrockUsdcVaultV2.address, mainnet.id);
     const deposit = await vault.deposit({
       userAddress: client.account.address,
-      assets: 1000000000000000000n,
+      amount: 1000000000000000000n,
     });
     const requirements_1 = await deposit.getRequirements();
     const data = await vault.getData();
@@ -30,7 +30,7 @@ describe("DepositVaultV2", () => {
         asset: KeyrockUsdcVaultV2.asset,
       },
       args: {
-        assets: 1000000000000000000n,
+        amount: 1000000000000000000n,
         maxSharePrice: 1030789509859687n,
         recipient: client.account.address,
       },
@@ -64,7 +64,7 @@ describe("DepositVaultV2", () => {
         const vaultV2 = morpho.vaultV2(KeyrockUsdcVaultV2.address, mainnet.id);
         const deposit = await vaultV2.deposit({
           userAddress: client.account.address,
-          assets: amount,
+          amount: amount,
         });
 
         const tx = deposit.buildTx();

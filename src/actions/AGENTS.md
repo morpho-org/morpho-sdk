@@ -17,7 +17,7 @@ Pure functions that build deep-frozen `Transaction<TAction>` objects. No side ef
 ```
 Entity (MorphoVaultV1)                          Entity (MorphoVaultV2)
   │                                               │
-  ├─ deposit ──► vaultV1Deposit()  ← bundler      ├─ deposit ──────────► vaultV2Deposit()           ← bundler
+  ├─ deposit ──► vaultV1Deposit()  ← bundler (+ native wrap)  ├─ deposit ──────────► vaultV2Deposit()  ← bundler (+ native wrap)
   ├─ withdraw ─► vaultV1Withdraw() ← direct       ├─ withdraw ─────────► vaultV2Withdraw()          ← direct
   └─ redeem ──► vaultV1Redeem()   ← direct        ├─ redeem ───────────► vaultV2Redeem()            ← direct
                                                    ├─ forceWithdraw ────► vaultV2ForceWithdraw()      ← multicall
@@ -30,7 +30,8 @@ Entity (MorphoVaultV1)                          Entity (MorphoVaultV2)
 ## Key Constraints
 
 - Every returned object **must** be `deepFreeze`-d — immutability is non-negotiable.
-- Validate all inputs (`assets > 0`, `shares > 0`, `maxSharePrice > 0`) and throw dedicated errors from `src/types/error.ts`.
+- Validate all inputs (`assets > 0`, `shares > 0`, `maxSharePrice > 0`, `nativeAmount >= 0`) and throw dedicated errors from `src/types/error.ts`.
+- For deposits with `nativeAmount`: validate vault asset is `wNative`, prepend `nativeTransfer` + `wrapNative` bundler actions, set `tx.value`.
 - Append metadata via `addTransactionMetadata` only when `metadata` param is provided.
 - **Never bypass the general adapter for deposits** — it enforces `maxSharePrice` (inflation attack prevention).
 - All actions extend `BaseAction<TType, TArgs>` (discriminated union on `type`).

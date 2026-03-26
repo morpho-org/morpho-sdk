@@ -20,7 +20,7 @@ export interface VaultV2ForceWithdrawParams {
   args: {
     deallocations: readonly Deallocation[];
     withdraw: {
-      assets: bigint;
+      amount: bigint;
       recipient: Address;
     };
     onBehalf: Address;
@@ -45,7 +45,7 @@ export interface VaultV2ForceWithdrawParams {
  * @param {Object} params.args - The force withdraw related parameters.
  * @param {readonly Deallocation[]} params.args.deallocations - The list of deallocations to perform.
  * @param {Object} params.args.withdraw - The withdraw parameters applied after deallocations.
- * @param {bigint} params.args.withdraw.assets - The amount of assets to withdraw.
+ * @param {bigint} params.args.withdraw.amount - The amount of assets to withdraw.
  * @param {Address} params.args.withdraw.recipient - The recipient of the withdrawn assets.
  * @param {Address} params.args.onBehalf - The address from which the penalty is taken (share owner).
  * @param {Metadata} [params.metadata] - Optional analytics metadata to append.
@@ -62,15 +62,15 @@ export const vaultV2ForceWithdraw = ({
     throw new EmptyDeallocationsError(vaultAddress);
   }
 
-  if (withdraw.assets <= 0n) {
+  if (withdraw.amount <= 0n) {
     throw new NonPositiveAssetAmountError(vaultAddress);
   }
 
-  const totalDeallocated = deallocations.reduce((sum, d) => sum + d.assets, 0n);
-  if (withdraw.assets < totalDeallocated) {
+  const totalDeallocated = deallocations.reduce((sum, d) => sum + d.amount, 0n);
+  if (withdraw.amount < totalDeallocated) {
     throw new DeallocationsExceedWithdrawError(
       vaultAddress,
-      withdraw.assets,
+      withdraw.amount,
       totalDeallocated,
     );
   }
@@ -85,7 +85,7 @@ export const vaultV2ForceWithdraw = ({
     encodeFunctionData({
       abi: vaultV2Abi,
       functionName: "withdraw",
-      args: [withdraw.assets, withdraw.recipient, onBehalf],
+      args: [withdraw.amount, withdraw.recipient, onBehalf],
     }),
   );
 
@@ -111,7 +111,7 @@ export const vaultV2ForceWithdraw = ({
         vault: vaultAddress,
         deallocations: deallocations.map((d) => ({ ...d })),
         withdraw: {
-          assets: withdraw.assets,
+          amount: withdraw.amount,
           recipient: withdraw.recipient,
         },
         onBehalf,

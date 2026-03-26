@@ -1,6 +1,10 @@
-import { DEFAULT_SLIPPAGE_TOLERANCE, MathLib } from "@morpho-org/blue-sdk";
+import {
+  DEFAULT_SLIPPAGE_TOLERANCE,
+  getChainAddresses,
+  MathLib,
+} from "@morpho-org/blue-sdk";
 import { fetchAccrualVault, fetchVault } from "@morpho-org/blue-sdk-viem";
-import type { Address } from "viem";
+import { type Address, isAddressEqual } from "viem";
 import {
   getRequirements,
   vaultV1Deposit,
@@ -10,9 +14,13 @@ import {
 import { MAX_SLIPPAGE_TOLERANCE } from "../../helpers/constant";
 import {
   ChainIdMismatchError,
+  ChainWNativeMissingError,
+  type DepositAmountArgs,
   type ERC20ApprovalAction,
   ExcessiveSlippageToleranceError,
   type MorphoClientType,
+  NativeAmountOnNonWNativeVaultError,
+  NegativeNativeAmountError,
   NegativeSlippageToleranceError,
   NonPositiveAssetAmountError,
   NonPositiveSharesAmountError,
@@ -42,16 +50,18 @@ export interface VaultV1Actions {
    * then returns `buildTx` and `getRequirements` for lazy evaluation.
    *
    * @param {Object} params - The deposit parameters.
-   * @param {bigint} params.assets - Amount of assets to deposit.
+   * @param {bigint} params.amount - Amount of assets to deposit.
    * @param {Address} params.userAddress - User address initiating the deposit.
    * @param {bigint} [params.slippageTolerance=DEFAULT_SLIPPAGE_TOLERANCE] - Slippage tolerance (default 0.03%, max 10%).
+   * @param {bigint} [params.nativeAmount] - Amount of native ETH to wrap into WETH. Vault asset must be wNative.
    * @returns {Promise<Object>} Object with `buildTx` and `getRequirements`.
    */
-  deposit: (params: {
-    assets: bigint;
-    userAddress: Address;
-    slippageTolerance?: bigint;
-  }) => Promise<{
+  deposit: (
+    params: {
+      userAddress: Address;
+      slippageTolerance?: bigint;
+    } & DepositAmountArgs,
+  ) => Promise<{
     buildTx: (
       requirementSignature?: RequirementSignature,
     ) => Readonly<Transaction<VaultV1DepositAction>>;
@@ -63,11 +73,11 @@ export interface VaultV1Actions {
    * Prepares a withdraw from a VaultV1 (MetaMorpho) contract.
    *
    * @param {Object} params - The withdraw parameters.
-   * @param {bigint} params.assets - Amount of assets to withdraw.
+   * @param {bigint} params.amount - Amount of assets to withdraw.
    * @param {Address} params.userAddress - User address initiating the withdraw.
    * @returns {Object} Object with `buildTx`.
    */
-  withdraw: (params: { assets: bigint; userAddress: Address }) => {
+  withdraw: (params: { amount: bigint; userAddress: Address }) => {
     buildTx: () => Readonly<Transaction<VaultV1WithdrawAction>>;
   };
   /**
@@ -109,14 +119,14 @@ export class MorphoVaultV1 implements VaultV1Actions {
   }
 
   async deposit({
-    assets,
+    amount = 0n,
     userAddress,
     slippageTolerance = DEFAULT_SLIPPAGE_TOLERANCE,
+    nativeAmount,
   }: {
-    assets: bigint;
     userAddress: Address;
     slippageTolerance?: bigint;
-  }) {
+  } & DepositAmountArgs) {
     if (this.client.viemClient.chain?.id !== this.chainId) {
       throw new ChainIdMismatchError(
         this.client.viemClient.chain?.id,
@@ -124,8 +134,20 @@ export class MorphoVaultV1 implements VaultV1Actions {
       );
     }
 
-    if (assets <= 0n) {
+    if (amount < 0n) {
       throw new NonPositiveAssetAmountError(this.vault);
+    }
+
+    if (nativeAmount && nativeAmount < 0n) {
+      throw new NegativeNativeAmountError(nativeAmount);
+    }
+
+    let wNative: Address | undefined;
+    if (nativeAmount) {
+      ({ wNative } = getChainAddresses(this.chainId));
+      if (!wNative) {
+        throw new ChainWNativeMissingError(this.chainId);
+      }
     }
 
     if (slippageTolerance < 0n) {
@@ -140,14 +162,22 @@ export class MorphoVaultV1 implements VaultV1Actions {
       deployless: this.client.options.supportDeployless,
     });
 
-    const shares = vaultData.toShares(assets);
+    if (nativeAmount && wNative) {
+      if (!isAddressEqual(vaultData.asset, wNative)) {
+        throw new NativeAmountOnNonWNativeVaultError(vaultData.asset, wNative);
+      }
+    }
+
+    const totalAssets = amount + (nativeAmount ?? 0n);
+
+    const shares = vaultData.toShares(totalAssets);
     if (shares <= 0n) {
       throw new NonPositiveSharesAmountError(this.vault);
     }
 
     const maxSharePrice = MathLib.min(
       MathLib.mulDivUp(
-        assets,
+        totalAssets,
         MathLib.wToRay(MathLib.WAD + slippageTolerance),
         shares,
       ),
@@ -163,10 +193,11 @@ export class MorphoVaultV1 implements VaultV1Actions {
           supportDeployless: this.client.options.supportDeployless,
           useSimplePermit: params?.useSimplePermit,
           args: {
-            amount: assets,
+            amount,
             from: userAddress,
           },
         }),
+
       buildTx: (requirementSignature?: RequirementSignature) =>
         vaultV1Deposit({
           vault: {
@@ -175,17 +206,18 @@ export class MorphoVaultV1 implements VaultV1Actions {
             asset: vaultData.asset,
           },
           args: {
-            assets,
+            amount,
             maxSharePrice,
             recipient: userAddress,
             requirementSignature,
+            nativeAmount,
           },
           metadata: this.client.options.metadata,
         }),
     };
   }
 
-  withdraw({ assets, userAddress }: { assets: bigint; userAddress: Address }) {
+  withdraw({ amount, userAddress }: { amount: bigint; userAddress: Address }) {
     if (this.client.viemClient.chain?.id !== this.chainId) {
       throw new ChainIdMismatchError(
         this.client.viemClient.chain?.id,
@@ -198,7 +230,7 @@ export class MorphoVaultV1 implements VaultV1Actions {
         vaultV1Withdraw({
           vault: { address: this.vault },
           args: {
-            assets,
+            amount,
             recipient: userAddress,
             onBehalf: userAddress,
           },

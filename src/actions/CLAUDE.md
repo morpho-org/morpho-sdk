@@ -8,7 +8,7 @@ Pure functions that build deep-frozen `Transaction<TAction>` objects. Three sub-
 
 | Function           | Route                     | Why                                                    |
 | ------------------ | ------------------------- | ------------------------------------------------------ |
-| `vaultV1Deposit`   | Bundler (general adapter) | Enforces `maxSharePrice` — inflation attack prevention |
+| `vaultV1Deposit`   | Bundler (general adapter) | Enforces `maxSharePrice` — inflation attack prevention. Supports native ETH wrapping via `nativeAmount`. |
 | `vaultV1Withdraw`  | Direct vault call         | No attack surface, simpler UX                          |
 | `vaultV1Redeem`    | Direct vault call         | No attack surface, simpler UX                          |
 
@@ -16,7 +16,7 @@ Pure functions that build deep-frozen `Transaction<TAction>` objects. Three sub-
 
 | Function                  | Route                     | Why                                                    |
 | ------------------------- | ------------------------- | ------------------------------------------------------ |
-| `vaultV2Deposit`          | Bundler (general adapter) | Enforces `maxSharePrice` — inflation attack prevention |
+| `vaultV2Deposit`          | Bundler (general adapter) | Enforces `maxSharePrice` — inflation attack prevention. Supports native ETH wrapping via `nativeAmount`. |
 | `vaultV2Withdraw`         | Direct vault call         | No attack surface, simpler UX                          |
 | `vaultV2Redeem`           | Direct vault call         | No attack surface, simpler UX                          |
 | `vaultV2ForceWithdraw`    | VaultV2 multicall         | Bundles N forceDeallocate + 1 withdraw to exit illiquid positions |
@@ -35,5 +35,6 @@ Resolves token approval needs before a deposit:
 ## Key Constraints
 
 - Every returned object must be `deepFreeze`-d.
-- Validate inputs (`assets > 0`, `maxSharePrice > 0`) and throw dedicated errors.
+- Validate inputs (`assets > 0`, `maxSharePrice > 0`, `nativeAmount >= 0`) and throw dedicated errors.
+- For deposits with `nativeAmount`: validate vault asset is `wNative`, prepend `nativeTransfer` + `wrapNative` bundler actions, set `tx.value`.
 - Append metadata via `addTransactionMetadata` only when provided.

@@ -108,7 +108,7 @@ describe("Redeem VaultV1", () => {
 
         const deposit = await vaultV1.deposit({
           userAddress: client.account.address,
-          assets: depositAmount,
+          amount: depositAmount,
         });
         const requirements = await deposit.getRequirements();
         const approveTx = requirements[0];
