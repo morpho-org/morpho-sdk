@@ -4,7 +4,7 @@ import {
   MathLib,
 } from "@morpho-org/blue-sdk";
 import { fetchAccrualVaultV2 } from "@morpho-org/blue-sdk-viem";
-import type { Address } from "viem";
+import { type Address, isAddressEqual } from "viem";
 import {
   getRequirements,
   vaultV2Deposit,
@@ -201,7 +201,7 @@ export class MorphoVaultV2 implements VaultV2Actions {
       );
     }
 
-    if (accrualVault.address !== this.vault) {
+    if (!isAddressEqual(accrualVault.address, this.vault)) {
       throw new VaultAddressMismatchError(this.vault, accrualVault.address);
     }
 
