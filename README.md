@@ -69,7 +69,7 @@ The bundler atomically transfers native token, wraps it to wNative, and deposits
 
 ```typescript
 const { buildTx } = vault.withdraw({
-  assets: 500000000000000000n,
+  amount: 500000000000000000n,
   userAddress: "0xUser...",
 });
 
@@ -91,8 +91,8 @@ const tx = buildTx();
 
 ```typescript
 const { buildTx } = vault.forceWithdraw({
-  deallocations: [{ id: "0xMarket...", assets: 100n }],
-  withdraw: { assets: 500000000000000000n },
+  deallocations: [{ adapter: "0xMarket...", amount: 100n }],
+  withdraw: { amount: 500000000000000000n },
   userAddress: "0xUser...",
 });
 
@@ -103,7 +103,7 @@ const tx = buildTx();
 
 ```typescript
 const { buildTx } = vault.forceRedeem({
-  deallocations: [{ id: "0xMarket...", assets: 100n }],
+  deallocations: [{ adapter: "0xMarket...", amount: 100n }],
   redeem: { shares: 1000000000000000000n },
   userAddress: "0xUser...",
 });
@@ -133,7 +133,7 @@ const tx = buildTx(requirementSignature);
 
 ```typescript
 const { buildTx } = vault.withdraw({
-  assets: 500000000000000000n,
+  amount: 500000000000000000n,
   userAddress: "0xUser...",
 });
 
