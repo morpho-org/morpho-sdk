@@ -91,7 +91,7 @@ const tx = buildTx();
 
 ```typescript
 const { buildTx } = vault.forceWithdraw({
-  deallocations: [{ adapter: "0xMarket...", amount: 100n }],
+  deallocations: [{ adapter: "0xAdapter...", amount: 100n }],
   withdraw: { amount: 500000000000000000n },
   userAddress: "0xUser...",
 });
@@ -103,7 +103,7 @@ const tx = buildTx();
 
 ```typescript
 const { buildTx } = vault.forceRedeem({
-  deallocations: [{ adapter: "0xMarket...", amount: 100n }],
+  deallocations: [{ adapter: "0xAdapter...", amount: 100n }],
   redeem: { shares: 1000000000000000000n },
   userAddress: "0xUser...",
 });
