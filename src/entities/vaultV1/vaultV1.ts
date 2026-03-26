@@ -1,6 +1,10 @@
-import { DEFAULT_SLIPPAGE_TOLERANCE, MathLib } from "@morpho-org/blue-sdk";
+import {
+  DEFAULT_SLIPPAGE_TOLERANCE,
+  getChainAddresses,
+  MathLib,
+} from "@morpho-org/blue-sdk";
 import { fetchAccrualVault, fetchVault } from "@morpho-org/blue-sdk-viem";
-import type { Address } from "viem";
+import { type Address, isAddressEqual } from "viem";
 import {
   getRequirements,
   vaultV1Deposit,
@@ -10,10 +14,12 @@ import {
 import { MAX_SLIPPAGE_TOLERANCE } from "../../helpers/constant";
 import {
   ChainIdMismatchError,
+  ChainWNativeMissingError,
   type DepositAmountArgs,
   type ERC20ApprovalAction,
   ExcessiveSlippageToleranceError,
   type MorphoClientType,
+  NativeAmountOnNonWNativeVaultError,
   NegativeNativeAmountError,
   NegativeSlippageToleranceError,
   NonPositiveAssetAmountError,
@@ -147,6 +153,19 @@ export class MorphoVaultV1 implements VaultV1Actions {
       chainId: this.chainId,
       deployless: this.client.options.supportDeployless,
     });
+
+    if (nativeAmount) {
+      const { wNative } = getChainAddresses(this.chainId);
+      if (!wNative) {
+        throw new ChainWNativeMissingError(this.chainId);
+      }
+      if (nativeAmount < 0n) {
+        throw new NegativeNativeAmountError(nativeAmount);
+      }
+      if (!isAddressEqual(vaultData.asset, wNative)) {
+        throw new NativeAmountOnNonWNativeVaultError(vaultData.asset, wNative);
+      }
+    }
 
     const totalAssets = amount + (nativeAmount ?? 0n);
 
