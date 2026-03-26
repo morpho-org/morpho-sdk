@@ -210,8 +210,9 @@ export class MorphoVaultV2 implements VaultV2Actions {
       throw new NegativeNativeAmountError(nativeAmount);
     }
 
+    let wNative: Address | undefined;
     if (nativeAmount) {
-      const { wNative } = getChainAddresses(this.chainId);
+      ({ wNative } = getChainAddresses(this.chainId));
       if (!wNative) {
         throw new ChainWNativeMissingError(this.chainId);
       }
@@ -229,10 +230,9 @@ export class MorphoVaultV2 implements VaultV2Actions {
       deployless: this.client.options.supportDeployless,
     });
 
-    if (nativeAmount) {
-      const { wNative } = getChainAddresses(this.chainId);
-      if (!isAddressEqual(vaultData.asset, wNative!)) {
-        throw new NativeAmountOnNonWNativeVaultError(vaultData.asset, wNative!);
+    if (nativeAmount && wNative) {
+      if (!isAddressEqual(vaultData.asset, wNative)) {
+        throw new NativeAmountOnNonWNativeVaultError(vaultData.asset, wNative);
       }
     }
 
