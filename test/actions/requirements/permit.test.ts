@@ -31,7 +31,7 @@ describe("Permit", () => {
         const accrualVault = await vault.getData();
         const deposit = vault.deposit({
           userAddress: client.account.address,
-          assets: amount,
+          amount: amount,
           accrualVault,
         });
         const requirements_1 = await deposit.getRequirements({

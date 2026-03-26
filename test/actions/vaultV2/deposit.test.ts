@@ -18,7 +18,7 @@ describe("DepositVaultV2", () => {
     const accrualVault = await vault.getData();
     const deposit = vault.deposit({
       userAddress: client.account.address,
-      assets: 1000000000000000000n,
+      amount: 1000000000000000000n,
       accrualVault,
     });
     const requirements_1 = await deposit.getRequirements();
@@ -32,7 +32,7 @@ describe("DepositVaultV2", () => {
         asset: KeyrockUsdcVaultV2.asset,
       },
       args: {
-        assets: 1000000000000000000n,
+        amount: 1000000000000000000n,
         maxSharePrice: 1030789509859687n,
         recipient: client.account.address,
       },
@@ -67,7 +67,7 @@ describe("DepositVaultV2", () => {
         const accrualVault = await vaultV2.getData();
         const deposit = vaultV2.deposit({
           userAddress: client.account.address,
-          assets: amount,
+          amount: amount,
           accrualVault,
         });
 

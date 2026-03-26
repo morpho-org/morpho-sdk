@@ -37,7 +37,7 @@ describe("Metadata", () => {
         const accrualVault = await vaultV2.getData();
         const deposit = vaultV2.deposit({
           userAddress: client.account.address,
-          assets: amount,
+          amount: amount,
           accrualVault,
         });
 
@@ -107,7 +107,7 @@ describe("Metadata", () => {
         const accrualVault = await vaultV2.getData();
         const deposit = vaultV2.deposit({
           userAddress: client.account.address,
-          assets: amount,
+          amount: amount,
           accrualVault,
         });
 

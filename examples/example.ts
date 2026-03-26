@@ -49,7 +49,7 @@ async function main() {
   const depositAmount = parseUnits("1", 18); // 1 token (18 decimals)
   const accrualVault = await vault.getData();
   const deposit = vault.deposit({
-    assets: depositAmount,
+    amount: depositAmount,
     userAddress: USER_ADDRESS,
     accrualVault,
   });
@@ -73,7 +73,7 @@ async function main() {
   console.log("\n📤 Creating withdraw transaction...");
   const withdrawAmount = parseUnits("1", 18); // 1 token
   const withdraw = vault.withdraw({
-    assets: withdrawAmount,
+    amount: withdrawAmount,
     userAddress: USER_ADDRESS,
   });
   const withdrawTx = withdraw.buildTx();

@@ -37,10 +37,10 @@ describe("forceWithdrawVaultV2 unit tests", () => {
           {
             adapter: mockAdapterAddress,
             marketParams: mockMarketParams,
-            assets,
+            amount: assets,
           },
         ],
-        withdraw: { assets, recipient: client.account.address },
+        withdraw: { amount: assets, recipient: client.account.address },
         onBehalf: client.account.address,
       },
     });
@@ -50,8 +50,8 @@ describe("forceWithdrawVaultV2 unit tests", () => {
     expect(tx.action.args.vault).toBe(mockVaultAddress);
     expect(tx.action.args.deallocations).toHaveLength(1);
     expect(tx.action.args.deallocations[0]?.adapter).toBe(mockAdapterAddress);
-    expect(tx.action.args.deallocations[0]?.assets).toBe(assets);
-    expect(tx.action.args.withdraw.assets).toBe(assets);
+    expect(tx.action.args.deallocations[0]?.amount).toBe(assets);
+    expect(tx.action.args.withdraw.amount).toBe(assets);
     expect(tx.action.args.withdraw.recipient).toBe(client.account.address);
     expect(tx.action.args.onBehalf).toBe(client.account.address);
     expect(tx.to).toBe(mockVaultAddress);
@@ -67,8 +67,8 @@ describe("forceWithdrawVaultV2 unit tests", () => {
     const tx = vaultV2ForceWithdraw({
       vault: { address: mockVaultAddress },
       args: {
-        deallocations: [{ adapter: mockAdapterAddress, assets }],
-        withdraw: { assets, recipient: client.account.address },
+        deallocations: [{ adapter: mockAdapterAddress, amount: assets }],
+        withdraw: { amount: assets, recipient: client.account.address },
         onBehalf: client.account.address,
       },
     });
@@ -77,7 +77,7 @@ describe("forceWithdrawVaultV2 unit tests", () => {
     expect(tx.action.type).toBe("vaultV2ForceWithdraw");
     expect(tx.action.args.deallocations).toHaveLength(1);
     expect(tx.action.args.deallocations[0]?.marketParams).toBeUndefined();
-    expect(tx.action.args.withdraw.assets).toBe(assets);
+    expect(tx.action.args.withdraw.amount).toBe(assets);
     expect(tx.to).toBe(mockVaultAddress);
     expect(isHex(tx.data)).toBe(true);
     expect(tx.value).toBe(0n);
@@ -97,11 +97,11 @@ describe("forceWithdrawVaultV2 unit tests", () => {
           {
             adapter: mockAdapterAddress,
             marketParams: mockMarketParams,
-            assets: assets1,
+            amount: assets1,
           },
-          { adapter: mockAdapterAddress2, assets: assets2 },
+          { adapter: mockAdapterAddress2, amount: assets2 },
         ],
-        withdraw: { assets: withdrawAssets, recipient: client.account.address },
+        withdraw: { amount: withdrawAssets, recipient: client.account.address },
         onBehalf: client.account.address,
       },
     });
@@ -110,10 +110,10 @@ describe("forceWithdrawVaultV2 unit tests", () => {
     expect(tx.action.type).toBe("vaultV2ForceWithdraw");
     expect(tx.action.args.deallocations).toHaveLength(2);
     expect(tx.action.args.deallocations[0]?.adapter).toBe(mockAdapterAddress);
-    expect(tx.action.args.deallocations[0]?.assets).toBe(assets1);
+    expect(tx.action.args.deallocations[0]?.amount).toBe(assets1);
     expect(tx.action.args.deallocations[1]?.adapter).toBe(mockAdapterAddress2);
-    expect(tx.action.args.deallocations[1]?.assets).toBe(assets2);
-    expect(tx.action.args.withdraw.assets).toBe(withdrawAssets);
+    expect(tx.action.args.deallocations[1]?.amount).toBe(assets2);
+    expect(tx.action.args.withdraw.amount).toBe(withdrawAssets);
     expect(tx.to).toBe(mockVaultAddress);
     expect(isHex(tx.data)).toBe(true);
     expect(tx.value).toBe(0n);
@@ -132,16 +132,16 @@ describe("forceWithdrawVaultV2 unit tests", () => {
           {
             adapter: mockAdapterAddress,
             marketParams: mockMarketParams,
-            assets: deallocatedAssets,
+            amount: deallocatedAssets,
           },
         ],
-        withdraw: { assets: withdrawAssets, recipient: client.account.address },
+        withdraw: { amount: withdrawAssets, recipient: client.account.address },
         onBehalf: client.account.address,
       },
     });
 
     expect(tx).toBeDefined();
-    expect(tx.action.args.withdraw.assets).toBe(withdrawAssets);
+    expect(tx.action.args.withdraw.amount).toBe(withdrawAssets);
   });
 
   test("should append metadata when provided", ({ client }) => {
@@ -154,10 +154,10 @@ describe("forceWithdrawVaultV2 unit tests", () => {
           {
             adapter: mockAdapterAddress,
             marketParams: mockMarketParams,
-            assets,
+            amount: assets,
           },
         ],
-        withdraw: { assets, recipient: client.account.address },
+        withdraw: { amount: assets, recipient: client.account.address },
         onBehalf: client.account.address,
       },
     });
@@ -169,10 +169,10 @@ describe("forceWithdrawVaultV2 unit tests", () => {
           {
             adapter: mockAdapterAddress,
             marketParams: mockMarketParams,
-            assets,
+            amount: assets,
           },
         ],
-        withdraw: { assets, recipient: client.account.address },
+        withdraw: { amount: assets, recipient: client.account.address },
         onBehalf: client.account.address,
       },
       metadata: { origin: "a1b2c3d4" },
@@ -191,7 +191,7 @@ describe("forceWithdrawVaultV2 unit tests", () => {
         args: {
           deallocations: [],
           withdraw: {
-            assets: parseUnits("100", 18),
+            amount: parseUnits("100", 18),
             recipient: client.account.address,
           },
           onBehalf: client.account.address,
@@ -208,9 +208,9 @@ describe("forceWithdrawVaultV2 unit tests", () => {
         vault: { address: mockVaultAddress },
         args: {
           deallocations: [
-            { adapter: mockAdapterAddress, assets: parseUnits("100", 18) },
+            { adapter: mockAdapterAddress, amount: parseUnits("100", 18) },
           ],
-          withdraw: { assets: 0n, recipient: client.account.address },
+          withdraw: { amount: 0n, recipient: client.account.address },
           onBehalf: client.account.address,
         },
       }),
@@ -225,9 +225,9 @@ describe("forceWithdrawVaultV2 unit tests", () => {
         vault: { address: mockVaultAddress },
         args: {
           deallocations: [
-            { adapter: mockAdapterAddress, assets: parseUnits("100", 18) },
+            { adapter: mockAdapterAddress, amount: parseUnits("100", 18) },
           ],
-          withdraw: { assets: -1n, recipient: client.account.address },
+          withdraw: { amount: -1n, recipient: client.account.address },
           onBehalf: client.account.address,
         },
       }),
@@ -245,10 +245,10 @@ describe("forceWithdrawVaultV2 unit tests", () => {
         vault: { address: mockVaultAddress },
         args: {
           deallocations: [
-            { adapter: mockAdapterAddress, assets: deallocatedAssets },
+            { adapter: mockAdapterAddress, amount: deallocatedAssets },
           ],
           withdraw: {
-            assets: withdrawAssets,
+            amount: withdrawAssets,
             recipient: client.account.address,
           },
           onBehalf: client.account.address,

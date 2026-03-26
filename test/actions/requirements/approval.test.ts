@@ -32,7 +32,7 @@ describe("Approval", () => {
         const accrualVault = await vault.getData();
         const deposit = vault.deposit({
           userAddress: client.account.address,
-          assets: amount,
+          amount: amount,
           accrualVault,
         });
 
@@ -84,7 +84,7 @@ describe("Approval", () => {
         const accrualVault = await vault.getData();
         const deposit = vault.deposit({
           userAddress: client.account.address,
-          assets: amount,
+          amount: amount,
           accrualVault,
         });
 

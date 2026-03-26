@@ -12,5 +12,5 @@ import type { Address } from "viem";
 export interface Deallocation {
   readonly adapter: Address;
   readonly marketParams?: MarketParams;
-  readonly assets: bigint;
+  readonly amount: bigint;
 }

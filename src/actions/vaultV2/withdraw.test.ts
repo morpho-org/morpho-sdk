@@ -12,14 +12,14 @@ describe("withdrawVaultV2 unit tests", () => {
   test("should create withdraw transaction with USDC vault", async ({
     client,
   }) => {
-    const assets = parseUnits("1000", 6); // 1000 USDC
+    const amount = parseUnits("1000", 6); // 1000 USDC
 
     const tx = vaultV2Withdraw({
       vault: {
         address: KeyrockUsdcVaultV2.address,
       },
       args: {
-        assets,
+        amount,
         recipient: client.account.address,
         onBehalf: client.account.address,
       },
@@ -28,7 +28,7 @@ describe("withdrawVaultV2 unit tests", () => {
     expect(tx).toBeDefined();
     expect(tx.action.type).toBe("vaultV2Withdraw");
     expect(tx.action.args.vault).toBe(KeyrockUsdcVaultV2.address);
-    expect(tx.action.args.assets).toBe(assets);
+    expect(tx.action.args.amount).toBe(amount);
     expect(tx.action.args.recipient).toBe(client.account.address);
     expect(tx.to).toBe(KeyrockUsdcVaultV2.address);
     expect(tx.data).toBeDefined();
@@ -38,14 +38,14 @@ describe("withdrawVaultV2 unit tests", () => {
   test("should create withdraw transaction with WETH vault", async ({
     client,
   }) => {
-    const assets = parseUnits("5", 18); // 5 WETH
+    const amount = parseUnits("5", 18); // 5 WETH
 
     const tx = vaultV2Withdraw({
       vault: {
         address: KpkWETHVaultV2.address,
       },
       args: {
-        assets,
+        amount,
         recipient: client.account.address,
         onBehalf: client.account.address,
       },
@@ -54,7 +54,7 @@ describe("withdrawVaultV2 unit tests", () => {
     expect(tx).toBeDefined();
     expect(tx.action.type).toBe("vaultV2Withdraw");
     expect(tx.action.args.vault).toBe(KpkWETHVaultV2.address);
-    expect(tx.action.args.assets).toBe(assets);
+    expect(tx.action.args.amount).toBe(amount);
     expect(tx.action.args.recipient).toBe(client.account.address);
     expect(tx.to).toBe(KpkWETHVaultV2.address);
     expect(tx.data).toBeDefined();
@@ -68,7 +68,7 @@ describe("withdrawVaultV2 unit tests", () => {
           address: KeyrockUsdcVaultV2.address,
         },
         args: {
-          assets: 0n,
+          amount: 0n,
           recipient: "0x1234567890123456789012345678901234567890",
           onBehalf: "0x1234567890123456789012345678901234567890",
         },
@@ -83,7 +83,7 @@ describe("withdrawVaultV2 unit tests", () => {
           address: KeyrockUsdcVaultV2.address,
         },
         args: {
-          assets: -1n,
+          amount: -1n,
           recipient: "0x1234567890123456789012345678901234567890",
           onBehalf: "0x1234567890123456789012345678901234567890",
         },

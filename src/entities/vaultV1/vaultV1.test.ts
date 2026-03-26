@@ -1,13 +1,18 @@
 import { parseUnits } from "viem";
 import { mainnet } from "viem/chains";
 import { describe, expect } from "vitest";
-import { SteakhouseUsdcVaultV1 } from "../../../test/fixtures/vaultV1";
+import {
+  GauntletWethVaultV1,
+  SteakhouseUsdcVaultV1,
+} from "../../../test/fixtures/vaultV1";
 import { test } from "../../../test/setup";
 import { MorphoClient } from "../../client";
 import { MAX_SLIPPAGE_TOLERANCE } from "../../helpers/constant";
 import {
   ExcessiveSlippageToleranceError,
   isRequirementApproval,
+  NativeAmountOnNonWNativeVaultError,
+  NegativeNativeAmountError,
   NegativeSlippageToleranceError,
 } from "../../types";
 
@@ -26,7 +31,7 @@ describe("MorphoVaultV1 entity tests", () => {
 
       const accrualVault = await vault.getData();
       const result = vault.deposit({
-        assets: parseUnits("100", 6),
+        amount: parseUnits("100", 6),
         userAddress: client.account.address,
         accrualVault,
         slippageTolerance: 0n,
@@ -53,7 +58,7 @@ describe("MorphoVaultV1 entity tests", () => {
 
       const accrualVault = await vault.getData();
       const result = vault.deposit({
-        assets: parseUnits("100", 6),
+        amount: parseUnits("100", 6),
         userAddress: client.account.address,
         accrualVault,
         slippageTolerance: MAX_SLIPPAGE_TOLERANCE,
@@ -81,7 +86,7 @@ describe("MorphoVaultV1 entity tests", () => {
       const accrualVault = await vault.getData();
       expect(() =>
         vault.deposit({
-          assets: parseUnits("100", 6),
+          amount: parseUnits("100", 6),
           userAddress: client.account.address,
           accrualVault,
           slippageTolerance: MAX_SLIPPAGE_TOLERANCE + 1n,
@@ -103,12 +108,58 @@ describe("MorphoVaultV1 entity tests", () => {
       const accrualVault = await vault.getData();
       expect(() =>
         vault.deposit({
-          assets: parseUnits("100", 6),
+          amount: parseUnits("100", 6),
           userAddress: client.account.address,
           accrualVault,
           slippageTolerance: -1n,
         }),
       ).toThrow(NegativeSlippageToleranceError);
+    });
+  });
+
+  describe("nativeAmount validation", () => {
+    test("should throw NegativeNativeAmountError for negative nativeAmount", async ({
+      client,
+    }) => {
+      const morphoClient = new MorphoClient(client, {
+        supportSignature: true,
+      });
+      const vault = morphoClient.vaultV1(
+        GauntletWethVaultV1.address,
+        mainnet.id,
+      );
+
+      const accrualVault = await vault.getData();
+      expect(() =>
+        vault.deposit({
+          amount: 0n,
+          nativeAmount: -1n,
+          userAddress: client.account.address,
+          accrualVault,
+        }),
+      ).toThrow(NegativeNativeAmountError);
+    });
+
+    test("should throw NativeAmountOnNonWNativeVaultError for non-WETH vault", async ({
+      client,
+    }) => {
+      const morphoClient = new MorphoClient(client, {
+        supportSignature: true,
+      });
+      const vault = morphoClient.vaultV1(
+        SteakhouseUsdcVaultV1.address,
+        mainnet.id,
+      );
+
+      const accrualVault = await vault.getData();
+      expect(() =>
+        vault.deposit({
+          amount: 0n,
+          nativeAmount: parseUnits("1", 18),
+          userAddress: client.account.address,
+          accrualVault,
+        }),
+      ).toThrow(NativeAmountOnNonWNativeVaultError);
     });
   });
 
@@ -126,7 +177,7 @@ describe("MorphoVaultV1 entity tests", () => {
 
       const accrualVault = await vault.getData();
       const { getRequirements } = vault.deposit({
-        assets: parseUnits("100", 6),
+        amount: parseUnits("100", 6),
         userAddress: client.account.address,
         accrualVault,
       });

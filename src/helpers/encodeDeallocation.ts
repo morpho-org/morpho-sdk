@@ -33,7 +33,7 @@ export function encodeForceDeallocateCall(
   deallocation: Deallocation,
   onBehalf: Address,
 ): Hex {
-  if (deallocation.assets <= 0n) {
+  if (deallocation.amount <= 0n) {
     throw new NonPositiveAssetAmountError(deallocation.adapter);
   }
 
@@ -42,6 +42,6 @@ export function encodeForceDeallocateCall(
   return encodeFunctionData({
     abi: vaultV2Abi,
     functionName: "forceDeallocate",
-    args: [deallocation.adapter, data, deallocation.assets, onBehalf],
+    args: [deallocation.adapter, data, deallocation.amount, onBehalf],
   });
 }

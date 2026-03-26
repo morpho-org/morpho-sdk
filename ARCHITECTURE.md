@@ -116,9 +116,10 @@ This is the most important routing decision in the SDK.
 All deposits — both V1 and V2 — are routed through the **Morpho Bundler** (specifically, its
 **general adapter**). The bundle atomically:
 
-1. Transfers the user's ERC-20 tokens to the general adapter (via `erc20TransferFrom`, permit,
+1. _(If `nativeAmount` is provided)_ Transfers native token to the general adapter via `nativeTransfer`, then wraps it to wNative via `wrapNative`.
+2. _(If `amount` is provided)_ Transfers the user's ERC-20 tokens to the general adapter (via `erc20TransferFrom`, permit,
    or permit2).
-2. Calls `erc4626Deposit` on the vault with a `maxSharePrice` parameter.
+3. Calls `erc4626Deposit` on the vault with a `maxSharePrice` parameter, using `totalAssets = amount + nativeAmount`.
 
 **Why the bundler is mandatory for deposits:** The `maxSharePrice` check inside the general
 adapter prevents **ERC-4626 inflation attacks**. In this attack, a malicious actor manipulates
@@ -126,6 +127,8 @@ the share price between the user's approval and the deposit transaction. The gen
 enforces the price check atomically in the same transaction as the token transfer, closing this
 vector. Vaults without "dead deposit protection" are especially vulnerable.
 This also makes the UX simpler, since users only need to approve the general adapter instead of approving each vault individually.
+
+**Native token wrapping:** For vaults whose underlying asset is wNative, deposits accept an optional `nativeAmount` parameter. When provided, the bundler first transfers native token (`nativeTransfer`) to the general adapter, then wraps it (`wrapNative`) before depositing. The transaction's `value` field is set to `nativeAmount`. Users can combine ERC-20 `amount` and `nativeAmount` in a single deposit. Validation ensures the vault asset is the chain's wrapped native token (`wNative`), and throws `NativeAmountOnNonWNativeVaultError` otherwise.
 
 **Security invariant:** Never bypass the general adapter for deposits.
 
@@ -149,13 +152,13 @@ on the vault contract itself.
 
 ### Summary
 
-| Operation           | Route                      | Why                                                    |
-| ------------------- | -------------------------- | ------------------------------------------------------ |
-| Deposit (V1 & V2)   | Bundler3 (general adapter) | `maxSharePrice` enforcement prevents inflation attacks |
-| Withdraw (V1 & V2)  | Direct vault call          | No attack surface, no approval needed                  |
-| Redeem (V1 & V2)    | Direct vault call          | No attack surface, no approval needed                  |
-| Force Withdraw (V2) | VaultV2 `multicall`        | Atomic deallocation + withdrawal on the vault contract |
-| Force Redeem (V2)   | VaultV2 `multicall`        | Atomic deallocation + redemption on the vault contract |
+| Operation           | Route                      | Why                                                                                                        |
+| ------------------- | -------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| Deposit (V1 & V2)   | Bundler3 (general adapter) | `maxSharePrice` enforcement prevents inflation attacks. Optional native token wrapping for wNative vaults. |
+| Withdraw (V1 & V2)  | Direct vault call          | No attack surface, no approval needed                                                                      |
+| Redeem (V1 & V2)    | Direct vault call          | No attack surface, no approval needed                                                                      |
+| Force Withdraw (V2) | VaultV2 `multicall`        | Atomic deallocation + withdrawal on the vault contract                                                     |
+| Force Redeem (V2)   | VaultV2 `multicall`        | Atomic deallocation + redemption on the vault contract                                                     |
 
 ## Dependency Map
 

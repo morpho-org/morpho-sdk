@@ -28,7 +28,7 @@ describe("DepositVaultV1", () => {
     const accrualVault = await vault.getData();
     const deposit = vault.deposit({
       userAddress: client.account.address,
-      assets: 1000000000000000000n,
+      amount: 1000000000000000000n,
       accrualVault,
     });
     const requirements_1 = await deposit.getRequirements();
@@ -41,7 +41,7 @@ describe("DepositVaultV1", () => {
         asset: SteakhouseUsdcVaultV1.asset,
       },
       args: {
-        assets: 1000000000000000000n,
+        amount: 1000000000000000000n,
         maxSharePrice: tx_1.action.args.maxSharePrice,
         recipient: client.account.address,
       },
@@ -79,7 +79,7 @@ describe("DepositVaultV1", () => {
         const accrualVault = await vaultV1.getData();
         const deposit = vaultV1.deposit({
           userAddress: client.account.address,
-          assets: amount,
+          amount: amount,
           accrualVault,
         });
 
@@ -147,7 +147,7 @@ describe("DepositVaultV1", () => {
         const accrualVault = await vaultV1.getData();
         const deposit = vaultV1.deposit({
           userAddress: client.account.address,
-          assets: amount,
+          amount: amount,
           accrualVault,
         });
 
@@ -211,7 +211,7 @@ describe("DepositVaultV1", () => {
         const accrualVault = await vault.getData();
         const deposit = vault.deposit({
           userAddress: client.account.address,
-          assets: amount,
+          amount: amount,
           accrualVault,
         });
         const requirements = await deposit.getRequirements({
@@ -285,7 +285,7 @@ describe("DepositVaultV1", () => {
         const accrualVault = await vault.getData();
         const deposit = vault.deposit({
           userAddress: client.account.address,
-          assets: amount,
+          amount: amount,
           accrualVault,
         });
 
@@ -383,7 +383,7 @@ describe("DepositVaultV1", () => {
         const accrualVault = await vault.getData();
         const deposit = vault.deposit({
           userAddress: client.account.address,
-          assets: amount,
+          amount: amount,
           accrualVault,
         });
 
@@ -435,7 +435,7 @@ describe("DepositVaultV1", () => {
         const accrualVault = await vaultV1.getData();
         const deposit = vaultV1.deposit({
           userAddress: client.account.address,
-          assets: amount,
+          amount: amount,
           accrualVault,
         });
         const requirements = await deposit.getRequirements();
@@ -449,7 +449,7 @@ describe("DepositVaultV1", () => {
 
         const withdraw = vaultV1.withdraw({
           userAddress: client.account.address,
-          assets: amount,
+          amount: amount,
         });
 
         const withdrawTx = withdraw.buildTx();

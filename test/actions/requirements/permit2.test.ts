@@ -52,7 +52,7 @@ describe("Permit2", () => {
         const accrualVault = await vault.getData();
         const deposit = vault.deposit({
           userAddress: client.account.address,
-          assets: amount,
+          amount: amount,
           accrualVault,
         });
 
@@ -140,7 +140,7 @@ describe("Permit2", () => {
         const accrualVault = await vault.getData();
         const deposit = vault.deposit({
           userAddress: client.account.address,
-          assets: amount,
+          amount: amount,
           accrualVault,
         });
 
@@ -222,7 +222,7 @@ describe("Permit2", () => {
         const accrualVault = await vault.getData();
         const deposit = vault.deposit({
           userAddress: client.account.address,
-          assets: amount,
+          amount: amount,
           accrualVault,
         });
 
@@ -275,7 +275,7 @@ describe("Permit2", () => {
         const accrualVault = await vault.getData();
         const deposit = vault.deposit({
           userAddress: client.account.address,
-          assets: amount,
+          amount: amount,
           accrualVault,
         });
 
@@ -358,7 +358,7 @@ describe("Permit2", () => {
         const accrualVault = await vault.getData();
         const deposit = vault.deposit({
           userAddress: client.account.address,
-          assets: amount,
+          amount: amount,
           accrualVault,
         });
 

@@ -85,11 +85,41 @@ export class DepositAssetMismatchError extends Error {
 export class DeallocationsExceedWithdrawError extends Error {
   constructor(
     vault: Address,
-    withdrawAssets: bigint,
+    withdrawAmount: bigint,
     totalDeallocated: bigint,
   ) {
     super(
-      `Total deallocated assets (${totalDeallocated}) exceed withdraw amount (${withdrawAssets}) for vault: ${vault}`,
+      `Total deallocated amount (${totalDeallocated}) exceed withdraw amount (${withdrawAmount}) for vault: ${vault}`,
+    );
+  }
+}
+
+export class NativeAmountOnNonWNativeVaultError extends Error {
+  constructor(vaultAsset: Address, wNative: Address) {
+    super(
+      `Cannot use nativeAmount: vault asset ${vaultAsset} is not the wrapped native token ${wNative}`,
+    );
+  }
+}
+
+export class ChainWNativeMissingError extends Error {
+  constructor(chainId: number) {
+    super(
+      `Chain ${chainId} does not have a configured wrapped native token (wNative)`,
+    );
+  }
+}
+
+export class NegativeNativeAmountError extends Error {
+  constructor(nativeAmount: bigint) {
+    super(`Native amount must not be negative, got ${nativeAmount}`);
+  }
+}
+
+export class ZeroDepositAmountError extends Error {
+  constructor(vault: Address) {
+    super(
+      `Total deposit amount must be positive for vault: ${vault}. Both amount and nativeAmount are zero.`,
     );
   }
 }

@@ -14,7 +14,7 @@ describe("Withdraw VaultV2", () => {
       .vaultV2(KeyrockUsdcVaultV2.address, mainnet.id)
       .withdraw({
         userAddress: client.account.address,
-        assets: 1000000000000000000n,
+        amount: 1000000000000000000n,
       });
     const tx_1 = withdraw.buildTx();
 
@@ -23,7 +23,7 @@ describe("Withdraw VaultV2", () => {
         address: KeyrockUsdcVaultV2.address,
       },
       args: {
-        assets: 1000000000000000000n,
+        amount: 1000000000000000000n,
         recipient: client.account.address,
         onBehalf: client.account.address,
       },
@@ -55,7 +55,7 @@ describe("Withdraw VaultV2", () => {
         const vaultV2 = morpho.vaultV2(KeyrockUsdcVaultV2.address, mainnet.id);
         const withdraw = vaultV2.withdraw({
           userAddress: client.account.address,
-          assets,
+          amount: assets,
         });
         const tx = withdraw.buildTx();
 
