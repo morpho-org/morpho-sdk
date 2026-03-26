@@ -96,6 +96,7 @@ export const vaultV1Deposit = ({
     }
 
     actions.push(
+      // Builds a native ETH transfer call to the recipient with no calldata or callback.
       {
         type: "nativeTransfer",
         args: [bundler3, generalAdapter1, nativeAmount, false /* skipRevert */],
