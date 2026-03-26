@@ -142,6 +142,13 @@ export class MorphoVaultV1 implements VaultV1Actions {
       throw new NegativeNativeAmountError(nativeAmount);
     }
 
+    if (nativeAmount) {
+      const { wNative } = getChainAddresses(this.chainId);
+      if (!wNative) {
+        throw new ChainWNativeMissingError(this.chainId);
+      }
+    }
+
     if (slippageTolerance < 0n) {
       throw new NegativeSlippageToleranceError(slippageTolerance);
     }
@@ -156,14 +163,8 @@ export class MorphoVaultV1 implements VaultV1Actions {
 
     if (nativeAmount) {
       const { wNative } = getChainAddresses(this.chainId);
-      if (!wNative) {
-        throw new ChainWNativeMissingError(this.chainId);
-      }
-      if (nativeAmount < 0n) {
-        throw new NegativeNativeAmountError(nativeAmount);
-      }
-      if (!isAddressEqual(vaultData.asset, wNative)) {
-        throw new NativeAmountOnNonWNativeVaultError(vaultData.asset, wNative);
+      if (!isAddressEqual(vaultData.asset, wNative!)) {
+        throw new NativeAmountOnNonWNativeVaultError(vaultData.asset, wNative!);
       }
     }
 

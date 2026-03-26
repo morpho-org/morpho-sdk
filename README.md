@@ -44,7 +44,7 @@ const requirements = await getRequirements();
 const tx = buildTx(requirementSignature);
 ```
 
-#### Deposit with native native token wrapping
+#### Deposit with native token wrapping
 
 For vaults whose underlying asset is wNative, you can deposit native token that will be automatically wrapped:
 

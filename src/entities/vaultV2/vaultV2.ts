@@ -59,13 +59,13 @@ export interface VaultV2Actions {
    * Bundler Integration: This flow uses the bundler to atomically execute the user's asset transfer and vault deposit in a single transaction for slippage protection.
    *
    * @param {Object} params - The deposit parameters.
-   * @param {bigint} params.amount - The amount of assets to deposit.
-   * @param {Address} [params.userAddress] - Optional user address initiating the deposit. Default is the client's user address is used.
+   * @param {bigint} [params.amount=0n] - Amount of ERC-20 assets to deposit. At least one of amount or nativeAmount must be provided.
+   * @param {Address} params.userAddress - User address initiating the deposit.
    * @param {bigint} [params.slippageTolerance=DEFAULT_SLIPPAGE_TOLERANCE] - Optional slippage tolerance value. Default is 0.03%. Slippage tolerance must be less than 10%.
-   * @param {bigint} [params.nativeAmount] - Amount of native ETH to wrap into WETH. Vault asset must be wNative.
+   * @param {bigint} [params.nativeAmount] - Amount of native token to wrap into wNative. Vault asset must be wNative.
    * @returns {Object} The result object.
    * @returns {Readonly<Transaction<VaultV2DepositAction>>} returns.tx The prepared deposit transaction.
-   * @returns {Promise<Readonly<Transaction<ERC20ApprovalAction>[]>>} returns.getRequirements The function for retrieving all required approval transactions.
+   * @returns {Promise<(Readonly<Transaction<ERC20ApprovalAction>> | Requirement)[]>} returns.getRequirements The function for retrieving all required approval transactions.
    */
   deposit: (
     params: {
@@ -206,6 +206,17 @@ export class MorphoVaultV2 implements VaultV2Actions {
       throw new NonPositiveAssetAmountError(this.vault);
     }
 
+    if (nativeAmount && nativeAmount < 0n) {
+      throw new NegativeNativeAmountError(nativeAmount);
+    }
+
+    if (nativeAmount) {
+      const { wNative } = getChainAddresses(this.chainId);
+      if (!wNative) {
+        throw new ChainWNativeMissingError(this.chainId);
+      }
+    }
+
     if (slippageTolerance < 0n) {
       throw new NegativeSlippageToleranceError(slippageTolerance);
     }
@@ -220,14 +231,8 @@ export class MorphoVaultV2 implements VaultV2Actions {
 
     if (nativeAmount) {
       const { wNative } = getChainAddresses(this.chainId);
-      if (!wNative) {
-        throw new ChainWNativeMissingError(this.chainId);
-      }
-      if (nativeAmount < 0n) {
-        throw new NegativeNativeAmountError(nativeAmount);
-      }
-      if (!isAddressEqual(vaultData.asset, wNative)) {
-        throw new NativeAmountOnNonWNativeVaultError(vaultData.asset, wNative);
+      if (!isAddressEqual(vaultData.asset, wNative!)) {
+        throw new NativeAmountOnNonWNativeVaultError(vaultData.asset, wNative!);
       }
     }
 

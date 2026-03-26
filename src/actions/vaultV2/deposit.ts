@@ -49,11 +49,11 @@ export interface VaultV2DepositParams {
  * @param {Address} params.vault.address - The vault address.
  * @param {Address} params.vault.asset - The underlying ERC20 asset address.
  * @param {Object} params.args - The deposit arguments.
- * @param {bigint} params.args.amount - Amount of assets to deposit.
+ * @param {bigint} [params.args.amount=0n] - Amount of ERC-20 assets to deposit. At least one of amount or nativeAmount must be provided.
  * @param {bigint} params.args.maxSharePrice - Maximum acceptable share price (slippage protection).
  * @param {Address} params.args.recipient - Receives the vault shares.
  * @param {RequirementSignature} [params.args.requirementSignature] - Pre-signed permit/permit2 approval.
- * @param {bigint} [params.args.nativeAmount] - Amount of native ETH to wrap into WETH for the deposit.
+ * @param {bigint} [params.args.nativeAmount] - Amount of native token to wrap into wNative for the deposit.
  * @param {Metadata} [params.metadata] - Optional analytics metadata.
  * @returns {Readonly<Transaction<VaultV2DepositAction>>} The prepared deposit transaction.
  */
@@ -96,7 +96,7 @@ export const vaultV2Deposit = ({
     }
 
     actions.push(
-      // Builds a native ETH transfer call to the recipient with no calldata or callback.
+      // Transfers native token from Bundler3 to GeneralAdapter1 for wrapping.
       {
         type: "nativeTransfer",
         args: [bundler3, generalAdapter1, nativeAmount, false /* skipRevert */],

@@ -32,7 +32,7 @@ At least one of `amount` or `nativeAmount` must be provided.
 - The `erc4626Deposit` uses `totalAssets = amount + nativeAmount`.
 - Actions are bundled atomically via `BundlerAction.encodeBundle()`.
 
-**Validation:** Throws `NonPositiveAssetAmountError` if `assets <= 0n`, `NonPositiveMaxSharePriceError` if `maxSharePrice <= 0n`, `NativeAmountOnNonWNativeVaultError` if vault asset is not wNative, `ChainWNativeMissingError` if chain has no configured wNative, `NegativeNativeAmountError` if `nativeAmount < 0n`, `ZeroDepositAmountError` if both amounts are zero.
+**Validation:** Throws `NonPositiveAssetAmountError` if `amount < 0n`, `NonPositiveMaxSharePriceError` if `maxSharePrice <= 0n`, `NativeAmountOnNonWNativeVaultError` if vault asset is not wNative, `ChainWNativeMissingError` if chain has no configured wNative, `NegativeNativeAmountError` if `nativeAmount < 0n`, `ZeroDepositAmountError` if both amounts are zero.
 
 **Security:** The general adapter enforces `maxSharePrice` on-chain. **Never bypass it** — vaults without dead deposit protection are vulnerable to inflation attacks.
 
