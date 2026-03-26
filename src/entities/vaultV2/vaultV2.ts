@@ -13,6 +13,7 @@ import { MAX_SLIPPAGE_TOLERANCE } from "../../helpers/constant";
 import {
   ChainIdMismatchError,
   type Deallocation,
+  type DepositAmountArgs,
   type ERC20ApprovalAction,
   ExcessiveSlippageToleranceError,
   type MorphoClientType,
@@ -60,12 +61,12 @@ export interface VaultV2Actions {
    * @returns {Readonly<Transaction<VaultV2DepositAction>>} returns.tx The prepared deposit transaction.
    * @returns {Promise<Readonly<Transaction<ERC20ApprovalAction>[]>>} returns.getRequirements The function for retrieving all required approval transactions.
    */
-  deposit: (params: {
-    amount: bigint;
-    userAddress: Address;
-    slippageTolerance?: bigint;
-    nativeAmount?: bigint;
-  }) => Promise<{
+  deposit: (
+    params: {
+      userAddress: Address;
+      slippageTolerance?: bigint;
+    } & DepositAmountArgs,
+  ) => Promise<{
     buildTx: (
       requirementSignature?: RequirementSignature,
     ) => Readonly<Transaction<VaultV2DepositAction>>;
@@ -180,16 +181,14 @@ export class MorphoVaultV2 implements VaultV2Actions {
   }
 
   async deposit({
-    amount,
+    amount = 0n,
     userAddress,
     slippageTolerance = DEFAULT_SLIPPAGE_TOLERANCE,
     nativeAmount,
   }: {
-    amount: bigint;
     userAddress: Address;
     slippageTolerance?: bigint;
-    nativeAmount?: bigint;
-  }) {
+  } & DepositAmountArgs) {
     if (this.client.viemClient.chain?.id !== this.chainId) {
       throw new ChainIdMismatchError(
         this.client.viemClient.chain?.id,

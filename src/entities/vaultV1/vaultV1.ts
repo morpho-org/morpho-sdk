@@ -10,6 +10,7 @@ import {
 import { MAX_SLIPPAGE_TOLERANCE } from "../../helpers/constant";
 import {
   ChainIdMismatchError,
+  type DepositAmountArgs,
   type ERC20ApprovalAction,
   ExcessiveSlippageToleranceError,
   type MorphoClientType,
@@ -49,12 +50,12 @@ export interface VaultV1Actions {
    * @param {bigint} [params.nativeAmount] - Amount of native ETH to wrap into WETH. Vault asset must be wNative.
    * @returns {Promise<Object>} Object with `buildTx` and `getRequirements`.
    */
-  deposit: (params: {
-    amount: bigint;
-    userAddress: Address;
-    slippageTolerance?: bigint;
-    nativeAmount?: bigint;
-  }) => Promise<{
+  deposit: (
+    params: {
+      userAddress: Address;
+      slippageTolerance?: bigint;
+    } & DepositAmountArgs,
+  ) => Promise<{
     buildTx: (
       requirementSignature?: RequirementSignature,
     ) => Readonly<Transaction<VaultV1DepositAction>>;
@@ -112,16 +113,14 @@ export class MorphoVaultV1 implements VaultV1Actions {
   }
 
   async deposit({
-    amount,
+    amount = 0n,
     userAddress,
     slippageTolerance = DEFAULT_SLIPPAGE_TOLERANCE,
     nativeAmount,
   }: {
-    amount: bigint;
     userAddress: Address;
     slippageTolerance?: bigint;
-    nativeAmount?: bigint;
-  }) {
+  } & DepositAmountArgs) {
     if (this.client.viemClient.chain?.id !== this.chainId) {
       throw new ChainIdMismatchError(
         this.client.viemClient.chain?.id,
