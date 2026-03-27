@@ -41,10 +41,12 @@ describe("WrapNative - VaultV1", () => {
       actionFn: async () => {
         const morpho = new MorphoClient(client);
         const vault = morpho.vaultV1(GauntletWethVaultV1.address, mainnet.id);
-        const deposit = await vault.deposit({
+        const accrualVault = await vault.getData();
+        const deposit = vault.deposit({
           userAddress: client.account.address,
           amount: 0n,
           nativeAmount,
+          accrualVault,
         });
 
         const requirements = await deposit.getRequirements();
@@ -108,10 +110,12 @@ describe("WrapNative - VaultV1", () => {
       actionFn: async () => {
         const morpho = new MorphoClient(client);
         const vault = morpho.vaultV1(GauntletWethVaultV1.address, mainnet.id);
-        const deposit = await vault.deposit({
+        const accrualVault = await vault.getData();
+        const deposit = vault.deposit({
           userAddress: client.account.address,
           amount,
           nativeAmount,
+          accrualVault,
         });
 
         const requirements = await deposit.getRequirements();
@@ -166,10 +170,12 @@ describe("WrapNative - VaultV1", () => {
       actionFn: async () => {
         const morpho = new MorphoClient(client, { supportSignature: true });
         const vault = morpho.vaultV1(GauntletWethVaultV1.address, mainnet.id);
-        const deposit = await vault.deposit({
+        const accrualVault = await vault.getData();
+        const deposit = vault.deposit({
           userAddress: client.account.address,
           amount,
           nativeAmount,
+          accrualVault,
         });
 
         const requirements = await deposit.getRequirements();
@@ -288,10 +294,12 @@ describe("WrapNative - VaultV2", () => {
       actionFn: async () => {
         const morpho = new MorphoClient(client);
         const vault = morpho.vaultV2(KpkWETHVaultV2.address, mainnet.id);
-        const deposit = await vault.deposit({
+        const accrualVault = await vault.getData();
+        const deposit = vault.deposit({
           userAddress: client.account.address,
           amount: 0n,
           nativeAmount,
+          accrualVault,
         });
 
         const requirements = await deposit.getRequirements();
@@ -355,10 +363,12 @@ describe("WrapNative - VaultV2", () => {
       actionFn: async () => {
         const morpho = new MorphoClient(client);
         const vault = morpho.vaultV2(KpkWETHVaultV2.address, mainnet.id);
-        const deposit = await vault.deposit({
+        const accrualVault = await vault.getData();
+        const deposit = vault.deposit({
           userAddress: client.account.address,
           amount,
           nativeAmount,
+          accrualVault,
         });
 
         const requirements = await deposit.getRequirements();
@@ -413,10 +423,12 @@ describe("WrapNative - VaultV2", () => {
       actionFn: async () => {
         const morpho = new MorphoClient(client, { supportSignature: true });
         const vault = morpho.vaultV2(KpkWETHVaultV2.address, mainnet.id);
-        const deposit = await vault.deposit({
+        const accrualVault = await vault.getData();
+        const deposit = vault.deposit({
           userAddress: client.account.address,
           amount,
           nativeAmount,
+          accrualVault,
         });
 
         const requirements = await deposit.getRequirements();

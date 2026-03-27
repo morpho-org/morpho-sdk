@@ -28,9 +28,11 @@ describe("Permit", () => {
         const morpho = new MorphoClient(client, { supportSignature: true });
 
         const vault = morpho.vaultV2(KeyrockUsdcVaultV2.address, mainnet.id);
-        const deposit = await vault.deposit({
+        const accrualVault = await vault.getData();
+        const deposit = vault.deposit({
           userAddress: client.account.address,
-          amount,
+          amount: amount,
+          accrualVault,
         });
         const requirements_1 = await deposit.getRequirements({
           useSimplePermit: true,

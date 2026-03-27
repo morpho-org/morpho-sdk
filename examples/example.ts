@@ -47,9 +47,11 @@ async function main() {
   // Example 1: Create a deposit transaction
   console.log("📥 Creating deposit transaction...");
   const depositAmount = parseUnits("1", 18); // 1 token (18 decimals)
-  const deposit = await vault.deposit({
+  const accrualVault = await vault.getData();
+  const deposit = vault.deposit({
     amount: depositAmount,
     userAddress: USER_ADDRESS,
+    accrualVault,
   });
   const depositTx = deposit.buildTx();
 

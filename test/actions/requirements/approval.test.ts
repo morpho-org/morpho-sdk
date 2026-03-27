@@ -29,9 +29,11 @@ describe("Approval", () => {
       },
       actionFn: async () => {
         const vault = morpho.vaultV2(Re7UsdtVaultV2.address, mainnet.id);
-        const deposit = await vault.deposit({
+        const accrualVault = await vault.getData();
+        const deposit = vault.deposit({
           userAddress: client.account.address,
-          amount,
+          amount: amount,
+          accrualVault,
         });
 
         const requirements = await deposit.getRequirements();
@@ -79,9 +81,11 @@ describe("Approval", () => {
       },
       actionFn: async () => {
         const vault = morpho.vaultV2(Re7UsdtVaultV2.address, mainnet.id);
-        const deposit = await vault.deposit({
+        const accrualVault = await vault.getData();
+        const deposit = vault.deposit({
           userAddress: client.account.address,
-          amount,
+          amount: amount,
+          accrualVault,
         });
 
         const requirements = await deposit.getRequirements();
