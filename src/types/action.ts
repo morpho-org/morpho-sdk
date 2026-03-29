@@ -102,6 +102,49 @@ export interface VaultV1RedeemAction
     }
   > {}
 
+export interface MarketV1SupplyCollateralAction
+  extends BaseAction<
+    "marketV1SupplyCollateral",
+    {
+      market: Hex;
+      amount: bigint;
+      onBehalf: Address;
+      nativeAmount?: bigint;
+    }
+  > {}
+
+export interface MarketV1BorrowAction
+  extends BaseAction<
+    "marketV1Borrow",
+    {
+      market: Hex;
+      amount: bigint;
+      receiver: Address;
+    }
+  > {}
+
+export interface MarketV1SupplyCollateralBorrowAction
+  extends BaseAction<
+    "marketV1SupplyCollateralBorrow",
+    {
+      market: Hex;
+      collateralAmount: bigint;
+      borrowAmount: bigint;
+      onBehalf: Address;
+      receiver: Address;
+      nativeAmount?: bigint;
+    }
+  > {}
+
+export interface MorphoAuthorizationAction
+  extends BaseAction<
+    "morphoAuthorization",
+    {
+      authorized: Address;
+      isAuthorized: boolean;
+    }
+  > {}
+
 export type TransactionAction =
   | ERC20ApprovalAction
   | VaultV2DepositAction
@@ -111,7 +154,11 @@ export type TransactionAction =
   | VaultV2ForceRedeemAction
   | VaultV1DepositAction
   | VaultV1WithdrawAction
-  | VaultV1RedeemAction;
+  | VaultV1RedeemAction
+  | MarketV1SupplyCollateralAction
+  | MarketV1BorrowAction
+  | MarketV1SupplyCollateralBorrowAction
+  | MorphoAuthorizationAction;
 
 export interface Transaction<TAction extends BaseAction = TransactionAction> {
   readonly to: Address;

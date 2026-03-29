@@ -2,7 +2,7 @@
 
 > Full context: [CLAUDE.md](../../CLAUDE.md)
 
-Pure functions that build deep-frozen `Transaction<TAction>` objects. Three sub-layers:
+Pure functions that build deep-frozen `Transaction<TAction>` objects. Four sub-layers:
 
 ## `vaultV1/` — VaultV1 (MetaMorpho) Operations
 
@@ -22,9 +22,17 @@ Pure functions that build deep-frozen `Transaction<TAction>` objects. Three sub-
 | `vaultV2ForceWithdraw`    | VaultV2 multicall         | Bundles N forceDeallocate + 1 withdraw to exit illiquid positions |
 | `vaultV2ForceRedeem`      | VaultV2 multicall         | Bundles N forceDeallocate + 1 redeem for maximum withdrawal scenarios |
 
+## `marketV1/` — MarketV1 (Morpho Blue) Operations
+
+| Function                         | Route                            | Why                                                                           |
+| -------------------------------- | -------------------------------- | ----------------------------------------------------------------------------- |
+| `marketV1SupplyCollateral`       | Direct / Bundler (if native)     | Direct when ERC20-only. Bundler only for native wrapping.                     |
+| `marketV1Borrow`                 | Direct Morpho call               | No bundler, no approval. On-chain health check enforces LLTV.                 |
+| `marketV1SupplyCollateralBorrow` | Bundler (general adapter)        | Atomic supply + borrow. Requires Morpho authorization for GeneralAdapter1.    |
+
 ## `requirements/` — Approval Resolution
 
-Resolves token approval needs before a deposit:
+Resolves token approval needs before a deposit or supply collateral:
 
 1. `supportSignature: false` → classic `approve()` tx (`getRequirementsApproval`).
 2. `supportSignature: true` + EIP-2612 → permit signature (`getRequirementsPermit`).

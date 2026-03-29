@@ -131,3 +131,53 @@ export class VaultAddressMismatchError extends Error {
     );
   }
 }
+
+export class NonPositiveBorrowAmountError extends Error {
+  constructor(market: string) {
+    super(`Borrow amount must be positive for market: ${market}`);
+  }
+}
+
+export class ZeroCollateralAmountError extends Error {
+  constructor(market: string) {
+    super(
+      `Total collateral amount must be positive for market: ${market}. Both amount and nativeAmount are zero.`,
+    );
+  }
+}
+
+export class NativeAmountOnNonWNativeCollateralError extends Error {
+  constructor(collateralToken: Address, wNative: Address) {
+    super(
+      `Cannot use nativeAmount: collateral token ${collateralToken} is not the wrapped native token ${wNative}`,
+    );
+  }
+}
+
+export class BorrowExceedsSafeLtvError extends Error {
+  constructor(borrowAmount: bigint, maxSafeBorrow: bigint) {
+    super(
+      `Borrow amount ${borrowAmount} exceeds safe maximum ${maxSafeBorrow} (LLTV minus buffer). Reduce borrow or increase collateral.`,
+    );
+  }
+}
+
+export class MissingMarketPriceError extends Error {
+  constructor(market: string) {
+    super(
+      `Oracle price unavailable for market ${market}. Cannot validate position health.`,
+    );
+  }
+}
+
+export class NegativeLltvBufferError extends Error {
+  constructor(buffer: bigint) {
+    super(`LLTV buffer ${buffer} must not be negative`);
+  }
+}
+
+export class ExcessiveLltvBufferError extends Error {
+  constructor(buffer: bigint) {
+    super(`LLTV buffer ${buffer} exceeds maximum allowed (10%)`);
+  }
+}
