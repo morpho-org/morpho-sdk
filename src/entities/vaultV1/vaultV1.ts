@@ -105,16 +105,6 @@ export class MorphoVaultV1 implements VaultV1Actions {
   ) {}
 
   async getData(parameters?: FetchParameters) {
-    if (
-      this.client.viemClient.chain?.id &&
-      this.client.viemClient.chain?.id !== this.chainId
-    ) {
-      throw new ChainIdMismatchError(
-        this.client.viemClient.chain?.id,
-        this.chainId,
-      );
-    }
-
     return fetchAccrualVault(this.vault, this.client.viemClient, {
       ...parameters,
       chainId: this.chainId,
