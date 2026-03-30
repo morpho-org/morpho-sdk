@@ -15,7 +15,6 @@ describe("SupplyCollateralMarketV1", () => {
   const marketParams = new MarketParams(WstethUsdcMarket);
 
   test("should create supply collateral bundle", async ({ client }) => {
-    const { morpho } = getChainAddresses(mainnet.id);
     const morphoClient = new MorphoClient(client);
     const market = morphoClient.marketV1(WstethUsdcMarket, mainnet.id);
 
@@ -30,8 +29,6 @@ describe("SupplyCollateralMarketV1", () => {
     const tx2 = marketV1SupplyCollateral({
       market: {
         chainId: mainnet.id,
-        morpho,
-        marketId: marketParams.id,
         marketParams: WstethUsdcMarket,
       },
       args: {

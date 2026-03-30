@@ -1,6 +1,5 @@
 import {
   type AccrualPosition,
-  getChainAddresses,
   type Market,
   type MarketParams,
   MathLib,
@@ -201,8 +200,6 @@ export class MorphoMarketV1 implements MarketV1Actions {
         marketV1SupplyCollateral({
           market: {
             chainId: this.chainId,
-            morpho: getChainAddresses(this.chainId).morpho,
-            marketId: this.marketParams.id,
             marketParams: this.marketParams,
           },
           args: {
@@ -237,8 +234,7 @@ export class MorphoMarketV1 implements MarketV1Actions {
       buildTx: () =>
         marketV1Borrow({
           market: {
-            morpho: getChainAddresses(this.chainId).morpho,
-            marketId: this.marketParams.id,
+            chainId: this.chainId,
             marketParams: this.marketParams,
           },
           args: {
@@ -312,7 +308,6 @@ export class MorphoMarketV1 implements MarketV1Actions {
         marketV1SupplyCollateralBorrow({
           market: {
             chainId: this.chainId,
-            marketId: this.marketParams.id,
             marketParams: this.marketParams,
           },
           args: {

@@ -1,4 +1,4 @@
-import { getChainAddresses, MarketParams } from "@morpho-org/blue-sdk";
+import { getChainAddresses } from "@morpho-org/blue-sdk";
 import { parseUnits } from "viem";
 import { mainnet } from "viem/chains";
 import { describe, expect } from "vitest";
@@ -9,16 +9,12 @@ import { marketV1Borrow } from "./borrow";
 
 describe("marketV1Borrow unit tests", () => {
   const { morpho } = getChainAddresses(mainnet.id);
-  const marketParams = new MarketParams(WstethUsdcMarket);
-  const marketId = marketParams.id;
-
   test("should create direct borrow transaction", async ({ client }) => {
     const amount = parseUnits("1000", 6);
 
     const tx = marketV1Borrow({
       market: {
-        morpho,
-        marketId,
+        chainId: mainnet.id,
         marketParams: WstethUsdcMarket,
       },
       args: {
@@ -30,7 +26,7 @@ describe("marketV1Borrow unit tests", () => {
 
     expect(tx).toBeDefined();
     expect(tx.action.type).toBe("marketV1Borrow");
-    expect(tx.action.args.market).toBe(marketId);
+    expect(tx.action.args.market).toBe(WstethUsdcMarket.id);
     expect(tx.action.args.amount).toBe(amount);
     expect(tx.action.args.receiver).toBe(client.account.address);
     expect(tx.to).toBe(morpho);
@@ -45,8 +41,7 @@ describe("marketV1Borrow unit tests", () => {
 
     const tx = marketV1Borrow({
       market: {
-        morpho,
-        marketId,
+        chainId: mainnet.id,
         marketParams: WstethUsdcMarket,
       },
       args: {
@@ -66,8 +61,7 @@ describe("marketV1Borrow unit tests", () => {
     expect(() =>
       marketV1Borrow({
         market: {
-          morpho,
-          marketId,
+          chainId: mainnet.id,
           marketParams: WstethUsdcMarket,
         },
         args: {
@@ -85,8 +79,7 @@ describe("marketV1Borrow unit tests", () => {
     expect(() =>
       marketV1Borrow({
         market: {
-          morpho,
-          marketId,
+          chainId: mainnet.id,
           marketParams: WstethUsdcMarket,
         },
         args: {
@@ -101,8 +94,7 @@ describe("marketV1Borrow unit tests", () => {
   test("should return a deep-frozen transaction object", async ({ client }) => {
     const tx = marketV1Borrow({
       market: {
-        morpho,
-        marketId,
+        chainId: mainnet.id,
         marketParams: WstethUsdcMarket,
       },
       args: {
@@ -124,8 +116,7 @@ describe("marketV1Borrow unit tests", () => {
 
     const txWithout = marketV1Borrow({
       market: {
-        morpho,
-        marketId,
+        chainId: mainnet.id,
         marketParams: WstethUsdcMarket,
       },
       args: {
@@ -137,8 +128,7 @@ describe("marketV1Borrow unit tests", () => {
 
     const txWith = marketV1Borrow({
       market: {
-        morpho,
-        marketId,
+        chainId: mainnet.id,
         marketParams: WstethUsdcMarket,
       },
       args: {
