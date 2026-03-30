@@ -1,5 +1,6 @@
 import { getChainAddresses, MarketParams, MathLib } from "@morpho-org/blue-sdk";
 import { blueAbi } from "@morpho-org/blue-sdk-viem";
+import type { AnvilTestClient } from "@morpho-org/test";
 import { encodeFunctionData, parseUnits } from "viem";
 import { mainnet } from "viem/chains";
 import { describe, expect } from "vitest";
@@ -10,16 +11,52 @@ import { test } from "../../setup";
 
 describe("BorrowMarketV1", () => {
   const marketParams = new MarketParams(WstethUsdcMarket);
+  const { morpho } = getChainAddresses(mainnet.id);
+
+  async function supplyCollateral(
+    client: AnvilTestClient<typeof mainnet>,
+    collateralAmount: bigint,
+  ) {
+    await client.approve({
+      address: WstethUsdcMarket.collateralToken,
+      args: [morpho, MathLib.MAX_UINT_256],
+    });
+    await client.sendTransaction({
+      to: morpho,
+      data: encodeFunctionData({
+        abi: blueAbi,
+        functionName: "supplyCollateral",
+        args: [
+          WstethUsdcMarket,
+          collateralAmount,
+          client.account.address,
+          "0x",
+        ],
+      }),
+      value: 0n,
+    });
+  }
 
   test("should create borrow bundle", async ({ client }) => {
-    const { morpho } = getChainAddresses(mainnet.id);
+    const collateralAmount = parseUnits("10", 18);
+    const amount = parseUnits("100", 6);
+
+    await client.deal({
+      erc20: WstethUsdcMarket.collateralToken,
+      amount: collateralAmount,
+    });
+    await supplyCollateral(client, collateralAmount);
+
     const morphoClient = new MorphoClient(client);
     const market = morphoClient.marketV1(WstethUsdcMarket, mainnet.id);
-    const amount = parseUnits("100", 6);
+    const accrualPosition = await market.getPositionData(
+      client.account.address,
+    );
 
     const borrow = market.borrow({
       userAddress: client.account.address,
       amount,
+      accrualPosition,
     });
 
     const tx = borrow.buildTx();
@@ -32,7 +69,6 @@ describe("BorrowMarketV1", () => {
   });
 
   test("should supply collateral then borrow USDC", async ({ client }) => {
-    const { morpho } = getChainAddresses(mainnet.id);
     const collateralAmount = parseUnits("10", 18);
     const borrowAmount = parseUnits("1000", 6);
 
@@ -52,33 +88,19 @@ describe("BorrowMarketV1", () => {
       },
       actionFn: async () => {
         // 1. Supply collateral first
-        await client.approve({
-          address: WstethUsdcMarket.collateralToken,
-          args: [morpho, MathLib.MAX_UINT_256],
-        });
-
-        await client.sendTransaction({
-          to: morpho,
-          data: encodeFunctionData({
-            abi: blueAbi,
-            functionName: "supplyCollateral",
-            args: [
-              WstethUsdcMarket,
-              collateralAmount,
-              client.account.address,
-              "0x",
-            ],
-          }),
-          value: 0n,
-        });
+        await supplyCollateral(client, collateralAmount);
 
         // 2. Borrow via entity
         const morphoClient = new MorphoClient(client);
         const market = morphoClient.marketV1(WstethUsdcMarket, mainnet.id);
+        const accrualPosition = await market.getPositionData(
+          client.account.address,
+        );
 
         const borrow = market.borrow({
           userAddress: client.account.address,
           amount: borrowAmount,
+          accrualPosition,
         });
 
         await client.sendTransaction(borrow.buildTx());

@@ -3,7 +3,11 @@ import { blueAbi } from "@morpho-org/blue-sdk-viem";
 import { deepFreeze } from "@morpho-org/morpho-ts";
 import type { Client } from "viem";
 import { type Address, encodeFunctionData, publicActions } from "viem";
-import type { MorphoAuthorizationAction, Transaction } from "../../types";
+import {
+  ChainIdMismatchError,
+  type MorphoAuthorizationAction,
+  type Transaction,
+} from "../../types";
 
 /**
  * Checks whether GeneralAdapter1 is authorized on Morpho for the given user.
@@ -22,6 +26,10 @@ export const getMorphoAuthorizationRequirement = async (
   chainId: number,
   userAddress: Address,
 ): Promise<Readonly<Transaction<MorphoAuthorizationAction>> | null> => {
+  if (viemClient.chain?.id !== chainId) {
+    throw new ChainIdMismatchError(viemClient.chain?.id, chainId);
+  }
+
   const {
     morpho,
     bundler3: { generalAdapter1 },
@@ -48,7 +56,7 @@ export const getMorphoAuthorizationRequirement = async (
     }),
     value: 0n,
     action: {
-      type: "morphoAuthorization",
+      type: "morphoAuthorization" as const,
       args: {
         authorized: generalAdapter1,
         isAuthorized: true,

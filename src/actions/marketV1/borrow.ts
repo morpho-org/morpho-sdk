@@ -27,7 +27,6 @@ export interface MarketV1BorrowParams {
  * Prepares a borrow transaction for a Morpho Blue market.
  *
  * Direct call to `morpho.borrow()`. No bundler needed.
- * The caller must have sufficient collateral to pass the on-chain health check.
  * Specifies exact asset amount; shares are computed by the protocol.
  *
  * @param params - Borrow parameters.
@@ -47,6 +46,7 @@ export const marketV1Borrow = ({
   let tx = {
     to: morpho,
     data: encodeFunctionData({
+      // TODO: Verify if we need to pass min-share-price
       abi: blueAbi,
       functionName: "borrow",
       args: [marketParams, amount, 0n, onBehalf, receiver],

@@ -169,15 +169,3 @@ export class MissingMarketPriceError extends Error {
     );
   }
 }
-
-export class NegativeLltvBufferError extends Error {
-  constructor(buffer: bigint) {
-    super(`LLTV buffer ${buffer} must not be negative`);
-  }
-}
-
-export class ExcessiveLltvBufferError extends Error {
-  constructor(buffer: bigint) {
-    super(`LLTV buffer ${buffer} exceeds maximum allowed (10%)`);
-  }
-}

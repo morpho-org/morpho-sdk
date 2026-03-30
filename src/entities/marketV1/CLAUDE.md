@@ -6,8 +6,7 @@
 
 ## Constructor
 
-`MorphoMarketV1(client, inputMarketParams: MarketParamsInput, chainId)`.
-Internally constructs `MarketParams` from blue-sdk to derive `marketId`.
+`MorphoMarketV1(client, marketparams: MarketParams, chainId)`.
 
 ## Methods
 
@@ -19,6 +18,7 @@ Fetch on-chain state via `fetchMarket` / `fetchAccrualPosition`.
 ### `supplyCollateral`
 
 Dual-path based on `nativeAmount`:
+
 - **No native**: direct `morpho.supplyCollateral()`. Requirements = approve Morpho (reads allowance via `publicActions`).
 - **Native**: bundler path. Requirements = approve GeneralAdapter1 (uses `getRequirements` orchestrator).
 
@@ -29,6 +29,7 @@ Direct `morpho.borrow()`. No bundler, no requirements.
 ### `supplyCollateralBorrow`
 
 Always bundler. Validates:
+
 1. Input amounts (positive, non-zero collateral).
 2. LLTV buffer: `totalBorrowAfter <= maxSafeBorrow` where `maxSafeBorrow = collateralValue * (LLTV - buffer)`.
    - `ORACLE_PRICE_SCALE = 1e36`. Buffer default = 0.5%, max = 10%.
@@ -37,6 +38,7 @@ Always bundler. Validates:
 3. Native wrapping: collateral token must be wNative.
 
 `getRequirements` returns:
+
 - ERC20 approval for GeneralAdapter1 (collateral token).
 - `morpho.setAuthorization(generalAdapter1, true)` tx if not yet authorized (reads via `publicActions`).
 

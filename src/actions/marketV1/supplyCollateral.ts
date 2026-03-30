@@ -1,4 +1,8 @@
-import { getChainAddresses, type MarketParams } from "@morpho-org/blue-sdk";
+import {
+  getChainAddresses,
+  type MarketId,
+  type MarketParams,
+} from "@morpho-org/blue-sdk";
 import { type Action, BundlerAction } from "@morpho-org/bundler-sdk-viem";
 import { deepFreeze } from "@morpho-org/morpho-ts";
 import type { Address } from "viem";
@@ -21,6 +25,8 @@ import { getRequirementsAction } from "../requirements/getRequirementsAction";
 export interface MarketV1SupplyCollateralParams {
   market: {
     readonly chainId: number;
+    readonly morpho: Address;
+    readonly marketId: MarketId;
     readonly marketParams: MarketParams;
   };
   args: DepositAmountArgs & {
@@ -33,7 +39,7 @@ export interface MarketV1SupplyCollateralParams {
 /**
  * Prepares a supply-collateral transaction for a Morpho Blue market.
  *
- * Always routed through bundler3 via GeneralAdapter1.
+ * Routed through bundler via GeneralAdapter1.
  * When `nativeAmount` is provided, native token is wrapped via GeneralAdapter1.
  * Collateral token must be the chain's wNative when `nativeAmount` is used.
  *

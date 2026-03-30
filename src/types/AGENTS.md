@@ -11,9 +11,9 @@ Centralized type definitions. Barrel-exported via `index.ts`.
 - `Requirement` / `RequirementSignature` — permit/permit2 sign flow.
 - `Metadata` — optional `{ origin, timestamp? }` for calldata tracing.
 - `DepositAmountArgs` — union type enforcing at least one of `amount` / `nativeAmount`. Reused for vault deposits and market collateral supply.
-- `MarketParamsInput` — Morpho Blue market params (`loanToken`, `collateralToken`, `oracle`, `irm`, `lltv`). In `entity.ts`.
+- `MarketParams` — Morpho Blue market params (`loanToken`, `collateralToken`, `oracle`, `irm`, `lltv`).
 - `MorphoAuthorizationAction` — for `morpho.setAuthorization()` pre-requisite transactions.
-- Custom errors in `error.ts` — one class per error case. Market-specific: `BorrowExceedsSafeLtvError`, `MissingMarketPriceError`, `NegativeLltvBufferError`, `ExcessiveLltvBufferError`, `ZeroCollateralAmountError`, `NativeAmountOnNonWNativeCollateralError`.
+- Custom errors in `error.ts` — one class per error case. Market-specific: `BorrowExceedsSafeLtvError`, `MissingMarketPriceError`, `ZeroCollateralAmountError`, `NativeAmountOnNonWNativeCollateralError`.
 
 ## Key Constraints
 

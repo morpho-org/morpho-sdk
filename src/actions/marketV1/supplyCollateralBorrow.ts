@@ -1,4 +1,8 @@
-import { getChainAddresses, type MarketParams } from "@morpho-org/blue-sdk";
+import {
+  getChainAddresses,
+  type MarketId,
+  type MarketParams,
+} from "@morpho-org/blue-sdk";
 import { type Action, BundlerAction } from "@morpho-org/bundler-sdk-viem";
 import { deepFreeze } from "@morpho-org/morpho-ts";
 import type { Address } from "viem";
@@ -22,6 +26,7 @@ import { getRequirementsAction } from "../requirements/getRequirementsAction";
 export interface MarketV1SupplyCollateralBorrowParams {
   market: {
     readonly chainId: number;
+    readonly marketId: MarketId;
     readonly marketParams: MarketParams;
   };
   args: DepositAmountArgs & {
@@ -126,6 +131,7 @@ export const marketV1SupplyCollateralBorrow = ({
     },
     {
       type: "morphoBorrow",
+      // TODO: Verify if we need to pass min-share-price
       args: [marketParams, borrowAmount, 0n, 0n, receiver, false],
     },
   );

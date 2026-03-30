@@ -1,7 +1,8 @@
 import {
   type AccrualPosition,
+  getChainAddresses,
   type Market,
-  MarketParams,
+  type MarketParams,
   MathLib,
   ORACLE_PRICE_SCALE,
 } from "@morpho-org/blue-sdk";
@@ -15,19 +16,17 @@ import {
   marketV1SupplyCollateralBorrow,
 } from "../../actions";
 import { validateChainId, validateNativeCollateral } from "../../helpers";
-import { DEFAULT_LLTV_BUFFER, MAX_LLTV_BUFFER } from "../../helpers/constant";
+import { DEFAULT_LLTV_BUFFER } from "../../helpers/constant";
 import {
   BorrowExceedsSafeLtvError,
   type DepositAmountArgs,
   type ERC20ApprovalAction,
-  ExcessiveLltvBufferError,
   type MarketV1BorrowAction,
   type MarketV1SupplyCollateralAction,
   type MarketV1SupplyCollateralBorrowAction,
   MissingMarketPriceError,
   type MorphoAuthorizationAction,
   type MorphoClientType,
-  NegativeLltvBufferError,
   NegativeNativeAmountError,
   NonPositiveAssetAmountError,
   NonPositiveBorrowAmountError,
@@ -62,7 +61,7 @@ export interface MarketV1Actions {
   /**
    * Prepares a supply-collateral transaction.
    *
-   * Always routed through bundler3 via GeneralAdapter1.
+   * Routed through bundler via GeneralAdapter1.
    * `getRequirements` returns ERC20 approval or permit for GeneralAdapter1.
    * When `nativeAmount` is provided, native token is wrapped; collateral must be wNative.
    *
@@ -82,12 +81,16 @@ export interface MarketV1Actions {
    * Prepares a borrow transaction.
    *
    * Direct call to `morpho.borrow()`. No bundler, no requirements.
-   * Caller must have sufficient collateral to pass the on-chain health check.
+   * Validates position health with LLTV buffer (0.5%) using the pre-fetched `accrualPosition`.
    *
-   * @param params - Borrow parameters.
+   * @param params - Borrow parameters including pre-fetched `accrualPosition` for health validation.
    * @returns Object with `buildTx`.
    */
-  borrow: (params: { userAddress: Address; amount: bigint }) => {
+  borrow: (params: {
+    userAddress: Address;
+    amount: bigint;
+    accrualPosition: AccrualPosition;
+  }) => {
     buildTx: () => Readonly<Transaction<MarketV1BorrowAction>>;
   };
 
@@ -109,7 +112,6 @@ export interface MarketV1Actions {
       userAddress: Address;
       accrualPosition: AccrualPosition;
       borrowAmount: bigint;
-      lltvBuffer?: bigint;
     } & DepositAmountArgs,
   ) => {
     buildTx: (
@@ -128,20 +130,16 @@ export interface MarketV1Actions {
 }
 
 export class MorphoMarketV1 implements MarketV1Actions {
-  private readonly params: MarketParams;
-
   constructor(
     private readonly client: MorphoClientType,
-    marketParams: MarketParams,
+    public readonly marketParams: MarketParams,
     private readonly chainId: number,
-  ) {
-    this.params = new MarketParams(marketParams);
-  }
+  ) {}
 
   async getMarketData(parameters?: FetchParameters): Promise<Market> {
     validateChainId(this.client.viemClient.chain?.id, this.chainId);
 
-    return fetchMarket(this.params.id, this.client.viemClient, {
+    return fetchMarket(this.marketParams.id, this.client.viemClient, {
       ...parameters,
       chainId: this.chainId,
     });
@@ -155,7 +153,7 @@ export class MorphoMarketV1 implements MarketV1Actions {
 
     return fetchAccrualPosition(
       userAddress,
-      this.params.id,
+      this.marketParams.id,
       this.client.viemClient,
       {
         ...parameters,
@@ -172,7 +170,7 @@ export class MorphoMarketV1 implements MarketV1Actions {
     validateChainId(this.client.viemClient.chain?.id, this.chainId);
 
     if (amount < 0n) {
-      throw new NonPositiveAssetAmountError(this.params.collateralToken);
+      throw new NonPositiveAssetAmountError(this.marketParams.collateralToken);
     }
 
     if (nativeAmount !== undefined && nativeAmount < 0n) {
@@ -181,17 +179,17 @@ export class MorphoMarketV1 implements MarketV1Actions {
 
     const totalCollateral = amount + (nativeAmount ?? 0n);
     if (totalCollateral === 0n) {
-      throw new ZeroCollateralAmountError(this.params.id);
+      throw new ZeroCollateralAmountError(this.marketParams.id);
     }
 
     if (nativeAmount) {
-      validateNativeCollateral(this.chainId, this.params.collateralToken);
+      validateNativeCollateral(this.chainId, this.marketParams.collateralToken);
     }
 
     return {
       getRequirements: (params?: { useSimplePermit?: boolean }) =>
         getRequirements(this.client.viemClient, {
-          address: this.params.collateralToken,
+          address: this.marketParams.collateralToken,
           chainId: this.chainId,
           supportSignature: this.client.options.supportSignature,
           supportDeployless: this.client.options.supportDeployless,
@@ -203,7 +201,9 @@ export class MorphoMarketV1 implements MarketV1Actions {
         marketV1SupplyCollateral({
           market: {
             chainId: this.chainId,
-            marketParams: this.params,
+            morpho: getChainAddresses(this.chainId).morpho,
+            marketId: this.marketParams.id,
+            marketParams: this.marketParams,
           },
           args: {
             amount,
@@ -216,19 +216,30 @@ export class MorphoMarketV1 implements MarketV1Actions {
     };
   }
 
-  borrow({ amount, userAddress }: { amount: bigint; userAddress: Address }) {
+  borrow({
+    amount,
+    userAddress,
+    accrualPosition,
+  }: {
+    amount: bigint;
+    userAddress: Address;
+    accrualPosition: AccrualPosition;
+  }) {
     validateChainId(this.client.viemClient.chain?.id, this.chainId);
 
     if (amount <= 0n) {
-      throw new NonPositiveBorrowAmountError(this.params.id);
+      throw new NonPositiveBorrowAmountError(this.marketParams.id);
     }
+
+    this.validatePositionHealth(accrualPosition, 0n, amount);
 
     return {
       buildTx: () =>
         marketV1Borrow({
           market: {
-            chainId: this.chainId,
-            marketParams: this.params,
+            morpho: getChainAddresses(this.chainId).morpho,
+            marketId: this.marketParams.id,
+            marketParams: this.marketParams,
           },
           args: {
             amount,
@@ -245,18 +256,16 @@ export class MorphoMarketV1 implements MarketV1Actions {
     userAddress,
     accrualPosition,
     borrowAmount,
-    lltvBuffer = DEFAULT_LLTV_BUFFER,
     nativeAmount,
   }: {
     userAddress: Address;
     accrualPosition: AccrualPosition;
     borrowAmount: bigint;
-    lltvBuffer?: bigint;
   } & DepositAmountArgs) {
     validateChainId(this.client.viemClient.chain?.id, this.chainId);
 
     if (amount < 0n) {
-      throw new NonPositiveAssetAmountError(this.params.collateralToken);
+      throw new NonPositiveAssetAmountError(this.marketParams.collateralToken);
     }
 
     if (nativeAmount !== undefined && nativeAmount < 0n) {
@@ -264,37 +273,25 @@ export class MorphoMarketV1 implements MarketV1Actions {
     }
 
     if (borrowAmount <= 0n) {
-      throw new NonPositiveBorrowAmountError(this.params.id);
-    }
-
-    if (lltvBuffer < 0n) {
-      throw new NegativeLltvBufferError(lltvBuffer);
-    }
-    if (lltvBuffer > MAX_LLTV_BUFFER) {
-      throw new ExcessiveLltvBufferError(lltvBuffer);
+      throw new NonPositiveBorrowAmountError(this.marketParams.id);
     }
 
     const totalCollateral = amount + (nativeAmount ?? 0n);
     if (totalCollateral === 0n) {
-      throw new ZeroCollateralAmountError(this.params.id);
+      throw new ZeroCollateralAmountError(this.marketParams.id);
     }
 
     if (nativeAmount) {
-      validateNativeCollateral(this.chainId, this.params.collateralToken);
+      validateNativeCollateral(this.chainId, this.marketParams.collateralToken);
     }
 
-    this.validatePositionHealth(
-      accrualPosition,
-      totalCollateral,
-      borrowAmount,
-      lltvBuffer,
-    );
+    this.validatePositionHealth(accrualPosition, totalCollateral, borrowAmount);
 
     return {
       getRequirements: async (params?: { useSimplePermit?: boolean }) => {
         const [erc20Requirements, authTx] = await Promise.all([
           getRequirements(this.client.viemClient, {
-            address: this.params.collateralToken,
+            address: this.marketParams.collateralToken,
             chainId: this.chainId,
             supportSignature: this.client.options.supportSignature,
             supportDeployless: this.client.options.supportDeployless,
@@ -315,7 +312,8 @@ export class MorphoMarketV1 implements MarketV1Actions {
         marketV1SupplyCollateralBorrow({
           market: {
             chainId: this.chainId,
-            marketParams: this.params,
+            marketId: this.marketParams.id,
+            marketParams: this.marketParams,
           },
           args: {
             amount,
@@ -340,12 +338,11 @@ export class MorphoMarketV1 implements MarketV1Actions {
     accrualPosition: AccrualPosition,
     additionalCollateral: bigint,
     borrowAmount: bigint,
-    lltvBuffer: bigint,
   ): void {
     const { price } = accrualPosition.market;
 
     if (price === undefined) {
-      throw new MissingMarketPriceError(this.params.id);
+      throw new MissingMarketPriceError(this.marketParams.id);
     }
 
     const totalCollateralAfter =
@@ -356,7 +353,7 @@ export class MorphoMarketV1 implements MarketV1Actions {
       ORACLE_PRICE_SCALE,
     );
 
-    const effectiveLltv = this.params.lltv - lltvBuffer;
+    const effectiveLltv = this.marketParams.lltv - DEFAULT_LLTV_BUFFER;
     const maxSafeBorrowAfter = MathLib.wMulDown(
       collateralValueAfter,
       effectiveLltv,

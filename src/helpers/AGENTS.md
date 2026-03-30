@@ -15,8 +15,7 @@ Utility functions shared across layers.
 
 - `constant.ts` — shared constants:
   - `MAX_SLIPPAGE_TOLERANCE` = 10% (WAD/10). For vault deposit share price.
-  - `DEFAULT_LLTV_BUFFER` = 0.5% (WAD/200). Safety margin below LLTV for `supplyCollateralBorrow`.
-  - `MAX_LLTV_BUFFER` = 10% (WAD/10). Upper bound for LLTV buffer.
+  - `DEFAULT_LLTV_BUFFER` = 0.5% (WAD/200). Hardcoded safety margin below LLTV for `supplyCollateralBorrow`.
 
 ## Key Constraints
 
