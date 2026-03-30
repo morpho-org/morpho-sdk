@@ -44,6 +44,7 @@ describe("marketV1SupplyCollateralBorrow unit tests", () => {
         borrowAmount,
         onBehalf: client.account.address,
         receiver: client.account.address,
+        minSharePrice: 0n,
       },
     });
 
@@ -73,6 +74,7 @@ describe("marketV1SupplyCollateralBorrow unit tests", () => {
         borrowAmount,
         onBehalf: client.account.address,
         receiver: client.account.address,
+        minSharePrice: 0n,
       },
     });
 
@@ -100,6 +102,7 @@ describe("marketV1SupplyCollateralBorrow unit tests", () => {
         borrowAmount,
         onBehalf: client.account.address,
         receiver: client.account.address,
+        minSharePrice: 0n,
       },
     });
 
@@ -155,6 +158,7 @@ describe("marketV1SupplyCollateralBorrow unit tests", () => {
         onBehalf: client.account.address,
         receiver: client.account.address,
         requirementSignature,
+        minSharePrice: 0n,
       },
     });
 
@@ -177,6 +181,7 @@ describe("marketV1SupplyCollateralBorrow unit tests", () => {
           borrowAmount: parseUnits("100", 6),
           onBehalf: client.account.address,
           receiver: client.account.address,
+          minSharePrice: 0n,
         },
       }),
     ).toThrow(NonPositiveAssetAmountError);
@@ -196,6 +201,7 @@ describe("marketV1SupplyCollateralBorrow unit tests", () => {
           borrowAmount: 0n,
           onBehalf: client.account.address,
           receiver: client.account.address,
+          minSharePrice: 0n,
         },
       }),
     ).toThrow(NonPositiveBorrowAmountError);
@@ -215,6 +221,7 @@ describe("marketV1SupplyCollateralBorrow unit tests", () => {
           borrowAmount: -1n,
           onBehalf: client.account.address,
           receiver: client.account.address,
+          minSharePrice: 0n,
         },
       }),
     ).toThrow(NonPositiveBorrowAmountError);
@@ -234,6 +241,7 @@ describe("marketV1SupplyCollateralBorrow unit tests", () => {
           borrowAmount: parseUnits("100", 6),
           onBehalf: client.account.address,
           receiver: client.account.address,
+          minSharePrice: 0n,
         },
       }),
     ).toThrow(ZeroCollateralAmountError);
@@ -253,6 +261,7 @@ describe("marketV1SupplyCollateralBorrow unit tests", () => {
           borrowAmount: parseUnits("100", 6),
           onBehalf: client.account.address,
           receiver: client.account.address,
+          minSharePrice: 0n,
         },
       }),
     ).toThrow(NegativeNativeAmountError);
@@ -272,6 +281,7 @@ describe("marketV1SupplyCollateralBorrow unit tests", () => {
           borrowAmount: parseUnits("100", 6),
           onBehalf: client.account.address,
           receiver: client.account.address,
+          minSharePrice: 0n,
         },
       }),
     ).toThrow(NativeAmountOnNonWNativeCollateralError);
@@ -288,6 +298,7 @@ describe("marketV1SupplyCollateralBorrow unit tests", () => {
         borrowAmount: parseUnits("100", 6),
         onBehalf: client.account.address,
         receiver: client.account.address,
+        minSharePrice: 0n,
       },
     });
 
@@ -312,6 +323,7 @@ describe("marketV1SupplyCollateralBorrow unit tests", () => {
         borrowAmount,
         onBehalf: client.account.address,
         receiver: client.account.address,
+        minSharePrice: 0n,
       },
     });
 
@@ -325,6 +337,7 @@ describe("marketV1SupplyCollateralBorrow unit tests", () => {
         borrowAmount,
         onBehalf: client.account.address,
         receiver: client.account.address,
+        minSharePrice: 0n,
       },
       metadata: { origin: "a1b2c3d4" },
     });

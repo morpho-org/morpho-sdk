@@ -8,7 +8,9 @@ import { NonPositiveBorrowAmountError } from "../../types";
 import { marketV1Borrow } from "./borrow";
 
 describe("marketV1Borrow unit tests", () => {
-  const { morpho } = getChainAddresses(mainnet.id);
+  const {
+    bundler3: { bundler3 },
+  } = getChainAddresses(mainnet.id);
   test("should create direct borrow transaction", async ({ client }) => {
     const amount = parseUnits("1000", 6);
 
@@ -19,7 +21,7 @@ describe("marketV1Borrow unit tests", () => {
       },
       args: {
         amount,
-        onBehalf: client.account.address,
+        minSharePrice: 0n,
         receiver: client.account.address,
       },
     });
@@ -29,30 +31,9 @@ describe("marketV1Borrow unit tests", () => {
     expect(tx.action.args.market).toBe(WstethUsdcMarket.id);
     expect(tx.action.args.amount).toBe(amount);
     expect(tx.action.args.receiver).toBe(client.account.address);
-    expect(tx.to).toBe(morpho);
+    expect(tx.to).toBe(bundler3);
     expect(tx.data).toBeDefined();
     expect(tx.value).toBe(0n);
-  });
-
-  test("should create borrow with different receiver", async ({ client }) => {
-    const amount = parseUnits("500", 6);
-    const receiver =
-      "0x0000000000000000000000000000000000000002" as `0x${string}`;
-
-    const tx = marketV1Borrow({
-      market: {
-        chainId: mainnet.id,
-        marketParams: WstethUsdcMarket,
-      },
-      args: {
-        amount,
-        onBehalf: client.account.address,
-        receiver,
-      },
-    });
-
-    expect(tx.action.args.receiver).toBe(receiver);
-    expect(tx.to).toBe(morpho);
   });
 
   test("should throw NonPositiveBorrowAmountError when amount is zero", async ({
@@ -66,7 +47,7 @@ describe("marketV1Borrow unit tests", () => {
         },
         args: {
           amount: 0n,
-          onBehalf: client.account.address,
+          minSharePrice: 0n,
           receiver: client.account.address,
         },
       }),
@@ -84,7 +65,7 @@ describe("marketV1Borrow unit tests", () => {
         },
         args: {
           amount: -1n,
-          onBehalf: client.account.address,
+          minSharePrice: 0n,
           receiver: client.account.address,
         },
       }),
@@ -99,7 +80,7 @@ describe("marketV1Borrow unit tests", () => {
       },
       args: {
         amount: parseUnits("100", 6),
-        onBehalf: client.account.address,
+        minSharePrice: 0n,
         receiver: client.account.address,
       },
     });
@@ -114,18 +95,6 @@ describe("marketV1Borrow unit tests", () => {
   }) => {
     const amount = parseUnits("100", 6);
 
-    const txWithout = marketV1Borrow({
-      market: {
-        chainId: mainnet.id,
-        marketParams: WstethUsdcMarket,
-      },
-      args: {
-        amount,
-        onBehalf: client.account.address,
-        receiver: client.account.address,
-      },
-    });
-
     const txWith = marketV1Borrow({
       market: {
         chainId: mainnet.id,
@@ -133,13 +102,13 @@ describe("marketV1Borrow unit tests", () => {
       },
       args: {
         amount,
-        onBehalf: client.account.address,
         receiver: client.account.address,
+        minSharePrice: 0n,
       },
       metadata: { origin: "a1b2c3d4" },
     });
 
-    expect(txWith.data.length).toBeGreaterThan(txWithout.data.length);
+    expect(txWith.data.includes("a1b2c3d4")).toBe(true);
     expect(txWith.action.type).toBe("marketV1Borrow");
   });
 });

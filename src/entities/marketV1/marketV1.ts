@@ -1,5 +1,6 @@
 import {
   type AccrualPosition,
+  DEFAULT_SLIPPAGE_TOLERANCE,
   type Market,
   type MarketParams,
   MathLib,
@@ -15,11 +16,15 @@ import {
   marketV1SupplyCollateralBorrow,
 } from "../../actions";
 import { validateChainId, validateNativeCollateral } from "../../helpers";
-import { DEFAULT_LLTV_BUFFER } from "../../helpers/constant";
+import {
+  DEFAULT_LLTV_BUFFER,
+  MAX_SLIPPAGE_TOLERANCE,
+} from "../../helpers/constant";
 import {
   BorrowExceedsSafeLtvError,
   type DepositAmountArgs,
   type ERC20ApprovalAction,
+  ExcessiveSlippageToleranceError,
   type MarketV1BorrowAction,
   type MarketV1SupplyCollateralAction,
   type MarketV1SupplyCollateralBorrowAction,
@@ -27,6 +32,7 @@ import {
   type MorphoAuthorizationAction,
   type MorphoClientType,
   NegativeNativeAmountError,
+  NegativeSlippageToleranceError,
   NonPositiveAssetAmountError,
   NonPositiveBorrowAmountError,
   type Requirement,
@@ -79,8 +85,9 @@ export interface MarketV1Actions {
   /**
    * Prepares a borrow transaction.
    *
-   * Direct call to `morpho.borrow()`. No bundler, no requirements.
+   * Routed through bundler3 via `morphoBorrow`. No requirements.
    * Validates position health with LLTV buffer (0.5%) using the pre-fetched `accrualPosition`.
+   * Computes `minSharePrice` from market borrow state and `slippageTolerance`.
    *
    * @param params - Borrow parameters including pre-fetched `accrualPosition` for health validation.
    * @returns Object with `buildTx`.
@@ -89,6 +96,7 @@ export interface MarketV1Actions {
     userAddress: Address;
     amount: bigint;
     accrualPosition: AccrualPosition;
+    slippageTolerance?: bigint;
   }) => {
     buildTx: () => Readonly<Transaction<MarketV1BorrowAction>>;
   };
@@ -111,6 +119,7 @@ export interface MarketV1Actions {
       userAddress: Address;
       accrualPosition: AccrualPosition;
       borrowAmount: bigint;
+      slippageTolerance?: bigint;
     } & DepositAmountArgs,
   ) => {
     buildTx: (
@@ -217,10 +226,12 @@ export class MorphoMarketV1 implements MarketV1Actions {
     amount,
     userAddress,
     accrualPosition,
+    slippageTolerance = DEFAULT_SLIPPAGE_TOLERANCE,
   }: {
     amount: bigint;
     userAddress: Address;
     accrualPosition: AccrualPosition;
+    slippageTolerance?: bigint;
   }) {
     validateChainId(this.client.viemClient.chain?.id, this.chainId);
 
@@ -228,7 +239,24 @@ export class MorphoMarketV1 implements MarketV1Actions {
       throw new NonPositiveBorrowAmountError(this.marketParams.id);
     }
 
+    if (slippageTolerance < 0n) {
+      throw new NegativeSlippageToleranceError(slippageTolerance);
+    }
+    if (slippageTolerance > MAX_SLIPPAGE_TOLERANCE) {
+      throw new ExcessiveSlippageToleranceError(slippageTolerance);
+    }
+
     this.validatePositionHealth(accrualPosition, 0n, amount);
+
+    const { totalBorrowAssets, totalBorrowShares } = accrualPosition.market;
+    const minSharePrice =
+      totalBorrowShares === 0n
+        ? 0n
+        : MathLib.mulDivDown(
+            totalBorrowAssets,
+            MathLib.wToRay(MathLib.WAD - slippageTolerance),
+            totalBorrowShares,
+          );
 
     return {
       buildTx: () =>
@@ -239,8 +267,8 @@ export class MorphoMarketV1 implements MarketV1Actions {
           },
           args: {
             amount,
-            onBehalf: userAddress,
             receiver: userAddress,
+            minSharePrice,
           },
           metadata: this.client.options.metadata,
         }),
@@ -253,10 +281,12 @@ export class MorphoMarketV1 implements MarketV1Actions {
     accrualPosition,
     borrowAmount,
     nativeAmount,
+    slippageTolerance = DEFAULT_SLIPPAGE_TOLERANCE,
   }: {
     userAddress: Address;
     accrualPosition: AccrualPosition;
     borrowAmount: bigint;
+    slippageTolerance?: bigint;
   } & DepositAmountArgs) {
     validateChainId(this.client.viemClient.chain?.id, this.chainId);
 
@@ -282,6 +312,23 @@ export class MorphoMarketV1 implements MarketV1Actions {
     }
 
     this.validatePositionHealth(accrualPosition, totalCollateral, borrowAmount);
+
+    if (slippageTolerance < 0n) {
+      throw new NegativeSlippageToleranceError(slippageTolerance);
+    }
+    if (slippageTolerance > MAX_SLIPPAGE_TOLERANCE) {
+      throw new ExcessiveSlippageToleranceError(slippageTolerance);
+    }
+
+    const { totalBorrowAssets, totalBorrowShares } = accrualPosition.market;
+    const minSharePrice =
+      totalBorrowShares === 0n
+        ? 0n
+        : MathLib.mulDivDown(
+            totalBorrowAssets,
+            MathLib.wToRay(MathLib.WAD - slippageTolerance),
+            totalBorrowShares,
+          );
 
     return {
       getRequirements: async (params?: { useSimplePermit?: boolean }) => {
@@ -316,6 +363,7 @@ export class MorphoMarketV1 implements MarketV1Actions {
             borrowAmount,
             onBehalf: userAddress,
             receiver: userAddress,
+            minSharePrice,
             requirementSignature,
           },
           metadata: this.client.options.metadata,

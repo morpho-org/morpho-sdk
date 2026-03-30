@@ -1,7 +1,7 @@
-import { getChainAddresses, type MarketParams } from "@morpho-org/blue-sdk";
-import { blueAbi } from "@morpho-org/blue-sdk-viem";
+import type { MarketParams } from "@morpho-org/blue-sdk";
+import { type Action, BundlerAction } from "@morpho-org/bundler-sdk-viem";
 import { deepFreeze } from "@morpho-org/morpho-ts";
-import { type Address, encodeFunctionData } from "viem";
+import type { Address } from "viem";
 import { addTransactionMetadata } from "../../helpers";
 import {
   type MarketV1BorrowAction,
@@ -17,8 +17,9 @@ export interface MarketV1BorrowParams {
   };
   args: {
     amount: bigint;
-    onBehalf: Address;
     receiver: Address;
+    /** Minimum borrow share price (in ray). Protects against share price manipulation. */
+    minSharePrice: bigint;
   };
   metadata?: Metadata;
 }
@@ -26,31 +27,31 @@ export interface MarketV1BorrowParams {
 /**
  * Prepares a borrow transaction for a Morpho Blue market.
  *
- * Direct call to `morpho.borrow()`. No bundler needed.
- * Specifies exact asset amount; shares are computed by the protocol.
+ * Routed through bundler3 via `morphoBorrow`. The bundler uses the transaction
+ * initiator as `onBehalf`. Uses `minSharePrice` to protect against share price
+ * manipulation between transaction construction and execution.
  *
  * @param params - Borrow parameters.
  * @returns Deep-frozen transaction.
  */
 export const marketV1Borrow = ({
   market: { chainId, marketParams },
-  args: { amount, onBehalf, receiver },
+  args: { amount, receiver, minSharePrice },
   metadata,
 }: MarketV1BorrowParams): Readonly<Transaction<MarketV1BorrowAction>> => {
   if (amount <= 0n) {
     throw new NonPositiveBorrowAmountError(marketParams.id);
   }
 
-  const { morpho } = getChainAddresses(chainId);
+  const actions: Action[] = [
+    {
+      type: "morphoBorrow",
+      args: [marketParams, amount, 0n, minSharePrice, receiver, false],
+    },
+  ];
 
   let tx = {
-    to: morpho,
-    data: encodeFunctionData({
-      // TODO: Verify if we need to pass min-share-price
-      abi: blueAbi,
-      functionName: "borrow",
-      args: [marketParams, amount, 0n, onBehalf, receiver],
-    }),
+    ...BundlerAction.encodeBundle(chainId, actions),
     value: 0n,
   };
 
@@ -66,6 +67,7 @@ export const marketV1Borrow = ({
         market: marketParams.id,
         amount,
         receiver,
+        minSharePrice,
       },
     },
   });

@@ -19,7 +19,6 @@ import { marketV1SupplyCollateral } from "./supplyCollateral";
 describe("marketV1SupplyCollateral unit tests", () => {
   const { wNative } = addressesRegistry[mainnet.id];
   const {
-    morpho,
     bundler3: { bundler3 },
   } = getChainAddresses(mainnet.id);
 
@@ -77,7 +76,7 @@ describe("marketV1SupplyCollateral unit tests", () => {
     expect(tx.action.args.amount).toBe(nativeAmount);
     expect(tx.action.args.nativeAmount).toBe(nativeAmount);
     expect(tx.value).toBe(nativeAmount);
-    expect(tx.to).not.toBe(morpho); // bundler address
+    expect(tx.to).toBe(bundler3);
   });
 
   test("should create bundler tx with both ERC20 amount and native amount", async ({
@@ -271,17 +270,6 @@ describe("marketV1SupplyCollateral unit tests", () => {
   }) => {
     const amount = parseUnits("1", 18);
 
-    const txWithout = marketV1SupplyCollateral({
-      market: {
-        chainId: mainnet.id,
-        marketParams: WstethUsdcMarket,
-      },
-      args: {
-        amount,
-        onBehalf: client.account.address,
-      },
-    });
-
     const txWith = marketV1SupplyCollateral({
       market: {
         chainId: mainnet.id,
@@ -294,7 +282,7 @@ describe("marketV1SupplyCollateral unit tests", () => {
       metadata: { origin: "a1b2c3d4" },
     });
 
-    expect(txWith.data.length).toBeGreaterThan(txWithout.data.length);
     expect(txWith.action.type).toBe("marketV1SupplyCollateral");
+    expect(txWith.data.includes("a1b2c3d4")).toBe(true);
   });
 });

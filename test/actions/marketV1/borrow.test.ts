@@ -11,7 +11,10 @@ import { test } from "../../setup";
 
 describe("BorrowMarketV1", () => {
   const marketParams = new MarketParams(WstethUsdcMarket);
-  const { morpho } = getChainAddresses(mainnet.id);
+  const {
+    morpho,
+    bundler3: { bundler3 },
+  } = getChainAddresses(mainnet.id);
 
   async function supplyCollateral(
     client: AnvilTestClient<typeof mainnet>,
@@ -64,7 +67,7 @@ describe("BorrowMarketV1", () => {
     expect(tx).toBeDefined();
     expect(tx.action.type).toBe("marketV1Borrow");
     expect(tx.action.args.amount).toBe(amount);
-    expect(tx.to).toBe(morpho);
+    expect(tx.to).toBe(bundler3);
     expect(tx.value).toBe(0n);
   });
 

@@ -120,6 +120,7 @@ export interface MarketV1BorrowAction
       market: Hex;
       amount: bigint;
       receiver: Address;
+      minSharePrice: bigint;
     }
   > {}
 
@@ -130,6 +131,7 @@ export interface MarketV1SupplyCollateralBorrowAction
       market: Hex;
       collateralAmount: bigint;
       borrowAmount: bigint;
+      minSharePrice: bigint;
       onBehalf: Address;
       receiver: Address;
       nativeAmount?: bigint;

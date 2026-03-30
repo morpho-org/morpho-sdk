@@ -28,6 +28,8 @@ export interface MarketV1SupplyCollateralBorrowParams {
     borrowAmount: bigint;
     onBehalf: Address;
     receiver: Address;
+    /** Minimum borrow share price (in ray). Protects against share price manipulation. */
+    minSharePrice: bigint;
     requirementSignature?: RequirementSignature;
   };
   metadata?: Metadata;
@@ -55,6 +57,7 @@ export const marketV1SupplyCollateralBorrow = ({
     borrowAmount,
     onBehalf,
     receiver,
+    minSharePrice,
     requirementSignature,
     nativeAmount,
   },
@@ -126,8 +129,7 @@ export const marketV1SupplyCollateralBorrow = ({
     },
     {
       type: "morphoBorrow",
-      // TODO: Verify if we need to pass min-share-price
-      args: [marketParams, borrowAmount, 0n, 0n, receiver, false],
+      args: [marketParams, borrowAmount, 0n, minSharePrice, receiver, false],
     },
   );
 
@@ -148,6 +150,7 @@ export const marketV1SupplyCollateralBorrow = ({
         market: marketParams.id,
         collateralAmount: totalCollateral,
         borrowAmount,
+        minSharePrice,
         onBehalf,
         receiver,
         nativeAmount,
