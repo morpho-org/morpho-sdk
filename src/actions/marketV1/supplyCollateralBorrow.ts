@@ -1,15 +1,15 @@
-import { getChainAddresses } from "@morpho-org/blue-sdk";
+import { getChainAddresses, type MarketParams } from "@morpho-org/blue-sdk";
 import { type Action, BundlerAction } from "@morpho-org/bundler-sdk-viem";
-import { deepFreeze, isDefined } from "@morpho-org/morpho-ts";
-import { type Address, type Hex, isAddressEqual } from "viem";
-import { addTransactionMetadata } from "../../helpers";
+import { deepFreeze } from "@morpho-org/morpho-ts";
+import type { Address } from "viem";
 import {
-  ChainWNativeMissingError,
+  addTransactionMetadata,
+  validateNativeCollateral,
+} from "../../helpers";
+import {
   type DepositAmountArgs,
-  type MarketParamsInput,
   type MarketV1SupplyCollateralBorrowAction,
   type Metadata,
-  NativeAmountOnNonWNativeCollateralError,
   NegativeNativeAmountError,
   NonPositiveAssetAmountError,
   NonPositiveBorrowAmountError,
@@ -22,8 +22,7 @@ import { getRequirementsAction } from "../requirements/getRequirementsAction";
 export interface MarketV1SupplyCollateralBorrowParams {
   market: {
     readonly chainId: number;
-    readonly marketId: Hex;
-    readonly marketParams: MarketParamsInput;
+    readonly marketParams: MarketParams;
   };
   args: DepositAmountArgs & {
     borrowAmount: bigint;
@@ -50,7 +49,7 @@ export interface MarketV1SupplyCollateralBorrowParams {
  * @returns Deep-frozen transaction.
  */
 export const marketV1SupplyCollateralBorrow = ({
-  market: { chainId, marketId, marketParams },
+  market: { chainId, marketParams },
   args: {
     amount = 0n,
     borrowAmount,
@@ -72,32 +71,23 @@ export const marketV1SupplyCollateralBorrow = ({
   }
 
   if (borrowAmount <= 0n) {
-    throw new NonPositiveBorrowAmountError(marketId);
+    throw new NonPositiveBorrowAmountError(marketParams.id);
   }
 
   const totalCollateral = amount + (nativeAmount ?? 0n);
 
   if (totalCollateral === 0n) {
-    throw new ZeroCollateralAmountError(marketId);
+    throw new ZeroCollateralAmountError(marketParams.id);
   }
 
   const {
     bundler3: { generalAdapter1, bundler3 },
-    wNative,
   } = getChainAddresses(chainId);
 
   const actions: Action[] = [];
 
   if (nativeAmount) {
-    if (!isDefined(wNative)) {
-      throw new ChainWNativeMissingError(chainId);
-    }
-    if (!isAddressEqual(marketParams.collateralToken, wNative)) {
-      throw new NativeAmountOnNonWNativeCollateralError(
-        marketParams.collateralToken,
-        wNative,
-      );
-    }
+    validateNativeCollateral(chainId, marketParams.collateralToken);
 
     actions.push(
       {
@@ -140,11 +130,10 @@ export const marketV1SupplyCollateralBorrow = ({
     },
   );
 
-  let tx = BundlerAction.encodeBundle(chainId, actions);
-
-  if (nativeAmount) {
-    tx = { ...tx, value: nativeAmount };
-  }
+  let tx = {
+    ...BundlerAction.encodeBundle(chainId, actions),
+    value: nativeAmount ?? 0n,
+  };
 
   if (metadata) {
     tx = addTransactionMetadata(tx, metadata);
@@ -155,7 +144,7 @@ export const marketV1SupplyCollateralBorrow = ({
     action: {
       type: "marketV1SupplyCollateralBorrow",
       args: {
-        market: marketId,
+        market: marketParams.id,
         collateralAmount: totalCollateral,
         borrowAmount,
         onBehalf,

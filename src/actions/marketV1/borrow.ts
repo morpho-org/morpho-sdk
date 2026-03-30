@@ -1,9 +1,9 @@
+import { getChainAddresses, type MarketParams } from "@morpho-org/blue-sdk";
 import { blueAbi } from "@morpho-org/blue-sdk-viem";
 import { deepFreeze } from "@morpho-org/morpho-ts";
-import { type Address, encodeFunctionData, type Hex } from "viem";
+import { type Address, encodeFunctionData } from "viem";
 import { addTransactionMetadata } from "../../helpers";
 import {
-  type MarketParamsInput,
   type MarketV1BorrowAction,
   type Metadata,
   NonPositiveBorrowAmountError,
@@ -12,9 +12,8 @@ import {
 
 export interface MarketV1BorrowParams {
   market: {
-    readonly morpho: Address;
-    readonly marketId: Hex;
-    readonly marketParams: MarketParamsInput;
+    readonly chainId: number;
+    readonly marketParams: MarketParams;
   };
   args: {
     amount: bigint;
@@ -35,13 +34,15 @@ export interface MarketV1BorrowParams {
  * @returns Deep-frozen transaction.
  */
 export const marketV1Borrow = ({
-  market: { morpho, marketId, marketParams },
+  market: { chainId, marketParams },
   args: { amount, onBehalf, receiver },
   metadata,
 }: MarketV1BorrowParams): Readonly<Transaction<MarketV1BorrowAction>> => {
   if (amount <= 0n) {
-    throw new NonPositiveBorrowAmountError(marketId);
+    throw new NonPositiveBorrowAmountError(marketParams.id);
   }
+
+  const { morpho } = getChainAddresses(chainId);
 
   let tx = {
     to: morpho,
@@ -62,7 +63,7 @@ export const marketV1Borrow = ({
     action: {
       type: "marketV1Borrow",
       args: {
-        market: marketId,
+        market: marketParams.id,
         amount,
         receiver,
       },

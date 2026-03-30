@@ -1,48 +1,32 @@
 import {
   type AccrualPosition,
-  getChainAddresses,
   type Market,
   MarketParams,
   MathLib,
   ORACLE_PRICE_SCALE,
 } from "@morpho-org/blue-sdk";
+import { fetchAccrualPosition, fetchMarket } from "@morpho-org/blue-sdk-viem";
+import type { Address } from "viem";
 import {
-  blueAbi,
-  fetchAccrualPosition,
-  fetchMarket,
-} from "@morpho-org/blue-sdk-viem";
-import { deepFreeze } from "@morpho-org/morpho-ts";
-import {
-  type Address,
-  encodeFunctionData,
-  erc20Abi,
-  type Hex,
-  isAddressEqual,
-  publicActions,
-} from "viem";
-import {
+  getMorphoAuthorizationRequirement,
   getRequirements,
-  getRequirementsApproval,
   marketV1Borrow,
   marketV1SupplyCollateral,
   marketV1SupplyCollateralBorrow,
 } from "../../actions";
+import { validateChainId, validateNativeCollateral } from "../../helpers";
 import { DEFAULT_LLTV_BUFFER, MAX_LLTV_BUFFER } from "../../helpers/constant";
 import {
   BorrowExceedsSafeLtvError,
-  ChainIdMismatchError,
-  ChainWNativeMissingError,
   type DepositAmountArgs,
   type ERC20ApprovalAction,
   ExcessiveLltvBufferError,
-  type MarketParamsInput,
   type MarketV1BorrowAction,
   type MarketV1SupplyCollateralAction,
   type MarketV1SupplyCollateralBorrowAction,
   MissingMarketPriceError,
   type MorphoAuthorizationAction,
   type MorphoClientType,
-  NativeAmountOnNonWNativeCollateralError,
   NegativeLltvBufferError,
   NegativeNativeAmountError,
   NonPositiveAssetAmountError,
@@ -78,10 +62,9 @@ export interface MarketV1Actions {
   /**
    * Prepares a supply-collateral transaction.
    *
-   * - **Direct path** (ERC20 only): calls `morpho.supplyCollateral()` directly. No bundler.
-   * - **Bundler path** (`nativeAmount` provided): wraps native token via GeneralAdapter1.
-   *
-   * `getRequirements` returns ERC20 approval for Morpho (direct) or GeneralAdapter1 (bundler).
+   * Always routed through bundler3 via GeneralAdapter1.
+   * `getRequirements` returns ERC20 approval or permit for GeneralAdapter1.
+   * When `nativeAmount` is provided, native token is wrapped; collateral must be wNative.
    *
    * @param params - Supply collateral parameters.
    * @returns Object with `buildTx` and `getRequirements`.
@@ -114,8 +97,8 @@ export interface MarketV1Actions {
    * Routed through the bundler. Validates position health with LLTV buffer
    * to prevent instant liquidation on new positions near the LLTV threshold.
    *
-   * `getRequirements` returns:
-   * - ERC20 approval for collateral token (to GeneralAdapter1).
+   * `getRequirements` returns in parallel:
+   * - ERC20 approval or permit for collateral token (to GeneralAdapter1).
    * - `morpho.setAuthorization(generalAdapter1, true)` if adapter is not yet authorized.
    *
    * @param params - Combined parameters including pre-fetched `accrualPosition` for health validation.
@@ -149,14 +132,14 @@ export class MorphoMarketV1 implements MarketV1Actions {
 
   constructor(
     private readonly client: MorphoClientType,
-    inputMarketParams: MarketParamsInput,
+    marketParams: MarketParams,
     private readonly chainId: number,
   ) {
-    this.params = new MarketParams(inputMarketParams);
+    this.params = new MarketParams(marketParams);
   }
 
   async getMarketData(parameters?: FetchParameters): Promise<Market> {
-    this.validateChainId();
+    validateChainId(this.client.viemClient.chain?.id, this.chainId);
 
     return fetchMarket(this.params.id, this.client.viemClient, {
       ...parameters,
@@ -168,7 +151,7 @@ export class MorphoMarketV1 implements MarketV1Actions {
     userAddress: Address,
     parameters?: FetchParameters,
   ): Promise<AccrualPosition> {
-    this.validateChainId();
+    validateChainId(this.client.viemClient.chain?.id, this.chainId);
 
     return fetchAccrualPosition(
       userAddress,
@@ -186,7 +169,7 @@ export class MorphoMarketV1 implements MarketV1Actions {
     userAddress,
     nativeAmount,
   }: { userAddress: Address } & DepositAmountArgs) {
-    this.validateChainId();
+    validateChainId(this.client.viemClient.chain?.id, this.chainId);
 
     if (amount < 0n) {
       throw new NonPositiveAssetAmountError(this.params.collateralToken);
@@ -201,51 +184,25 @@ export class MorphoMarketV1 implements MarketV1Actions {
       throw new ZeroCollateralAmountError(this.params.id);
     }
 
-    const useBundler = !!nativeAmount;
-    const { morpho } = getChainAddresses(this.chainId);
-
-    if (useBundler) {
-      this.validateNativeCollateral();
+    if (nativeAmount) {
+      validateNativeCollateral(this.chainId, this.params.collateralToken);
     }
 
     return {
-      getRequirements: async (params?: { useSimplePermit?: boolean }) => {
-        if (useBundler) {
-          return getRequirements(this.client.viemClient, {
-            address: this.params.collateralToken,
-            chainId: this.chainId,
-            supportSignature: this.client.options.supportSignature,
-            supportDeployless: this.client.options.supportDeployless,
-            useSimplePermit: params?.useSimplePermit,
-            args: { amount, from: userAddress },
-          });
-        }
-
-        // Direct path: approve Morpho contract for collateral token
-        const allowance = await this.readErc20Allowance(
-          this.params.collateralToken,
-          userAddress,
-          morpho,
-        );
-
-        return getRequirementsApproval({
+      getRequirements: (params?: { useSimplePermit?: boolean }) =>
+        getRequirements(this.client.viemClient, {
           address: this.params.collateralToken,
           chainId: this.chainId,
-          args: {
-            spendAmount: totalCollateral,
-            approvalAmount: totalCollateral,
-            spender: morpho,
-          },
-          allowances: allowance,
-        });
-      },
+          supportSignature: this.client.options.supportSignature,
+          supportDeployless: this.client.options.supportDeployless,
+          useSimplePermit: params?.useSimplePermit,
+          args: { amount, from: userAddress },
+        }),
 
       buildTx: (requirementSignature?: RequirementSignature) =>
         marketV1SupplyCollateral({
           market: {
             chainId: this.chainId,
-            morpho,
-            marketId: this.params.id as Hex,
             marketParams: this.params,
           },
           args: {
@@ -260,20 +217,17 @@ export class MorphoMarketV1 implements MarketV1Actions {
   }
 
   borrow({ amount, userAddress }: { amount: bigint; userAddress: Address }) {
-    this.validateChainId();
+    validateChainId(this.client.viemClient.chain?.id, this.chainId);
 
     if (amount <= 0n) {
       throw new NonPositiveBorrowAmountError(this.params.id);
     }
 
-    const { morpho } = getChainAddresses(this.chainId);
-
     return {
       buildTx: () =>
         marketV1Borrow({
           market: {
-            morpho,
-            marketId: this.params.id as Hex,
+            chainId: this.chainId,
             marketParams: this.params,
           },
           args: {
@@ -299,7 +253,7 @@ export class MorphoMarketV1 implements MarketV1Actions {
     borrowAmount: bigint;
     lltvBuffer?: bigint;
   } & DepositAmountArgs) {
-    this.validateChainId();
+    validateChainId(this.client.viemClient.chain?.id, this.chainId);
 
     if (amount < 0n) {
       throw new NonPositiveAssetAmountError(this.params.collateralToken);
@@ -326,10 +280,9 @@ export class MorphoMarketV1 implements MarketV1Actions {
     }
 
     if (nativeAmount) {
-      this.validateNativeCollateral();
+      validateNativeCollateral(this.chainId, this.params.collateralToken);
     }
 
-    // --- LLTV buffer health check ---
     this.validatePositionHealth(
       accrualPosition,
       totalCollateral,
@@ -339,41 +292,29 @@ export class MorphoMarketV1 implements MarketV1Actions {
 
     return {
       getRequirements: async (params?: { useSimplePermit?: boolean }) => {
-        const results: (
-          | Readonly<Transaction<ERC20ApprovalAction>>
-          | Readonly<Transaction<MorphoAuthorizationAction>>
-          | Requirement
-        )[] = [];
-
-        // 1. Collateral token approval for GeneralAdapter1 (bundler path)
-        const erc20Requirements = await getRequirements(
-          this.client.viemClient,
-          {
+        const [erc20Requirements, authTx] = await Promise.all([
+          getRequirements(this.client.viemClient, {
             address: this.params.collateralToken,
             chainId: this.chainId,
             supportSignature: this.client.options.supportSignature,
             supportDeployless: this.client.options.supportDeployless,
             useSimplePermit: params?.useSimplePermit,
             args: { amount, from: userAddress },
-          },
-        );
-        results.push(...erc20Requirements);
+          }),
+          getMorphoAuthorizationRequirement(
+            this.client.viemClient,
+            this.chainId,
+            userAddress,
+          ),
+        ]);
 
-        // 2. Morpho authorization for GeneralAdapter1 (required for borrow via bundler)
-        const authTx =
-          await this.getMorphoAuthorizationRequirement(userAddress);
-        if (authTx) {
-          results.push(authTx);
-        }
-
-        return results;
+        return [...erc20Requirements, ...(authTx ? [authTx] : [])];
       },
 
       buildTx: (requirementSignature?: RequirementSignature) =>
         marketV1SupplyCollateralBorrow({
           market: {
             chainId: this.chainId,
-            marketId: this.params.id as Hex,
             marketParams: this.params,
           },
           args: {
@@ -390,31 +331,6 @@ export class MorphoMarketV1 implements MarketV1Actions {
   }
 
   // ── Private helpers ──────────────────────────────────────────────
-
-  private validateChainId(): void {
-    if (
-      this.client.viemClient.chain?.id &&
-      this.client.viemClient.chain?.id !== this.chainId
-    ) {
-      throw new ChainIdMismatchError(
-        this.client.viemClient.chain?.id,
-        this.chainId,
-      );
-    }
-  }
-
-  private validateNativeCollateral(): void {
-    const { wNative } = getChainAddresses(this.chainId);
-    if (!wNative) {
-      throw new ChainWNativeMissingError(this.chainId);
-    }
-    if (!isAddressEqual(this.params.collateralToken, wNative)) {
-      throw new NativeAmountOnNonWNativeCollateralError(
-        this.params.collateralToken,
-        wNative,
-      );
-    }
-  }
 
   /**
    * Validates that the resulting position stays within the safe LTV threshold
@@ -458,64 +374,5 @@ export class MorphoMarketV1 implements MarketV1Actions {
         maxSafeAdditionalBorrow,
       );
     }
-  }
-
-  /**
-   * Reads ERC20 allowance via eth_call on the viem client.
-   */
-  private async readErc20Allowance(
-    token: Address,
-    owner: Address,
-    spender: Address,
-  ): Promise<bigint> {
-    const pc = this.client.viemClient.extend(publicActions);
-    return pc.readContract({
-      address: token,
-      abi: erc20Abi,
-      functionName: "allowance",
-      args: [owner, spender],
-    });
-  }
-
-  /**
-   * Checks if GeneralAdapter1 is authorized on Morpho for the user.
-   * If not, returns a `setAuthorization` transaction.
-   */
-  private async getMorphoAuthorizationRequirement(
-    userAddress: Address,
-  ): Promise<Readonly<Transaction<MorphoAuthorizationAction>> | null> {
-    const {
-      morpho,
-      bundler3: { generalAdapter1 },
-    } = getChainAddresses(this.chainId);
-
-    const pc = this.client.viemClient.extend(publicActions);
-    const isAuthorized = await pc.readContract({
-      address: morpho,
-      abi: blueAbi,
-      functionName: "isAuthorized",
-      args: [userAddress, generalAdapter1],
-    });
-
-    if (isAuthorized) {
-      return null;
-    }
-
-    return deepFreeze({
-      to: morpho,
-      data: encodeFunctionData({
-        abi: blueAbi,
-        functionName: "setAuthorization",
-        args: [generalAdapter1, true],
-      }),
-      value: 0n,
-      action: {
-        type: "morphoAuthorization",
-        args: {
-          authorized: generalAdapter1,
-          isAuthorized: true,
-        },
-      },
-    });
   }
 }
