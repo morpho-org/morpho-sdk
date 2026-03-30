@@ -1,8 +1,4 @@
-import {
-  addressesRegistry,
-  getChainAddresses,
-  MarketParams,
-} from "@morpho-org/blue-sdk";
+import { addressesRegistry, getChainAddresses } from "@morpho-org/blue-sdk";
 import { parseUnits } from "viem";
 import { mainnet } from "viem/chains";
 import { describe, expect, vi } from "vitest";
@@ -22,9 +18,10 @@ import { marketV1SupplyCollateral } from "./supplyCollateral";
 
 describe("marketV1SupplyCollateral unit tests", () => {
   const { wNative } = addressesRegistry[mainnet.id];
-  const { morpho } = getChainAddresses(mainnet.id);
-  const marketParams = new MarketParams(WstethUsdcMarket);
-  const marketId = marketParams.id;
+  const {
+    morpho,
+    bundler3: { bundler3 },
+  } = getChainAddresses(mainnet.id);
 
   /** Market params with wNative as collateral — enables native wrapping tests. */
   const wNativeCollateralMarketParams = {
@@ -50,11 +47,11 @@ describe("marketV1SupplyCollateral unit tests", () => {
 
     expect(tx).toBeDefined();
     expect(tx.action.type).toBe("marketV1SupplyCollateral");
-    expect(tx.action.args.market).toBe(marketId);
+    expect(tx.action.args.market).toBe(WstethUsdcMarket.id);
     expect(tx.action.args.amount).toBe(amount);
     expect(tx.action.args.onBehalf).toBe(client.account.address);
     expect(tx.action.args.nativeAmount).toBeUndefined();
-    expect(tx.to).toBe(morpho);
+    expect(tx.to).toBe(bundler3);
     expect(tx.data).toBeDefined();
     expect(tx.value).toBe(0n);
   });

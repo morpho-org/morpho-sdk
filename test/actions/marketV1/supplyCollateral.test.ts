@@ -130,9 +130,18 @@ describe("SupplyCollateralMarketV1", () => {
         });
 
         const requirements = await supplyCollateral.getRequirements();
-        expect(requirements.length).toBe(0);
+        expect(requirements.length).toBe(1);
 
-        await client.sendTransaction(supplyCollateral.buildTx());
+        const approveTx = requirements[0];
+        if (!isRequirementApproval(approveTx)) {
+          throw new Error("Expected approval requirement");
+        }
+
+        await client.sendTransaction(approveTx);
+
+        const tx = supplyCollateral.buildTx();
+
+        await client.sendTransaction(tx);
       },
     });
 
