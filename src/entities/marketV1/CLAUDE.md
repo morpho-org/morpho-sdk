@@ -6,7 +6,7 @@
 
 ## Constructor
 
-`MorphoMarketV1(client, marketparams: MarketParams, chainId)`.
+`MorphoMarketV1(client, marketParams: MarketParams, chainId)`.
 
 ## Methods
 

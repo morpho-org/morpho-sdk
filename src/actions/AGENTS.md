@@ -26,8 +26,8 @@ Entity (MorphoVaultV1)                          Entity (MorphoVaultV2)
 
 Entity (MorphoMarketV1)
   │
-  ├─ supplyCollateral ──────► marketV1SupplyCollateral()       ← direct / bundler (if native)
-  ├─ borrow ────────────────► marketV1Borrow()                 ← direct Morpho call
+  ├─ supplyCollateral ──────► marketV1SupplyCollateral()       ← bundler (general adapter)
+  ├─ borrow ────────────────► marketV1Borrow()                 ← bundler (general adapter)
   └─ supplyCollateralBorrow ► marketV1SupplyCollateralBorrow() ← bundler (general adapter)
                     │
                     ▼

@@ -18,6 +18,9 @@
 | **VaultV1** | `deposit`       | Bundler (general adapter) | Same ERC-4626 inflation attack prevention as V2. Supports native token wrapping.        |
 |             | `withdraw`      | Direct vault call         | No attack surface                                                                       |
 |             | `redeem`        | Direct vault call         | No attack surface                                                                       |
+| **MarketV1** | `supplyCollateral` | Bundler (general adapter) | `erc20TransferFrom` + `morphoSupplyCollateral`. Supports native wrapping.            |
+|              | `borrow`           | Bundler (general adapter) | `morphoBorrow` with `minSharePrice` slippage protection. Requires GA1 auth.          |
+|              | `supplyCollateralBorrow` | Bundler (general adapter) | Atomic supply + borrow. LLTV buffer prevents instant liquidation.              |
 
 ## VaultV2
 
@@ -151,6 +154,64 @@ const { buildTx } = vault.redeem({
 const tx = buildTx();
 ```
 
+## MarketV1
+
+```typescript
+const market = morpho.marketV1(
+  {
+    loanToken: "0xLoan...",
+    collateralToken: "0xCollateral...",
+    oracle: "0xOracle...",
+    irm: "0xIrm...",
+    lltv: 860000000000000000n,
+  },
+  1,
+);
+```
+
+### Supply Collateral
+
+```typescript
+const { buildTx, getRequirements } = market.supplyCollateral({
+  amount: 1000000000000000000n,
+  userAddress: "0xUser...",
+});
+
+const requirements = await getRequirements();
+const tx = buildTx(requirementSignature);
+```
+
+### Borrow
+
+```typescript
+const accrualPosition = await market.getPositionData("0xUser...");
+
+const { buildTx, getRequirements } = market.borrow({
+  amount: 500000000000000000n,
+  userAddress: "0xUser...",
+  accrualPosition,
+});
+
+const requirements = await getRequirements();
+const tx = buildTx();
+```
+
+### Supply Collateral & Borrow
+
+```typescript
+const accrualPosition = await market.getPositionData("0xUser...");
+
+const { buildTx, getRequirements } = market.supplyCollateralBorrow({
+  amount: 1000000000000000000n,
+  borrowAmount: 500000000000000000n,
+  userAddress: "0xUser...",
+  accrualPosition,
+});
+
+const requirements = await getRequirements();
+const tx = buildTx(requirementSignature);
+```
+
 ## Architecture
 
 ```mermaid
@@ -159,6 +220,7 @@ graph LR
 
     MC -->|.vaultV1| MV1
     MC -->|.vaultV2| MV2
+    MC -->|.marketV1| MM1
 
     subgraph VaultV1 Flow
         MV1[MorphoVaultV1]
@@ -186,15 +248,28 @@ graph LR
         V2FR -->|multicall| V2C
     end
 
+    subgraph MarketV1 Flow
+        MM1[MorphoMarketV1]
+        MM1 --> M1SC[marketV1SupplyCollateral]
+        MM1 --> M1B[marketV1Borrow]
+        MM1 --> M1SCB[marketV1SupplyCollateralBorrow]
+
+        M1SC -->|erc20TransferFrom + morphoSupplyCollateral| B3[Bundler3]
+        M1B -->|morphoBorrow| B3
+        M1SCB -->|transfer + supplyCollateral + borrow| B3
+    end
+
     subgraph Shared
         REQ[getRequirements]
     end
 
     MV1 -.->|approval / permit| REQ
     MV2 -.->|approval / permit| REQ
+    MM1 -.->|approval / permit / authorization| REQ
 
     style B1 fill:#e8f5e9,stroke:#4caf50
     style B2 fill:#e8f5e9,stroke:#4caf50
+    style B3 fill:#e8f5e9,stroke:#4caf50
     style MM fill:#fff3e0,stroke:#ff9800
     style V2C fill:#e3f2fd,stroke:#2196f3
     style REQ fill:#f3e5f5,stroke:#9c27b0

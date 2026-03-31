@@ -1,6 +1,6 @@
 # review
 
-Reviews a GitHub Pull Request with expertise in TypeScript SDK design, viem, and Morpho Protocol (VaultV2) best practices.
+Reviews a GitHub Pull Request with expertise in TypeScript SDK design, viem, and Morpho Protocol (VaultV1, VaultV2, MarketV1) best practices.
 
 ## Usage
 

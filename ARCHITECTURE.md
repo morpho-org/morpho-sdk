@@ -35,32 +35,38 @@ the consuming application decides when and how to send it.
               │    MorphoClient     │  ← Client layer
               │  (wraps viem Client,│
               │   holds options)    │
-              └───┬────────────┬────┘
-                  │            │
-        .vaultV1()│            │.vaultV2()
-                  │            │
-        ┌─────────▼───┐  ┌─────▼────────┐
-        │MorphoVaultV1│  │MorphoVaultV2 │  ← Entity layer
-        │(MetaMorpho) │  │              │
-        └──────┬──────┘  └──────┬───────┘
-               │                │
-               │  delegates     │  delegates
-               │                │
-        ┌──────▼────────────────▼───────┐
-        │         Action functions      │  ← Action layer
-        │  (pure tx builders, no state) │
-        └───────────────────────────────┘
+              └───┬────────┬────┬───┘
+                  │        │    │
+        .vaultV1()│        │    │.marketV1()
+                  │        │    │
+        ┌─────────▼──┐     │   ┌▼──────────────┐
+        │MorphoVaultV1│    │   │MorphoMarketV1 │  ← Entity layer
+        │(MetaMorpho) │    │   │(Morpho Blue)  │
+        └──────┬──────┘    │   └──────┬────────┘
+               │           │          │
+               │ .vaultV2()│          │  delegates
+               │           │          │
+               │   ┌───────▼────┐     │
+               │   │MorphoVaultV2│    │
+               │   └──────┬─────┘     │
+               │          │           │
+               │delegates │  delegates│
+               │          │           │
+        ┌──────▼───────── ▼───────────▼──┐
+        │         Action functions       │  ← Action layer
+        │  (pure tx builders, no state)  │
+        └────────────────────────────────┘
 ```
 
 ### Why this layering exists
 
 Each layer has a single responsibility and a strict boundary:
 
-| Layer      | Responsibility                                                                                                            | What it must NOT do                           |
-| ---------- | ------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------- |
-| **Client** | Wrap a viem `Client`, normalize SDK options (`supportSignature`, `metadata`, `supportDeployless`), produce vault entities | Call actions directly, hold mutable state     |
-| **Entity** | Fetch on-chain vault data, compute derived values (e.g. `maxSharePrice` with slippage), delegate to action functions      | Encode calldata, know about bundler internals |
-| **Action** | Validate inputs, encode calldata, deep-freeze the result, return a `Transaction<TAction>`                                 | Fetch data, hold state, mutate anything       |
+| Layer      | Responsibility                                                                                                                                  | What it must NOT do                           |
+| ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------- |
+| **Client** | Wrap a viem `Client`, normalize SDK options (`supportSignature`, `metadata`, `supportDeployless`), produce vault/market entities                | Call actions directly, hold mutable state     |
+| **Entity** | Fetch on-chain data (vault accrual data, market/position data), compute derived values (e.g. `maxSharePrice`, LLTV buffer), delegate to actions | Encode calldata, know about bundler internals |
+| **Action** | Validate inputs, encode calldata, deep-freeze the result, return a `Transaction<TAction>`                                                       | Fetch data, hold state, mutate anything       |
 
 **Calls flow strictly downward**: Client → Entity → Action. An action never calls an entity;
 an entity never instantiates a client.
@@ -100,6 +106,24 @@ at the SDK level. The differences are at the protocol layer:
   transaction.
 - **Contract**: Uses `vaultV2Abi` from `@morpho-org/blue-sdk-viem`.
 - **SDK data**: Fetched via `fetchVaultV2` / `fetchAccrualVaultV2`.
+
+### MarketV1 (Morpho Blue)
+
+- **Market-based lending**: MarketV1 represents Morpho Blue isolated lending markets. Each market
+  has a loan token, collateral token, oracle, IRM, and LLTV (liquidation loan-to-value).
+- **Supply collateral**: Users deposit collateral tokens into a market position. Routed through
+  bundler3 via GeneralAdapter1 (`erc20TransferFrom` + `morphoSupplyCollateral`). Supports native
+  token wrapping when collateral is wNative.
+- **Borrow**: Users borrow loan tokens against their collateral. Routed through bundler3 via
+  `morphoBorrow`. Requires GeneralAdapter1 authorization on Morpho (`setAuthorization`). Uses
+  `minSharePrice` for slippage protection.
+- **Supply collateral + borrow (atomic)**: Atomic bundler operation combining collateral transfer,
+  `morphoSupplyCollateral`, and `morphoBorrow` in a single transaction. Validates position health
+  with an LLTV buffer (default 0.5%) to prevent instant liquidation.
+- **LLTV buffer**: Both `borrow` and `supplyCollateralBorrow` validate that the resulting position
+  stays below `LLTV - buffer` (default 0.5%). Throws `BorrowExceedsSafeLtvError` if exceeded.
+- **SDK data**: Fetched via `fetchMarket` / `fetchAccrualPosition`. `AccrualPosition` provides
+  health metrics: `maxBorrowAssets`, `ltv`, `isHealthy`, `borrowAssets`, `collateral`.
 
 ### Force Deallocation (V2 only)
 
@@ -152,13 +176,16 @@ on the vault contract itself.
 
 ### Summary
 
-| Operation           | Route                      | Why                                                                                                        |
-| ------------------- | -------------------------- | ---------------------------------------------------------------------------------------------------------- |
-| Deposit (V1 & V2)   | Bundler3 (general adapter) | `maxSharePrice` enforcement prevents inflation attacks. Optional native token wrapping for wNative vaults. |
-| Withdraw (V1 & V2)  | Direct vault call          | No attack surface, no approval needed                                                                      |
-| Redeem (V1 & V2)    | Direct vault call          | No attack surface, no approval needed                                                                      |
-| Force Withdraw (V2) | VaultV2 `multicall`        | Atomic deallocation + withdrawal on the vault contract                                                     |
-| Force Redeem (V2)   | VaultV2 `multicall`        | Atomic deallocation + redemption on the vault contract                                                     |
+| Operation                             | Route                      | Why                                                                                                        |
+| ------------------------------------- | -------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| Deposit (V1 & V2)                     | Bundler3 (general adapter) | `maxSharePrice` enforcement prevents inflation attacks. Optional native token wrapping for wNative vaults. |
+| Withdraw (V1 & V2)                    | Direct vault call          | No attack surface, no approval needed                                                                      |
+| Redeem (V1 & V2)                      | Direct vault call          | No attack surface, no approval needed                                                                      |
+| Force Withdraw (V2)                   | VaultV2 `multicall`        | Atomic deallocation + withdrawal on the vault contract                                                     |
+| Force Redeem (V2)                     | VaultV2 `multicall`        | Atomic deallocation + redemption on the vault contract                                                     |
+| Supply Collateral (MarketV1)          | Bundler3 (general adapter) | `erc20TransferFrom` + `morphoSupplyCollateral`. Optional native wrapping for wNative collateral.           |
+| Borrow (MarketV1)                     | Bundler3 (general adapter) | `morphoBorrow` with `minSharePrice` slippage protection. Requires GA1 authorization on Morpho.             |
+| Supply Collateral + Borrow (MarketV1) | Bundler3 (general adapter) | Atomic collateral supply + borrow. LLTV buffer prevents instant liquidation.                               |
 
 ## Dependency Map
 
@@ -225,7 +252,7 @@ Token approval constants:
 
 ## Requirements System
 
-Before a deposit, the user must grant the **general adapter** permission to spend their
+Before a deposit or supply collateral, the user must grant the **general adapter** permission to spend their
 ERC-20 tokens. The requirements system resolves what approvals or signatures are needed.
 
 ### Why requirements target the general adapter, not the vault
