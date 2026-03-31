@@ -3,6 +3,7 @@ import {
   DEFAULT_SLIPPAGE_TOLERANCE,
   getChainAddresses,
   MathLib,
+  SharesMath,
 } from "@morpho-org/blue-sdk";
 import { blueAbi } from "@morpho-org/blue-sdk-viem";
 
@@ -45,14 +46,11 @@ describe("SupplyCollateralBorrowMarketV1", () => {
       .buildTx();
 
     const { totalBorrowAssets, totalBorrowShares } = accrualPosition.market;
-    const minSharePrice =
-      totalBorrowShares === 0n
-        ? 0n
-        : MathLib.mulDivDown(
-            totalBorrowAssets,
-            MathLib.wToRay(MathLib.WAD - DEFAULT_SLIPPAGE_TOLERANCE),
-            totalBorrowShares,
-          );
+    const minSharePrice = MathLib.mulDivDown(
+      totalBorrowAssets + SharesMath.VIRTUAL_ASSETS,
+      MathLib.wToRay(MathLib.WAD - DEFAULT_SLIPPAGE_TOLERANCE),
+      totalBorrowShares + SharesMath.VIRTUAL_SHARES,
+    );
 
     const directTx = marketV1SupplyCollateralBorrow({
       market: { chainId: mainnet.id, marketParams: WethUsdsMarketV1 },

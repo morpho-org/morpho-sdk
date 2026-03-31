@@ -2,6 +2,7 @@ import {
   type AccrualPosition,
   DEFAULT_SLIPPAGE_TOLERANCE,
   MathLib,
+  SharesMath,
 } from "@morpho-org/blue-sdk";
 
 import { parseUnits } from "viem";
@@ -46,14 +47,11 @@ describe("BorrowMarketV1", () => {
     const tx = borrow.buildTx();
 
     const { totalBorrowAssets, totalBorrowShares } = accrualPosition.market;
-    const minSharePrice =
-      totalBorrowShares === 0n
-        ? 0n
-        : MathLib.mulDivDown(
-            totalBorrowAssets,
-            MathLib.wToRay(MathLib.WAD - DEFAULT_SLIPPAGE_TOLERANCE),
-            totalBorrowShares,
-          );
+    const minSharePrice = MathLib.mulDivDown(
+      totalBorrowAssets + SharesMath.VIRTUAL_ASSETS,
+      MathLib.wToRay(MathLib.WAD - DEFAULT_SLIPPAGE_TOLERANCE),
+      totalBorrowShares + SharesMath.VIRTUAL_SHARES,
+    );
 
     const directTx = marketV1Borrow({
       market: { chainId: mainnet.id, marketParams: WethUsdsMarketV1 },
@@ -98,14 +96,11 @@ describe("BorrowMarketV1", () => {
       })
       .buildTx();
 
-    const expectedMinSharePrice =
-      totalBorrowShares === 0n
-        ? 0n
-        : MathLib.mulDivDown(
-            totalBorrowAssets,
-            MathLib.wToRay(MathLib.WAD - DEFAULT_SLIPPAGE_TOLERANCE),
-            totalBorrowShares,
-          );
+    const expectedMinSharePrice = MathLib.mulDivDown(
+      totalBorrowAssets + SharesMath.VIRTUAL_ASSETS,
+      MathLib.wToRay(MathLib.WAD - DEFAULT_SLIPPAGE_TOLERANCE),
+      totalBorrowShares + SharesMath.VIRTUAL_SHARES,
+    );
 
     expect(tx.action.args.minSharePrice).toBe(expectedMinSharePrice);
     expect(tx.action.args.minSharePrice).toBeGreaterThan(0n);

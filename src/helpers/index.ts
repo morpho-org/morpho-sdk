@@ -1,2 +1,7 @@
 export { addTransactionMetadata } from "./metadata";
-export { validateChainId, validateNativeCollateral } from "./validate";
+export {
+  validateAccrualPosition,
+  validateChainId,
+  validateNativeCollateral,
+  validatePositionHealth,
+} from "./validate";

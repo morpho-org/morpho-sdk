@@ -175,3 +175,19 @@ export class MissingMarketPriceError extends Error {
     );
   }
 }
+
+export class AccrualPositionMarketMismatchError extends Error {
+  constructor(positionMarketId: string, expectedMarketId: string) {
+    super(
+      `Accrual position market ${positionMarketId} does not match expected market ${expectedMarketId}`,
+    );
+  }
+}
+
+export class AccrualPositionUserMismatchError extends Error {
+  constructor(positionUser: string, expectedUser: string) {
+    super(
+      `Accrual position user ${positionUser} does not match expected user ${expectedUser}`,
+    );
+  }
+}

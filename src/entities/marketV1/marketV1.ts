@@ -4,7 +4,6 @@ import {
   type Market,
   type MarketParams,
   MathLib,
-  ORACLE_PRICE_SCALE,
   SharesMath,
 } from "@morpho-org/blue-sdk";
 import { fetchAccrualPosition, fetchMarket } from "@morpho-org/blue-sdk-viem";
@@ -16,13 +15,14 @@ import {
   marketV1SupplyCollateral,
   marketV1SupplyCollateralBorrow,
 } from "../../actions";
-import { validateChainId, validateNativeCollateral } from "../../helpers";
 import {
-  DEFAULT_LLTV_BUFFER,
-  MAX_SLIPPAGE_TOLERANCE,
-} from "../../helpers/constant";
+  validateAccrualPosition,
+  validateChainId,
+  validateNativeCollateral,
+  validatePositionHealth,
+} from "../../helpers";
+import { MAX_SLIPPAGE_TOLERANCE } from "../../helpers/constant";
 import {
-  BorrowExceedsSafeLtvError,
   type DepositAmountArgs,
   type ERC20ApprovalAction,
   ExcessiveSlippageToleranceError,
@@ -30,7 +30,6 @@ import {
   type MarketV1SupplyCollateralAction,
   type MarketV1SupplyCollateralBorrowAction,
   MissingAccrualPositionError,
-  MissingMarketPriceError,
   type MorphoAuthorizationAction,
   type MorphoClientType,
   NegativeNativeAmountError,
@@ -258,22 +257,23 @@ export class MorphoMarketV1 implements MarketV1Actions {
       throw new MissingAccrualPositionError(this.marketParams.id);
     }
 
-    this.validatePositionHealth(accrualPosition, 0n, amount);
+    validateAccrualPosition(accrualPosition, this.marketParams.id, userAddress);
+
+    validatePositionHealth(
+      accrualPosition,
+      0n,
+      amount,
+      this.marketParams.id,
+      this.marketParams.lltv,
+    );
 
     const { totalBorrowAssets, totalBorrowShares } = accrualPosition.market;
     const slippageMultiplier = MathLib.wToRay(MathLib.WAD - slippageTolerance);
-    const minSharePrice =
-      totalBorrowShares === 0n
-        ? MathLib.mulDivDown(
-            SharesMath.VIRTUAL_ASSETS,
-            slippageMultiplier,
-            SharesMath.VIRTUAL_SHARES,
-          )
-        : MathLib.mulDivDown(
-            totalBorrowAssets,
-            slippageMultiplier,
-            totalBorrowShares,
-          );
+    const minSharePrice = MathLib.mulDivDown(
+      totalBorrowAssets + SharesMath.VIRTUAL_ASSETS,
+      slippageMultiplier,
+      totalBorrowShares + SharesMath.VIRTUAL_SHARES,
+    );
 
     return {
       getRequirements: async () => {
@@ -332,6 +332,8 @@ export class MorphoMarketV1 implements MarketV1Actions {
       throw new MissingAccrualPositionError(this.marketParams.id);
     }
 
+    validateAccrualPosition(accrualPosition, this.marketParams.id, userAddress);
+
     const totalCollateral = amount + (nativeAmount ?? 0n);
     if (totalCollateral === 0n) {
       throw new ZeroCollateralAmountError(this.marketParams.id);
@@ -348,22 +350,21 @@ export class MorphoMarketV1 implements MarketV1Actions {
       validateNativeCollateral(this.chainId, this.marketParams.collateralToken);
     }
 
-    this.validatePositionHealth(accrualPosition, totalCollateral, borrowAmount);
+    validatePositionHealth(
+      accrualPosition,
+      totalCollateral,
+      borrowAmount,
+      this.marketParams.id,
+      this.marketParams.lltv,
+    );
 
     const { totalBorrowAssets, totalBorrowShares } = accrualPosition.market;
     const slippageMultiplier = MathLib.wToRay(MathLib.WAD - slippageTolerance);
-    const minSharePrice =
-      totalBorrowShares === 0n
-        ? MathLib.mulDivDown(
-            SharesMath.VIRTUAL_ASSETS,
-            slippageMultiplier,
-            SharesMath.VIRTUAL_SHARES,
-          )
-        : MathLib.mulDivDown(
-            totalBorrowAssets,
-            slippageMultiplier,
-            totalBorrowShares,
-          );
+    const minSharePrice = MathLib.mulDivDown(
+      totalBorrowAssets + SharesMath.VIRTUAL_ASSETS,
+      slippageMultiplier,
+      totalBorrowShares + SharesMath.VIRTUAL_SHARES,
+    );
 
     return {
       getRequirements: async (params?: { useSimplePermit?: boolean }) => {
@@ -404,51 +405,5 @@ export class MorphoMarketV1 implements MarketV1Actions {
           metadata: this.client.options.metadata,
         }),
     };
-  }
-
-  // ── Private helpers ──────────────────────────────────────────────
-
-  /**
-   * Validates that the resulting position stays within the safe LTV threshold
-   * (LLTV minus buffer) after supplying additional collateral and borrowing.
-   */
-  private validatePositionHealth(
-    accrualPosition: AccrualPosition,
-    additionalCollateral: bigint,
-    borrowAmount: bigint,
-  ): void {
-    const { price } = accrualPosition.market;
-
-    if (price === undefined) {
-      throw new MissingMarketPriceError(this.marketParams.id);
-    }
-
-    const totalCollateralAfter =
-      accrualPosition.collateral + additionalCollateral;
-    const collateralValueAfter = MathLib.mulDivDown(
-      totalCollateralAfter,
-      price,
-      ORACLE_PRICE_SCALE,
-    );
-
-    const effectiveLltv = this.marketParams.lltv - DEFAULT_LLTV_BUFFER;
-
-    const maxSafeBorrowAfter = MathLib.wMulDown(
-      collateralValueAfter,
-      effectiveLltv,
-    );
-
-    const totalBorrowAfter = accrualPosition.borrowAssets + borrowAmount;
-
-    if (totalBorrowAfter > maxSafeBorrowAfter) {
-      const maxSafeAdditionalBorrow = MathLib.zeroFloorSub(
-        maxSafeBorrowAfter,
-        accrualPosition.borrowAssets,
-      );
-      throw new BorrowExceedsSafeLtvError(
-        borrowAmount,
-        maxSafeAdditionalBorrow,
-      );
-    }
   }
 }
