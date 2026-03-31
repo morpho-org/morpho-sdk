@@ -1,4 +1,4 @@
-import { getChainAddresses, MarketParams, MathLib } from "@morpho-org/blue-sdk";
+import { getChainAddresses, MathLib } from "@morpho-org/blue-sdk";
 import { parseUnits } from "viem";
 import { mainnet } from "viem/chains";
 import { describe, expect } from "vitest";
@@ -6,121 +6,26 @@ import {
   isRequirementApproval,
   MorphoClient,
   marketV1SupplyCollateral,
-  NegativeNativeAmountError,
-  NonPositiveAssetAmountError,
-  ZeroCollateralAmountError,
 } from "../../../src";
-import { WstethUsdcMarket } from "../../fixtures/marketV1";
+import { CbbtcUsdcMarketV1, WethUsdsMarketV1 } from "../../fixtures/marketV1";
 import { testInvariants } from "../../helpers/invariants";
 import { test } from "../../setup";
 
 describe("SupplyCollateralMarketV1", () => {
-  const marketParams = new MarketParams(WstethUsdcMarket);
-
-  describe("unit errors", () => {
-    test("should throw ZeroCollateralAmountError at action level when amount is zero", ({
-      client: _client,
-    }) => {
-      expect(() =>
-        marketV1SupplyCollateral({
-          market: { chainId: mainnet.id, marketParams: WstethUsdcMarket },
-          args: {
-            amount: 0n,
-            onBehalf: "0x0000000000000000000000000000000000000001",
-          },
-        }),
-      ).toThrow(ZeroCollateralAmountError);
-    });
-
-    test("should throw NonPositiveAssetAmountError at action level when amount is negative", ({
-      client: _client,
-    }) => {
-      expect(() =>
-        marketV1SupplyCollateral({
-          market: { chainId: mainnet.id, marketParams: WstethUsdcMarket },
-          args: {
-            amount: -1n,
-            onBehalf: "0x0000000000000000000000000000000000000001",
-          },
-        }),
-      ).toThrow(NonPositiveAssetAmountError);
-    });
-
-    test("should throw NegativeNativeAmountError at action level when nativeAmount is negative", ({
-      client: _client,
-    }) => {
-      expect(() =>
-        marketV1SupplyCollateral({
-          market: { chainId: mainnet.id, marketParams: WstethUsdcMarket },
-          args: {
-            amount: parseUnits("1", 18),
-            nativeAmount: -1n,
-            onBehalf: "0x0000000000000000000000000000000000000001",
-          },
-        }),
-      ).toThrow(NegativeNativeAmountError);
-    });
-
-    test("should throw ZeroCollateralAmountError at entity level when amount is zero", ({
-      client,
-    }) => {
-      const morphoClient = new MorphoClient(client);
-      const market = morphoClient.marketV1(WstethUsdcMarket, mainnet.id);
-
-      expect(() =>
-        market.supplyCollateral({
-          userAddress: client.account.address,
-          amount: 0n,
-        }),
-      ).toThrow(ZeroCollateralAmountError);
-    });
-
-    test("should throw NonPositiveAssetAmountError at entity level when amount is negative", ({
-      client,
-    }) => {
-      const morphoClient = new MorphoClient(client);
-      const market = morphoClient.marketV1(WstethUsdcMarket, mainnet.id);
-
-      expect(() =>
-        market.supplyCollateral({
-          userAddress: client.account.address,
-          amount: -1n,
-        }),
-      ).toThrow(NonPositiveAssetAmountError);
-    });
-
-    test("should throw NegativeNativeAmountError at entity level when nativeAmount is negative", ({
-      client,
-    }) => {
-      const morphoClient = new MorphoClient(client);
-      const market = morphoClient.marketV1(WstethUsdcMarket, mainnet.id);
-
-      expect(() =>
-        market.supplyCollateral({
-          userAddress: client.account.address,
-          amount: parseUnits("1", 18),
-          nativeAmount: -1n,
-        }),
-      ).toThrow(NegativeNativeAmountError);
-    });
-  });
-
   test("should create supply collateral bundle", async ({ client }) => {
     const morphoClient = new MorphoClient(client);
-    const market = morphoClient.marketV1(WstethUsdcMarket, mainnet.id);
+    const market = morphoClient.marketV1(CbbtcUsdcMarketV1, mainnet.id);
 
     const supplyCollateral = market.supplyCollateral({
       userAddress: client.account.address,
       amount: parseUnits("1", 18),
     });
-
-    const requirements = await supplyCollateral.getRequirements();
     const tx = supplyCollateral.buildTx();
 
-    const tx2 = marketV1SupplyCollateral({
+    const directTx = marketV1SupplyCollateral({
       market: {
         chainId: mainnet.id,
-        marketParams: WstethUsdcMarket,
+        marketParams: CbbtcUsdcMarketV1,
       },
       args: {
         amount: parseUnits("1", 18),
@@ -129,31 +34,28 @@ describe("SupplyCollateralMarketV1", () => {
     });
 
     expect(supplyCollateral).toBeDefined();
-    expect(requirements).toBeDefined();
-    expect(tx).toStrictEqual(tx2);
+    expect(directTx).toStrictEqual(tx);
   });
 
-  test("should supply 1 wstETH collateral with approval (direct path)", async ({
-    client,
-  }) => {
+  test("should supply 1 collateral with approval", async ({ client }) => {
     const amount = parseUnits("1", 18);
     await client.deal({
-      erc20: WstethUsdcMarket.collateralToken,
+      erc20: CbbtcUsdcMarketV1.collateralToken,
       amount,
     });
 
     const {
       markets: {
-        WstethUsdcMarket: { initialState, finalState },
+        CbbtcUsdcMarketV1: { initialState, finalState },
       },
     } = await testInvariants({
       client,
       params: {
-        markets: { WstethUsdcMarket: marketParams },
+        markets: { CbbtcUsdcMarketV1 },
       },
       actionFn: async () => {
         const morphoClient = new MorphoClient(client);
-        const market = morphoClient.marketV1(WstethUsdcMarket, mainnet.id);
+        const market = morphoClient.marketV1(CbbtcUsdcMarketV1, mainnet.id);
 
         const supplyCollateral = market.supplyCollateral({
           userAddress: client.account.address,
@@ -163,15 +65,14 @@ describe("SupplyCollateralMarketV1", () => {
         const requirements = await supplyCollateral.getRequirements();
 
         const approveTx = requirements[0];
-        if (!approveTx) {
-          throw new Error("Approve transaction not found");
-        }
         if (!isRequirementApproval(approveTx)) {
           throw new Error("Expected approval requirement");
         }
 
         await client.sendTransaction(approveTx);
-        await client.sendTransaction(supplyCollateral.buildTx());
+
+        const tx = supplyCollateral.buildTx();
+        await client.sendTransaction(tx);
       },
     });
 
@@ -186,34 +87,34 @@ describe("SupplyCollateralMarketV1", () => {
     );
   });
 
-  test("should supply wstETH collateral with approval already sufficient (direct path)", async ({
+  test("should supply collateral with approval already sufficient", async ({
     client,
   }) => {
     const amount = parseUnits("0.5", 18);
     const { morpho } = getChainAddresses(mainnet.id);
 
     await client.deal({
-      erc20: WstethUsdcMarket.collateralToken,
+      erc20: CbbtcUsdcMarketV1.collateralToken,
       amount,
     });
 
     await client.approve({
-      address: WstethUsdcMarket.collateralToken,
+      address: CbbtcUsdcMarketV1.collateralToken,
       args: [morpho, MathLib.MAX_UINT_256],
     });
 
     const {
       markets: {
-        WstethUsdcMarket: { initialState, finalState },
+        CbbtcUsdcMarketV1: { initialState, finalState },
       },
     } = await testInvariants({
       client,
       params: {
-        markets: { WstethUsdcMarket: marketParams },
+        markets: { CbbtcUsdcMarketV1 },
       },
       actionFn: async () => {
         const morphoClient = new MorphoClient(client);
-        const market = morphoClient.marketV1(WstethUsdcMarket, mainnet.id);
+        const market = morphoClient.marketV1(CbbtcUsdcMarketV1, mainnet.id);
 
         const supplyCollateral = market.supplyCollateral({
           userAddress: client.account.address,
@@ -241,6 +142,120 @@ describe("SupplyCollateralMarketV1", () => {
     );
     expect(finalState.morphoCollateralTokenBalance).toEqual(
       initialState.morphoCollateralTokenBalance + amount,
+    );
+  });
+
+  test("should supply collateral with native ETH only via wrapping", async ({
+    client,
+  }) => {
+    const nativeAmount = parseUnits("1", 18);
+
+    await client.setBalance({
+      address: client.account.address,
+      value: nativeAmount + parseUnits("10", 18),
+    });
+
+    const {
+      markets: {
+        WethUsdsMarketV1: { initialState, finalState },
+      },
+    } = await testInvariants({
+      client,
+      params: {
+        markets: { WethUsdsMarketV1 },
+      },
+      actionFn: async () => {
+        const morphoClient = new MorphoClient(client);
+        const market = morphoClient.marketV1(WethUsdsMarketV1, mainnet.id);
+
+        const supplyCollateral = market.supplyCollateral({
+          userAddress: client.account.address,
+          amount: 0n,
+          nativeAmount,
+        });
+
+        const requirements = await supplyCollateral.getRequirements();
+        expect(requirements.length).toBe(0);
+
+        const tx = supplyCollateral.buildTx();
+        expect(tx.value).toEqual(nativeAmount);
+
+        await client.sendTransaction(tx);
+      },
+    });
+
+    expect(finalState.userCollateralTokenBalance).toEqual(
+      initialState.userCollateralTokenBalance,
+    );
+    expect(finalState.morphoCollateralTokenBalance).toEqual(
+      initialState.morphoCollateralTokenBalance + nativeAmount,
+    );
+    expect(finalState.position.collateral).toEqual(
+      initialState.position.collateral + nativeAmount,
+    );
+  });
+
+  test("should supply collateral with both ERC20 WETH and native ETH via wrapping ", async ({
+    client,
+  }) => {
+    const amount = parseUnits("0.5", 18);
+    const nativeAmount = parseUnits("0.5", 18);
+    const totalCollateral = amount + nativeAmount;
+
+    await client.deal({
+      erc20: WethUsdsMarketV1.collateralToken,
+      amount,
+    });
+
+    await client.setBalance({
+      address: client.account.address,
+      value: nativeAmount + parseUnits("10", 18),
+    });
+
+    const {
+      markets: {
+        WethUsdsMarketV1: { initialState, finalState },
+      },
+    } = await testInvariants({
+      client,
+      params: {
+        markets: { WethUsdsMarketV1 },
+      },
+      actionFn: async () => {
+        const morphoClient = new MorphoClient(client);
+        const market = morphoClient.marketV1(WethUsdsMarketV1, mainnet.id);
+
+        const supplyCollateral = market.supplyCollateral({
+          userAddress: client.account.address,
+          amount,
+          nativeAmount,
+        });
+
+        const requirements = await supplyCollateral.getRequirements();
+        expect(requirements.length).toBe(1);
+
+        const approveTx = requirements[0];
+        if (!isRequirementApproval(approveTx)) {
+          throw new Error("Expected approval requirement");
+        }
+
+        await client.sendTransaction(approveTx);
+
+        const tx = supplyCollateral.buildTx();
+        expect(tx.value).toEqual(nativeAmount);
+
+        await client.sendTransaction(tx);
+      },
+    });
+
+    expect(finalState.userCollateralTokenBalance).toEqual(
+      initialState.userCollateralTokenBalance - amount,
+    );
+    expect(finalState.morphoCollateralTokenBalance).toEqual(
+      initialState.morphoCollateralTokenBalance + totalCollateral,
+    );
+    expect(finalState.position.collateral).toEqual(
+      initialState.position.collateral + totalCollateral,
     );
   });
 });

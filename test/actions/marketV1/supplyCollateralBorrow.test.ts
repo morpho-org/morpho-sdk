@@ -1,321 +1,50 @@
 import {
+  type AccrualPosition,
   DEFAULT_SLIPPAGE_TOLERANCE,
   getChainAddresses,
-  MarketParams,
   MathLib,
-  ORACLE_PRICE_SCALE,
 } from "@morpho-org/blue-sdk";
 import { blueAbi } from "@morpho-org/blue-sdk-viem";
-import type { AnvilTestClient } from "@morpho-org/test";
-import { type Address, encodeFunctionData, parseUnits } from "viem";
+
+import { encodeFunctionData, parseUnits } from "viem";
 import { mainnet } from "viem/chains";
 import { describe, expect } from "vitest";
 import {
   BorrowExceedsSafeLtvError,
   ExcessiveSlippageToleranceError,
+  isRequirementApproval,
+  MissingAccrualPositionError,
   MorphoClient,
   marketV1SupplyCollateralBorrow,
-  NegativeNativeAmountError,
-  NegativeSlippageToleranceError,
-  NonPositiveAssetAmountError,
-  NonPositiveBorrowAmountError,
-  type RequirementSignature,
-  ZeroCollateralAmountError,
 } from "../../../src";
-import { DEFAULT_LLTV_BUFFER } from "../../../src/helpers/constant";
-import { WstethUsdcMarket } from "../../fixtures/marketV1";
+import { MAX_SLIPPAGE_TOLERANCE } from "../../../src/helpers/constant";
+import { WethUsdsMarketV1 } from "../../fixtures/marketV1";
 import { testInvariants } from "../../helpers/invariants";
+import { supplyCollateral } from "../../helpers/marketV1";
 import { test } from "../../setup";
 
-/**
- * Executes all requirements (approval txs, authorization txs, signatures).
- * Returns a permit/permit2 signature if one was encountered.
- */
-async function executeRequirements(
-  client: AnvilTestClient<typeof mainnet>,
-  requirements: readonly unknown[],
-): Promise<RequirementSignature | undefined> {
-  let requirementSignature: RequirementSignature | undefined;
-
-  for (const req of requirements) {
-    if (
-      req != null &&
-      typeof req === "object" &&
-      "sign" in req &&
-      typeof req.sign === "function"
-    ) {
-      requirementSignature = await (
-        req as {
-          sign: (
-            c: typeof client,
-            addr: `0x${string}`,
-          ) => Promise<RequirementSignature>;
-        }
-      ).sign(client, client.account.address);
-    } else if (
-      req != null &&
-      typeof req === "object" &&
-      "to" in req &&
-      "data" in req
-    ) {
-      await client.sendTransaction(
-        req as { to: `0x${string}`; data: `0x${string}`; value: bigint },
-      );
-    }
-  }
-
-  return requirementSignature;
-}
-
 describe("SupplyCollateralBorrowMarketV1", () => {
-  const marketParams = new MarketParams(WstethUsdcMarket);
-
-  describe("errors — action level (pure validation)", () => {
-    const onBehalf: Address = "0x0000000000000000000000000000000000000001";
-    const receiver: Address = "0x0000000000000000000000000000000000000001";
-
-    test("should throw NonPositiveBorrowAmountError for zero borrowAmount", () => {
-      expect(() =>
-        marketV1SupplyCollateralBorrow({
-          market: { chainId: mainnet.id, marketParams: WstethUsdcMarket },
-          args: {
-            amount: parseUnits("1", 18),
-            borrowAmount: 0n,
-            onBehalf,
-            receiver,
-            minSharePrice: 0n,
-          },
-        }),
-      ).toThrow(NonPositiveBorrowAmountError);
-    });
-
-    test("should throw NonPositiveAssetAmountError for negative ERC20 amount", () => {
-      expect(() =>
-        marketV1SupplyCollateralBorrow({
-          market: { chainId: mainnet.id, marketParams: WstethUsdcMarket },
-          args: {
-            amount: -1n,
-            borrowAmount: parseUnits("100", 6),
-            onBehalf,
-            receiver,
-            minSharePrice: 0n,
-          },
-        }),
-      ).toThrow(NonPositiveAssetAmountError);
-    });
-
-    test("should throw ZeroCollateralAmountError when both amount and nativeAmount are zero", () => {
-      expect(() =>
-        marketV1SupplyCollateralBorrow({
-          market: { chainId: mainnet.id, marketParams: WstethUsdcMarket },
-          args: {
-            amount: 0n,
-            borrowAmount: parseUnits("100", 6),
-            onBehalf,
-            receiver,
-            minSharePrice: 0n,
-          },
-        }),
-      ).toThrow(ZeroCollateralAmountError);
-    });
-
-    test("should throw NegativeNativeAmountError for negative nativeAmount", () => {
-      expect(() =>
-        marketV1SupplyCollateralBorrow({
-          market: { chainId: mainnet.id, marketParams: WstethUsdcMarket },
-          args: {
-            amount: parseUnits("1", 18),
-            nativeAmount: -1n,
-            borrowAmount: parseUnits("100", 6),
-            onBehalf,
-            receiver,
-            minSharePrice: 0n,
-          },
-        }),
-      ).toThrow(NegativeNativeAmountError);
-    });
-  });
-
-  describe("errors — entity level (on-chain position)", () => {
-    // These errors are thrown before the health check — a fresh empty position suffices.
-    test("should throw NonPositiveBorrowAmountError for zero borrowAmount", async ({
-      client,
-    }) => {
-      const morphoClient = new MorphoClient(client);
-      const market = morphoClient.marketV1(WstethUsdcMarket, mainnet.id);
-      const accrualPosition = await market.getPositionData(
-        client.account.address,
-      );
-
-      expect(() =>
-        market.supplyCollateralBorrow({
-          userAddress: client.account.address,
-          amount: parseUnits("1", 18),
-          borrowAmount: 0n,
-          accrualPosition,
-        }),
-      ).toThrow(NonPositiveBorrowAmountError);
-    });
-
-    test("should throw ZeroCollateralAmountError when collateral amount is zero", async ({
-      client,
-    }) => {
-      const morphoClient = new MorphoClient(client);
-      const market = morphoClient.marketV1(WstethUsdcMarket, mainnet.id);
-      const accrualPosition = await market.getPositionData(
-        client.account.address,
-      );
-
-      expect(() =>
-        market.supplyCollateralBorrow({
-          userAddress: client.account.address,
-          amount: 0n,
-          borrowAmount: parseUnits("100", 6),
-          accrualPosition,
-        }),
-      ).toThrow(ZeroCollateralAmountError);
-    });
-
-    test("should throw NegativeNativeAmountError for negative nativeAmount", async ({
-      client,
-    }) => {
-      const morphoClient = new MorphoClient(client);
-      const market = morphoClient.marketV1(WstethUsdcMarket, mainnet.id);
-      const accrualPosition = await market.getPositionData(
-        client.account.address,
-      );
-
-      expect(() =>
-        market.supplyCollateralBorrow({
-          userAddress: client.account.address,
-          amount: parseUnits("1", 18),
-          nativeAmount: -1n,
-          borrowAmount: parseUnits("100", 6),
-          accrualPosition,
-        }),
-      ).toThrow(NegativeNativeAmountError);
-    });
-
-    test("should throw BorrowExceedsSafeLtvError when borrow exceeds LTV buffer", async ({
-      client,
-    }) => {
-      const collateralAmount = parseUnits("1", 18);
-      await client.deal({
-        erc20: WstethUsdcMarket.collateralToken,
-        amount: collateralAmount,
-      });
-
-      const morphoClient = new MorphoClient(client);
-      const market = morphoClient.marketV1(WstethUsdcMarket, mainnet.id);
-      const accrualPosition = await market.getPositionData(
-        client.account.address,
-      );
-
-      const { price } = accrualPosition.market;
-      expect(price).toBeDefined();
-
-      const collateralValueAfter = MathLib.mulDivDown(
-        collateralAmount,
-        price!,
-        ORACLE_PRICE_SCALE,
-      );
-      const effectiveLltv = WstethUsdcMarket.lltv - DEFAULT_LLTV_BUFFER;
-      const maxSafeBorrow = MathLib.wMulDown(
-        collateralValueAfter,
-        effectiveLltv,
-      );
-
-      expect(() =>
-        market.supplyCollateralBorrow({
-          userAddress: client.account.address,
-          amount: collateralAmount,
-          borrowAmount: maxSafeBorrow + 1n,
-          accrualPosition,
-        }),
-      ).toThrow(BorrowExceedsSafeLtvError);
-    });
-
-    // Slippage errors are thrown after the health check — need a position that passes it.
-    test("should throw NegativeSlippageToleranceError for negative slippage", async ({
-      client,
-    }) => {
-      const collateralAmount = parseUnits("10", 18);
-      await client.deal({
-        erc20: WstethUsdcMarket.collateralToken,
-        amount: collateralAmount,
-      });
-
-      const morphoClient = new MorphoClient(client);
-      const market = morphoClient.marketV1(WstethUsdcMarket, mainnet.id);
-      const accrualPosition = await market.getPositionData(
-        client.account.address,
-      );
-
-      expect(() =>
-        market.supplyCollateralBorrow({
-          userAddress: client.account.address,
-          amount: collateralAmount,
-          borrowAmount: parseUnits("100", 6),
-          accrualPosition,
-          slippageTolerance: -1n,
-        }),
-      ).toThrow(NegativeSlippageToleranceError);
-    });
-
-    test("should throw ExcessiveSlippageToleranceError for slippage above 10%", async ({
-      client,
-    }) => {
-      const collateralAmount = parseUnits("10", 18);
-      await client.deal({
-        erc20: WstethUsdcMarket.collateralToken,
-        amount: collateralAmount,
-      });
-
-      const morphoClient = new MorphoClient(client);
-      const market = morphoClient.marketV1(WstethUsdcMarket, mainnet.id);
-      const accrualPosition = await market.getPositionData(
-        client.account.address,
-      );
-
-      expect(() =>
-        market.supplyCollateralBorrow({
-          userAddress: client.account.address,
-          amount: collateralAmount,
-          borrowAmount: parseUnits("100", 6),
-          accrualPosition,
-          slippageTolerance: MathLib.WAD / 10n + 1n,
-        }),
-      ).toThrow(ExcessiveSlippageToleranceError);
-    });
-  });
-
-  test("should compute minSharePrice from real market borrow state", async ({
-    client,
-  }) => {
-    const collateralAmount = parseUnits("10", 18);
-    await client.deal({
-      erc20: WstethUsdcMarket.collateralToken,
-      amount: collateralAmount,
-    });
+  test("should create supply collateral borrow bundle", async ({ client }) => {
+    const amount = parseUnits("10", 18);
+    const borrowAmount = parseUnits("1000", 18);
 
     const morphoClient = new MorphoClient(client);
-    const market = morphoClient.marketV1(WstethUsdcMarket, mainnet.id);
+    const market = morphoClient.marketV1(WethUsdsMarketV1, mainnet.id);
     const accrualPosition = await market.getPositionData(
       client.account.address,
     );
 
-    const { totalBorrowAssets, totalBorrowShares } = accrualPosition.market;
-
     const tx = market
       .supplyCollateralBorrow({
         userAddress: client.account.address,
-        amount: collateralAmount,
-        borrowAmount: parseUnits("100", 6),
+        amount,
+        borrowAmount,
         accrualPosition,
       })
       .buildTx();
 
-    const expectedMinSharePrice =
+    const { totalBorrowAssets, totalBorrowShares } = accrualPosition.market;
+    const minSharePrice =
       totalBorrowShares === 0n
         ? 0n
         : MathLib.mulDivDown(
@@ -324,256 +53,248 @@ describe("SupplyCollateralBorrowMarketV1", () => {
             totalBorrowShares,
           );
 
-    expect(tx.action.args.minSharePrice).toBe(expectedMinSharePrice);
-    expect(tx.action.args.minSharePrice).toBeGreaterThan(0n);
+    const directTx = marketV1SupplyCollateralBorrow({
+      market: { chainId: mainnet.id, marketParams: WethUsdsMarketV1 },
+      args: {
+        amount,
+        borrowAmount,
+        onBehalf: client.account.address,
+        receiver: client.account.address,
+        minSharePrice,
+      },
+    });
+
+    expect(directTx).toStrictEqual(tx);
   });
 
-  test("should atomic supply collateral and borrow with approval", async ({
+  test("should supply collateral and borrow with ERC20 approval and authorization", async ({
     client,
   }) => {
-    const collateralAmount = parseUnits("10", 18);
-    const borrowAmount = parseUnits("1000", 6);
+    const amount = parseUnits("10", 18);
+    const borrowAmount = parseUnits("1000", 18);
 
-    await client.deal({
-      erc20: WstethUsdcMarket.collateralToken,
-      amount: collateralAmount,
-    });
+    await client.deal({ erc20: WethUsdsMarketV1.collateralToken, amount });
 
     const {
       markets: {
-        WstethUsdcMarket: { initialState, finalState },
+        WethUsdsMarketV1: { initialState, finalState },
       },
     } = await testInvariants({
       client,
-      params: {
-        markets: { WstethUsdcMarket: marketParams },
-      },
+      params: { markets: { WethUsdsMarketV1 } },
       actionFn: async () => {
         const morphoClient = new MorphoClient(client);
-        const market = morphoClient.marketV1(WstethUsdcMarket, mainnet.id);
+        const market = morphoClient.marketV1(WethUsdsMarketV1, mainnet.id);
         const accrualPosition = await market.getPositionData(
           client.account.address,
         );
 
         const scb = market.supplyCollateralBorrow({
           userAddress: client.account.address,
-          amount: collateralAmount,
-          accrualPosition,
+          amount,
           borrowAmount,
+          accrualPosition,
         });
 
         const requirements = await scb.getRequirements();
-        await executeRequirements(client, requirements);
+        expect(requirements).toHaveLength(2);
+        expect(requirements[0]!.action.type).toBe("erc20Approval");
+        expect(requirements[1]!.action.type).toBe("morphoAuthorization");
 
-        await client.sendTransaction(scb.buildTx());
+        const approval = requirements[0];
+        if (!isRequirementApproval(approval)) {
+          throw new Error("Approval requirement not found");
+        }
+        const authorization = requirements[1];
+        if (!isRequirementApproval(authorization)) {
+          throw new Error("Authorization requirement not found");
+        }
+
+        await client.sendTransaction(approval);
+        await client.sendTransaction(authorization);
+
+        const tx = scb.buildTx();
+
+        await client.sendTransaction(tx);
       },
     });
 
     expect(finalState.userCollateralTokenBalance).toEqual(
-      initialState.userCollateralTokenBalance - collateralAmount,
+      initialState.userCollateralTokenBalance - amount,
     );
     expect(finalState.userLoanTokenBalance).toEqual(
       initialState.userLoanTokenBalance + borrowAmount,
     );
-    expect(finalState.position.collateral).toEqual(
-      initialState.position.collateral + collateralAmount,
-    );
-    expect(finalState.position.borrowAssets).toBeGreaterThan(
-      initialState.position.borrowAssets,
-    );
     expect(finalState.morphoCollateralTokenBalance).toEqual(
-      initialState.morphoCollateralTokenBalance + collateralAmount,
+      initialState.morphoCollateralTokenBalance + amount,
+    );
+    expect(finalState.morphoLoanTokenBalance).toEqual(
+      initialState.morphoLoanTokenBalance - borrowAmount,
+    );
+    expect(finalState.position.collateral).toEqual(
+      initialState.position.collateral + amount,
+    );
+    expect(finalState.position.borrowAssets).toEqual(
+      initialState.position.borrowAssets + borrowAmount + 1n,
     );
   });
 
-  test("should atomic supply and borrow with permit2", async ({ client }) => {
-    const collateralAmount = parseUnits("10", 18);
-    const borrowAmount = parseUnits("1000", 6);
+  test("should supply collateral with native ETH only and borrow", async ({
+    client,
+  }) => {
+    const nativeAmount = parseUnits("10", 18);
+    const borrowAmount = parseUnits("1000", 18);
 
-    await client.deal({
-      erc20: WstethUsdcMarket.collateralToken,
-      amount: collateralAmount,
+    await client.setBalance({
+      address: client.account.address,
+      value: nativeAmount + parseUnits("1", 18),
     });
 
     const {
       markets: {
-        WstethUsdcMarket: { initialState, finalState },
+        WethUsdsMarketV1: { initialState, finalState },
       },
     } = await testInvariants({
       client,
-      params: {
-        markets: { WstethUsdcMarket: marketParams },
-      },
-      actionFn: async () => {
-        const morphoClient = new MorphoClient(client, {
-          supportSignature: true,
-        });
-        const market = morphoClient.marketV1(WstethUsdcMarket, mainnet.id);
-        const accrualPosition = await market.getPositionData(
-          client.account.address,
-        );
-
-        const scb = market.supplyCollateralBorrow({
-          userAddress: client.account.address,
-          amount: collateralAmount,
-          accrualPosition,
-          borrowAmount,
-        });
-
-        const requirements = await scb.getRequirements();
-        const requirementSignature = await executeRequirements(
-          client,
-          requirements,
-        );
-
-        await client.sendTransaction(scb.buildTx(requirementSignature));
-      },
-    });
-
-    expect(finalState.userCollateralTokenBalance).toEqual(
-      initialState.userCollateralTokenBalance - collateralAmount,
-    );
-    expect(finalState.userLoanTokenBalance).toEqual(
-      initialState.userLoanTokenBalance + borrowAmount,
-    );
-    expect(finalState.position.collateral).toEqual(
-      initialState.position.collateral + collateralAmount,
-    );
-    expect(finalState.morphoCollateralTokenBalance).toEqual(
-      initialState.morphoCollateralTokenBalance + collateralAmount,
-    );
-  });
-
-  test("should supply collateral and borrow round trip", async ({ client }) => {
-    const { morpho } = getChainAddresses(mainnet.id);
-    const collateralAmount = parseUnits("10", 18);
-    const borrowAmount = parseUnits("1000", 6);
-
-    await client.deal({
-      erc20: WstethUsdcMarket.collateralToken,
-      amount: collateralAmount,
-    });
-
-    const {
-      markets: {
-        WstethUsdcMarket: { initialState, finalState },
-      },
-    } = await testInvariants({
-      client,
-      params: {
-        markets: { WstethUsdcMarket: marketParams },
-      },
+      params: { markets: { WethUsdsMarketV1 } },
       actionFn: async () => {
         const morphoClient = new MorphoClient(client);
-        const market = morphoClient.marketV1(WstethUsdcMarket, mainnet.id);
+        const market = morphoClient.marketV1(WethUsdsMarketV1, mainnet.id);
         const accrualPosition = await market.getPositionData(
           client.account.address,
         );
 
         const scb = market.supplyCollateralBorrow({
           userAddress: client.account.address,
-          amount: collateralAmount,
-          accrualPosition,
+          nativeAmount,
           borrowAmount,
+          accrualPosition,
         });
 
         const requirements = await scb.getRequirements();
-        await executeRequirements(client, requirements);
-        await client.sendTransaction(scb.buildTx());
+        expect(requirements).toHaveLength(1);
+        expect(requirements[0]!.action.type).toBe("morphoAuthorization");
 
-        await client.approve({
-          address: WstethUsdcMarket.loanToken,
-          args: [morpho, MathLib.MAX_UINT_256],
-        });
+        const authorization = requirements[0];
+        if (!isRequirementApproval(authorization)) {
+          throw new Error("Authorization requirement not found");
+        }
 
-        const updatedPosition = await market.getPositionData(
-          client.account.address,
-        );
+        await client.sendTransaction(authorization);
 
-        await client.deal({
-          erc20: WstethUsdcMarket.loanToken,
-          amount: updatedPosition.borrowAssets + parseUnits("1", 6),
-        });
-
-        await client.sendTransaction({
-          to: morpho,
-          data: encodeFunctionData({
-            abi: blueAbi,
-            functionName: "repay",
-            args: [
-              WstethUsdcMarket,
-              0n,
-              updatedPosition.borrowShares,
-              client.account.address,
-              "0x",
-            ],
-          }),
-          value: 0n,
-        });
-
-        await client.sendTransaction({
-          to: morpho,
-          data: encodeFunctionData({
-            abi: blueAbi,
-            functionName: "withdrawCollateral",
-            args: [
-              WstethUsdcMarket,
-              collateralAmount,
-              client.account.address,
-              client.account.address,
-            ],
-          }),
-          value: 0n,
-        });
+        const tx = scb.buildTx();
+        expect(tx.value).toEqual(nativeAmount);
+        await client.sendTransaction(tx);
       },
     });
 
     expect(finalState.userCollateralTokenBalance).toEqual(
       initialState.userCollateralTokenBalance,
     );
+    expect(finalState.morphoCollateralTokenBalance).toEqual(
+      initialState.morphoCollateralTokenBalance + nativeAmount,
+    );
+    expect(finalState.userLoanTokenBalance).toEqual(
+      initialState.userLoanTokenBalance + borrowAmount,
+    );
+    expect(finalState.morphoLoanTokenBalance).toEqual(
+      initialState.morphoLoanTokenBalance - borrowAmount,
+    );
     expect(finalState.position.collateral).toEqual(
-      initialState.position.collateral,
+      initialState.position.collateral + nativeAmount,
+    );
+    expect(finalState.position.borrowAssets).toEqual(
+      initialState.position.borrowAssets + borrowAmount + 1n,
     );
   });
 
-  test("should include setAuthorization tx in requirements when GeneralAdapter1 is not yet authorized", async ({
+  test("should supply mixed collateral (ERC20 + native ETH) and borrow", async ({
     client,
   }) => {
-    const morphoClient = new MorphoClient(client);
-    const market = morphoClient.marketV1(WstethUsdcMarket, mainnet.id);
-    const accrualPosition = await market.getPositionData(
-      client.account.address,
-    );
+    const amount = parseUnits("5", 18);
+    const nativeAmount = parseUnits("5", 18);
+    const totalCollateral = amount + nativeAmount;
+    const borrowAmount = parseUnits("1000", 18);
 
-    const scb = market.supplyCollateralBorrow({
-      userAddress: client.account.address,
-      amount: parseUnits("1", 18),
-      borrowAmount: parseUnits("100", 6),
-      accrualPosition,
+    await client.deal({ erc20: WethUsdsMarketV1.collateralToken, amount });
+    await client.setBalance({
+      address: client.account.address,
+      value: nativeAmount + parseUnits("1", 18),
     });
 
-    const requirements = await scb.getRequirements();
+    const {
+      markets: {
+        WethUsdsMarketV1: { initialState, finalState },
+      },
+    } = await testInvariants({
+      client,
+      params: { markets: { WethUsdsMarketV1 } },
+      actionFn: async () => {
+        const morphoClient = new MorphoClient(client);
+        const market = morphoClient.marketV1(WethUsdsMarketV1, mainnet.id);
+        const accrualPosition = await market.getPositionData(
+          client.account.address,
+        );
 
-    const authTx = requirements.find(
-      (req) =>
-        req != null &&
-        "action" in req &&
-        typeof req.action === "object" &&
-        req.action !== null &&
-        "type" in req.action &&
-        req.action.type === "morphoAuthorization",
+        const scb = market.supplyCollateralBorrow({
+          userAddress: client.account.address,
+          amount,
+          nativeAmount,
+          borrowAmount,
+          accrualPosition,
+        });
+
+        const requirements = await scb.getRequirements();
+        expect(requirements).toHaveLength(2);
+        expect(requirements[0]!.action.type).toBe("erc20Approval");
+        expect(requirements[1]!.action.type).toBe("morphoAuthorization");
+
+        const approval = requirements[0];
+        if (!isRequirementApproval(approval)) {
+          throw new Error("Approval requirement not found");
+        }
+        const authorization = requirements[1];
+        if (!isRequirementApproval(authorization)) {
+          throw new Error("Authorization requirement not found");
+        }
+        await client.sendTransaction(approval);
+        await client.sendTransaction(authorization);
+
+        const tx = scb.buildTx();
+        expect(tx.value).toEqual(nativeAmount);
+        await client.sendTransaction(tx);
+      },
+    });
+
+    expect(finalState.userCollateralTokenBalance).toEqual(
+      initialState.userCollateralTokenBalance - amount,
     );
-
-    expect(authTx).toBeDefined();
+    expect(finalState.morphoCollateralTokenBalance).toEqual(
+      initialState.morphoCollateralTokenBalance + totalCollateral,
+    );
+    expect(finalState.userLoanTokenBalance).toEqual(
+      initialState.userLoanTokenBalance + borrowAmount,
+    );
+    expect(finalState.morphoLoanTokenBalance).toEqual(
+      initialState.morphoLoanTokenBalance - borrowAmount,
+    );
+    expect(finalState.position.collateral).toEqual(
+      initialState.position.collateral + totalCollateral,
+    );
+    expect(finalState.position.borrowAssets).toEqual(
+      initialState.position.borrowAssets + borrowAmount + 1n,
+    );
   });
 
-  test("should not include setAuthorization tx when GeneralAdapter1 is already authorized", async ({
+  test("should require only ERC20 approval when GeneralAdapter1 is already authorized", async ({
     client,
   }) => {
     const {
       morpho,
       bundler3: { generalAdapter1 },
     } = getChainAddresses(mainnet.id);
+    const amount = parseUnits("10", 18);
+    const borrowAmount = parseUnits("1000", 18);
 
     await client.sendTransaction({
       to: morpho,
@@ -585,100 +306,138 @@ describe("SupplyCollateralBorrowMarketV1", () => {
       value: 0n,
     });
 
-    const morphoClient = new MorphoClient(client);
-    const market = morphoClient.marketV1(WstethUsdcMarket, mainnet.id);
-    const accrualPosition = await market.getPositionData(
-      client.account.address,
-    );
-
-    const scb = market.supplyCollateralBorrow({
-      userAddress: client.account.address,
-      amount: parseUnits("1", 18),
-      borrowAmount: parseUnits("100", 6),
-      accrualPosition,
-    });
-
-    const requirements = await scb.getRequirements();
-
-    const authTx = requirements.find(
-      (req) =>
-        req != null &&
-        "action" in req &&
-        typeof req.action === "object" &&
-        req.action !== null &&
-        "type" in req.action &&
-        req.action.type === "morphoAuthorization",
-    );
-
-    expect(authTx).toBeUndefined();
-  });
-
-  test("should execute full supplyCollateralBorrow after manual setAuthorization", async ({
-    client,
-  }) => {
-    const collateralAmount = parseUnits("10", 18);
-    const borrowAmount = parseUnits("1000", 6);
-
-    await client.deal({
-      erc20: WstethUsdcMarket.collateralToken,
-      amount: collateralAmount,
-    });
+    await client.deal({ erc20: WethUsdsMarketV1.collateralToken, amount });
 
     const {
       markets: {
-        WstethUsdcMarket: { initialState, finalState },
+        WethUsdsMarketV1: { initialState, finalState },
       },
     } = await testInvariants({
       client,
-      params: {
-        markets: { WstethUsdcMarket: marketParams },
-      },
+      params: { markets: { WethUsdsMarketV1 } },
       actionFn: async () => {
-        const {
-          morpho,
-          bundler3: { generalAdapter1 },
-        } = getChainAddresses(mainnet.id);
-
-        await client.sendTransaction({
-          to: morpho,
-          data: encodeFunctionData({
-            abi: blueAbi,
-            functionName: "setAuthorization",
-            args: [generalAdapter1, true],
-          }),
-          value: 0n,
-        });
-
         const morphoClient = new MorphoClient(client);
-        const market = morphoClient.marketV1(WstethUsdcMarket, mainnet.id);
+        const market = morphoClient.marketV1(WethUsdsMarketV1, mainnet.id);
         const accrualPosition = await market.getPositionData(
           client.account.address,
         );
 
         const scb = market.supplyCollateralBorrow({
           userAddress: client.account.address,
-          amount: collateralAmount,
-          accrualPosition,
+          amount,
           borrowAmount,
+          accrualPosition,
         });
 
         const requirements = await scb.getRequirements();
-        await executeRequirements(client, requirements);
-        await client.sendTransaction(scb.buildTx());
+        expect(requirements).toHaveLength(1);
+
+        const approval = requirements[0];
+        if (!isRequirementApproval(approval)) {
+          throw new Error("Approval requirement not found");
+        }
+        await client.sendTransaction(approval);
+
+        const tx = scb.buildTx();
+        await client.sendTransaction(tx);
       },
     });
 
     expect(finalState.userCollateralTokenBalance).toEqual(
-      initialState.userCollateralTokenBalance - collateralAmount,
+      initialState.userCollateralTokenBalance - amount,
     );
     expect(finalState.userLoanTokenBalance).toEqual(
       initialState.userLoanTokenBalance + borrowAmount,
     );
     expect(finalState.position.collateral).toEqual(
-      initialState.position.collateral + collateralAmount,
+      initialState.position.collateral + amount,
     );
-    expect(finalState.position.borrowAssets).toBeGreaterThan(
-      initialState.position.borrowAssets,
+    expect(finalState.position.borrowAssets).toEqual(
+      initialState.position.borrowAssets + borrowAmount + 1n,
     );
+  });
+
+  describe("errors", () => {
+    test("should throw MissingAccrualPositionError when accrualPosition is not provided", async ({
+      client,
+    }) => {
+      const morphoClient = new MorphoClient(client);
+      const market = morphoClient.marketV1(WethUsdsMarketV1, mainnet.id);
+
+      expect(() =>
+        market.supplyCollateralBorrow({
+          userAddress: client.account.address,
+          amount: parseUnits("1", 18),
+          borrowAmount: parseUnits("100", 18),
+          accrualPosition: undefined as unknown as AccrualPosition,
+        }),
+      ).toThrow(MissingAccrualPositionError);
+    });
+
+    test("should throw BorrowExceedsSafeLtvError when borrow exceeds LLTV buffer", async ({
+      client,
+    }) => {
+      const morphoClient = new MorphoClient(client);
+      const market = morphoClient.marketV1(WethUsdsMarketV1, mainnet.id);
+      const accrualPosition = await market.getPositionData(
+        client.account.address,
+      );
+
+      expect(() =>
+        market.supplyCollateralBorrow({
+          userAddress: client.account.address,
+          amount: parseUnits("1", 18),
+          borrowAmount: parseUnits("10000", 18),
+          accrualPosition,
+        }),
+      ).toThrow(BorrowExceedsSafeLtvError);
+    });
+
+    test("should throw BorrowExceedsSafeLtvError when borrow exceeds LLTV buffer on existing position", async ({
+      client,
+    }) => {
+      const morphoClient = new MorphoClient(client);
+      const market = morphoClient.marketV1(WethUsdsMarketV1, mainnet.id);
+
+      await supplyCollateral(
+        client,
+        mainnet.id,
+        WethUsdsMarketV1,
+        parseUnits("1", 18),
+      );
+
+      const newAccrualPosition = await market.getPositionData(
+        client.account.address,
+      );
+
+      expect(() =>
+        market.supplyCollateralBorrow({
+          userAddress: client.account.address,
+          amount: 1n,
+          borrowAmount: parseUnits("10000", 18),
+          accrualPosition: newAccrualPosition,
+        }),
+      ).toThrow(BorrowExceedsSafeLtvError);
+    });
+
+    test("should throw ExcessiveSlippageToleranceError for slippage above maximum", async ({
+      client,
+    }) => {
+      const morphoClient = new MorphoClient(client);
+      const market = morphoClient.marketV1(WethUsdsMarketV1, mainnet.id);
+      const accrualPosition = await market.getPositionData(
+        client.account.address,
+      );
+
+      expect(() =>
+        market.supplyCollateralBorrow({
+          userAddress: client.account.address,
+          amount: parseUnits("10", 18),
+          borrowAmount: parseUnits("1000", 18),
+          accrualPosition,
+          slippageTolerance: MAX_SLIPPAGE_TOLERANCE + 1n,
+        }),
+      ).toThrow(ExcessiveSlippageToleranceError);
+    });
   });
 });

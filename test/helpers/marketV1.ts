@@ -10,12 +10,16 @@ import { encodeFunctionData } from "viem";
 export async function supplyCollateral(
   client: AnvilTestClient,
   chainId: number,
-  WstethUsdcMarket: MarketParams,
+  market: MarketParams,
   collateralAmount: bigint,
 ) {
   const { morpho } = getChainAddresses(chainId);
+  await client.deal({
+    erc20: market.collateralToken,
+    amount: collateralAmount,
+  });
   await client.approve({
-    address: WstethUsdcMarket.collateralToken,
+    address: market.collateralToken,
     args: [morpho, MathLib.MAX_UINT_256],
   });
   await client.sendTransaction({
@@ -23,7 +27,7 @@ export async function supplyCollateral(
     data: encodeFunctionData({
       abi: blueAbi,
       functionName: "supplyCollateral",
-      args: [WstethUsdcMarket, collateralAmount, client.account.address, "0x"],
+      args: [market, collateralAmount, client.account.address, "0x"],
     }),
     value: 0n,
   });

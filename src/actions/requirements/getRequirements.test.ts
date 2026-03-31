@@ -9,7 +9,7 @@ import {
 } from "../../types";
 import { getRequirements } from "./getRequirements";
 
-vi.mock("@morpho-org/blue-sdk-viem", async (importOriginal) => {
+vi.mock("@morpho-org/blue-sdk-viem", async (_importOriginal) => {
   return {
     fetchHolding: vi.fn(),
     fetchToken: vi.fn(),

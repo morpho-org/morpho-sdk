@@ -2,7 +2,7 @@ import { addressesRegistry, MarketParams } from "@morpho-org/blue-sdk";
 import { parseUnits } from "viem";
 import { mainnet } from "viem/chains";
 import { describe, expect, vi } from "vitest";
-import { WstethUsdcMarket } from "../../../test/fixtures/marketV1";
+import { WethUsdsMarketV1 } from "../../../test/fixtures/marketV1";
 import { test } from "../../../test/setup";
 import {
   isRequirementApproval,
@@ -19,14 +19,8 @@ import { marketV1SupplyCollateralBorrow } from "./supplyCollateralBorrow";
 
 describe("marketV1SupplyCollateralBorrow unit tests", () => {
   const { wNative } = addressesRegistry[mainnet.id];
-  const marketParams = new MarketParams(WstethUsdcMarket);
+  const marketParams = new MarketParams(WethUsdsMarketV1);
   const marketId = marketParams.id;
-
-  /** Market params with wNative as collateral — enables native wrapping tests. */
-  const wNativeCollateralMarketParams = {
-    ...WstethUsdcMarket,
-    collateralToken: wNative,
-  };
 
   test("should create bundler supply collateral + borrow transaction (ERC20 only)", async ({
     client,
@@ -37,7 +31,7 @@ describe("marketV1SupplyCollateralBorrow unit tests", () => {
     const tx = marketV1SupplyCollateralBorrow({
       market: {
         chainId: mainnet.id,
-        marketParams: WstethUsdcMarket,
+        marketParams: WethUsdsMarketV1,
       },
       args: {
         amount,
@@ -67,7 +61,7 @@ describe("marketV1SupplyCollateralBorrow unit tests", () => {
     const tx = marketV1SupplyCollateralBorrow({
       market: {
         chainId: mainnet.id,
-        marketParams: wNativeCollateralMarketParams,
+        marketParams: WethUsdsMarketV1,
       },
       args: {
         nativeAmount,
@@ -94,7 +88,7 @@ describe("marketV1SupplyCollateralBorrow unit tests", () => {
     const tx = marketV1SupplyCollateralBorrow({
       market: {
         chainId: mainnet.id,
-        marketParams: wNativeCollateralMarketParams,
+        marketParams: WethUsdsMarketV1,
       },
       args: {
         amount,
@@ -150,7 +144,7 @@ describe("marketV1SupplyCollateralBorrow unit tests", () => {
     const tx = marketV1SupplyCollateralBorrow({
       market: {
         chainId: mainnet.id,
-        marketParams: wNativeCollateralMarketParams,
+        marketParams: WethUsdsMarketV1,
       },
       args: {
         amount,
@@ -174,7 +168,7 @@ describe("marketV1SupplyCollateralBorrow unit tests", () => {
       marketV1SupplyCollateralBorrow({
         market: {
           chainId: mainnet.id,
-          marketParams: WstethUsdcMarket,
+          marketParams: WethUsdsMarketV1,
         },
         args: {
           amount: -1n,
@@ -194,7 +188,7 @@ describe("marketV1SupplyCollateralBorrow unit tests", () => {
       marketV1SupplyCollateralBorrow({
         market: {
           chainId: mainnet.id,
-          marketParams: WstethUsdcMarket,
+          marketParams: WethUsdsMarketV1,
         },
         args: {
           amount: parseUnits("1", 18),
@@ -214,7 +208,7 @@ describe("marketV1SupplyCollateralBorrow unit tests", () => {
       marketV1SupplyCollateralBorrow({
         market: {
           chainId: mainnet.id,
-          marketParams: WstethUsdcMarket,
+          marketParams: WethUsdsMarketV1,
         },
         args: {
           amount: parseUnits("1", 18),
@@ -234,7 +228,7 @@ describe("marketV1SupplyCollateralBorrow unit tests", () => {
       marketV1SupplyCollateralBorrow({
         market: {
           chainId: mainnet.id,
-          marketParams: WstethUsdcMarket,
+          marketParams: WethUsdsMarketV1,
         },
         args: {
           amount: 0n,
@@ -254,7 +248,7 @@ describe("marketV1SupplyCollateralBorrow unit tests", () => {
       marketV1SupplyCollateralBorrow({
         market: {
           chainId: mainnet.id,
-          marketParams: wNativeCollateralMarketParams,
+          marketParams: WethUsdsMarketV1,
         },
         args: {
           nativeAmount: -1n,
@@ -274,7 +268,7 @@ describe("marketV1SupplyCollateralBorrow unit tests", () => {
       marketV1SupplyCollateralBorrow({
         market: {
           chainId: mainnet.id,
-          marketParams: WstethUsdcMarket,
+          marketParams: WethUsdsMarketV1,
         },
         args: {
           nativeAmount: parseUnits("1", 18),
@@ -291,7 +285,7 @@ describe("marketV1SupplyCollateralBorrow unit tests", () => {
     const tx = marketV1SupplyCollateralBorrow({
       market: {
         chainId: mainnet.id,
-        marketParams: WstethUsdcMarket,
+        marketParams: WethUsdsMarketV1,
       },
       args: {
         amount: parseUnits("1", 18),
@@ -316,7 +310,7 @@ describe("marketV1SupplyCollateralBorrow unit tests", () => {
     const txWithout = marketV1SupplyCollateralBorrow({
       market: {
         chainId: mainnet.id,
-        marketParams: WstethUsdcMarket,
+        marketParams: WethUsdsMarketV1,
       },
       args: {
         amount,
@@ -330,7 +324,7 @@ describe("marketV1SupplyCollateralBorrow unit tests", () => {
     const txWith = marketV1SupplyCollateralBorrow({
       market: {
         chainId: mainnet.id,
-        marketParams: WstethUsdcMarket,
+        marketParams: WethUsdsMarketV1,
       },
       args: {
         amount,

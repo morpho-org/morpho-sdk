@@ -28,6 +28,7 @@ import {
   type MarketV1BorrowAction,
   type MarketV1SupplyCollateralAction,
   type MarketV1SupplyCollateralBorrowAction,
+  MissingAccrualPositionError,
   MissingMarketPriceError,
   type MorphoAuthorizationAction,
   type MorphoClientType,
@@ -85,12 +86,15 @@ export interface MarketV1Actions {
   /**
    * Prepares a borrow transaction.
    *
-   * Routed through bundler3 via `morphoBorrow`. No requirements.
+   * Routed through bundler3 via `morphoBorrow`.
    * Validates position health with LLTV buffer (0.5%) using the pre-fetched `accrualPosition`.
    * Computes `minSharePrice` from market borrow state and `slippageTolerance`.
    *
+   * `getRequirements` returns `morpho.setAuthorization(generalAdapter1, true)` if not yet authorized,
+   * since borrowing through bundler3 requires GeneralAdapter1 authorization on Morpho.
+   *
    * @param params - Borrow parameters including pre-fetched `accrualPosition` for health validation.
-   * @returns Object with `buildTx`.
+   * @returns Object with `buildTx` and `getRequirements`.
    */
   borrow: (params: {
     userAddress: Address;
@@ -99,6 +103,9 @@ export interface MarketV1Actions {
     slippageTolerance?: bigint;
   }) => {
     buildTx: () => Readonly<Transaction<MarketV1BorrowAction>>;
+    getRequirements: () => Promise<
+      Readonly<Transaction<MorphoAuthorizationAction>>[]
+    >;
   };
 
   /**
@@ -246,6 +253,10 @@ export class MorphoMarketV1 implements MarketV1Actions {
       throw new ExcessiveSlippageToleranceError(slippageTolerance);
     }
 
+    if (!accrualPosition) {
+      throw new MissingAccrualPositionError(this.marketParams.id);
+    }
+
     this.validatePositionHealth(accrualPosition, 0n, amount);
 
     const { totalBorrowAssets, totalBorrowShares } = accrualPosition.market;
@@ -259,6 +270,15 @@ export class MorphoMarketV1 implements MarketV1Actions {
           );
 
     return {
+      getRequirements: async () => {
+        const authTx = await getMorphoAuthorizationRequirement(
+          this.client.viemClient,
+          this.chainId,
+          userAddress,
+        );
+        return authTx ? [authTx] : [];
+      },
+
       buildTx: () =>
         marketV1Borrow({
           market: {
@@ -300,6 +320,10 @@ export class MorphoMarketV1 implements MarketV1Actions {
 
     if (borrowAmount <= 0n) {
       throw new NonPositiveBorrowAmountError(this.marketParams.id);
+    }
+
+    if (!accrualPosition) {
+      throw new MissingAccrualPositionError(this.marketParams.id);
     }
 
     const totalCollateral = amount + (nativeAmount ?? 0n);
@@ -397,6 +421,7 @@ export class MorphoMarketV1 implements MarketV1Actions {
     );
 
     const effectiveLltv = this.marketParams.lltv - DEFAULT_LLTV_BUFFER;
+
     const maxSafeBorrowAfter = MathLib.wMulDown(
       collateralValueAfter,
       effectiveLltv,

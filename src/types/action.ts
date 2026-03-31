@@ -222,7 +222,11 @@ export interface RequirementSignature {
 }
 
 export function isRequirementApproval(
-  requirement: Transaction<ERC20ApprovalAction> | Requirement | undefined,
+  requirement:
+    | Transaction<ERC20ApprovalAction>
+    | Transaction<MorphoAuthorizationAction>
+    | Requirement
+    | undefined,
 ): requirement is Transaction<ERC20ApprovalAction> {
   return (
     requirement !== undefined &&
@@ -233,7 +237,11 @@ export function isRequirementApproval(
 }
 
 export function isRequirementSignature(
-  requirement: Transaction<ERC20ApprovalAction> | Requirement | undefined,
+  requirement:
+    | Transaction<ERC20ApprovalAction>
+    | Transaction<MorphoAuthorizationAction>
+    | Requirement
+    | undefined,
 ): requirement is Requirement {
   return (
     requirement !== undefined &&

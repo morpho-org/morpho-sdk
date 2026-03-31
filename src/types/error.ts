@@ -52,6 +52,12 @@ export class NegativeSlippageToleranceError extends Error {
   }
 }
 
+export class MissingAccrualPositionError extends Error {
+  constructor(market: string) {
+    super(`Accrual position is missing for market: ${market}`);
+  }
+}
+
 export class ExcessiveSlippageToleranceError extends Error {
   constructor(slippageTolerance: bigint) {
     super(

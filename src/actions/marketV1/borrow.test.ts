@@ -2,7 +2,8 @@ import { getChainAddresses } from "@morpho-org/blue-sdk";
 import { parseUnits } from "viem";
 import { mainnet } from "viem/chains";
 import { describe, expect } from "vitest";
-import { WstethUsdcMarket } from "../../../test/fixtures/marketV1";
+import { WethUsdsMarketV1 } from "../../../test/fixtures/marketV1";
+
 import { test } from "../../../test/setup";
 import { NonPositiveBorrowAmountError } from "../../types";
 import { marketV1Borrow } from "./borrow";
@@ -17,7 +18,7 @@ describe("marketV1Borrow unit tests", () => {
     const tx = marketV1Borrow({
       market: {
         chainId: mainnet.id,
-        marketParams: WstethUsdcMarket,
+        marketParams: WethUsdsMarketV1,
       },
       args: {
         amount,
@@ -28,7 +29,7 @@ describe("marketV1Borrow unit tests", () => {
 
     expect(tx).toBeDefined();
     expect(tx.action.type).toBe("marketV1Borrow");
-    expect(tx.action.args.market).toBe(WstethUsdcMarket.id);
+    expect(tx.action.args.market).toBe(WethUsdsMarketV1.id);
     expect(tx.action.args.amount).toBe(amount);
     expect(tx.action.args.receiver).toBe(client.account.address);
     expect(tx.to).toBe(bundler3);
@@ -43,7 +44,7 @@ describe("marketV1Borrow unit tests", () => {
       marketV1Borrow({
         market: {
           chainId: mainnet.id,
-          marketParams: WstethUsdcMarket,
+          marketParams: WethUsdsMarketV1,
         },
         args: {
           amount: 0n,
@@ -61,7 +62,7 @@ describe("marketV1Borrow unit tests", () => {
       marketV1Borrow({
         market: {
           chainId: mainnet.id,
-          marketParams: WstethUsdcMarket,
+          marketParams: WethUsdsMarketV1,
         },
         args: {
           amount: -1n,
@@ -76,7 +77,7 @@ describe("marketV1Borrow unit tests", () => {
     const tx = marketV1Borrow({
       market: {
         chainId: mainnet.id,
-        marketParams: WstethUsdcMarket,
+        marketParams: WethUsdsMarketV1,
       },
       args: {
         amount: parseUnits("100", 6),
@@ -98,7 +99,7 @@ describe("marketV1Borrow unit tests", () => {
     const txWith = marketV1Borrow({
       market: {
         chainId: mainnet.id,
-        marketParams: WstethUsdcMarket,
+        marketParams: WethUsdsMarketV1,
       },
       args: {
         amount,
