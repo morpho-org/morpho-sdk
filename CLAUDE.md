@@ -54,8 +54,8 @@ VaultV2 operations:
 
 MarketV1 (Morpho Blue) operations:
 
-- **supplyCollateral** → `marketV1SupplyCollateral()` — direct `morpho.supplyCollateral()` call (no bundler). Bundler used only when `nativeAmount` wrapping needed. `getRequirements` returns collateral token approval.
-- **borrow** → `marketV1Borrow()` — direct `morpho.borrow()` call. No bundler, no requirements. LLTV buffer validation prevents instant liquidation.
+- **supplyCollateral** → `marketV1SupplyCollateral()` — routed through bundler3 via GeneralAdapter1 (`erc20TransferFrom` + `morphoSupplyCollateral`). Supports optional `nativeAmount` for native token wrapping. `getRequirements` returns collateral token approval for GeneralAdapter1.
+- **borrow** → `marketV1Borrow()` — routed through bundler3 via `morphoBorrow`. Requires GeneralAdapter1 authorization on Morpho (`setAuthorization`). `getRequirements` returns authorization tx if needed. Uses `minSharePrice` for slippage protection. LLTV buffer validation prevents instant liquidation.
 - **supplyCollateralBorrow** → `marketV1SupplyCollateralBorrow()` — bundled via bundler3 (collateral transfer + `morphoSupplyCollateral` + `morphoBorrow`). Requires GeneralAdapter1 authorization on Morpho. LLTV buffer validation prevents instant liquidation. Supports `nativeAmount` for collateral wrapping.
 
 ## Code Standards

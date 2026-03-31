@@ -16,4 +16,4 @@
 - Validate `chainId` match before any on-chain call.
 - Never encode calldata here — that belongs in Actions.
 - Vault deposits go through the bundler (both V1 and V2). Withdraw/redeem are direct vault calls.
-- MarketV1: `supplyCollateral` (solo, no native) and `borrow` (solo) are direct Morpho calls. `supplyCollateralBorrow` uses bundler.
+- MarketV1: all operations (`supplyCollateral`, `borrow`, `supplyCollateralBorrow`) are routed through bundler3 via GeneralAdapter1.

@@ -26,8 +26,8 @@ Pure functions that build deep-frozen `Transaction<TAction>` objects. Four sub-l
 
 | Function                         | Route                            | Why                                                                           |
 | -------------------------------- | -------------------------------- | ----------------------------------------------------------------------------- |
-| `marketV1SupplyCollateral`       | Direct / Bundler (if native)     | Direct when ERC20-only. Bundler only for native wrapping.                     |
-| `marketV1Borrow`                 | Direct Morpho call               | No bundler, no approval. On-chain health check enforces LLTV.                 |
+| `marketV1SupplyCollateral`       | Bundler (general adapter)        | Always bundled via GeneralAdapter1. Approval on GA1, not Morpho.              |
+| `marketV1Borrow`                 | Bundler (general adapter)        | Requires GA1 authorization on Morpho. Uses `minSharePrice` for slippage.      |
 | `marketV1SupplyCollateralBorrow` | Bundler (general adapter)        | Atomic supply + borrow. Requires Morpho authorization for GeneralAdapter1.    |
 
 ## `requirements/` — Approval Resolution

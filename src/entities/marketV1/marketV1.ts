@@ -5,6 +5,7 @@ import {
   type MarketParams,
   MathLib,
   ORACLE_PRICE_SCALE,
+  SharesMath,
 } from "@morpho-org/blue-sdk";
 import { fetchAccrualPosition, fetchMarket } from "@morpho-org/blue-sdk-viem";
 import type { Address } from "viem";
@@ -260,12 +261,17 @@ export class MorphoMarketV1 implements MarketV1Actions {
     this.validatePositionHealth(accrualPosition, 0n, amount);
 
     const { totalBorrowAssets, totalBorrowShares } = accrualPosition.market;
+    const slippageMultiplier = MathLib.wToRay(MathLib.WAD - slippageTolerance);
     const minSharePrice =
       totalBorrowShares === 0n
-        ? 0n
+        ? MathLib.mulDivDown(
+            SharesMath.VIRTUAL_ASSETS,
+            slippageMultiplier,
+            SharesMath.VIRTUAL_SHARES,
+          )
         : MathLib.mulDivDown(
             totalBorrowAssets,
-            MathLib.wToRay(MathLib.WAD - slippageTolerance),
+            slippageMultiplier,
             totalBorrowShares,
           );
 
@@ -331,12 +337,6 @@ export class MorphoMarketV1 implements MarketV1Actions {
       throw new ZeroCollateralAmountError(this.marketParams.id);
     }
 
-    if (nativeAmount) {
-      validateNativeCollateral(this.chainId, this.marketParams.collateralToken);
-    }
-
-    this.validatePositionHealth(accrualPosition, totalCollateral, borrowAmount);
-
     if (slippageTolerance < 0n) {
       throw new NegativeSlippageToleranceError(slippageTolerance);
     }
@@ -344,13 +344,24 @@ export class MorphoMarketV1 implements MarketV1Actions {
       throw new ExcessiveSlippageToleranceError(slippageTolerance);
     }
 
+    if (nativeAmount) {
+      validateNativeCollateral(this.chainId, this.marketParams.collateralToken);
+    }
+
+    this.validatePositionHealth(accrualPosition, totalCollateral, borrowAmount);
+
     const { totalBorrowAssets, totalBorrowShares } = accrualPosition.market;
+    const slippageMultiplier = MathLib.wToRay(MathLib.WAD - slippageTolerance);
     const minSharePrice =
       totalBorrowShares === 0n
-        ? 0n
+        ? MathLib.mulDivDown(
+            SharesMath.VIRTUAL_ASSETS,
+            slippageMultiplier,
+            SharesMath.VIRTUAL_SHARES,
+          )
         : MathLib.mulDivDown(
             totalBorrowAssets,
-            MathLib.wToRay(MathLib.WAD - slippageTolerance),
+            slippageMultiplier,
             totalBorrowShares,
           );
 

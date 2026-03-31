@@ -8,29 +8,32 @@ Pure transaction builders for Morpho Blue market interactions.
 
 ### `marketV1SupplyCollateral`
 
-Dual-path supply collateral.
+Always routed through bundler3 via GeneralAdapter1.
 
-| Path    | When               | Route                                                      | Spender             |
-| ------- | ------------------ | ---------------------------------------------------------- | ------------------- |
-| Direct  | no `nativeAmount`  | `morpho.supplyCollateral()`                                | Morpho contract     |
-| Bundler | `nativeAmount > 0` | `nativeTransfer` + `wrapNative` + `morphoSupplyCollateral` | via general adapter |
+| Scenario            | Actions                                                                          |
+| ------------------- | -------------------------------------------------------------------------------- |
+| ERC20-only          | `erc20TransferFrom` + `morphoSupplyCollateral`                                   |
+| With `nativeAmount` | `nativeTransfer` + `wrapNative` + (optional `erc20TransferFrom`) + `morphoSupplyCollateral` |
 
 - `DepositAmountArgs`: at least one of `amount` / `nativeAmount`.
 - Collateral token must be wNative for native wrapping.
+- Spender for ERC20 approval: **GeneralAdapter1** (not Morpho contract).
 - Zero loss: exact `totalCollateral` reaches Morpho.
 
 ### `marketV1Borrow`
 
-Direct `morpho.borrow()` call. Specifies exact asset amount (`shares = 0`).
+Routed through bundler3 via `morphoBorrow`. Specifies exact asset amount (`shares = 0`).
 
-- No bundler, no requirements.
+- GeneralAdapter1 must be authorized on Morpho (`setAuthorization`).
+- Uses `minSharePrice` (computed from market state + slippage tolerance) for slippage protection.
+- `morphoBorrow` args: `[marketParams, amount, 0n (shares), minSharePrice, receiver, false]`.
 
 ### `marketV1SupplyCollateralBorrow`
 
 Atomic bundled: collateral transfer + `morphoSupplyCollateral` + `morphoBorrow`.
 
 - GeneralAdapter1 must be authorized on Morpho (`setAuthorization`).
-- `morphoBorrow` args: `[marketParams, borrowAmount, 0n (shares), 0n (minSharePrice), receiver, false]`.
+- `morphoBorrow` args: `[marketParams, borrowAmount, 0n (shares), minSharePrice, receiver, false]`.
 - `onBehalf` for supply collateral = user. Borrow `onBehalf` = initiator (handled by adapter).
 - Supports `nativeAmount` wrapping for collateral.
 - Zero loss: all collateral to Morpho, all borrowed tokens to receiver.

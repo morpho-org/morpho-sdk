@@ -17,14 +17,13 @@ Fetch on-chain state via `fetchMarket` / `fetchAccrualPosition`.
 
 ### `supplyCollateral`
 
-Dual-path based on `nativeAmount`:
-
-- **No native**: direct `morpho.supplyCollateral()`. Requirements = approve Morpho (reads allowance via `publicActions`).
-- **Native**: bundler path. Requirements = approve GeneralAdapter1 (uses `getRequirements` orchestrator).
+Always routed through bundler3 via GeneralAdapter1. Requirements = approve GeneralAdapter1 (uses `getRequirements` orchestrator).
+When `nativeAmount` is provided, native token is wrapped via `nativeTransfer` + `wrapNative`.
 
 ### `borrow`
 
-Direct `morpho.borrow()`. No bundler, no requirements.
+Routed through bundler3 via `morphoBorrow`. Requires GeneralAdapter1 authorization on Morpho (`setAuthorization`).
+Uses `minSharePrice` (computed from market borrow state + slippage tolerance) for slippage protection.
 
 ### `supplyCollateralBorrow`
 
@@ -46,4 +45,4 @@ Always bundler. Validates:
 
 - Validate `chainId` match before any on-chain call.
 - Never encode calldata here — that belongs in Actions.
-- `supplyCollateral` (solo, no native) and `borrow` (solo) are direct Morpho calls. `supplyCollateralBorrow` always uses bundler.
+- All operations (`supplyCollateral`, `borrow`, `supplyCollateralBorrow`) are routed through bundler3 via GeneralAdapter1.
