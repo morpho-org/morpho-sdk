@@ -13,12 +13,13 @@ import {
   BorrowExceedsSafeLtvError,
   ExcessiveSlippageToleranceError,
   isRequirementApproval,
+  isRequirementSignature,
   MissingAccrualPositionError,
   MorphoClient,
   marketV1SupplyCollateralBorrow,
 } from "../../../src";
 import { MAX_SLIPPAGE_TOLERANCE } from "../../../src/helpers/constant";
-import { WethUsdsMarketV1 } from "../../fixtures/marketV1";
+import { UsdcEurcvMarketV1, WethUsdsMarketV1 } from "../../fixtures/marketV1";
 import { testInvariants } from "../../helpers/invariants";
 import { supplyCollateral } from "../../helpers/marketV1";
 import { test } from "../../setup";
@@ -348,6 +349,176 @@ describe("SupplyCollateralBorrowMarketV1", () => {
     );
     expect(finalState.userLoanTokenBalance).toEqual(
       initialState.userLoanTokenBalance + borrowAmount,
+    );
+    expect(finalState.position.collateral).toEqual(
+      initialState.position.collateral + amount,
+    );
+    expect(finalState.position.borrowAssets).toEqual(
+      initialState.position.borrowAssets + borrowAmount + 1n,
+    );
+  });
+
+  test("should supply collateral and borrow with permit (EIP-2612) and authorization", async ({
+    client,
+  }) => {
+    const amount = parseUnits("1", 18);
+    const borrowAmount = parseUnits("10000", 6);
+
+    await client.deal({
+      erc20: UsdcEurcvMarketV1.collateralToken,
+      amount,
+    });
+
+    const {
+      markets: {
+        UsdcEurcvMarketV1: { initialState, finalState },
+      },
+    } = await testInvariants({
+      client,
+      params: { markets: { UsdcEurcvMarketV1 } },
+      actionFn: async () => {
+        const morphoClient = new MorphoClient(client, {
+          supportSignature: true,
+        });
+        const market = morphoClient.marketV1(UsdcEurcvMarketV1, mainnet.id);
+        const accrualPosition = await market.getPositionData(
+          client.account.address,
+        );
+
+        const scb = market.supplyCollateralBorrow({
+          userAddress: client.account.address,
+          amount,
+          borrowAmount,
+          accrualPosition,
+        });
+
+        const requirements = await scb.getRequirements({
+          useSimplePermit: true,
+        });
+        expect(requirements).toHaveLength(2);
+
+        const permitRequirement = requirements[0];
+        if (!isRequirementSignature(permitRequirement)) {
+          throw new Error("Expected permit signature requirement");
+        }
+
+        const requirementSignature = await permitRequirement.sign(
+          client,
+          client.account.address,
+        );
+
+        const authorization = requirements[1];
+        if (!isRequirementApproval(authorization)) {
+          throw new Error("Authorization requirement not found");
+        }
+
+        await client.sendTransaction(authorization);
+
+        const tx = scb.buildTx(requirementSignature);
+        await client.sendTransaction(tx);
+      },
+    });
+
+    expect(finalState.userCollateralTokenBalance).toEqual(
+      initialState.userCollateralTokenBalance - amount,
+    );
+    expect(finalState.userLoanTokenBalance).toEqual(
+      initialState.userLoanTokenBalance + borrowAmount,
+    );
+    expect(finalState.morphoCollateralTokenBalance).toEqual(
+      initialState.morphoCollateralTokenBalance + amount,
+    );
+    expect(finalState.morphoLoanTokenBalance).toEqual(
+      initialState.morphoLoanTokenBalance - borrowAmount,
+    );
+    expect(finalState.position.collateral).toEqual(
+      initialState.position.collateral + amount,
+    );
+    expect(finalState.position.borrowAssets).toEqual(
+      initialState.position.borrowAssets + borrowAmount + 1n,
+    );
+  });
+
+  test("should supply collateral and borrow with permit2 and authorization", async ({
+    client,
+  }) => {
+    const amount = parseUnits("10", 18);
+    const borrowAmount = parseUnits("1000", 18);
+
+    await client.deal({
+      erc20: WethUsdsMarketV1.collateralToken,
+      amount,
+    });
+
+    const {
+      markets: {
+        WethUsdsMarketV1: { initialState, finalState },
+      },
+    } = await testInvariants({
+      client,
+      params: { markets: { WethUsdsMarketV1 } },
+      actionFn: async () => {
+        const morphoClient = new MorphoClient(client, {
+          supportSignature: true,
+        });
+        const market = morphoClient.marketV1(WethUsdsMarketV1, mainnet.id);
+        const accrualPosition = await market.getPositionData(
+          client.account.address,
+        );
+
+        const scb = market.supplyCollateralBorrow({
+          userAddress: client.account.address,
+          amount,
+          borrowAmount,
+          accrualPosition,
+        });
+
+        const requirements = await scb.getRequirements();
+
+        // permit2 requirements: approve token -> permit2 + permit2 signature + morpho authorization
+        expect(requirements).toHaveLength(3);
+
+        const approvalPermit2 = requirements[0];
+        if (!isRequirementApproval(approvalPermit2)) {
+          throw new Error("Expected approval requirement for permit2");
+        }
+
+        await client.sendTransaction(approvalPermit2);
+
+        const signaturePermit2 = requirements[1];
+        if (!isRequirementSignature(signaturePermit2)) {
+          throw new Error("Expected permit2 signature requirement");
+        }
+
+        const requirementSignature = await signaturePermit2.sign(
+          client,
+          client.account.address,
+        );
+
+        const authorization = requirements[2];
+        if (!isRequirementApproval(authorization)) {
+          throw new Error("Authorization requirement not found");
+        }
+        expect(authorization.action.type).toBe("morphoAuthorization");
+
+        await client.sendTransaction(authorization);
+
+        const tx = scb.buildTx(requirementSignature);
+        await client.sendTransaction(tx);
+      },
+    });
+
+    expect(finalState.userCollateralTokenBalance).toEqual(
+      initialState.userCollateralTokenBalance - amount,
+    );
+    expect(finalState.userLoanTokenBalance).toEqual(
+      initialState.userLoanTokenBalance + borrowAmount,
+    );
+    expect(finalState.morphoCollateralTokenBalance).toEqual(
+      initialState.morphoCollateralTokenBalance + amount,
+    );
+    expect(finalState.morphoLoanTokenBalance).toEqual(
+      initialState.morphoLoanTokenBalance - borrowAmount,
     );
     expect(finalState.position.collateral).toEqual(
       initialState.position.collateral + amount,

@@ -15,3 +15,11 @@ export const WethUsdsMarketV1 = new MarketParams({
   irm: "0x870aC11D48B15DB9a138Cf899d20F13F79Ba00BC",
   lltv: 860000000000000000n,
 });
+
+export const UsdcEurcvMarketV1 = new MarketParams({
+  collateralToken: "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+  loanToken: "0x5F7827FDeb7c20b443265Fc2F40845B715385Ff2",
+  oracle: "0xC4Cd46Bc6873186A2726d56Da77F17Dcc7eF5BB8",
+  irm: "0x870aC11D48B15DB9a138Cf899d20F13F79Ba00BC",
+  lltv: 860000000000000000n,
+});

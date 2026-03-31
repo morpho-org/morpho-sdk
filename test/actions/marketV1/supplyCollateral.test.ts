@@ -1,13 +1,22 @@
-import { getChainAddresses, MathLib } from "@morpho-org/blue-sdk";
-import { parseUnits } from "viem";
+import {
+  addressesRegistry,
+  getChainAddresses,
+  MathLib,
+} from "@morpho-org/blue-sdk";
+import { isHex, parseUnits } from "viem";
 import { mainnet } from "viem/chains";
 import { describe, expect } from "vitest";
 import {
   isRequirementApproval,
+  isRequirementSignature,
   MorphoClient,
   marketV1SupplyCollateral,
 } from "../../../src";
-import { CbbtcUsdcMarketV1, WethUsdsMarketV1 } from "../../fixtures/marketV1";
+import {
+  CbbtcUsdcMarketV1,
+  UsdcEurcvMarketV1,
+  WethUsdsMarketV1,
+} from "../../fixtures/marketV1";
 import { testInvariants } from "../../helpers/invariants";
 import { test } from "../../setup";
 
@@ -256,6 +265,146 @@ describe("SupplyCollateralMarketV1", () => {
     );
     expect(finalState.position.collateral).toEqual(
       initialState.position.collateral + totalCollateral,
+    );
+  });
+
+  test("should supply collateral with permit (EIP-2612)", async ({
+    client,
+  }) => {
+    const amount = parseUnits("1", 18);
+    await client.deal({
+      erc20: UsdcEurcvMarketV1.collateralToken,
+      amount,
+    });
+
+    const {
+      markets: {
+        UsdcEurcvMarketV1: { initialState, finalState },
+      },
+    } = await testInvariants({
+      client,
+      params: {
+        markets: { UsdcEurcvMarketV1 },
+      },
+      actionFn: async () => {
+        const morphoClient = new MorphoClient(client, {
+          supportSignature: true,
+        });
+        const market = morphoClient.marketV1(UsdcEurcvMarketV1, mainnet.id);
+
+        const supplyCollateral = market.supplyCollateral({
+          userAddress: client.account.address,
+          amount,
+        });
+
+        const requirements = await supplyCollateral.getRequirements({
+          useSimplePermit: true,
+        });
+        expect(requirements.length).toBe(1);
+
+        if (!isRequirementSignature(requirements[0])) {
+          throw new Error("Expected permit signature requirement");
+        }
+
+        const requirementSignature = await requirements[0].sign(
+          client,
+          client.account.address,
+        );
+
+        const tx = supplyCollateral.buildTx(requirementSignature);
+        await client.sendTransaction(tx);
+      },
+    });
+
+    expect(finalState.userCollateralTokenBalance).toEqual(
+      initialState.userCollateralTokenBalance - amount,
+    );
+    expect(finalState.morphoCollateralTokenBalance).toEqual(
+      initialState.morphoCollateralTokenBalance + amount,
+    );
+    expect(finalState.position.collateral).toEqual(
+      initialState.position.collateral + amount,
+    );
+  });
+
+  test("should supply collateral with permit2", async ({ client }) => {
+    const {
+      permit2,
+      bundler3: { generalAdapter1 },
+    } = addressesRegistry[mainnet.id];
+
+    const amount = parseUnits("1", 18);
+    await client.deal({
+      erc20: CbbtcUsdcMarketV1.collateralToken,
+      amount,
+    });
+
+    const {
+      markets: {
+        CbbtcUsdcMarketV1: { initialState, finalState },
+      },
+    } = await testInvariants({
+      client,
+      params: {
+        markets: { CbbtcUsdcMarketV1 },
+      },
+      actionFn: async () => {
+        const morphoClient = new MorphoClient(client, {
+          supportSignature: true,
+        });
+        const market = morphoClient.marketV1(CbbtcUsdcMarketV1, mainnet.id);
+
+        const supplyCollateral = market.supplyCollateral({
+          userAddress: client.account.address,
+          amount,
+        });
+
+        const requirements = await supplyCollateral.getRequirements();
+        expect(requirements.length).toBe(2);
+
+        const approvalPermit2 = requirements[0];
+        if (!isRequirementApproval(approvalPermit2)) {
+          throw new Error("Expected approval requirement for permit2");
+        }
+
+        expect(approvalPermit2.action.args.spender).toBe(permit2);
+        expect(approvalPermit2.action.args.amount).toBe(MathLib.MAX_UINT_160);
+
+        await client.sendTransaction(approvalPermit2);
+
+        const signaturePermit2 = requirements[1];
+        if (!isRequirementSignature(signaturePermit2)) {
+          throw new Error("Expected permit2 signature requirement");
+        }
+
+        expect(signaturePermit2.action.type).toBe("permit2");
+        expect(signaturePermit2.action.args.spender).toBe(generalAdapter1);
+
+        const requirementSignature = await signaturePermit2.sign(
+          client,
+          client.account.address,
+        );
+
+        expect(requirementSignature.args.owner).toEqual(client.account.address);
+        expect(isHex(requirementSignature.args.signature)).toBe(true);
+        expect(requirementSignature.args.signature.length).toBe(132);
+        expect(requirementSignature.args.deadline).toBeGreaterThan(
+          BigInt(Math.floor(Date.now() / 1000)),
+        );
+
+        const tx = supplyCollateral.buildTx(requirementSignature);
+        await client.sendTransaction(tx);
+      },
+    });
+
+    expect(finalState.userCollateralTokenBalance).toEqual(
+      initialState.userCollateralTokenBalance - amount,
+    );
+    expect(finalState.morphoCollateralTokenBalance).toEqual(
+      initialState.morphoCollateralTokenBalance + amount,
+    );
+    expect(finalState.position.collateral).toEqual(
+      initialState.position.collateral + amount,
     );
   });
 });
