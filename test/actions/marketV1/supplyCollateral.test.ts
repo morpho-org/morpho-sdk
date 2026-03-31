@@ -6,6 +6,9 @@ import {
   isRequirementApproval,
   MorphoClient,
   marketV1SupplyCollateral,
+  NegativeNativeAmountError,
+  NonPositiveAssetAmountError,
+  ZeroCollateralAmountError,
 } from "../../../src";
 import { WstethUsdcMarket } from "../../fixtures/marketV1";
 import { testInvariants } from "../../helpers/invariants";
@@ -13,6 +16,94 @@ import { test } from "../../setup";
 
 describe("SupplyCollateralMarketV1", () => {
   const marketParams = new MarketParams(WstethUsdcMarket);
+
+  describe("unit errors", () => {
+    test("should throw ZeroCollateralAmountError at action level when amount is zero", ({
+      client: _client,
+    }) => {
+      expect(() =>
+        marketV1SupplyCollateral({
+          market: { chainId: mainnet.id, marketParams: WstethUsdcMarket },
+          args: {
+            amount: 0n,
+            onBehalf: "0x0000000000000000000000000000000000000001",
+          },
+        }),
+      ).toThrow(ZeroCollateralAmountError);
+    });
+
+    test("should throw NonPositiveAssetAmountError at action level when amount is negative", ({
+      client: _client,
+    }) => {
+      expect(() =>
+        marketV1SupplyCollateral({
+          market: { chainId: mainnet.id, marketParams: WstethUsdcMarket },
+          args: {
+            amount: -1n,
+            onBehalf: "0x0000000000000000000000000000000000000001",
+          },
+        }),
+      ).toThrow(NonPositiveAssetAmountError);
+    });
+
+    test("should throw NegativeNativeAmountError at action level when nativeAmount is negative", ({
+      client: _client,
+    }) => {
+      expect(() =>
+        marketV1SupplyCollateral({
+          market: { chainId: mainnet.id, marketParams: WstethUsdcMarket },
+          args: {
+            amount: parseUnits("1", 18),
+            nativeAmount: -1n,
+            onBehalf: "0x0000000000000000000000000000000000000001",
+          },
+        }),
+      ).toThrow(NegativeNativeAmountError);
+    });
+
+    test("should throw ZeroCollateralAmountError at entity level when amount is zero", ({
+      client,
+    }) => {
+      const morphoClient = new MorphoClient(client);
+      const market = morphoClient.marketV1(WstethUsdcMarket, mainnet.id);
+
+      expect(() =>
+        market.supplyCollateral({
+          userAddress: client.account.address,
+          amount: 0n,
+        }),
+      ).toThrow(ZeroCollateralAmountError);
+    });
+
+    test("should throw NonPositiveAssetAmountError at entity level when amount is negative", ({
+      client,
+    }) => {
+      const morphoClient = new MorphoClient(client);
+      const market = morphoClient.marketV1(WstethUsdcMarket, mainnet.id);
+
+      expect(() =>
+        market.supplyCollateral({
+          userAddress: client.account.address,
+          amount: -1n,
+        }),
+      ).toThrow(NonPositiveAssetAmountError);
+    });
+
+    test("should throw NegativeNativeAmountError at entity level when nativeAmount is negative", ({
+      client,
+    }) => {
+      const morphoClient = new MorphoClient(client);
+      const market = morphoClient.marketV1(WstethUsdcMarket, mainnet.id);
+
+      expect(() =>
+        market.supplyCollateral({
+          userAddress: client.account.address,
+          amount: parseUnits("1", 18),
+          nativeAmount: -1n,
+        }),
+      ).toThrow(NegativeNativeAmountError);
+    });
+  });
 
   test("should create supply collateral bundle", async ({ client }) => {
     const morphoClient = new MorphoClient(client);

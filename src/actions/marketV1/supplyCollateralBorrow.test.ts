@@ -343,6 +343,7 @@ describe("marketV1SupplyCollateralBorrow unit tests", () => {
     });
 
     expect(txWith.data.length).toBeGreaterThan(txWithout.data.length);
+    expect(txWith.data.includes("a1b2c3d4")).toBe(true);
     expect(txWith.action.type).toBe("marketV1SupplyCollateralBorrow");
   });
 });
