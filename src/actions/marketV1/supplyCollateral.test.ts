@@ -2,7 +2,10 @@ import { addressesRegistry, getChainAddresses } from "@morpho-org/blue-sdk";
 import { parseUnits } from "viem";
 import { mainnet } from "viem/chains";
 import { describe, expect, vi } from "vitest";
-import { WethUsdsMarketV1 } from "../../../test/fixtures/marketV1";
+import {
+  UsdcEurcvMarketV1,
+  WethUsdsMarketV1,
+} from "../../../test/fixtures/marketV1";
 import { test } from "../../../test/setup";
 import {
   isRequirementApproval,
@@ -238,7 +241,7 @@ describe("marketV1SupplyCollateral unit tests", () => {
       marketV1SupplyCollateral({
         market: {
           chainId: mainnet.id,
-          marketParams: WethUsdsMarketV1,
+          marketParams: UsdcEurcvMarketV1,
         },
         args: {
           nativeAmount: parseUnits("1", 18),
