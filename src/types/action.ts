@@ -232,7 +232,26 @@ export function isRequirementApproval(
     requirement !== undefined &&
     "to" in requirement &&
     "value" in requirement &&
-    "data" in requirement
+    "data" in requirement &&
+    "action" in requirement &&
+    requirement.action.type === "erc20Approval"
+  );
+}
+
+export function isRequirementAuthorization(
+  requirement:
+    | Transaction<ERC20ApprovalAction>
+    | Transaction<MorphoAuthorizationAction>
+    | Requirement
+    | undefined,
+): requirement is Transaction<MorphoAuthorizationAction> {
+  return (
+    requirement !== undefined &&
+    "to" in requirement &&
+    "value" in requirement &&
+    "data" in requirement &&
+    "action" in requirement &&
+    requirement.action.type === "morphoAuthorization"
   );
 }
 

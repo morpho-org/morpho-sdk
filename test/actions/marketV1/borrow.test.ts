@@ -10,7 +10,7 @@ import { mainnet } from "viem/chains";
 import { describe, expect } from "vitest";
 import {
   BorrowExceedsSafeLtvError,
-  isRequirementApproval,
+  isRequirementAuthorization,
   MissingAccrualPositionError,
   MorphoClient,
   marketV1Borrow,
@@ -141,7 +141,7 @@ describe("BorrowMarketV1", () => {
 
         const requirements = await borrow.getRequirements();
         const requirementAuthorization = requirements[0];
-        if (!isRequirementApproval(requirementAuthorization)) {
+        if (!isRequirementAuthorization(requirementAuthorization)) {
           throw new Error("Authorization requirement not found");
         }
 

@@ -14,6 +14,7 @@ import {
   BorrowExceedsSafeLtvError,
   ExcessiveSlippageToleranceError,
   isRequirementApproval,
+  isRequirementAuthorization,
   isRequirementSignature,
   MissingAccrualPositionError,
   MorphoClient,
@@ -105,7 +106,7 @@ describe("SupplyCollateralBorrowMarketV1", () => {
           throw new Error("Approval requirement not found");
         }
         const authorization = requirements[1];
-        if (!isRequirementApproval(authorization)) {
+        if (!isRequirementAuthorization(authorization)) {
           throw new Error("Authorization requirement not found");
         }
 
@@ -175,7 +176,7 @@ describe("SupplyCollateralBorrowMarketV1", () => {
         expect(requirements[0]!.action.type).toBe("morphoAuthorization");
 
         const authorization = requirements[0];
-        if (!isRequirementApproval(authorization)) {
+        if (!isRequirementAuthorization(authorization)) {
           throw new Error("Authorization requirement not found");
         }
 
@@ -253,7 +254,7 @@ describe("SupplyCollateralBorrowMarketV1", () => {
           throw new Error("Approval requirement not found");
         }
         const authorization = requirements[1];
-        if (!isRequirementApproval(authorization)) {
+        if (!isRequirementAuthorization(authorization)) {
           throw new Error("Authorization requirement not found");
         }
         await client.sendTransaction(approval);
@@ -406,7 +407,7 @@ describe("SupplyCollateralBorrowMarketV1", () => {
         );
 
         const authorization = requirements[1];
-        if (!isRequirementApproval(authorization)) {
+        if (!isRequirementAuthorization(authorization)) {
           throw new Error("Authorization requirement not found");
         }
 
@@ -494,7 +495,7 @@ describe("SupplyCollateralBorrowMarketV1", () => {
         );
 
         const authorization = requirements[2];
-        if (!isRequirementApproval(authorization)) {
+        if (!isRequirementAuthorization(authorization)) {
           throw new Error("Authorization requirement not found");
         }
         expect(authorization.action.type).toBe("morphoAuthorization");

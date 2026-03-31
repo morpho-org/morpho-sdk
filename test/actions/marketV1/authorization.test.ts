@@ -2,7 +2,7 @@ import { getChainAddresses } from "@morpho-org/blue-sdk";
 import { parseUnits } from "viem";
 import { mainnet } from "viem/chains";
 import { describe, expect } from "vitest";
-import { isRequirementApproval, MorphoClient } from "../../../src";
+import { isRequirementAuthorization, MorphoClient } from "../../../src";
 import { WethUsdsMarketV1 } from "../../fixtures/marketV1";
 import { supplyCollateral } from "../../helpers/marketV1";
 import { test } from "../../setup";
@@ -110,7 +110,7 @@ describe("AuthorizationMarketV1", () => {
         .getRequirements();
 
       const requirementAuthorization = requirementsBefore[0];
-      if (!isRequirementApproval(requirementAuthorization)) {
+      if (!isRequirementAuthorization(requirementAuthorization)) {
         throw new Error("Authorization requirement not found");
       }
       await client.sendTransaction(requirementAuthorization);
