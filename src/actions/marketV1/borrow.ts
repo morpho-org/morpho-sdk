@@ -59,7 +59,16 @@ export const marketV1Borrow = ({
     for (const r of reallocations) {
       actions.push({
         type: "reallocateTo",
-        args: [r.vault, r.fee, r.withdrawals, marketParams, false],
+        args: [
+          r.vault,
+          r.fee,
+          r.withdrawals.map((w) => ({
+            marketParams: w.marketParams,
+            amount: w.amount,
+          })),
+          marketParams,
+          false,
+        ],
       });
     }
   }

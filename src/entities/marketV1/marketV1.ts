@@ -7,6 +7,7 @@ import {
 } from "@morpho-org/blue-sdk";
 import {
   fetchAccrualPosition,
+  fetchHolding,
   fetchMarket,
   fetchPosition,
   fetchVault,
@@ -249,6 +250,10 @@ export class MorphoMarketV1 implements MarketV1Actions {
       string,
       Record<string, import("@morpho-org/blue-sdk").Position>
     > = {};
+    const holdings: Record<
+      string,
+      Record<string, import("@morpho-org/blue-sdk").Holding>
+    > = {};
 
     // Fetch data for each supplying vault in parallel
     await Promise.all(
@@ -257,20 +262,29 @@ export class MorphoMarketV1 implements MarketV1Actions {
         vaults[vaultAddress] = vault;
         vaultMarketConfigs[vaultAddress] = {};
         positions[vaultAddress] = {};
+        holdings[vaultAddress] = {};
 
-        // Fetch vault's config + position on target market
-        const [targetConfig, targetPosition] = await Promise.all([
-          fetchVaultMarketConfig(
-            vaultAddress,
-            targetMarketId,
-            client,
-            fetchParams,
-          ),
-          fetchPosition(vaultAddress, targetMarketId, client, fetchParams),
-        ]);
+        // Fetch vault's config, position, and loan token holding on target market
+        const [targetConfig, targetPosition, loanTokenHolding] =
+          await Promise.all([
+            fetchVaultMarketConfig(
+              vaultAddress,
+              targetMarketId,
+              client,
+              fetchParams,
+            ),
+            fetchPosition(vaultAddress, targetMarketId, client, fetchParams),
+            fetchHolding(
+              vaultAddress,
+              this.marketParams.loanToken,
+              client,
+              fetchParams,
+            ),
+          ]);
 
         vaultMarketConfigs[vaultAddress][targetMarketId] = targetConfig;
         positions[vaultAddress][targetMarketId] = targetPosition;
+        holdings[vaultAddress]![this.marketParams.loanToken] = loanTokenHolding;
 
         // Fetch data for each source market in the vault's withdraw queue
         const sourceMarketIds = vault.withdrawQueue.filter(
@@ -316,6 +330,7 @@ export class MorphoMarketV1 implements MarketV1Actions {
         vaults,
         vaultMarketConfigs,
         positions,
+        holdings,
       },
     };
   }

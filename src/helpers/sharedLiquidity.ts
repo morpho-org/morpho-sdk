@@ -39,10 +39,17 @@ function groupByVault(
     });
   }
 
+  // Sort withdrawals by marketId ascending — required by PublicAllocator contract
   return [...byVault.entries()].map(([vault, data]) => ({
     vault,
     fee: data.fee,
-    withdrawals: data.withdrawals,
+    withdrawals: data.withdrawals.sort((a, b) =>
+      a.marketParams.id < b.marketParams.id
+        ? -1
+        : a.marketParams.id > b.marketParams.id
+          ? 1
+          : 0,
+    ),
   }));
 }
 
