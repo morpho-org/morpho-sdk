@@ -15,6 +15,7 @@ import {
   NonPositiveBorrowAmountError,
   type RequirementSignature,
   type Transaction,
+  type VaultReallocation,
   ZeroCollateralAmountError,
 } from "../../types";
 import { getRequirementsAction } from "../requirements/getRequirementsAction";
@@ -31,6 +32,8 @@ export interface MarketV1SupplyCollateralBorrowParams {
     /** Minimum borrow share price (in ray). Protects against share price manipulation. */
     minSharePrice: bigint;
     requirementSignature?: RequirementSignature;
+    /** Vault reallocations to execute before borrowing (computed by entity). */
+    reallocations?: readonly VaultReallocation[];
   };
   metadata?: Metadata;
 }
@@ -60,6 +63,7 @@ export const marketV1SupplyCollateralBorrow = ({
     minSharePrice,
     requirementSignature,
     nativeAmount,
+    reallocations,
   },
   metadata,
 }: MarketV1SupplyCollateralBorrowParams): Readonly<
@@ -122,20 +126,31 @@ export const marketV1SupplyCollateralBorrow = ({
     }
   }
 
-  actions.push(
-    {
-      type: "morphoSupplyCollateral",
-      args: [marketParams, totalCollateral, onBehalf, [], false],
-    },
-    {
-      type: "morphoBorrow",
-      args: [marketParams, borrowAmount, 0n, minSharePrice, receiver, false],
-    },
-  );
+  actions.push({
+    type: "morphoSupplyCollateral",
+    args: [marketParams, totalCollateral, onBehalf, [], false],
+  });
+
+  const reallocationFee =
+    reallocations?.reduce((sum, r) => sum + r.fee, 0n) ?? 0n;
+
+  if (reallocations) {
+    for (const r of reallocations) {
+      actions.push({
+        type: "reallocateTo",
+        args: [r.vault, r.fee, r.withdrawals, marketParams, false],
+      });
+    }
+  }
+
+  actions.push({
+    type: "morphoBorrow",
+    args: [marketParams, borrowAmount, 0n, minSharePrice, receiver, false],
+  });
 
   let tx = {
     ...BundlerAction.encodeBundle(chainId, actions),
-    value: nativeAmount ?? 0n,
+    value: (nativeAmount ?? 0n) + reallocationFee,
   };
 
   if (metadata) {
@@ -154,6 +169,7 @@ export const marketV1SupplyCollateralBorrow = ({
         onBehalf,
         receiver,
         nativeAmount,
+        ...(reallocationFee > 0n ? { reallocationFee } : {}),
       },
     },
   });

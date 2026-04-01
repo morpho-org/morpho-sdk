@@ -13,8 +13,12 @@ import {
   BorrowExceedsSafeLtvError,
   ChainIdMismatchError,
   ChainWNativeMissingError,
+  EmptyReallocationWithdrawalsError,
   MissingMarketPriceError,
   NativeAmountOnNonWNativeCollateralError,
+  NegativeReallocationFeeError,
+  NonPositiveReallocationAmountError,
+  type VaultReallocation,
 } from "../types";
 import { DEFAULT_LLTV_BUFFER } from "./constant";
 
@@ -131,5 +135,31 @@ export const validateNativeCollateral = (
   }
   if (!isAddressEqual(collateralToken, wNative)) {
     throw new NativeAmountOnNonWNativeCollateralError(collateralToken, wNative);
+  }
+};
+
+/**
+ * Validates that vault reallocations are well-formed.
+ *
+ * @param reallocations - The reallocations to validate.
+ */
+export const validateReallocations = (
+  reallocations: readonly VaultReallocation[],
+): void => {
+  for (const r of reallocations) {
+    if (r.fee < 0n) {
+      throw new NegativeReallocationFeeError(r.vault);
+    }
+    if (r.withdrawals.length === 0) {
+      throw new EmptyReallocationWithdrawalsError(r.vault);
+    }
+    for (const w of r.withdrawals) {
+      if (w.amount <= 0n) {
+        throw new NonPositiveReallocationAmountError(
+          r.vault,
+          w.marketParams.id,
+        );
+      }
+    }
   }
 };

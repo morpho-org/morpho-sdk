@@ -2,10 +2,18 @@ import {
   type AccrualPosition,
   DEFAULT_SLIPPAGE_TOLERANCE,
   type Market,
+  type MarketId,
   type MarketParams,
 } from "@morpho-org/blue-sdk";
-import { fetchAccrualPosition, fetchMarket } from "@morpho-org/blue-sdk-viem";
+import {
+  fetchAccrualPosition,
+  fetchMarket,
+  fetchPosition,
+  fetchVault,
+  fetchVaultMarketConfig,
+} from "@morpho-org/blue-sdk-viem";
 import type { Address } from "viem";
+import { getBlock } from "viem/actions";
 import {
   getMorphoAuthorizationRequirement,
   getRequirements,
@@ -15,10 +23,12 @@ import {
 } from "../../actions";
 import {
   computeMinBorrowSharePrice,
+  computeReallocations,
   validateAccrualPosition,
   validateChainId,
   validateNativeCollateral,
   validatePositionHealth,
+  validateReallocations,
 } from "../../helpers";
 import { MAX_SLIPPAGE_TOLERANCE } from "../../helpers/constant";
 import {
@@ -37,7 +47,9 @@ import {
   NonPositiveBorrowAmountError,
   type Requirement,
   type RequirementSignature,
+  type SharedLiquidityData,
   type Transaction,
+  type VaultReallocation,
   ZeroCollateralAmountError,
 } from "../../types";
 import type { FetchParameters } from "../../types/data";
@@ -62,6 +74,21 @@ export interface MarketV1Actions {
     userAddress: Address,
     parameters?: FetchParameters,
   ) => Promise<AccrualPosition>;
+
+  /**
+   * Fetches on-chain state needed to compute shared liquidity reallocations.
+   *
+   * Fetches vault data, vault market configs, positions, and source market states
+   * for each supplying vault via RPC. The returned data is passed to `borrow()` or
+   * `supplyCollateralBorrow()` where the reallocation algorithm runs internally.
+   *
+   * @param params - Supplying vault addresses and optional fetch parameters.
+   * @returns Shared liquidity data container for `borrow()`/`supplyCollateralBorrow()`.
+   */
+  getSharedLiquidityData: (params: {
+    supplyingVaults: readonly Address[];
+    parameters?: FetchParameters;
+  }) => Promise<SharedLiquidityData>;
 
   /**
    * Prepares a supply-collateral transaction.
@@ -89,6 +116,9 @@ export interface MarketV1Actions {
    * Validates position health with LLTV buffer (0.5%) using the pre-fetched `accrualPosition`.
    * Computes `minSharePrice` from market borrow state and `slippageTolerance`.
    *
+   * When `sharedLiquidity` is provided, `reallocateTo` actions are prepended to the bundle,
+   * moving liquidity from other markets via the PublicAllocator before borrowing.
+   *
    * `getRequirements` returns `morpho.setAuthorization(generalAdapter1, true)` if not yet authorized,
    * since borrowing through bundler3 requires GeneralAdapter1 authorization on Morpho.
    *
@@ -100,6 +130,7 @@ export interface MarketV1Actions {
     amount: bigint;
     accrualPosition: AccrualPosition;
     slippageTolerance?: bigint;
+    sharedLiquidity?: SharedLiquidityData;
   }) => {
     buildTx: () => Readonly<Transaction<MarketV1BorrowAction>>;
     getRequirements: () => Promise<
@@ -112,6 +143,9 @@ export interface MarketV1Actions {
    *
    * Routed through the bundler. Validates position health with LLTV buffer
    * to prevent instant liquidation on new positions near the LLTV threshold.
+   *
+   * When `sharedLiquidity` is provided, `reallocateTo` actions are prepended before
+   * `morphoBorrow` in the bundle.
    *
    * `getRequirements` returns in parallel:
    * - ERC20 approval or permit for collateral token (to GeneralAdapter1).
@@ -126,6 +160,7 @@ export interface MarketV1Actions {
       accrualPosition: AccrualPosition;
       borrowAmount: bigint;
       slippageTolerance?: bigint;
+      sharedLiquidity?: SharedLiquidityData;
     } & DepositAmountArgs,
   ) => {
     buildTx: (
@@ -174,6 +209,115 @@ export class MorphoMarketV1 implements MarketV1Actions {
         chainId: this.chainId,
       },
     );
+  }
+
+  async getSharedLiquidityData({
+    supplyingVaults,
+    parameters,
+  }: {
+    supplyingVaults: readonly Address[];
+    parameters?: FetchParameters;
+  }): Promise<SharedLiquidityData> {
+    validateChainId(this.client.viemClient.chain?.id, this.chainId);
+
+    const client = this.client.viemClient;
+    const targetMarketId = this.marketParams.id;
+    const fetchParams = { ...parameters, chainId: this.chainId };
+
+    // Fetch block info for SimulationState
+    const block = await getBlock(
+      client,
+      parameters?.blockNumber
+        ? { blockNumber: parameters.blockNumber }
+        : parameters?.blockTag
+          ? { blockTag: parameters.blockTag }
+          : undefined,
+    );
+
+    // Fetch target market
+    const targetMarket = await fetchMarket(targetMarketId, client, fetchParams);
+
+    const markets: Record<MarketId, Market> = {
+      [targetMarketId]: targetMarket,
+    };
+    const vaults: Record<string, import("@morpho-org/blue-sdk").Vault> = {};
+    const vaultMarketConfigs: Record<
+      string,
+      Record<string, import("@morpho-org/blue-sdk").VaultMarketConfig>
+    > = {};
+    const positions: Record<
+      string,
+      Record<string, import("@morpho-org/blue-sdk").Position>
+    > = {};
+
+    // Fetch data for each supplying vault in parallel
+    await Promise.all(
+      supplyingVaults.map(async (vaultAddress) => {
+        const vault = await fetchVault(vaultAddress, client, fetchParams);
+        vaults[vaultAddress] = vault;
+        vaultMarketConfigs[vaultAddress] = {};
+        positions[vaultAddress] = {};
+
+        // Fetch vault's config + position on target market
+        const [targetConfig, targetPosition] = await Promise.all([
+          fetchVaultMarketConfig(
+            vaultAddress,
+            targetMarketId,
+            client,
+            fetchParams,
+          ),
+          fetchPosition(vaultAddress, targetMarketId, client, fetchParams),
+        ]);
+
+        vaultMarketConfigs[vaultAddress][targetMarketId] = targetConfig;
+        positions[vaultAddress][targetMarketId] = targetPosition;
+
+        // Fetch data for each source market in the vault's withdraw queue
+        const sourceMarketIds = vault.withdrawQueue.filter(
+          (id) => id !== targetMarketId,
+        );
+
+        await Promise.all(
+          sourceMarketIds.map(async (sourceMarketId) => {
+            const [sourceConfig, sourcePosition] = await Promise.all([
+              fetchVaultMarketConfig(
+                vaultAddress,
+                sourceMarketId,
+                client,
+                fetchParams,
+              ),
+              fetchPosition(vaultAddress, sourceMarketId, client, fetchParams),
+            ]);
+
+            vaultMarketConfigs[vaultAddress]![sourceMarketId] = sourceConfig;
+            positions[vaultAddress]![sourceMarketId] = sourcePosition;
+
+            // Fetch source market state (deduplicate across vaults)
+            if (!markets[sourceMarketId]) {
+              markets[sourceMarketId] = await fetchMarket(
+                sourceMarketId,
+                client,
+                fetchParams,
+              );
+            }
+          }),
+        );
+      }),
+    );
+
+    return {
+      simulationState: {
+        chainId: this.chainId,
+        block: {
+          number: block.number ?? 0n,
+          timestamp: block.timestamp,
+        },
+        markets,
+        vaults,
+        vaultMarketConfigs,
+        positions,
+      },
+    };
   }
 
   supplyCollateral({
@@ -233,11 +377,13 @@ export class MorphoMarketV1 implements MarketV1Actions {
     userAddress,
     accrualPosition,
     slippageTolerance = DEFAULT_SLIPPAGE_TOLERANCE,
+    sharedLiquidity,
   }: {
     amount: bigint;
     userAddress: Address;
     accrualPosition: AccrualPosition;
     slippageTolerance?: bigint;
+    sharedLiquidity?: SharedLiquidityData;
   }) {
     validateChainId(this.client.viemClient.chain?.id, this.chainId);
 
@@ -271,6 +417,22 @@ export class MorphoMarketV1 implements MarketV1Actions {
       slippageTolerance,
     );
 
+    let reallocations: readonly VaultReallocation[] | undefined;
+    if (sharedLiquidity) {
+      reallocations = computeReallocations(
+        sharedLiquidity,
+        this.marketParams.id,
+        {
+          enabled: true,
+          defaultMaxWithdrawalUtilization:
+            this.client.options.sharedLiquidity?.maxWithdrawalUtilization,
+        },
+      );
+      if (reallocations.length > 0) {
+        validateReallocations(reallocations);
+      }
+    }
+
     return {
       getRequirements: async () => {
         const authTx = await getMorphoAuthorizationRequirement(
@@ -291,6 +453,7 @@ export class MorphoMarketV1 implements MarketV1Actions {
             amount,
             receiver: userAddress,
             minSharePrice,
+            reallocations,
           },
           metadata: this.client.options.metadata,
         }),
@@ -304,11 +467,13 @@ export class MorphoMarketV1 implements MarketV1Actions {
     borrowAmount,
     nativeAmount,
     slippageTolerance = DEFAULT_SLIPPAGE_TOLERANCE,
+    sharedLiquidity,
   }: {
     userAddress: Address;
     accrualPosition: AccrualPosition;
     borrowAmount: bigint;
     slippageTolerance?: bigint;
+    sharedLiquidity?: SharedLiquidityData;
   } & DepositAmountArgs) {
     validateChainId(this.client.viemClient.chain?.id, this.chainId);
 
@@ -360,6 +525,22 @@ export class MorphoMarketV1 implements MarketV1Actions {
       slippageTolerance,
     );
 
+    let reallocations: readonly VaultReallocation[] | undefined;
+    if (sharedLiquidity) {
+      reallocations = computeReallocations(
+        sharedLiquidity,
+        this.marketParams.id,
+        {
+          enabled: true,
+          defaultMaxWithdrawalUtilization:
+            this.client.options.sharedLiquidity?.maxWithdrawalUtilization,
+        },
+      );
+      if (reallocations.length > 0) {
+        validateReallocations(reallocations);
+      }
+    }
+
     return {
       getRequirements: async (params?: { useSimplePermit?: boolean }) => {
         const [erc20Requirements, authTx] = await Promise.all([
@@ -395,6 +576,7 @@ export class MorphoMarketV1 implements MarketV1Actions {
             receiver: userAddress,
             minSharePrice,
             requirementSignature,
+            reallocations,
           },
           metadata: this.client.options.metadata,
         }),
