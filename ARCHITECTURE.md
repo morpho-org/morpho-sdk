@@ -65,7 +65,7 @@ Each layer has a single responsibility and a strict boundary:
 | Layer      | Responsibility                                                                                                                                  | What it must NOT do                           |
 | ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------- |
 | **Client** | Wrap a viem `Client`, normalize SDK options (`supportSignature`, `metadata`, `supportDeployless`), produce vault/market entities                | Call actions directly, hold mutable state     |
-| **Entity** | Fetch on-chain data (vault accrual data, market/position data), compute derived values (e.g. `maxSharePrice`, LLTV buffer), delegate to actions | Encode calldata, know about bundler internals |
+| **Entity** | Fetch on-chain data (vault accrual data for V1/V2, market/position data for MarketV1), compute derived values (e.g. `maxSharePrice`, LLTV buffer), delegate to actions | Encode calldata, know about bundler internals |
 | **Action** | Validate inputs, encode calldata, deep-freeze the result, return a `Transaction<TAction>`                                                       | Fetch data, hold state, mutate anything       |
 
 **Calls flow strictly downward**: Client → Entity → Action. An action never calls an entity;
@@ -124,6 +124,7 @@ at the SDK level. The differences are at the protocol layer:
   stays below `LLTV - buffer` (default 0.5%). Throws `BorrowExceedsSafeLtvError` if exceeded.
 - **SDK data**: Fetched via `fetchMarket` / `fetchAccrualPosition`. `AccrualPosition` provides
   health metrics: `maxBorrowAssets`, `ltv`, `isHealthy`, `borrowAssets`, `collateral`.
+
 
 ### Force Deallocation (V2 only)
 

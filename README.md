@@ -212,6 +212,7 @@ const requirements = await getRequirements();
 const tx = buildTx(requirementSignature);
 ```
 
+
 ## Architecture
 
 ```mermaid
@@ -258,6 +259,7 @@ graph LR
         M1B -->|morphoBorrow| B3
         M1SCB -->|transfer + supplyCollateral + borrow| B3
     end
+
 
     subgraph Shared
         REQ[getRequirements]
