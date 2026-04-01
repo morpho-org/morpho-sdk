@@ -2,8 +2,6 @@ import {
   type AccrualPosition,
   DEFAULT_SLIPPAGE_TOLERANCE,
   getChainAddresses,
-  MathLib,
-  SharesMath,
 } from "@morpho-org/blue-sdk";
 import { blueAbi } from "@morpho-org/blue-sdk-viem";
 
@@ -12,6 +10,7 @@ import { mainnet } from "viem/chains";
 import { describe, expect } from "vitest";
 import {
   BorrowExceedsSafeLtvError,
+  computeMinBorrowSharePrice,
   ExcessiveSlippageToleranceError,
   isRequirementApproval,
   isRequirementAuthorization,
@@ -46,11 +45,10 @@ describe("SupplyCollateralBorrowMarketV1", () => {
       })
       .buildTx();
 
-    const { totalBorrowAssets, totalBorrowShares } = accrualPosition.market;
-    const minSharePrice = MathLib.mulDivDown(
-      totalBorrowAssets + SharesMath.VIRTUAL_ASSETS,
-      MathLib.wToRay(MathLib.WAD - DEFAULT_SLIPPAGE_TOLERANCE),
-      totalBorrowShares + SharesMath.VIRTUAL_SHARES,
+    const minSharePrice = computeMinBorrowSharePrice(
+      borrowAmount,
+      accrualPosition.market,
+      DEFAULT_SLIPPAGE_TOLERANCE,
     );
 
     const directTx = marketV1SupplyCollateralBorrow({

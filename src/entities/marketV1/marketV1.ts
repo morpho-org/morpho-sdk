@@ -3,8 +3,6 @@ import {
   DEFAULT_SLIPPAGE_TOLERANCE,
   type Market,
   type MarketParams,
-  MathLib,
-  SharesMath,
 } from "@morpho-org/blue-sdk";
 import { fetchAccrualPosition, fetchMarket } from "@morpho-org/blue-sdk-viem";
 import type { Address } from "viem";
@@ -16,6 +14,7 @@ import {
   marketV1SupplyCollateralBorrow,
 } from "../../actions";
 import {
+  computeMinBorrowSharePrice,
   validateAccrualPosition,
   validateChainId,
   validateNativeCollateral,
@@ -266,13 +265,10 @@ export class MorphoMarketV1 implements MarketV1Actions {
       this.marketParams.id,
       this.marketParams.lltv,
     );
-
-    const { totalBorrowAssets, totalBorrowShares } = accrualPosition.market;
-    const slippageMultiplier = MathLib.wToRay(MathLib.WAD - slippageTolerance);
-    const minSharePrice = MathLib.mulDivDown(
-      totalBorrowAssets + SharesMath.VIRTUAL_ASSETS,
-      slippageMultiplier,
-      totalBorrowShares + SharesMath.VIRTUAL_SHARES,
+    const minSharePrice = computeMinBorrowSharePrice(
+      amount,
+      accrualPosition.market,
+      slippageTolerance,
     );
 
     return {
@@ -358,12 +354,10 @@ export class MorphoMarketV1 implements MarketV1Actions {
       this.marketParams.lltv,
     );
 
-    const { totalBorrowAssets, totalBorrowShares } = accrualPosition.market;
-    const slippageMultiplier = MathLib.wToRay(MathLib.WAD - slippageTolerance);
-    const minSharePrice = MathLib.mulDivDown(
-      totalBorrowAssets + SharesMath.VIRTUAL_ASSETS,
-      slippageMultiplier,
-      totalBorrowShares + SharesMath.VIRTUAL_SHARES,
+    const minSharePrice = computeMinBorrowSharePrice(
+      borrowAmount,
+      accrualPosition.market,
+      slippageTolerance,
     );
 
     return {

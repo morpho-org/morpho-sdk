@@ -1,4 +1,5 @@
 export { addTransactionMetadata } from "./metadata";
+export { computeMinBorrowSharePrice } from "./slippage";
 export {
   validateAccrualPosition,
   validateChainId,

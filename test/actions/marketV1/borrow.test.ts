@@ -10,6 +10,7 @@ import { mainnet } from "viem/chains";
 import { describe, expect } from "vitest";
 import {
   BorrowExceedsSafeLtvError,
+  computeMinBorrowSharePrice,
   isRequirementAuthorization,
   MissingAccrualPositionError,
   MorphoClient,
@@ -46,11 +47,10 @@ describe("BorrowMarketV1", () => {
 
     const tx = borrow.buildTx();
 
-    const { totalBorrowAssets, totalBorrowShares } = accrualPosition.market;
-    const minSharePrice = MathLib.mulDivDown(
-      totalBorrowAssets + SharesMath.VIRTUAL_ASSETS,
-      MathLib.wToRay(MathLib.WAD - DEFAULT_SLIPPAGE_TOLERANCE),
-      totalBorrowShares + SharesMath.VIRTUAL_SHARES,
+    const minSharePrice = computeMinBorrowSharePrice(
+      amount,
+      accrualPosition.market,
+      DEFAULT_SLIPPAGE_TOLERANCE,
     );
 
     const directTx = marketV1Borrow({
