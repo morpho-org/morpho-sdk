@@ -2,10 +2,10 @@ import { MarketParams } from "@morpho-org/blue-sdk";
 import { type Address, parseUnits } from "viem";
 import { mainnet } from "viem/chains";
 import { describe, expect } from "vitest";
-import { MorphoClient, vaultV2ForceRedeem } from "../../src";
-import { ReEcosystemUsdcVaultV2 } from "../fixtures/vaultV2";
-import { testInvariants } from "../helpers/invariants";
-import { test } from "../setup";
+import { MorphoClient, vaultV2ForceRedeem } from "../../../src";
+import { ReEcosystemUsdcVaultV2 } from "../../fixtures/vaultV2";
+import { testInvariants } from "../../helpers/invariants";
+import { test } from "../../setup";
 
 describe("ForceRedeem VaultV2", () => {
   // MarketV1 adapter addresses
@@ -45,7 +45,7 @@ describe("ForceRedeem VaultV2", () => {
       {
         adapter: adapterAddress1,
         marketParams,
-        assets: assetsDeallocate,
+        amount: assetsDeallocate,
       },
     ] as const;
 
@@ -103,7 +103,9 @@ describe("ForceRedeem VaultV2", () => {
       amount: redeemShares,
     });
 
-    const deallocations = [{ adapter: adapterAddress2, assets }] as const;
+    const deallocations = [
+      { adapter: adapterAddress2, amount: assets },
+    ] as const;
 
     const forceRedeem = vaultV2.forceRedeem({
       deallocations,
@@ -161,9 +163,9 @@ describe("ForceRedeem VaultV2", () => {
       {
         adapter: adapterAddress1,
         marketParams: marketParams,
-        assets: assetsDeallocate1,
+        amount: assetsDeallocate1,
       },
-      { adapter: adapterAddress2, assets: assetsDeallocate2 },
+      { adapter: adapterAddress2, amount: assetsDeallocate2 },
     ] as const;
 
     const forceRedeem = vaultV2.forceRedeem({

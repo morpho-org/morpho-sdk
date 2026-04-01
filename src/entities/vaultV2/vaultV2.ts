@@ -1,6 +1,11 @@
-import { DEFAULT_SLIPPAGE_TOLERANCE, MathLib } from "@morpho-org/blue-sdk";
-import { fetchAccrualVaultV2, fetchVaultV2 } from "@morpho-org/blue-sdk-viem";
-import type { Address } from "viem";
+import {
+  type AccrualVaultV2,
+  DEFAULT_SLIPPAGE_TOLERANCE,
+  getChainAddresses,
+  MathLib,
+} from "@morpho-org/blue-sdk";
+import { fetchAccrualVaultV2 } from "@morpho-org/blue-sdk-viem";
+import { type Address, isAddressEqual } from "viem";
 import {
   getRequirements,
   vaultV2Deposit,
@@ -12,19 +17,26 @@ import {
 import { MAX_SLIPPAGE_TOLERANCE } from "../../helpers/constant";
 import {
   ChainIdMismatchError,
+  ChainWNativeMissingError,
   type Deallocation,
+  type DepositAmountArgs,
   type ERC20ApprovalAction,
   ExcessiveSlippageToleranceError,
   type MorphoClientType,
+  NativeAmountOnNonWNativeVaultError,
+  NegativeNativeAmountError,
+  NegativeSlippageToleranceError,
+  NonPositiveAssetAmountError,
+  NonPositiveSharesAmountError,
   type Requirement,
   type RequirementSignature,
   type Transaction,
+  VaultAddressMismatchError,
   type VaultV2DepositAction,
   type VaultV2ForceRedeemAction,
   type VaultV2ForceWithdrawAction,
   type VaultV2RedeemAction,
   type VaultV2WithdrawAction,
-  ZeroSharesAmountError,
 } from "../../types";
 import type { FetchParameters } from "../../types/data";
 
@@ -44,42 +56,46 @@ export interface VaultV2Actions {
    * Prepares a deposit transaction for the VaultV2 contract.
    *
    * This function constructs the transaction data required to deposit a specified amount of assets into the vault.
-   * The function asynchronously fetches the latest vault data to ensure accurate calculations for slippage and asset address,
+   * Uses pre-fetched accrual vault data for accurate calculations of slippage and asset address,
    * then returns the prepared deposit transaction and a function for retrieving all required approval transactions.
    * Bundler Integration: This flow uses the bundler to atomically execute the user's asset transfer and vault deposit in a single transaction for slippage protection.
    *
    * @param {Object} params - The deposit parameters.
-   * @param {bigint} params.assets - The amount of assets to deposit.
-   * @param {Address} [params.userAddress] - Optional user address initiating the deposit. Default is the client's user address is used.
+   * @param {bigint} [params.amount=0n] - Amount of ERC-20 assets to deposit. At least one of amount or nativeAmount must be provided.
+   * @param {Address} params.userAddress - User address initiating the deposit.
+   * @param {AccrualVaultV2} params.accrualVault - Pre-fetched vault data with asset address and share conversion.
    * @param {bigint} [params.slippageTolerance=DEFAULT_SLIPPAGE_TOLERANCE] - Optional slippage tolerance value. Default is 0.03%. Slippage tolerance must be less than 10%.
+   * @param {bigint} [params.nativeAmount] - Amount of native token to wrap into wNative. Vault asset must be wNative.
    * @returns {Object} The result object.
    * @returns {Readonly<Transaction<VaultV2DepositAction>>} returns.tx The prepared deposit transaction.
-   * @returns {Promise<Readonly<Transaction<ERC20ApprovalAction>[]>>} returns.getRequirements The function for retrieving all required approval transactions.
+   * @returns {Promise<(Readonly<Transaction<ERC20ApprovalAction>> | Requirement)[]>} returns.getRequirements The function for retrieving all required approval transactions.
    */
-  deposit: (params: {
-    assets: bigint;
-    userAddress: Address;
-    slippageTolerance?: bigint;
-  }) => Promise<{
+  deposit: (
+    params: {
+      userAddress: Address;
+      accrualVault: AccrualVaultV2;
+      slippageTolerance?: bigint;
+    } & DepositAmountArgs,
+  ) => {
     buildTx: (
       requirementSignature?: RequirementSignature,
     ) => Readonly<Transaction<VaultV2DepositAction>>;
     getRequirements: (params?: {
       useSimplePermit?: boolean;
     }) => Promise<(Readonly<Transaction<ERC20ApprovalAction>> | Requirement)[]>;
-  }>;
+  };
   /**
    * Prepares a withdraw transaction for the VaultV2 contract.
    *
    * This function constructs the transaction data required to withdraw a specified amount of assets from the vault.
    *
    * @param {Object} params - The withdraw parameters.
-   * @param {bigint} params.assets - The amount of assets to withdraw.
+   * @param {bigint} params.amount - The amount of assets to withdraw.
    * @param {Address} params.userAddress - User address initiating the withdraw.
    * @returns {Object} The result object.
    * @returns {Readonly<Transaction<VaultV2WithdrawAction>>} returns.tx The prepared withdraw transaction.
    */
-  withdraw: (params: { assets: bigint; userAddress: Address }) => {
+  withdraw: (params: { amount: bigint; userAddress: Address }) => {
     buildTx: () => Readonly<Transaction<VaultV2WithdrawAction>>;
   };
   /**
@@ -106,14 +122,14 @@ export interface VaultV2Actions {
    * @param {Object} params - The force withdraw parameters.
    * @param {readonly Deallocation[]} params.deallocations - The typed list of deallocations to perform.
    * @param {Object} params.withdraw - The withdraw parameters applied after deallocations.
-   * @param {bigint} params.withdraw.assets - The amount of assets to withdraw.
+   * @param {bigint} params.withdraw.amount - The amount of assets to withdraw.
    * @param {Address} params.userAddress - User address (penalty source and withdraw recipient).
    * @returns {Object} The result object.
    * @returns {Readonly<Transaction<VaultV2ForceWithdrawAction>>} returns.buildTx The prepared multicall transaction.
    */
   forceWithdraw: (params: {
     deallocations: readonly Deallocation[];
-    withdraw: { assets: bigint };
+    withdraw: { amount: bigint };
     userAddress: Address;
   }) => {
     buildTx: () => Readonly<Transaction<VaultV2ForceWithdrawAction>>;
@@ -164,15 +180,17 @@ export class MorphoVaultV2 implements VaultV2Actions {
     });
   }
 
-  async deposit({
-    assets,
+  deposit({
+    amount = 0n,
     userAddress,
+    accrualVault,
     slippageTolerance = DEFAULT_SLIPPAGE_TOLERANCE,
+    nativeAmount,
   }: {
-    assets: bigint;
     userAddress: Address;
+    accrualVault: AccrualVaultV2;
     slippageTolerance?: bigint;
-  }) {
+  } & DepositAmountArgs) {
     if (this.client.viemClient.chain?.id !== this.chainId) {
       throw new ChainIdMismatchError(
         this.client.viemClient.chain?.id,
@@ -180,23 +198,52 @@ export class MorphoVaultV2 implements VaultV2Actions {
       );
     }
 
-    const vaultData = await fetchVaultV2(this.vault, this.client.viemClient, {
-      chainId: this.chainId,
-      deployless: this.client.options.supportDeployless,
-    });
+    if (!isAddressEqual(accrualVault.address, this.vault)) {
+      throw new VaultAddressMismatchError(this.vault, accrualVault.address);
+    }
 
+    if (amount < 0n) {
+      throw new NonPositiveAssetAmountError(this.vault);
+    }
+
+    if (nativeAmount && nativeAmount < 0n) {
+      throw new NegativeNativeAmountError(nativeAmount);
+    }
+
+    let wNative: Address | undefined;
+    if (nativeAmount) {
+      ({ wNative } = getChainAddresses(this.chainId));
+      if (!wNative) {
+        throw new ChainWNativeMissingError(this.chainId);
+      }
+    }
+
+    if (slippageTolerance < 0n) {
+      throw new NegativeSlippageToleranceError(slippageTolerance);
+    }
     if (slippageTolerance > MAX_SLIPPAGE_TOLERANCE) {
       throw new ExcessiveSlippageToleranceError(slippageTolerance);
     }
 
-    const shares = vaultData.toShares(assets);
-    if (shares === 0n) {
-      throw new ZeroSharesAmountError(this.vault);
+    if (nativeAmount && wNative) {
+      if (!isAddressEqual(accrualVault.asset, wNative)) {
+        throw new NativeAmountOnNonWNativeVaultError(
+          accrualVault.asset,
+          wNative,
+        );
+      }
+    }
+
+    const totalAssets = amount + (nativeAmount ?? 0n);
+
+    const shares = accrualVault.toShares(totalAssets);
+    if (shares <= 0n) {
+      throw new NonPositiveSharesAmountError(this.vault);
     }
 
     const maxSharePrice = MathLib.min(
       MathLib.mulDivUp(
-        assets,
+        totalAssets,
         MathLib.wToRay(MathLib.WAD + slippageTolerance),
         shares,
       ),
@@ -206,35 +253,37 @@ export class MorphoVaultV2 implements VaultV2Actions {
     return {
       getRequirements: async (params?: { useSimplePermit?: boolean }) =>
         await getRequirements(this.client.viemClient, {
-          address: vaultData.asset,
+          address: accrualVault.asset,
           chainId: this.chainId,
           supportSignature: this.client.options.supportSignature,
           supportDeployless: this.client.options.supportDeployless,
           useSimplePermit: params?.useSimplePermit,
           args: {
-            amount: assets,
+            amount,
             from: userAddress,
           },
         }),
+
       buildTx: (requirementSignature?: RequirementSignature) =>
         vaultV2Deposit({
           vault: {
             chainId: this.chainId,
             address: this.vault,
-            asset: vaultData.asset,
+            asset: accrualVault.asset,
           },
           args: {
-            assets,
+            amount,
             maxSharePrice,
             recipient: userAddress,
             requirementSignature,
+            nativeAmount,
           },
           metadata: this.client.options.metadata,
         }),
     };
   }
 
-  withdraw({ assets, userAddress }: { assets: bigint; userAddress: Address }) {
+  withdraw({ amount, userAddress }: { amount: bigint; userAddress: Address }) {
     if (this.client.viemClient.chain?.id !== this.chainId) {
       throw new ChainIdMismatchError(
         this.client.viemClient.chain?.id,
@@ -247,7 +296,7 @@ export class MorphoVaultV2 implements VaultV2Actions {
         vaultV2Withdraw({
           vault: { address: this.vault },
           args: {
-            assets,
+            amount,
             recipient: userAddress,
             onBehalf: userAddress,
           },
@@ -284,7 +333,7 @@ export class MorphoVaultV2 implements VaultV2Actions {
     userAddress,
   }: {
     deallocations: readonly Deallocation[];
-    withdraw: { assets: bigint };
+    withdraw: { amount: bigint };
     userAddress: Address;
   }) {
     if (this.client.viemClient.chain?.id !== this.chainId) {
@@ -301,7 +350,7 @@ export class MorphoVaultV2 implements VaultV2Actions {
           args: {
             deallocations,
             withdraw: {
-              assets: withdraw.assets,
+              amount: withdraw.amount,
               recipient: userAddress,
             },
             onBehalf: userAddress,

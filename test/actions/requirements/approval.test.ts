@@ -4,8 +4,8 @@ import { testInvariants } from "test/helpers/invariants";
 import { parseUnits } from "viem";
 import { mainnet } from "viem/chains";
 import { describe, expect } from "vitest";
-import { isRequirementApproval, MorphoClient } from "../../src";
-import { test } from "../setup";
+import { isRequirementApproval, MorphoClient } from "../../../src";
+import { test } from "../../setup";
 
 describe("Approval", () => {
   test("should approve once for USDT vaultV2 with allowance 0", async ({
@@ -29,9 +29,11 @@ describe("Approval", () => {
       },
       actionFn: async () => {
         const vault = morpho.vaultV2(Re7UsdtVaultV2.address, mainnet.id);
-        const deposit = await vault.deposit({
+        const accrualVault = await vault.getData();
+        const deposit = vault.deposit({
           userAddress: client.account.address,
-          assets: amount,
+          amount: amount,
+          accrualVault,
         });
 
         const requirements = await deposit.getRequirements();
@@ -79,9 +81,11 @@ describe("Approval", () => {
       },
       actionFn: async () => {
         const vault = morpho.vaultV2(Re7UsdtVaultV2.address, mainnet.id);
-        const deposit = await vault.deposit({
+        const accrualVault = await vault.getData();
+        const deposit = vault.deposit({
           userAddress: client.account.address,
-          assets: amount,
+          amount: amount,
+          accrualVault,
         });
 
         const requirements = await deposit.getRequirements();

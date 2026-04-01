@@ -8,26 +8,31 @@ Pure transaction builders for VaultV2 vault interactions. Each function validate
 
 ### `vaultV2Deposit`
 
-Builds a deposit transaction routed through the **bundler** (general adapter).
+Builds a deposit transaction routed through the **bundler** (general adapter). Supports native token wrapping for wNative vaults.
 
-| Param                       | Type      | Description                                      |
-| --------------------------- | --------- | ------------------------------------------------ |
-| `vault.chainId`             | `number`  | Chain ID (used to resolve bundler addresses)     |
-| `vault.address`             | `Address` | Vault contract address                           |
-| `vault.asset`               | `Address` | Underlying ERC20 token address                   |
-| `args.assets`               | `bigint`  | Amount of assets to deposit                      |
-| `args.maxSharePrice`        | `bigint`  | Max acceptable share price (slippage protection) |
-| `args.recipient`            | `Address` | Receives the vault shares                        |
-| `args.requirementSignature` | optional  | Pre-signed permit/permit2 approval               |
-| `metadata`                  | optional  | Analytics metadata to append                     |
+| Param                       | Type      | Description                                                      |
+| --------------------------- | --------- | ---------------------------------------------------------------- |
+| `vault.chainId`             | `number`  | Chain ID (used to resolve bundler addresses)                     |
+| `vault.address`             | `Address` | Vault contract address                                           |
+| `vault.asset`               | `Address` | Underlying ERC20 token address                                   |
+| `args.amount`               | `bigint?` | Amount of ERC-20 assets to deposit                               |
+| `args.nativeAmount`         | `bigint?` | Amount of native token to wrap and deposit (wNative vaults only) |
+| `args.maxSharePrice`        | `bigint`  | Max acceptable share price (slippage protection)                 |
+| `args.recipient`            | `Address` | Receives the vault shares                                        |
+| `args.requirementSignature` | optional  | Pre-signed permit/permit2 approval                               |
+| `metadata`                  | optional  | Analytics metadata to append                                     |
+
+At least one of `amount` or `nativeAmount` must be provided.
 
 **Routing logic:**
 
+- If `nativeAmount` is provided → `nativeTransfer` (native token → Bundler3 → GeneralAdapter1) + `wrapNative` actions are prepended. `tx.value` is set to `nativeAmount`.
 - If `requirementSignature` is provided → `getRequirementsAction()` resolves the permit/permit2 bundler actions, then `erc4626Deposit`.
 - If no signature → `erc20TransferFrom` to general adapter, then `erc4626Deposit`.
+- The `erc4626Deposit` uses `totalAssets = amount + nativeAmount`.
 - Actions are bundled atomically via `BundlerAction.encodeBundle()`.
 
-**Validation:** Throws `ZeroAssetAmountError` if `assets === 0n`, `ZeroMaxSharePriceError` if `maxSharePrice === 0n`.
+**Validation:** Throws `NonPositiveAssetAmountError` if `amount < 0n`, `NonPositiveMaxSharePriceError` if `maxSharePrice <= 0n`, `NativeAmountOnNonWNativeVaultError` if vault asset is not wNative, `ChainWNativeMissingError` if chain has no configured wNative, `NegativeNativeAmountError` if `nativeAmount < 0n`, `ZeroDepositAmountError` if both amounts are zero.
 
 **Security:** The general adapter enforces `maxSharePrice` on-chain. **Never bypass it** — vaults without dead deposit protection are vulnerable to inflation attacks.
 
@@ -47,7 +52,7 @@ Builds a withdraw transaction as a **direct vault call** (no bundler).
 | `args.onBehalf`  | `Address` | Address whose shares are burned |
 | `metadata`       | optional  | Analytics metadata to append    |
 
-**Validation:** Throws `ZeroAssetAmountError` if `assets === 0n`.
+**Validation:** Throws `NonPositiveAssetAmountError` if `assets <= 0n`.
 
 **Why no bundler?** Withdraw has no inflation attack surface. Direct call avoids unnecessary approval overhead.
 
@@ -67,7 +72,7 @@ Builds a redeem transaction as a **direct vault call** (no bundler).
 | `args.onBehalf`  | `Address` | Address whose shares are burned |
 | `metadata`       | optional  | Analytics metadata to append    |
 
-**Validation:** Throws `ZeroSharesAmountError` if `shares === 0n`.
+**Validation:** Throws `NonPositiveSharesAmountError` if `shares <= 0n`.
 
 **Why no bundler?** Same rationale as withdraw — no attack surface.
 
@@ -89,7 +94,7 @@ This allows a user to free liquidity from adapters other than the liquidity adap
 | `args.onBehalf`           | `Address`        | Address from which the penalty is taken (share owner)            |
 | `metadata`                | optional         | Analytics metadata to append                                     |
 
-**Validation:** Throws `EmptyDeallocationsError` if `deallocations` is empty. Throws `ZeroAssetAmountError` if `withdraw.assets === 0n`.
+**Validation:** Throws `EmptyDeallocationsError` if `deallocations` is empty. Throws `NonPositiveAssetAmountError` if `withdraw.assets <= 0n`.
 
 **Deallocation data encoding:** When `marketParams` is provided (Morpho Market V1 adapter), the data is ABI-encoded from the `MarketParams`. When `marketParams` is omitted (e.g. Vault V1 adapter), empty bytes (`0x`) are passed.
 
@@ -115,7 +120,7 @@ This is the share-based counterpart to `vaultV2ForceWithdraw`, useful for maximu
 | `args.onBehalf`         | `Address`        | Address from which the penalty is taken (share owner)            |
 | `metadata`              | optional         | Analytics metadata to append                                     |
 
-**Validation:** Throws `EmptyDeallocationsError` if `deallocations` is empty. Throws `ZeroSharesAmountError` if `redeem.shares === 0n`.
+**Validation:** Throws `EmptyDeallocationsError` if `deallocations` is empty. Throws `NonPositiveSharesAmountError` if `redeem.shares <= 0n`.
 
 **Deallocation data encoding:** Same as `vaultV2ForceWithdraw` — when `marketParams` is provided (Morpho Market V1 adapter), the data is ABI-encoded from the `MarketParams`. When `marketParams` is omitted (e.g. Vault V1 adapter), empty bytes (`0x`) are passed.
 

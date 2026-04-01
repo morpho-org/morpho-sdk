@@ -10,7 +10,8 @@ Centralized type definitions. Barrel-exported via `index.ts`.
 - `Transaction<TAction>` — immutable `{ to, value, data, action }`.
 - `Requirement` / `RequirementSignature` — permit/permit2 sign flow.
 - `Metadata` — optional `{ origin, timestamp? }` for calldata tracing.
-- Custom errors in `error.ts` — one class per error case.
+- `DepositAmountArgs` — union type enforcing at least one of `amount` / `nativeAmount`.
+- Custom errors in `error.ts` — one class per error case (includes `NativeAmountOnNonWNativeVaultError`, `ChainWNativeMissingError`, `NegativeNativeAmountError`, `ZeroDepositAmountError` for native wrapping validation).
 
 ## Key Constraints
 

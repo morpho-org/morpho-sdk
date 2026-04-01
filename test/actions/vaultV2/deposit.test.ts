@@ -3,17 +3,23 @@ import { testInvariants } from "test/helpers/invariants";
 import { parseUnits } from "viem";
 import { mainnet } from "viem/chains";
 import { describe, expect } from "vitest";
-import { isRequirementApproval, MorphoClient, vaultV2Deposit } from "../../src";
-import { test } from "../setup";
+import {
+  isRequirementApproval,
+  MorphoClient,
+  vaultV2Deposit,
+} from "../../../src";
+import { test } from "../../setup";
 
 describe("DepositVaultV2", () => {
   test("should create deposit bundle", async ({ client }) => {
     const morpho = new MorphoClient(client);
 
     const vault = morpho.vaultV2(KeyrockUsdcVaultV2.address, mainnet.id);
-    const deposit = await vault.deposit({
+    const accrualVault = await vault.getData();
+    const deposit = vault.deposit({
       userAddress: client.account.address,
-      assets: 1000000000000000000n,
+      amount: 1000000000000000000n,
+      accrualVault,
     });
     const requirements_1 = await deposit.getRequirements();
     const data = await vault.getData();
@@ -26,7 +32,7 @@ describe("DepositVaultV2", () => {
         asset: KeyrockUsdcVaultV2.asset,
       },
       args: {
-        assets: 1000000000000000000n,
+        amount: 1000000000000000000n,
         maxSharePrice: 1030789509859687n,
         recipient: client.account.address,
       },
@@ -58,9 +64,11 @@ describe("DepositVaultV2", () => {
       actionFn: async () => {
         const morpho = new MorphoClient(client);
         const vaultV2 = morpho.vaultV2(KeyrockUsdcVaultV2.address, mainnet.id);
-        const deposit = await vaultV2.deposit({
+        const accrualVault = await vaultV2.getData();
+        const deposit = vaultV2.deposit({
           userAddress: client.account.address,
-          assets: amount,
+          amount: amount,
+          accrualVault,
         });
 
         const tx = deposit.buildTx();

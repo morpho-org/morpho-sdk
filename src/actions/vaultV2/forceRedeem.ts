@@ -7,9 +7,9 @@ import {
   type Deallocation,
   EmptyDeallocationsError,
   type Metadata,
+  NonPositiveSharesAmountError,
   type Transaction,
   type VaultV2ForceRedeemAction,
-  ZeroSharesAmountError,
 } from "../../types";
 
 export interface VaultV2ForceRedeemParams {
@@ -69,8 +69,8 @@ export const vaultV2ForceRedeem = ({
     throw new EmptyDeallocationsError(vaultAddress);
   }
 
-  if (redeem.shares === 0n) {
-    throw new ZeroSharesAmountError(vaultAddress);
+  if (redeem.shares <= 0n) {
+    throw new NonPositiveSharesAmountError(vaultAddress);
   }
 
   const calls: Hex[] = [];

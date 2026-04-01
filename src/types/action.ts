@@ -21,9 +21,10 @@ export interface VaultV2DepositAction
     "vaultV2Deposit",
     {
       vault: Address;
-      assets: bigint;
+      amount: bigint;
       maxSharePrice: bigint;
       recipient: Address;
+      nativeAmount?: bigint;
     }
   > {}
 
@@ -32,7 +33,7 @@ export interface VaultV2WithdrawAction
     "vaultV2Withdraw",
     {
       vault: Address;
-      assets: bigint;
+      amount: bigint;
       recipient: Address;
     }
   > {}
@@ -53,7 +54,7 @@ export interface VaultV2ForceWithdrawAction
     {
       vault: Address;
       deallocations: readonly Deallocation[];
-      withdraw: { assets: bigint; recipient: Address };
+      withdraw: { amount: bigint; recipient: Address };
       onBehalf: Address;
     }
   > {}
@@ -69,13 +70,48 @@ export interface VaultV2ForceRedeemAction
     }
   > {}
 
+export interface VaultV1DepositAction
+  extends BaseAction<
+    "vaultV1Deposit",
+    {
+      vault: Address;
+      amount: bigint;
+      maxSharePrice: bigint;
+      recipient: Address;
+      nativeAmount?: bigint;
+    }
+  > {}
+
+export interface VaultV1WithdrawAction
+  extends BaseAction<
+    "vaultV1Withdraw",
+    {
+      vault: Address;
+      amount: bigint;
+      recipient: Address;
+    }
+  > {}
+
+export interface VaultV1RedeemAction
+  extends BaseAction<
+    "vaultV1Redeem",
+    {
+      vault: Address;
+      shares: bigint;
+      recipient: Address;
+    }
+  > {}
+
 export type TransactionAction =
   | ERC20ApprovalAction
   | VaultV2DepositAction
   | VaultV2WithdrawAction
   | VaultV2RedeemAction
   | VaultV2ForceWithdrawAction
-  | VaultV2ForceRedeemAction;
+  | VaultV2ForceRedeemAction
+  | VaultV1DepositAction
+  | VaultV1WithdrawAction
+  | VaultV1RedeemAction;
 
 export interface Transaction<TAction extends BaseAction = TransactionAction> {
   readonly to: Address;
@@ -83,6 +119,17 @@ export interface Transaction<TAction extends BaseAction = TransactionAction> {
   readonly data: Hex;
   readonly action: TAction;
 }
+
+/**
+ * Enforces that at least one deposit amount source is provided.
+ *
+ * - `amount` alone: standard ERC20 deposit.
+ * - `nativeAmount` alone: pure native-wrap deposit (vault asset must be wNative).
+ * - Both: mixed deposit (ERC20 transfer + native wrap).
+ */
+export type DepositAmountArgs =
+  | { amount: bigint; nativeAmount?: bigint }
+  | { nativeAmount: bigint; amount?: bigint };
 
 export interface PermitArgs {
   owner: Address;

@@ -13,12 +13,12 @@ import {
   NonPositiveMaxSharePriceError,
   type RequirementSignature,
   type Transaction,
-  type VaultV2DepositAction,
+  type VaultV1DepositAction,
   ZeroDepositAmountError,
 } from "../../types";
 import { getRequirementsAction } from "../requirements/getRequirementsAction";
 
-export interface VaultV2DepositParams {
+export interface VaultV1DepositParams {
   vault: {
     chainId: number;
     address: Address;
@@ -33,7 +33,7 @@ export interface VaultV2DepositParams {
 }
 
 /**
- * Prepares a deposit transaction for the VaultV2 contract.
+ * Prepares a deposit transaction for a VaultV1 (MetaMorpho) contract.
  *
  * Routed through the bundler to atomically execute the asset transfer and vault deposit.
  * The general adapter enforces `maxSharePrice` on-chain to prevent inflation attacks.
@@ -55,9 +55,9 @@ export interface VaultV2DepositParams {
  * @param {RequirementSignature} [params.args.requirementSignature] - Pre-signed permit/permit2 approval.
  * @param {bigint} [params.args.nativeAmount] - Amount of native token to wrap into wNative for the deposit.
  * @param {Metadata} [params.metadata] - Optional analytics metadata.
- * @returns {Readonly<Transaction<VaultV2DepositAction>>} The prepared deposit transaction.
+ * @returns {Readonly<Transaction<VaultV1DepositAction>>} The prepared deposit transaction.
  */
-export const vaultV2Deposit = ({
+export const vaultV1Deposit = ({
   vault: { chainId, address: vaultAddress, asset },
   args: {
     amount = 0n,
@@ -67,7 +67,7 @@ export const vaultV2Deposit = ({
     nativeAmount,
   },
   metadata,
-}: VaultV2DepositParams): Readonly<Transaction<VaultV2DepositAction>> => {
+}: VaultV1DepositParams): Readonly<Transaction<VaultV1DepositAction>> => {
   if (amount < 0n) {
     throw new NonPositiveAssetAmountError(asset);
   }
@@ -156,7 +156,7 @@ export const vaultV2Deposit = ({
   return deepFreeze({
     ...tx,
     action: {
-      type: "vaultV2Deposit",
+      type: "vaultV1Deposit",
       args: {
         vault: vaultAddress,
         amount,

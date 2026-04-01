@@ -63,6 +63,11 @@ export const getRequirements = async (
   if (viemClient.chain?.id !== chainId) {
     throw new ChainIdMismatchError(viemClient.chain?.id, chainId);
   }
+
+  if (amount === 0n) {
+    return [];
+  }
+
   const {
     permit2,
     dai,

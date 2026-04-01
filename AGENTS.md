@@ -2,7 +2,7 @@
 
 > Full conventions and architecture: [CLAUDE.md](CLAUDE.md)
 
-Morpho Consumer SDK — builds transactions for VaultV2 operations (deposit, withdraw, redeem, forceWithdraw, forceRedeem).
+Morpho Consumer SDK — builds transactions for VaultV1 (MetaMorpho) and VaultV2 operations.
 
 ## Layer Intents
 

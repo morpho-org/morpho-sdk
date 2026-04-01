@@ -2,10 +2,10 @@ import { MarketParams } from "@morpho-org/blue-sdk";
 import { type Address, parseUnits } from "viem";
 import { mainnet } from "viem/chains";
 import { describe, expect } from "vitest";
-import { MorphoClient, vaultV2ForceWithdraw } from "../../src";
-import { ReEcosystemUsdcVaultV2 } from "../fixtures/vaultV2";
-import { testInvariants } from "../helpers/invariants";
-import { test } from "../setup";
+import { MorphoClient, vaultV2ForceWithdraw } from "../../../src";
+import { ReEcosystemUsdcVaultV2 } from "../../fixtures/vaultV2";
+import { testInvariants } from "../../helpers/invariants";
+import { test } from "../../setup";
 
 describe("ForceWithdraw VaultV2", () => {
   // MarketV1 adapter addresses
@@ -47,13 +47,13 @@ describe("ForceWithdraw VaultV2", () => {
       {
         adapter: adapterAddress1,
         marketParams,
-        assets: assetsDeallocate,
+        amount: assetsDeallocate,
       },
     ] as const;
 
     const forceWithdraw = vaultV2.forceWithdraw({
       deallocations,
-      withdraw: { assets: assetsWithdraw },
+      withdraw: { amount: assetsWithdraw },
       userAddress: client.account.address,
     });
     const tx_1 = forceWithdraw.buildTx();
@@ -62,7 +62,7 @@ describe("ForceWithdraw VaultV2", () => {
       vault: { address: ReEcosystemUsdcVaultV2.address },
       args: {
         deallocations,
-        withdraw: { assets: assetsWithdraw, recipient: client.account.address },
+        withdraw: { amount: assetsWithdraw, recipient: client.account.address },
         onBehalf: client.account.address,
       },
     });
@@ -112,11 +112,13 @@ describe("ForceWithdraw VaultV2", () => {
       amount: share,
     });
 
-    const deallocations = [{ adapter: adapterAddress2, assets }] as const;
+    const deallocations = [
+      { adapter: adapterAddress2, amount: assets },
+    ] as const;
 
     const forceWithdraw = vaultV2.forceWithdraw({
       deallocations,
-      withdraw: { assets },
+      withdraw: { amount: assets },
       userAddress: client.account.address,
     });
     const tx = forceWithdraw.buildTx();
@@ -175,14 +177,14 @@ describe("ForceWithdraw VaultV2", () => {
       {
         adapter: adapterAddress1,
         marketParams: marketParams,
-        assets: assetsDeallocate1,
+        amount: assetsDeallocate1,
       },
-      { adapter: adapterAddress2, assets: assetsDeallocate2 },
+      { adapter: adapterAddress2, amount: assetsDeallocate2 },
     ] as const;
 
     const forceWithdraw = vaultV2.forceWithdraw({
       deallocations,
-      withdraw: { assets: withdrawAssets },
+      withdraw: { amount: withdrawAssets },
       userAddress: client.account.address,
     });
     const tx = forceWithdraw.buildTx();

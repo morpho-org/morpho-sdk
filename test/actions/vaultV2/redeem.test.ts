@@ -4,7 +4,7 @@ import { testInvariants } from "test/helpers/invariants";
 import { parseUnits } from "viem";
 import { mainnet } from "viem/chains";
 import { describe, expect } from "vitest";
-import { test } from "../setup";
+import { test } from "../../setup";
 
 describe("Redeem VaultV2", () => {
   test("should create redeem transaction", async ({ client }) => {
