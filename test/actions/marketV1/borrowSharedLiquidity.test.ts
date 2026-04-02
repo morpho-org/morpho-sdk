@@ -52,6 +52,7 @@ describe("BorrowWithSharedLiquidity", () => {
         // Fetch shared liquidity data from the Steakhouse USDC vault
         const sharedLiquidityData = await market.getSharedLiquidityData({
           supplyingVaults: [SteakhouseUsdcVaultV1.address],
+          targetMarket: accrualPosition.market,
         });
 
         // Borrow with shared liquidity — reallocations computed internally

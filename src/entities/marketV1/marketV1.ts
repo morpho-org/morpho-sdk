@@ -1,9 +1,13 @@
 import {
   type AccrualPosition,
   DEFAULT_SLIPPAGE_TOLERANCE,
+  type Holding,
   type Market,
   type MarketId,
   type MarketParams,
+  type Position,
+  type Vault,
+  type VaultMarketConfig,
 } from "@morpho-org/blue-sdk";
 import {
   fetchAccrualPosition,
@@ -13,8 +17,8 @@ import {
   fetchVault,
   fetchVaultMarketConfig,
 } from "@morpho-org/blue-sdk-viem";
+import { Time } from "@morpho-org/morpho-ts";
 import type { Address } from "viem";
-import { getBlock } from "viem/actions";
 import {
   getMorphoAuthorizationRequirement,
   getRequirements,
@@ -88,6 +92,7 @@ export interface MarketV1Actions {
    */
   getSharedLiquidityData: (params: {
     supplyingVaults: readonly Address[];
+    targetMarket: Market;
     parameters?: FetchParameters;
   }) => Promise<SharedLiquidityData>;
 
@@ -214,117 +219,124 @@ export class MorphoMarketV1 implements MarketV1Actions {
 
   async getSharedLiquidityData({
     supplyingVaults,
+    targetMarket,
     parameters,
   }: {
     supplyingVaults: readonly Address[];
+    targetMarket: Market;
     parameters?: FetchParameters;
   }): Promise<SharedLiquidityData> {
     validateChainId(this.client.viemClient.chain?.id, this.chainId);
 
-    const client = this.client.viemClient;
     const targetMarketId = this.marketParams.id;
     const fetchParams = { ...parameters, chainId: this.chainId };
 
-    // Fetch block info for SimulationState
-    const block = await getBlock(
-      client,
-      parameters?.blockNumber
-        ? { blockNumber: parameters.blockNumber }
-        : parameters?.blockTag
-          ? { blockTag: parameters.blockTag }
-          : undefined,
+    // Phase 1: fetch all vaults in parallel to discover withdraw queues
+    const fetchedVaults = await Promise.all(
+      supplyingVaults.map((vaultAddress) =>
+        fetchVault(vaultAddress, this.client.viemClient, fetchParams),
+      ),
     );
 
-    // Fetch target market
-    const targetMarket = await fetchMarket(targetMarketId, client, fetchParams);
+    const vaults: Record<Address, Vault> = {};
+    const vaultMarketConfigs: Record<
+      Address,
+      Record<Address, VaultMarketConfig>
+    > = {};
+    const positions: Record<Address, Record<Address, Position>> = {};
+    const holdings: Record<Address, Record<Address, Holding>> = {};
+
+    // Collect all source market IDs and deduplicate market fetches
+    const marketPromises = new Map<MarketId, Promise<Market>>();
+    const perVaultFetches: Promise<void>[] = [];
+
+    for (let i = 0; i < supplyingVaults.length; i++) {
+      const vaultAddress = supplyingVaults[i]!;
+      const vault = fetchedVaults[i]!;
+      vaults[vaultAddress] = vault;
+      vaultMarketConfigs[vaultAddress] = {};
+      positions[vaultAddress] = {};
+      holdings[vaultAddress] = {};
+
+      const sourceMarketIds = vault.withdrawQueue.filter(
+        (id) => id !== targetMarketId,
+      );
+
+      // Deduplicate source market fetches across vaults
+      for (const sourceMarketId of sourceMarketIds) {
+        if (!marketPromises.has(sourceMarketId)) {
+          marketPromises.set(
+            sourceMarketId,
+            fetchMarket(sourceMarketId, this.client.viemClient, fetchParams),
+          );
+        }
+      }
+
+      // Schedule all per-vault fetches (target + sources) in one flat batch
+      perVaultFetches.push(
+        (async () => {
+          const allMarketIds = [targetMarketId, ...sourceMarketIds];
+
+          const [loanTokenHolding, ...configsAndPositions] = await Promise.all([
+            fetchHolding(
+              vaultAddress,
+              this.marketParams.loanToken,
+              this.client.viemClient,
+              fetchParams,
+            ),
+            ...allMarketIds.flatMap((marketId) => [
+              fetchVaultMarketConfig(
+                vaultAddress,
+                marketId,
+                this.client.viemClient,
+                fetchParams,
+              ),
+              fetchPosition(
+                vaultAddress,
+                marketId,
+                this.client.viemClient,
+                fetchParams,
+              ),
+            ]),
+          ]);
+
+          holdings[vaultAddress]![this.marketParams.loanToken] =
+            loanTokenHolding;
+
+          for (let j = 0; j < allMarketIds.length; j++) {
+            const marketId = allMarketIds[j]!;
+
+            vaultMarketConfigs[vaultAddress]![marketId] = configsAndPositions[
+              j * 2
+            ] as VaultMarketConfig;
+            positions[vaultAddress]![marketId] = configsAndPositions[
+              j * 2 + 1
+            ] as Position;
+          }
+        })(),
+      );
+    }
+
+    // Phase 2: run all per-vault fetches + all market fetches in parallel
+    const marketEntries = [...marketPromises.entries()];
+    const [, ...resolvedMarkets] = await Promise.all([
+      Promise.all(perVaultFetches),
+      ...marketEntries.map(([, promise]) => promise),
+    ]);
 
     const markets: Record<MarketId, Market> = {
       [targetMarketId]: targetMarket,
     };
-    const vaults: Record<string, import("@morpho-org/blue-sdk").Vault> = {};
-    const vaultMarketConfigs: Record<
-      string,
-      Record<string, import("@morpho-org/blue-sdk").VaultMarketConfig>
-    > = {};
-    const positions: Record<
-      string,
-      Record<string, import("@morpho-org/blue-sdk").Position>
-    > = {};
-    const holdings: Record<
-      string,
-      Record<string, import("@morpho-org/blue-sdk").Holding>
-    > = {};
-
-    // Fetch data for each supplying vault in parallel
-    await Promise.all(
-      supplyingVaults.map(async (vaultAddress) => {
-        const vault = await fetchVault(vaultAddress, client, fetchParams);
-        vaults[vaultAddress] = vault;
-        vaultMarketConfigs[vaultAddress] = {};
-        positions[vaultAddress] = {};
-        holdings[vaultAddress] = {};
-
-        // Fetch vault's config, position, and loan token holding on target market
-        const [targetConfig, targetPosition, loanTokenHolding] =
-          await Promise.all([
-            fetchVaultMarketConfig(
-              vaultAddress,
-              targetMarketId,
-              client,
-              fetchParams,
-            ),
-            fetchPosition(vaultAddress, targetMarketId, client, fetchParams),
-            fetchHolding(
-              vaultAddress,
-              this.marketParams.loanToken,
-              client,
-              fetchParams,
-            ),
-          ]);
-
-        vaultMarketConfigs[vaultAddress][targetMarketId] = targetConfig;
-        positions[vaultAddress][targetMarketId] = targetPosition;
-        holdings[vaultAddress]![this.marketParams.loanToken] = loanTokenHolding;
-
-        // Fetch data for each source market in the vault's withdraw queue
-        const sourceMarketIds = vault.withdrawQueue.filter(
-          (id) => id !== targetMarketId,
-        );
-
-        await Promise.all(
-          sourceMarketIds.map(async (sourceMarketId) => {
-            const [sourceConfig, sourcePosition] = await Promise.all([
-              fetchVaultMarketConfig(
-                vaultAddress,
-                sourceMarketId,
-                client,
-                fetchParams,
-              ),
-              fetchPosition(vaultAddress, sourceMarketId, client, fetchParams),
-            ]);
-
-            vaultMarketConfigs[vaultAddress]![sourceMarketId] = sourceConfig;
-            positions[vaultAddress]![sourceMarketId] = sourcePosition;
-
-            // Fetch source market state (deduplicate across vaults)
-            if (!markets[sourceMarketId]) {
-              markets[sourceMarketId] = await fetchMarket(
-                sourceMarketId,
-                client,
-                fetchParams,
-              );
-            }
-          }),
-        );
-      }),
-    );
+    for (let i = 0; i < marketEntries.length; i++) {
+      markets[marketEntries[i]![0]] = resolvedMarkets[i]!;
+    }
 
     return {
       simulationState: {
         chainId: this.chainId,
         block: {
-          number: block.number ?? 0n,
-          timestamp: block.timestamp,
+          number: parameters?.blockNumber ?? 0n,
+          timestamp: Time.timestamp(),
         },
         markets,
         vaults,

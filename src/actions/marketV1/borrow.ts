@@ -96,7 +96,7 @@ export const marketV1Borrow = ({
         amount,
         receiver,
         minSharePrice,
-        ...(reallocationFee > 0n ? { reallocationFee } : {}),
+        reallocationFee,
       },
     },
   });

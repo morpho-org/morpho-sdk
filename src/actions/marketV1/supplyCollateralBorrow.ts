@@ -178,7 +178,7 @@ export const marketV1SupplyCollateralBorrow = ({
         onBehalf,
         receiver,
         nativeAmount,
-        ...(reallocationFee > 0n ? { reallocationFee } : {}),
+        reallocationFee,
       },
     },
   });
