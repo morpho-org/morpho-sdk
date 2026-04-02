@@ -7,18 +7,12 @@ import type {
 } from "../entities";
 import type { Metadata } from "./index";
 
-export interface SharedLiquidityOptions {
-  /** Max utilization allowed on source markets when withdrawing (WAD). Default: 92% */
-  readonly maxWithdrawalUtilization?: bigint;
-}
-
 export interface MorphoClientType {
   readonly viemClient: Client;
   readonly options: {
     readonly supportSignature: boolean;
     readonly supportDeployless?: boolean;
     readonly metadata?: Metadata;
-    readonly sharedLiquidity?: SharedLiquidityOptions;
   };
 
   vaultV1: (vault: Address, chainId: number) => VaultV1Actions;

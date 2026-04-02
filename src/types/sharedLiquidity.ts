@@ -1,17 +1,5 @@
 import type { MarketParams } from "@morpho-org/blue-sdk";
-import type { InputSimulationState } from "@morpho-org/simulation-sdk";
 import type { Address } from "viem";
-
-/**
- * On-chain state needed to compute shared liquidity reallocations.
- *
- * Returned by `getSharedLiquidityData()`. Passed to `borrow()` or
- * `supplyCollateralBorrow()` where the reallocation algorithm runs
- * internally via `SimulationState.getMarketPublicReallocations()`.
- */
-export interface SharedLiquidityData {
-  readonly simulationState: InputSimulationState;
-}
 
 /** A single withdrawal from a source market within a vault reallocation. */
 export interface ReallocationWithdrawal {

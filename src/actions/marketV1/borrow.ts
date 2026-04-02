@@ -2,7 +2,7 @@ import type { MarketParams } from "@morpho-org/blue-sdk";
 import { type Action, BundlerAction } from "@morpho-org/bundler-sdk-viem";
 import { deepFreeze } from "@morpho-org/morpho-ts";
 import type { Address } from "viem";
-import { addTransactionMetadata } from "../../helpers";
+import { addTransactionMetadata, validateReallocations } from "../../helpers";
 import {
   type MarketV1BorrowAction,
   type Metadata,
@@ -55,7 +55,8 @@ export const marketV1Borrow = ({
   const reallocationFee =
     reallocations?.reduce((sum, r) => sum + r.fee, 0n) ?? 0n;
 
-  if (reallocations) {
+  if (reallocations && reallocations.length > 0) {
+    validateReallocations(reallocations);
     for (const r of reallocations) {
       actions.push({
         type: "reallocateTo",

@@ -1,5 +1,4 @@
 export { addTransactionMetadata } from "./metadata";
-export { computeReallocations } from "./sharedLiquidity";
 export { computeMinBorrowSharePrice } from "./slippage";
 export {
   validateAccrualPosition,

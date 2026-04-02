@@ -5,6 +5,7 @@ import type { Address } from "viem";
 import {
   addTransactionMetadata,
   validateNativeCollateral,
+  validateReallocations,
 } from "../../helpers";
 import {
   type DepositAmountArgs,
@@ -134,7 +135,8 @@ export const marketV1SupplyCollateralBorrow = ({
   const reallocationFee =
     reallocations?.reduce((sum, r) => sum + r.fee, 0n) ?? 0n;
 
-  if (reallocations) {
+  if (reallocations && reallocations.length > 0) {
+    validateReallocations(reallocations);
     for (const r of reallocations) {
       actions.push({
         type: "reallocateTo",

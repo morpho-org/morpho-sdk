@@ -1,23 +1,10 @@
 import {
   type AccrualPosition,
   DEFAULT_SLIPPAGE_TOLERANCE,
-  type Holding,
   type Market,
-  type MarketId,
   type MarketParams,
-  type Position,
-  type Vault,
-  type VaultMarketConfig,
 } from "@morpho-org/blue-sdk";
-import {
-  fetchAccrualPosition,
-  fetchHolding,
-  fetchMarket,
-  fetchPosition,
-  fetchVault,
-  fetchVaultMarketConfig,
-} from "@morpho-org/blue-sdk-viem";
-import { Time } from "@morpho-org/morpho-ts";
+import { fetchAccrualPosition, fetchMarket } from "@morpho-org/blue-sdk-viem";
 import type { Address } from "viem";
 import {
   getMorphoAuthorizationRequirement,
@@ -28,12 +15,10 @@ import {
 } from "../../actions";
 import {
   computeMinBorrowSharePrice,
-  computeReallocations,
   validateAccrualPosition,
   validateChainId,
   validateNativeCollateral,
   validatePositionHealth,
-  validateReallocations,
 } from "../../helpers";
 import { MAX_SLIPPAGE_TOLERANCE } from "../../helpers/constant";
 import {
@@ -52,7 +37,6 @@ import {
   NonPositiveBorrowAmountError,
   type Requirement,
   type RequirementSignature,
-  type SharedLiquidityData,
   type Transaction,
   type VaultReallocation,
   ZeroCollateralAmountError,
@@ -81,22 +65,6 @@ export interface MarketV1Actions {
   ) => Promise<AccrualPosition>;
 
   /**
-   * Fetches on-chain state needed to compute shared liquidity reallocations.
-   *
-   * Fetches vault data, vault market configs, positions, and source market states
-   * for each supplying vault via RPC. The returned data is passed to `borrow()` or
-   * `supplyCollateralBorrow()` where the reallocation algorithm runs internally.
-   *
-   * @param params - Supplying vault addresses and optional fetch parameters.
-   * @returns Shared liquidity data container for `borrow()`/`supplyCollateralBorrow()`.
-   */
-  getSharedLiquidityData: (params: {
-    supplyingVaults: readonly Address[];
-    targetMarket: Market;
-    parameters?: FetchParameters;
-  }) => Promise<SharedLiquidityData>;
-
-  /**
    * Prepares a supply-collateral transaction.
    *
    * Routed through bundler via GeneralAdapter1.
@@ -122,7 +90,7 @@ export interface MarketV1Actions {
    * Validates position health with LLTV buffer (0.5%) using the pre-fetched `accrualPosition`.
    * Computes `minSharePrice` from market borrow state and `slippageTolerance`.
    *
-   * When `sharedLiquidity` is provided, `reallocateTo` actions are prepended to the bundle,
+   * When `reallocations` is provided, `reallocateTo` actions are prepended to the bundle,
    * moving liquidity from other markets via the PublicAllocator before borrowing.
    *
    * `getRequirements` returns `morpho.setAuthorization(generalAdapter1, true)` if not yet authorized,
@@ -136,7 +104,7 @@ export interface MarketV1Actions {
     amount: bigint;
     accrualPosition: AccrualPosition;
     slippageTolerance?: bigint;
-    sharedLiquidity?: SharedLiquidityData;
+    reallocations?: readonly VaultReallocation[];
   }) => {
     buildTx: () => Readonly<Transaction<MarketV1BorrowAction>>;
     getRequirements: () => Promise<
@@ -150,7 +118,7 @@ export interface MarketV1Actions {
    * Routed through the bundler. Validates position health with LLTV buffer
    * to prevent instant liquidation on new positions near the LLTV threshold.
    *
-   * When `sharedLiquidity` is provided, `reallocateTo` actions are prepended before
+   * When `reallocations` is provided, `reallocateTo` actions are prepended before
    * `morphoBorrow` in the bundle.
    *
    * `getRequirements` returns in parallel:
@@ -166,7 +134,7 @@ export interface MarketV1Actions {
       accrualPosition: AccrualPosition;
       borrowAmount: bigint;
       slippageTolerance?: bigint;
-      sharedLiquidity?: SharedLiquidityData;
+      reallocations?: readonly VaultReallocation[];
     } & DepositAmountArgs,
   ) => {
     buildTx: (
@@ -215,136 +183,6 @@ export class MorphoMarketV1 implements MarketV1Actions {
         chainId: this.chainId,
       },
     );
-  }
-
-  async getSharedLiquidityData({
-    supplyingVaults,
-    targetMarket,
-    parameters,
-  }: {
-    supplyingVaults: readonly Address[];
-    targetMarket: Market;
-    parameters?: FetchParameters;
-  }): Promise<SharedLiquidityData> {
-    validateChainId(this.client.viemClient.chain?.id, this.chainId);
-
-    const targetMarketId = this.marketParams.id;
-    const fetchParams = { ...parameters, chainId: this.chainId };
-
-    // Phase 1: fetch all vaults in parallel to discover withdraw queues
-    const fetchedVaults = await Promise.all(
-      supplyingVaults.map((vaultAddress) =>
-        fetchVault(vaultAddress, this.client.viemClient, fetchParams),
-      ),
-    );
-
-    const vaults: Record<Address, Vault> = {};
-    const vaultMarketConfigs: Record<
-      Address,
-      Record<Address, VaultMarketConfig>
-    > = {};
-    const positions: Record<Address, Record<Address, Position>> = {};
-    const holdings: Record<Address, Record<Address, Holding>> = {};
-
-    // Collect all source market IDs and deduplicate market fetches
-    const marketPromises = new Map<MarketId, Promise<Market>>();
-    const perVaultFetches: Promise<void>[] = [];
-
-    for (let i = 0; i < supplyingVaults.length; i++) {
-      const vaultAddress = supplyingVaults[i]!;
-      const vault = fetchedVaults[i]!;
-      vaults[vaultAddress] = vault;
-      vaultMarketConfigs[vaultAddress] = {};
-      positions[vaultAddress] = {};
-      holdings[vaultAddress] = {};
-
-      const sourceMarketIds = vault.withdrawQueue.filter(
-        (id) => id !== targetMarketId,
-      );
-
-      // Deduplicate source market fetches across vaults
-      for (const sourceMarketId of sourceMarketIds) {
-        if (!marketPromises.has(sourceMarketId)) {
-          marketPromises.set(
-            sourceMarketId,
-            fetchMarket(sourceMarketId, this.client.viemClient, fetchParams),
-          );
-        }
-      }
-
-      // Schedule all per-vault fetches (target + sources) in one flat batch
-      perVaultFetches.push(
-        (async () => {
-          const allMarketIds = [targetMarketId, ...sourceMarketIds];
-
-          const [loanTokenHolding, ...configsAndPositions] = await Promise.all([
-            fetchHolding(
-              vaultAddress,
-              this.marketParams.loanToken,
-              this.client.viemClient,
-              fetchParams,
-            ),
-            ...allMarketIds.flatMap((marketId) => [
-              fetchVaultMarketConfig(
-                vaultAddress,
-                marketId,
-                this.client.viemClient,
-                fetchParams,
-              ),
-              fetchPosition(
-                vaultAddress,
-                marketId,
-                this.client.viemClient,
-                fetchParams,
-              ),
-            ]),
-          ]);
-
-          holdings[vaultAddress]![this.marketParams.loanToken] =
-            loanTokenHolding;
-
-          for (let j = 0; j < allMarketIds.length; j++) {
-            const marketId = allMarketIds[j]!;
-
-            vaultMarketConfigs[vaultAddress]![marketId] = configsAndPositions[
-              j * 2
-            ] as VaultMarketConfig;
-            positions[vaultAddress]![marketId] = configsAndPositions[
-              j * 2 + 1
-            ] as Position;
-          }
-        })(),
-      );
-    }
-
-    // Phase 2: run all per-vault fetches + all market fetches in parallel
-    const marketEntries = [...marketPromises.entries()];
-    const [, ...resolvedMarkets] = await Promise.all([
-      Promise.all(perVaultFetches),
-      ...marketEntries.map(([, promise]) => promise),
-    ]);
-
-    const markets: Record<MarketId, Market> = {
-      [targetMarketId]: targetMarket,
-    };
-    for (let i = 0; i < marketEntries.length; i++) {
-      markets[marketEntries[i]![0]] = resolvedMarkets[i]!;
-    }
-
-    return {
-      simulationState: {
-        chainId: this.chainId,
-        block: {
-          number: parameters?.blockNumber ?? 0n,
-          timestamp: Time.timestamp(),
-        },
-        markets,
-        vaults,
-        vaultMarketConfigs,
-        positions,
-        holdings,
-      },
-    };
   }
 
   supplyCollateral({
@@ -404,13 +242,13 @@ export class MorphoMarketV1 implements MarketV1Actions {
     userAddress,
     accrualPosition,
     slippageTolerance = DEFAULT_SLIPPAGE_TOLERANCE,
-    sharedLiquidity,
+    reallocations,
   }: {
     amount: bigint;
     userAddress: Address;
     accrualPosition: AccrualPosition;
     slippageTolerance?: bigint;
-    sharedLiquidity?: SharedLiquidityData;
+    reallocations?: readonly VaultReallocation[];
   }) {
     validateChainId(this.client.viemClient.chain?.id, this.chainId);
 
@@ -443,22 +281,6 @@ export class MorphoMarketV1 implements MarketV1Actions {
       accrualPosition.market,
       slippageTolerance,
     );
-
-    let reallocations: readonly VaultReallocation[] | undefined;
-    if (sharedLiquidity) {
-      reallocations = computeReallocations(
-        sharedLiquidity,
-        this.marketParams.id,
-        {
-          enabled: true,
-          defaultMaxWithdrawalUtilization:
-            this.client.options.sharedLiquidity?.maxWithdrawalUtilization,
-        },
-      );
-      if (reallocations.length > 0) {
-        validateReallocations(reallocations);
-      }
-    }
 
     return {
       getRequirements: async () => {
@@ -494,13 +316,13 @@ export class MorphoMarketV1 implements MarketV1Actions {
     borrowAmount,
     nativeAmount,
     slippageTolerance = DEFAULT_SLIPPAGE_TOLERANCE,
-    sharedLiquidity,
+    reallocations,
   }: {
     userAddress: Address;
     accrualPosition: AccrualPosition;
     borrowAmount: bigint;
     slippageTolerance?: bigint;
-    sharedLiquidity?: SharedLiquidityData;
+    reallocations?: readonly VaultReallocation[];
   } & DepositAmountArgs) {
     validateChainId(this.client.viemClient.chain?.id, this.chainId);
 
@@ -551,22 +373,6 @@ export class MorphoMarketV1 implements MarketV1Actions {
       accrualPosition.market,
       slippageTolerance,
     );
-
-    let reallocations: readonly VaultReallocation[] | undefined;
-    if (sharedLiquidity) {
-      reallocations = computeReallocations(
-        sharedLiquidity,
-        this.marketParams.id,
-        {
-          enabled: true,
-          defaultMaxWithdrawalUtilization:
-            this.client.options.sharedLiquidity?.maxWithdrawalUtilization,
-        },
-      );
-      if (reallocations.length > 0) {
-        validateReallocations(reallocations);
-      }
-    }
 
     return {
       getRequirements: async (params?: { useSimplePermit?: boolean }) => {

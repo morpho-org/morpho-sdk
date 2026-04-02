@@ -1,18 +1,13 @@
 import type { MarketParams } from "@morpho-org/blue-sdk";
 import type { Address, Client } from "viem";
 import { MorphoMarketV1, MorphoVaultV1, MorphoVaultV2 } from "../entities";
-import type {
-  Metadata,
-  MorphoClientType,
-  SharedLiquidityOptions,
-} from "../types";
+import type { Metadata, MorphoClientType } from "../types";
 
 export class MorphoClient implements MorphoClientType {
   readonly options: {
     readonly supportSignature: boolean;
     readonly supportDeployless?: boolean;
     readonly metadata?: Metadata;
-    readonly sharedLiquidity?: SharedLiquidityOptions;
   };
 
   constructor(
@@ -21,14 +16,12 @@ export class MorphoClient implements MorphoClientType {
       readonly supportSignature?: boolean;
       readonly supportDeployless?: boolean;
       readonly metadata?: Metadata;
-      readonly sharedLiquidity?: SharedLiquidityOptions;
     },
   ) {
     this.options = {
       ..._options,
       supportSignature: _options?.supportSignature ?? false,
       supportDeployless: _options?.supportDeployless,
-      sharedLiquidity: _options?.sharedLiquidity,
     };
   }
 
