@@ -17,6 +17,8 @@ Utility functions shared across layers.
   - `MAX_SLIPPAGE_TOLERANCE` = 10% (WAD/10). For vault deposit share price.
   - `DEFAULT_LLTV_BUFFER` = 0.5% (WAD/200). Hardcoded safety margin below LLTV for `supplyCollateralBorrow`.
 
+- `validateReallocations(reallocations)` — validates reallocation params: fee >= 0, non-empty withdrawals, positive amounts. Throws `NegativeReallocationFeeError`, `EmptyReallocationWithdrawalsError`, `NonPositiveReallocationAmountError`.
+
 ## Key Constraints
 
 - Pure functions. Return new objects — never mutate inputs.

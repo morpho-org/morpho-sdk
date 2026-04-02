@@ -55,8 +55,25 @@ VaultV2 operations:
 MarketV1 (Morpho Blue) operations:
 
 - **supplyCollateral** → `marketV1SupplyCollateral()` — routed through bundler3 via GeneralAdapter1 (`erc20TransferFrom` + `morphoSupplyCollateral`). Supports optional `nativeAmount` for native token wrapping. `getRequirements` returns collateral token approval for GeneralAdapter1.
-- **borrow** → `marketV1Borrow()` — routed through bundler3 via `morphoBorrow`. Requires GeneralAdapter1 authorization on Morpho (`setAuthorization`). `getRequirements` returns authorization tx if needed. Uses `minSharePrice` for slippage protection. LLTV buffer validation prevents instant liquidation.
-- **supplyCollateralBorrow** → `marketV1SupplyCollateralBorrow()` — bundled via bundler3 (collateral transfer + `morphoSupplyCollateral` + `morphoBorrow`). Requires GeneralAdapter1 authorization on Morpho. LLTV buffer validation prevents instant liquidation. Supports `nativeAmount` for collateral wrapping.
+- **borrow** → `marketV1Borrow()` — routed through bundler3 via `morphoBorrow`. Requires GeneralAdapter1 authorization on Morpho (`setAuthorization`). `getRequirements` returns authorization tx if needed. Uses `minSharePrice` for slippage protection. LLTV buffer validation prevents instant liquidation. Supports optional **reallocations** for shared liquidity (see below).
+- **supplyCollateralBorrow** → `marketV1SupplyCollateralBorrow()` — bundled via bundler3 (collateral transfer + `morphoSupplyCollateral` + `morphoBorrow`). Requires GeneralAdapter1 authorization on Morpho. LLTV buffer validation prevents instant liquidation. Supports `nativeAmount` for collateral wrapping. Supports optional **reallocations** for shared liquidity (see below).
+
+## Shared Liquidity & Reallocations (PublicAllocator)
+
+When a Morpho Blue market lacks sufficient liquidity for a borrow, liquidity can be **reallocated** from other markets managed by MetaMorpho Vaults via the **PublicAllocator** contract.
+
+**Concept:** A `VaultReallocation` maps 1:1 to a `PublicAllocator.reallocateTo()` call. It withdraws loan tokens from one or more _source markets_ within a vault and supplies them to the _target market_ — all atomically within the same bundler transaction.
+
+**Flow:**
+
+1. Caller provides an optional `reallocations: VaultReallocation[]` parameter to `borrow` or `supplyCollateralBorrow`.
+2. Each reallocation is validated (`validateReallocations`) and encoded as a `reallocateTo` bundler action.
+3. These actions are prepended (borrow) or inserted between supply-collateral and borrow (supplyCollateralBorrow) in the bundle.
+4. Reallocation fees (native token per vault) are summed and set as `tx.value`.
+5. The `morphoBorrow` action executes against the now-liquid target market.
+
+**Key types:** `VaultReallocation`, `ReallocationWithdrawal` (in `src/types/sharedLiquidity.ts`).
+**Validation errors:** `NegativeReallocationFeeError`, `EmptyReallocationWithdrawalsError`, `NonPositiveReallocationAmountError`.
 
 ## Code Standards
 

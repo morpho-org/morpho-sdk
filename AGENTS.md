@@ -16,6 +16,10 @@ Each layer has its own `AGENTS.md` with scoped context:
 | Types   | [`src/types/AGENTS.md`](src/types/AGENTS.md)       | All type definitions, custom errors                            |
 | Helpers | [`src/helpers/AGENTS.md`](src/helpers/AGENTS.md)   | Metadata utilities, constants                                  |
 
+## Shared Liquidity & Reallocations
+
+`borrow` and `supplyCollateralBorrow` accept an optional `reallocations: VaultReallocation[]`. Each reallocation triggers a `PublicAllocator.reallocateTo()` call in the bundler bundle, moving liquidity from source markets to the target market before the borrow executes. Fees (native token) accumulate in `tx.value`. Types: `VaultReallocation`, `ReallocationWithdrawal` (`src/types/sharedLiquidity.ts`).
+
 ## Non-Negotiables
 
 - `pnpm lint && pnpm build` after every change.

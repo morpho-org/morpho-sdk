@@ -13,7 +13,11 @@ Centralized type definitions. Barrel-exported via `index.ts`.
 - `DepositAmountArgs` — union type enforcing at least one of `amount` / `nativeAmount`. Reused for vault deposits and market collateral supply.
 - `MarketParams` — Morpho Blue market params (`loanToken`, `collateralToken`, `oracle`, `irm`, `lltv`).
 - `MorphoAuthorizationAction` — for `morpho.setAuthorization()` pre-requisite transactions.
-- Custom errors in `error.ts` — one class per error case. Includes native wrapping validation (`NativeAmountOnNonWNativeVaultError`, `ChainWNativeMissingError`, `NegativeNativeAmountError`, `ZeroDepositAmountError`) and market-specific: `BorrowExceedsSafeLtvError`, `MissingMarketPriceError`, `ZeroCollateralAmountError`, `NativeAmountOnNonWNativeCollateralError`.
+- **Shared liquidity types** in `sharedLiquidity.ts`:
+  - `ReallocationWithdrawal` — `{ readonly marketParams: MarketParams; readonly amount: bigint }`. Single withdrawal from a source market.
+  - `VaultReallocation` — `{ readonly vault: Address; readonly fee: bigint; readonly withdrawals: readonly ReallocationWithdrawal[] }`. Maps 1:1 to a `PublicAllocator.reallocateTo()` call. Fee is in native ETH.
+- `MarketV1BorrowAction` and `MarketV1SupplyCollateralBorrowAction` include optional `reallocationFee?: bigint` in their args to track total fees paid.
+- Custom errors in `error.ts` — one class per error case. Includes native wrapping validation (`NativeAmountOnNonWNativeVaultError`, `ChainWNativeMissingError`, `NegativeNativeAmountError`, `ZeroDepositAmountError`), market-specific: `BorrowExceedsSafeLtvError`, `MissingMarketPriceError`, `ZeroCollateralAmountError`, `NativeAmountOnNonWNativeCollateralError`, and reallocation-specific: `NegativeReallocationFeeError`, `EmptyReallocationWithdrawalsError`, `NonPositiveReallocationAmountError`.
 
 ## Key Constraints
 

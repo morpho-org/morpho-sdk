@@ -13,7 +13,8 @@ Centralized type definitions. Barrel-exported via `index.ts`.
 - `DepositAmountArgs` — union type enforcing at least one of `amount` / `nativeAmount`. Reused for vault deposits and market collateral supply.
 - `MarketParams` — Morpho Blue market params (`loanToken`, `collateralToken`, `oracle`, `irm`, `lltv`).
 - `MorphoAuthorizationAction` — for `morpho.setAuthorization()` pre-requisite transactions.
-- Custom errors in `error.ts` — one class per error case. Market-specific: `BorrowExceedsSafeLtvError`, `MissingMarketPriceError`, `ZeroCollateralAmountError`, `NativeAmountOnNonWNativeCollateralError`.
+- **Shared liquidity types** in `sharedLiquidity.ts`: `ReallocationWithdrawal` (source market + amount), `VaultReallocation` (vault address + fee + withdrawals). Maps to `PublicAllocator.reallocateTo()`.
+- Custom errors in `error.ts` — one class per error case. Market-specific: `BorrowExceedsSafeLtvError`, `MissingMarketPriceError`, `ZeroCollateralAmountError`, `NativeAmountOnNonWNativeCollateralError`. Reallocation-specific: `NegativeReallocationFeeError`, `EmptyReallocationWithdrawalsError`, `NonPositiveReallocationAmountError`.
 
 ## Key Constraints
 

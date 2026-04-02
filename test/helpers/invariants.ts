@@ -75,6 +75,7 @@ export interface MarketInvariantResult {
   initialState: MarketInvariant;
   finalState: MarketInvariant;
   accruedInterest: bigint;
+  marketAccruedInterest: bigint;
 }
 
 export interface VaultInvariantResult {
@@ -472,12 +473,18 @@ const _buildMarketFinalState = async <TMarketName extends string>({
       chainId: client.chain.id,
     });
 
+    const accrued = initialState.position.accrueInterest(
+      finalState.block.timestamp,
+    );
+
     results[name] = {
       initialState,
       finalState,
       accruedInterest:
-        initialState.position.accrueInterest(finalState.block.timestamp)
-          .borrowAssets - initialState.position.borrowAssets,
+        accrued.borrowAssets - initialState.position.borrowAssets,
+      marketAccruedInterest:
+        accrued.market.totalSupplyAssets -
+        initialState.position.market.totalSupplyAssets,
     };
   }
 

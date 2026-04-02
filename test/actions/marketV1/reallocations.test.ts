@@ -1,5 +1,5 @@
 import { getChainAddresses, MarketParams } from "@morpho-org/blue-sdk";
-import { fetchMarket, publicAllocatorAbi } from "@morpho-org/blue-sdk-viem";
+import { publicAllocatorAbi } from "@morpho-org/blue-sdk-viem";
 
 import { encodeFunctionData, parseUnits } from "viem";
 import { mainnet } from "viem/chains";
@@ -55,11 +55,6 @@ describe("Borrow with single vault reallocation (e2e)", () => {
       collateralAmount,
     );
 
-    const marketBefore = await fetchMarket(CbbtcUsdcMarketV1.id, client, {
-      chainId: mainnet.id,
-    });
-    const supplyBefore = marketBefore.totalSupplyAssets;
-
     const reallocations: readonly VaultReallocation[] = [
       {
         vault: SteakhouseUsdcVaultV1.address,
@@ -75,11 +70,13 @@ describe("Borrow with single vault reallocation (e2e)", () => {
 
     const {
       markets: {
-        CbbtcUsdcMarketV1: { initialState, finalState },
+        CbbtcUsdcMarketV1: { initialState, finalState, marketAccruedInterest },
       },
     } = await testInvariants({
       client,
-      params: { markets: { CbbtcUsdcMarketV1 } },
+      params: {
+        markets: { CbbtcUsdcMarketV1, WbtcUsdcSourceMarket },
+      },
       actionFn: async () => {
         const morphoClient = new MorphoClient(client);
         const market = morphoClient.marketV1(CbbtcUsdcMarketV1, mainnet.id);
@@ -109,32 +106,30 @@ describe("Borrow with single vault reallocation (e2e)", () => {
       },
     });
 
-    // User received borrowed USDC
     expect(finalState.userLoanTokenBalance).toEqual(
       initialState.userLoanTokenBalance + borrowAmount,
     );
 
-    // Position reflects borrow
-    expect(finalState.position.borrowAssets).toBeGreaterThanOrEqual(
-      initialState.position.borrowAssets + borrowAmount,
+    expect(finalState.position.borrowAssets).toEqual(
+      initialState.position.borrowAssets + borrowAmount + 1n,
     );
 
-    // Market supply increased from reallocation
-    const marketAfter = await fetchMarket(CbbtcUsdcMarketV1.id, client, {
-      chainId: mainnet.id,
-    });
-    expect(marketAfter.totalSupplyAssets).toBeGreaterThan(
-      supplyBefore - borrowAmount,
-    );
+    expect(
+      finalState.position.market.totalSupplyAssets -
+        initialState.position.market.totalSupplyAssets,
+    ).toEqual(reallocationAmount + marketAccruedInterest);
   });
 });
 
-describe("Borrow with multiple source market withdrawals (e2e)", () => {
+describe("Borrow with multiple source market withdrawals", () => {
   test("should borrow with reallocation withdrawing from two source markets", async ({
     client,
   }) => {
     const collateralAmount = parseUnits("10", 8);
     const borrowAmount = parseUnits("2000", 6);
+
+    const reallocationAmount1 = parseUnits("1500", 6);
+    const reallocationAmount2 = parseUnits("1000", 6);
 
     await supplyCollateral(
       client,
@@ -150,11 +145,11 @@ describe("Borrow with multiple source market withdrawals (e2e)", () => {
         withdrawals: [
           {
             marketParams: WbtcUsdcSourceMarket,
-            amount: parseUnits("1500", 6),
+            amount: reallocationAmount1,
           },
           {
             marketParams: WstethUsdcSourceMarket,
-            amount: parseUnits("1000", 6),
+            amount: reallocationAmount2,
           },
         ],
       },
@@ -162,7 +157,7 @@ describe("Borrow with multiple source market withdrawals (e2e)", () => {
 
     const {
       markets: {
-        CbbtcUsdcMarketV1: { initialState, finalState },
+        CbbtcUsdcMarketV1: { initialState, finalState, marketAccruedInterest },
       },
     } = await testInvariants({
       client,
@@ -198,17 +193,25 @@ describe("Borrow with multiple source market withdrawals (e2e)", () => {
     expect(finalState.userLoanTokenBalance).toEqual(
       initialState.userLoanTokenBalance + borrowAmount,
     );
-    expect(finalState.position.borrowAssets).toBeGreaterThanOrEqual(
-      initialState.position.borrowAssets + borrowAmount,
+    expect(finalState.position.borrowAssets).toEqual(
+      initialState.position.borrowAssets + borrowAmount + 1n,
+    );
+
+    expect(
+      finalState.position.market.totalSupplyAssets -
+        initialState.position.market.totalSupplyAssets,
+    ).toEqual(
+      reallocationAmount1 + reallocationAmount2 + marketAccruedInterest,
     );
   });
 });
 
-describe("Borrow with reallocation fee (e2e)", () => {
+describe("Borrow with reallocation fee", () => {
   test("should borrow with non-zero reallocation fee", async ({ client }) => {
     const collateralAmount = parseUnits("10", 8);
     const borrowAmount = parseUnits("1000", 6);
     const reallocationFee = parseUnits("0.01", 18); // 0.01 ETH
+    const reallocationAmount = parseUnits("2000", 6);
 
     await supplyCollateral(
       client,
@@ -243,15 +246,19 @@ describe("Borrow with reallocation fee (e2e)", () => {
         withdrawals: [
           {
             marketParams: WbtcUsdcSourceMarket,
-            amount: parseUnits("2000", 6),
+            amount: reallocationAmount,
           },
         ],
       },
     ];
 
+    const publicAllocatorBalanceBefore = await client.getBalance({
+      address: publicAllocator!,
+    });
+
     const {
       markets: {
-        CbbtcUsdcMarketV1: { initialState, finalState },
+        CbbtcUsdcMarketV1: { initialState, finalState, marketAccruedInterest },
       },
     } = await testInvariants({
       client,
@@ -294,18 +301,31 @@ describe("Borrow with reallocation fee (e2e)", () => {
     expect(finalState.userLoanTokenBalance).toEqual(
       initialState.userLoanTokenBalance + borrowAmount,
     );
-    expect(finalState.position.borrowAssets).toBeGreaterThanOrEqual(
-      initialState.position.borrowAssets + borrowAmount,
+    expect(finalState.position.borrowAssets).toEqual(
+      initialState.position.borrowAssets + borrowAmount + 1n,
+    );
+
+    expect(
+      finalState.position.market.totalSupplyAssets -
+        initialState.position.market.totalSupplyAssets,
+    ).toEqual(reallocationAmount + marketAccruedInterest);
+
+    const publicAllocatorBalanceAfter = await client.getBalance({
+      address: publicAllocator!,
+    });
+    expect(publicAllocatorBalanceAfter).toEqual(
+      publicAllocatorBalanceBefore + reallocationFee,
     );
   });
 });
 
-describe("SupplyCollateralBorrow with single vault reallocation (e2e)", () => {
+describe("SupplyCollateralBorrow with single vault reallocation", () => {
   test("should supply collateral and borrow with reallocation from one vault", async ({
     client,
   }) => {
     const collateralAmount = parseUnits("10", 8);
     const borrowAmount = parseUnits("1000", 6);
+    const reallocationAmount = parseUnits("2000", 6);
 
     await client.deal({
       erc20: CbbtcUsdcMarketV1.collateralToken,
@@ -319,7 +339,7 @@ describe("SupplyCollateralBorrow with single vault reallocation (e2e)", () => {
         withdrawals: [
           {
             marketParams: WbtcUsdcSourceMarket,
-            amount: parseUnits("2000", 6),
+            amount: reallocationAmount,
           },
         ],
       },
@@ -327,7 +347,7 @@ describe("SupplyCollateralBorrow with single vault reallocation (e2e)", () => {
 
     const {
       markets: {
-        CbbtcUsdcMarketV1: { initialState, finalState },
+        CbbtcUsdcMarketV1: { initialState, finalState, marketAccruedInterest },
       },
     } = await testInvariants({
       client,
@@ -380,15 +400,22 @@ describe("SupplyCollateralBorrow with single vault reallocation (e2e)", () => {
     expect(finalState.position.borrowAssets).toEqual(
       initialState.position.borrowAssets + borrowAmount + 1n,
     );
+
+    expect(
+      finalState.position.market.totalSupplyAssets -
+        initialState.position.market.totalSupplyAssets,
+    ).toEqual(reallocationAmount + marketAccruedInterest);
   });
 });
 
-describe("SupplyCollateralBorrow with multiple source market withdrawals (e2e)", () => {
+describe("SupplyCollateralBorrow with multiple source market withdrawals", () => {
   test("should supply collateral and borrow with reallocation from two source markets", async ({
     client,
   }) => {
     const collateralAmount = parseUnits("10", 8);
     const borrowAmount = parseUnits("2000", 6);
+    const reallocationAmount1 = parseUnits("1500", 6);
+    const reallocationAmount2 = parseUnits("1000", 6);
 
     await client.deal({
       erc20: CbbtcUsdcMarketV1.collateralToken,
@@ -402,11 +429,11 @@ describe("SupplyCollateralBorrow with multiple source market withdrawals (e2e)",
         withdrawals: [
           {
             marketParams: WbtcUsdcSourceMarket,
-            amount: parseUnits("1500", 6),
+            amount: reallocationAmount1,
           },
           {
             marketParams: WstethUsdcSourceMarket,
-            amount: parseUnits("1000", 6),
+            amount: reallocationAmount2,
           },
         ],
       },
@@ -414,7 +441,7 @@ describe("SupplyCollateralBorrow with multiple source market withdrawals (e2e)",
 
     const {
       markets: {
-        CbbtcUsdcMarketV1: { initialState, finalState },
+        CbbtcUsdcMarketV1: { initialState, finalState, marketAccruedInterest },
       },
     } = await testInvariants({
       client,
@@ -465,6 +492,138 @@ describe("SupplyCollateralBorrow with multiple source market withdrawals (e2e)",
     );
     expect(finalState.position.borrowAssets).toEqual(
       initialState.position.borrowAssets + borrowAmount + 1n,
+    );
+    expect(
+      finalState.position.market.totalSupplyAssets -
+        initialState.position.market.totalSupplyAssets,
+    ).toEqual(
+      reallocationAmount1 + reallocationAmount2 + marketAccruedInterest,
+    );
+  });
+});
+
+describe("SupplyCollateralBorrow with reallocation fee", () => {
+  test("should supply collateral and borrow with non-zero reallocation fee", async ({
+    client,
+  }) => {
+    const collateralAmount = parseUnits("10", 8);
+    const borrowAmount = parseUnits("1000", 6);
+    const reallocationFee = parseUnits("0.01", 18); // 0.01 ETH
+    const reallocationAmount = parseUnits("2000", 6);
+
+    await client.deal({
+      erc20: CbbtcUsdcMarketV1.collateralToken,
+      amount: collateralAmount,
+    });
+
+    // Impersonate the PA admin to set a fee on the Steakhouse vault
+    const { publicAllocator } = getChainAddresses(mainnet.id);
+    await client.impersonateAccount({ address: PA_ADMIN });
+    await client.setBalance({
+      address: PA_ADMIN,
+      value: parseUnits("1", 18),
+    });
+    await client.sendTransaction({
+      account: PA_ADMIN,
+      to: publicAllocator,
+      data: encodeFunctionData({
+        abi: publicAllocatorAbi,
+        functionName: "setFee",
+        args: [SteakhouseUsdcVaultV1.address, reallocationFee],
+      }),
+      value: 0n,
+    });
+    await client.stopImpersonatingAccount({ address: PA_ADMIN });
+
+    const reallocations: readonly VaultReallocation[] = [
+      {
+        vault: SteakhouseUsdcVaultV1.address,
+        fee: reallocationFee,
+        withdrawals: [
+          {
+            marketParams: WbtcUsdcSourceMarket,
+            amount: reallocationAmount,
+          },
+        ],
+      },
+    ];
+
+    const publicAllocatorBalanceBefore = await client.getBalance({
+      address: publicAllocator!,
+    });
+
+    const {
+      markets: {
+        CbbtcUsdcMarketV1: { initialState, finalState, marketAccruedInterest },
+      },
+    } = await testInvariants({
+      client,
+      params: { markets: { CbbtcUsdcMarketV1 } },
+      actionFn: async () => {
+        const morphoClient = new MorphoClient(client);
+        const market = morphoClient.marketV1(CbbtcUsdcMarketV1, mainnet.id);
+        const accrualPosition = await market.getPositionData(
+          client.account.address,
+        );
+
+        const scb = market.supplyCollateralBorrow({
+          userAddress: client.account.address,
+          amount: collateralAmount,
+          borrowAmount,
+          accrualPosition,
+          reallocations,
+        });
+
+        const requirements = await scb.getRequirements();
+        const approval = requirements[0];
+        if (!isRequirementApproval(approval)) {
+          throw new Error("Approval requirement not found");
+        }
+        const authorization = requirements[1];
+        if (!isRequirementAuthorization(authorization)) {
+          throw new Error("Authorization requirement not found");
+        }
+
+        await client.sendTransaction(approval);
+        await client.sendTransaction(authorization);
+
+        const tx = scb.buildTx();
+        expect(tx.value).toBe(reallocationFee);
+        expect(tx.action.args.reallocationFee).toBe(reallocationFee);
+
+        // Set ETH balance to cover the fee
+        await client.setBalance({
+          address: client.account.address,
+          value: reallocationFee + parseUnits("1", 18),
+        });
+
+        await client.sendTransaction(tx);
+      },
+    });
+
+    expect(finalState.userCollateralTokenBalance).toEqual(
+      initialState.userCollateralTokenBalance - collateralAmount,
+    );
+    expect(finalState.userLoanTokenBalance).toEqual(
+      initialState.userLoanTokenBalance + borrowAmount,
+    );
+    expect(finalState.position.collateral).toEqual(
+      initialState.position.collateral + collateralAmount,
+    );
+    expect(finalState.position.borrowAssets).toEqual(
+      initialState.position.borrowAssets + borrowAmount + 1n,
+    );
+
+    expect(
+      finalState.position.market.totalSupplyAssets -
+        initialState.position.market.totalSupplyAssets,
+    ).toEqual(reallocationAmount + marketAccruedInterest);
+
+    const publicAllocatorBalanceAfter = await client.getBalance({
+      address: publicAllocator!,
+    });
+    expect(publicAllocatorBalanceAfter).toEqual(
+      publicAllocatorBalanceBefore + reallocationFee,
     );
   });
 });

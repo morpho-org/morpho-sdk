@@ -8,19 +8,19 @@
 
 ## Entities & Actions
 
-| Entity      | Action          | Route                     | Why                                                                                     |
-| ----------- | --------------- | ------------------------- | --------------------------------------------------------------------------------------- |
-| **VaultV2** | `deposit`       | Bundler (general adapter) | Enforces `maxSharePrice` — inflation attack prevention. Supports native token wrapping. |
-|             | `withdraw`      | Direct vault call         | No attack surface, no bundler overhead needed                                           |
-|             | `redeem`        | Direct vault call         | No attack surface, no bundler overhead needed                                           |
-|             | `forceWithdraw` | Vault `multicall`         | N `forceDeallocate` + 1 `withdraw` in a single tx                                       |
-|             | `forceRedeem`   | Vault `multicall`         | N `forceDeallocate` + 1 `redeem` in a single tx                                         |
-| **VaultV1** | `deposit`       | Bundler (general adapter) | Same ERC-4626 inflation attack prevention as V2. Supports native token wrapping.        |
-|             | `withdraw`      | Direct vault call         | No attack surface                                                                       |
-|             | `redeem`        | Direct vault call         | No attack surface                                                                       |
-| **MarketV1** | `supplyCollateral` | Bundler (general adapter) | `erc20TransferFrom` + `morphoSupplyCollateral`. Supports native wrapping.            |
-|              | `borrow`           | Bundler (general adapter) | `morphoBorrow` with `minSharePrice` slippage protection. Requires GA1 auth.          |
-|              | `supplyCollateralBorrow` | Bundler (general adapter) | Atomic supply + borrow. LLTV buffer prevents instant liquidation.              |
+| Entity       | Action                   | Route                     | Why                                                                                                 |
+| ------------ | ------------------------ | ------------------------- | --------------------------------------------------------------------------------------------------- |
+| **VaultV2**  | `deposit`                | Bundler (general adapter) | Enforces `maxSharePrice` — inflation attack prevention. Supports native token wrapping.             |
+|              | `withdraw`               | Direct vault call         | No attack surface, no bundler overhead needed                                                       |
+|              | `redeem`                 | Direct vault call         | No attack surface, no bundler overhead needed                                                       |
+|              | `forceWithdraw`          | Vault `multicall`         | N `forceDeallocate` + 1 `withdraw` in a single tx                                                   |
+|              | `forceRedeem`            | Vault `multicall`         | N `forceDeallocate` + 1 `redeem` in a single tx                                                     |
+| **VaultV1**  | `deposit`                | Bundler (general adapter) | Same ERC-4626 inflation attack prevention as V2. Supports native token wrapping.                    |
+|              | `withdraw`               | Direct vault call         | No attack surface                                                                                   |
+|              | `redeem`                 | Direct vault call         | No attack surface                                                                                   |
+| **MarketV1** | `supplyCollateral`       | Bundler (general adapter) | `erc20TransferFrom` + `morphoSupplyCollateral`. Supports native wrapping.                           |
+|              | `borrow`                 | Bundler (general adapter) | `morphoBorrow` with `minSharePrice` slippage protection. Requires GA1 auth. Supports reallocations. |
+|              | `supplyCollateralBorrow` | Bundler (general adapter) | Atomic supply + borrow. LLTV buffer prevents instant liquidation. Supports reallocations.           |
 
 ## VaultV2
 
@@ -165,7 +165,7 @@ const market = morpho.marketV1(
     irm: "0xIrm...",
     lltv: 860000000000000000n,
   },
-  1,
+  1
 );
 ```
 
@@ -212,6 +212,52 @@ const requirements = await getRequirements();
 const tx = buildTx(requirementSignature);
 ```
 
+### Borrow with Shared Liquidity (Reallocations)
+
+When a market lacks sufficient liquidity, you can reallocate liquidity from other markets managed by MetaMorpho Vaults via the **PublicAllocator** contract:
+
+```typescript
+import type { VaultReallocation } from "@morpho-org/consumer-sdk";
+
+const reallocations: VaultReallocation[] = [
+  {
+    vault: "0xVault...", // MetaMorpho vault to reallocate from
+    fee: 0n, // PublicAllocator fee in native token (can be 0)
+    withdrawals: [
+      {
+        marketParams: sourceMarketParams, // Source market to withdraw from
+        amount: 2000000000n, // Amount to withdraw
+      },
+    ],
+  },
+];
+
+const accrualPosition = await market.getPositionData("0xUser...");
+
+// Borrow with reallocations
+const { buildTx, getRequirements } = market.borrow({
+  amount: 500000000000000000n,
+  userAddress: "0xUser...",
+  accrualPosition,
+  reallocations,
+});
+
+const requirements = await getRequirements();
+const tx = buildTx();
+// tx.value includes the sum of all reallocation fees
+```
+
+Reallocations also work with `supplyCollateralBorrow`:
+
+```typescript
+const { buildTx, getRequirements } = market.supplyCollateralBorrow({
+  amount: 1000000000000000000n,
+  borrowAmount: 500000000000000000n,
+  userAddress: "0xUser...",
+  accrualPosition,
+  reallocations,
+});
+```
 
 ## Architecture
 
@@ -256,8 +302,10 @@ graph LR
         MM1 --> M1SCB[marketV1SupplyCollateralBorrow]
 
         M1SC -->|erc20TransferFrom + morphoSupplyCollateral| B3[Bundler3]
-        M1B -->|morphoBorrow| B3
-        M1SCB -->|transfer + supplyCollateral + borrow| B3
+        M1B -->|reallocateTo? + morphoBorrow| B3
+        M1SCB -->|transfer + supplyCollateral + reallocateTo? + borrow| B3
+
+        B3 -.->|reallocateTo| PA[PublicAllocator]
     end
 
 
@@ -275,6 +323,7 @@ graph LR
     style MM fill:#fff3e0,stroke:#ff9800
     style V2C fill:#e3f2fd,stroke:#2196f3
     style REQ fill:#f3e5f5,stroke:#9c27b0
+    style PA fill:#fff9c4,stroke:#f9a825
 ```
 
 ## Local Development
