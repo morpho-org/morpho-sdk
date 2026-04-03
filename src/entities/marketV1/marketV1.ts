@@ -1,6 +1,7 @@
 import {
   type AccrualPosition,
   DEFAULT_SLIPPAGE_TOLERANCE,
+  type Holding,
   type Market,
   type MarketId,
   type MarketParams,
@@ -10,6 +11,7 @@ import {
 } from "@morpho-org/blue-sdk";
 import {
   fetchAccrualPosition,
+  fetchHolding,
   fetchMarket,
   fetchPosition,
   fetchVault,
@@ -519,7 +521,9 @@ export class MorphoMarketV1 implements MarketV1Actions {
       (mid) => mid !== targetMarketId,
     );
 
-    const [markets, configs, positions] = await Promise.all([
+    const loanToken = market.params.loanToken;
+
+    const [markets, configs, positions, holdings] = await Promise.all([
       Promise.all(
         sourceMarketIds.map((mid) => fetchMarket(mid, client, fetchParams)),
       ),
@@ -537,6 +541,11 @@ export class MorphoMarketV1 implements MarketV1Actions {
             mid,
             position,
           })),
+        ),
+      ),
+      Promise.all(
+        vaultAddresses.map((addr) =>
+          fetchHolding(addr, loanToken, client, fetchParams),
         ),
       ),
     ]);
@@ -570,6 +579,14 @@ export class MorphoMarketV1 implements MarketV1Actions {
       (positionsRecord[vault] ??= {})[mid] = position;
     }
 
+    const holdingsRecord: Record<
+      Address,
+      Record<Address, Holding | undefined>
+    > = {};
+    for (const holding of holdings) {
+      (holdingsRecord[holding.user] ??= {})[holding.token] = holding;
+    }
+
     return new SimulationState({
       chainId: this.chainId,
       block: {
@@ -580,6 +597,7 @@ export class MorphoMarketV1 implements MarketV1Actions {
       vaults: vaultsRecord,
       vaultMarketConfigs: vaultMarketConfigsRecord,
       positions: positionsRecord,
+      holdings: holdingsRecord,
     });
   }
 
@@ -596,7 +614,7 @@ export class MorphoMarketV1 implements MarketV1Actions {
       reallocationData,
       marketId: this.marketParams.id,
       borrowAmount,
-      options,
+      options: { enabled: true, ...options },
     });
   }
 }

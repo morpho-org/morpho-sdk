@@ -615,12 +615,12 @@ describe("SupplyCollateralBorrow with reallocation fee", () => {
   });
 });
 
-describe("getReallocationData and getReallocations (e2e)", () => {
+describe("getReallocationData and getReallocations", () => {
   test("should compute reallocations and borrow using getReallocationData + getReallocations", async ({
     client,
   }) => {
-    const collateralAmount = parseUnits("10", 8);
-    const borrowAmount = parseUnits("1000", 6);
+    const collateralAmount = parseUnits("1000", 8);
+    const borrowAmount = parseUnits("50000000", 6);
 
     await supplyCollateral(
       client,
@@ -693,16 +693,16 @@ describe("getReallocationData and getReallocations (e2e)", () => {
     expect(finalState.userLoanTokenBalance).toEqual(
       initialState.userLoanTokenBalance + borrowAmount,
     );
-    expect(finalState.position.borrowAssets).toBeGreaterThan(
-      initialState.position.borrowAssets,
+    expect(finalState.position.borrowAssets).toEqual(
+      initialState.position.borrowAssets + borrowAmount + 1n,
     );
   });
 
   test("should compute reallocations for supplyCollateralBorrow", async ({
     client,
   }) => {
-    const collateralAmount = parseUnits("10", 8);
-    const borrowAmount = parseUnits("1000", 6);
+    const collateralAmount = parseUnits("1000", 8);
+    const borrowAmount = parseUnits("50000000", 6);
 
     await client.deal({
       erc20: CbbtcUsdcMarketV1.collateralToken,
@@ -738,6 +738,8 @@ describe("getReallocationData and getReallocations (e2e)", () => {
           reallocationData,
           borrowAmount,
         });
+
+        expect(reallocations.length).toBeGreaterThan(0);
 
         const scb = market.supplyCollateralBorrow({
           userAddress: client.account.address,
