@@ -17,7 +17,7 @@ import {
   fetchVault,
   fetchVaultMarketConfig,
 } from "@morpho-org/blue-sdk-viem";
-import { SimulationState } from "@morpho-org/simulation-sdk";
+import { type MinimalBlock, SimulationState } from "@morpho-org/simulation-sdk";
 import type { Address } from "viem";
 import {
   getMorphoAuthorizationRequirement,
@@ -185,9 +185,7 @@ export interface MarketV1Actions {
   getReallocationData: (params: {
     vaultAddresses: readonly Address[];
     market: Market;
-    blockNumber: bigint;
-    blockTimestamp: bigint;
-    parameters?: FetchParameters;
+    block: MinimalBlock;
   }) => Promise<SimulationState>;
 
   /**
@@ -478,15 +476,11 @@ export class MorphoMarketV1 implements MarketV1Actions {
   async getReallocationData({
     vaultAddresses,
     market,
-    blockNumber,
-    blockTimestamp,
-    parameters,
+    block,
   }: {
     vaultAddresses: readonly Address[];
     market: Market;
-    blockNumber: bigint;
-    blockTimestamp: bigint;
-    parameters?: FetchParameters;
+    block: MinimalBlock;
   }): Promise<SimulationState> {
     validateChainId(this.client.viemClient.chain?.id, this.chainId);
     if (market.id !== this.marketParams.id) {
@@ -497,7 +491,7 @@ export class MorphoMarketV1 implements MarketV1Actions {
     }
 
     const client = this.client.viemClient;
-    const fetchParams = { ...parameters, chainId: this.chainId };
+    const fetchParams = { block, chainId: this.chainId };
 
     // Phase 1: Fetch all vaults in parallel to get their withdrawQueues.
     const vaults = await Promise.all(
@@ -589,10 +583,7 @@ export class MorphoMarketV1 implements MarketV1Actions {
 
     return new SimulationState({
       chainId: this.chainId,
-      block: {
-        number: blockNumber,
-        timestamp: blockTimestamp,
-      },
+      block,
       markets: marketsRecord,
       vaults: vaultsRecord,
       vaultMarketConfigs: vaultMarketConfigsRecord,

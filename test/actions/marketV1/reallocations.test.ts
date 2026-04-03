@@ -650,8 +650,7 @@ describe("getReallocationData and getReallocations", () => {
         const reallocationData = await market.getReallocationData({
           vaultAddresses: [SteakhouseUsdcVaultV1.address],
           market: accrualPosition.market,
-          blockNumber: block.number,
-          blockTimestamp: block.timestamp,
+          block,
         });
 
         const reallocations = market.getReallocations({
@@ -730,8 +729,7 @@ describe("getReallocationData and getReallocations", () => {
         const reallocationData = await market.getReallocationData({
           vaultAddresses: [SteakhouseUsdcVaultV1.address],
           market: accrualPosition.market,
-          blockNumber: block.number,
-          blockTimestamp: block.timestamp,
+          block,
         });
 
         const reallocations = market.getReallocations({
@@ -794,8 +792,7 @@ describe("getReallocationData and getReallocations", () => {
     const reallocationData = await market.getReallocationData({
       vaultAddresses: [SteakhouseUsdcVaultV1.address],
       market: accrualPosition.market,
-      blockNumber: block.number,
-      blockTimestamp: block.timestamp,
+      block,
     });
 
     const reallocations = market.getReallocations({
