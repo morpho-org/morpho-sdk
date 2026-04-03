@@ -1,7 +1,7 @@
-import { getChainAddresses, MarketParams } from "@morpho-org/blue-sdk";
+import { getChainAddresses } from "@morpho-org/blue-sdk";
 import { publicAllocatorAbi } from "@morpho-org/blue-sdk-viem";
 
-import { encodeFunctionData, parseUnits } from "viem";
+import { type Address, encodeFunctionData, parseUnits } from "viem";
 import { mainnet } from "viem/chains";
 import { describe, expect } from "vitest";
 import {
@@ -15,32 +15,18 @@ import {
   NonPositiveReallocationAmountError,
 } from "../../../src";
 import type { VaultReallocation } from "../../../src/types";
-import { CbbtcUsdcMarketV1 } from "../../fixtures/marketV1";
+import {
+  CbbtcUsdcMarketV1,
+  WbtcUsdcSourceMarket,
+  WstethUsdcSourceMarket,
+} from "../../fixtures/marketV1";
 import { SteakhouseUsdcVaultV1 } from "../../fixtures/vaultV1";
 import { testInvariants } from "../../helpers/invariants";
 import { supplyCollateral } from "../../helpers/marketV1";
 import { test } from "../../setup";
 
-/** WBTC/USDC market — source for Steakhouse vault reallocations. */
-const WbtcUsdcSourceMarket = new MarketParams({
-  loanToken: "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
-  collateralToken: "0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599",
-  oracle: "0xDddd770BADd886dF3864029e4B377B5F6a2B6b83",
-  irm: "0x870aC11D48B15DB9a138Cf899d20F13F79Ba00BC",
-  lltv: 860000000000000000n,
-});
-
-/** wstETH/USDC market — second source for multi-withdrawal tests. */
-const WstethUsdcSourceMarket = new MarketParams({
-  loanToken: "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
-  collateralToken: "0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0",
-  oracle: "0x48F7E36EB6B826B2dF4B2E630B62Cd25e89E40e2",
-  irm: "0x870aC11D48B15DB9a138Cf899d20F13F79Ba00BC",
-  lltv: 860000000000000000n,
-});
-
 /** PublicAllocator admin for the Steakhouse vault at the fork block. */
-const PA_ADMIN = "0x9E9110cFd24cd851ea5bc73a27975B33E308f9e1" as const;
+const PA_ADMIN: Address = "0x9E9110cFd24cd851ea5bc73a27975B33E308f9e1";
 
 describe("Borrow with single vault reallocation (e2e)", () => {
   test("should borrow with reallocation from one vault", async ({ client }) => {
