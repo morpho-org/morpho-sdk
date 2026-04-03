@@ -136,7 +136,7 @@ export const marketV1SupplyCollateralBorrow = ({
     reallocations?.reduce((sum, r) => sum + r.fee, 0n) ?? 0n;
 
   if (reallocations && reallocations.length > 0) {
-    validateReallocations(reallocations);
+    validateReallocations(reallocations, marketParams.id);
     for (const r of reallocations) {
       actions.push({
         type: "reallocateTo",

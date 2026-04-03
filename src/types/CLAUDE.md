@@ -17,7 +17,7 @@ Centralized type definitions. Barrel-exported via `index.ts`.
   - `ReallocationWithdrawal` — `{ readonly marketParams: MarketParams; readonly amount: bigint }`. Single withdrawal from a source market.
   - `VaultReallocation` — `{ readonly vault: Address; readonly fee: bigint; readonly withdrawals: readonly ReallocationWithdrawal[] }`. Maps 1:1 to a `PublicAllocator.reallocateTo()` call. Fee is in native ETH.
 - `MarketV1BorrowAction` and `MarketV1SupplyCollateralBorrowAction` include optional `reallocationFee?: bigint` in their args to track total fees paid.
-- Custom errors in `error.ts` — one class per error case. Includes native wrapping validation (`NativeAmountOnNonWNativeVaultError`, `ChainWNativeMissingError`, `NegativeNativeAmountError`, `ZeroDepositAmountError`), market-specific: `BorrowExceedsSafeLtvError`, `MissingMarketPriceError`, `ZeroCollateralAmountError`, `NativeAmountOnNonWNativeCollateralError`, and reallocation-specific: `NegativeReallocationFeeError`, `EmptyReallocationWithdrawalsError`, `NonPositiveReallocationAmountError`.
+- Custom errors in `error.ts` — one class per error case. Includes native wrapping validation (`NativeAmountOnNonWNativeVaultError`, `ChainWNativeMissingError`, `NegativeNativeAmountError`, `ZeroDepositAmountError`), market-specific: `BorrowExceedsSafeLtvError`, `MissingMarketPriceError`, `ZeroCollateralAmountError`, `NativeAmountOnNonWNativeCollateralError`, and reallocation-specific: `NegativeReallocationFeeError`, `EmptyReallocationWithdrawalsError`, `NonPositiveReallocationAmountError`, `ReallocationWithdrawalOnTargetMarketError`, `UnsortedReallocationWithdrawalsError`.
 
 ## Key Constraints
 

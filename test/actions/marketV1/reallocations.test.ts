@@ -13,6 +13,7 @@ import {
   marketV1SupplyCollateralBorrow,
   NegativeReallocationFeeError,
   NonPositiveReallocationAmountError,
+  ReallocationWithdrawalOnTargetMarketError,
 } from "../../../src";
 import type { VaultReallocation } from "../../../src/types";
 import {
@@ -704,6 +705,31 @@ describe("Reallocation validation errors", () => {
         }),
       ).toThrow(NonPositiveReallocationAmountError);
     });
+
+    test("should throw ReallocationWithdrawalOnTargetMarketError when withdrawal includes borrow market", () => {
+      expect(() =>
+        marketV1Borrow({
+          market: { chainId: mainnet.id, marketParams: CbbtcUsdcMarketV1 },
+          args: {
+            amount: parseUnits("100", 6),
+            receiver: "0x000000000000000000000000000000000000dEaD",
+            minSharePrice: 1n,
+            reallocations: [
+              {
+                vault: SteakhouseUsdcVaultV1.address,
+                fee: 0n,
+                withdrawals: [
+                  {
+                    marketParams: CbbtcUsdcMarketV1,
+                    amount: parseUnits("100", 6),
+                  },
+                ],
+              },
+            ],
+          },
+        }),
+      ).toThrow(ReallocationWithdrawalOnTargetMarketError);
+    });
   });
 
   describe("marketV1SupplyCollateralBorrow", () => {
@@ -802,6 +828,33 @@ describe("Reallocation validation errors", () => {
           },
         }),
       ).toThrow(NonPositiveReallocationAmountError);
+    });
+
+    test("should throw ReallocationWithdrawalOnTargetMarketError when withdrawal includes borrow market", () => {
+      expect(() =>
+        marketV1SupplyCollateralBorrow({
+          market: { chainId: mainnet.id, marketParams: CbbtcUsdcMarketV1 },
+          args: {
+            amount: parseUnits("1", 8),
+            borrowAmount: parseUnits("100", 6),
+            onBehalf: "0x000000000000000000000000000000000000dEaD",
+            receiver: "0x000000000000000000000000000000000000dEaD",
+            minSharePrice: 1n,
+            reallocations: [
+              {
+                vault: SteakhouseUsdcVaultV1.address,
+                fee: 0n,
+                withdrawals: [
+                  {
+                    marketParams: CbbtcUsdcMarketV1,
+                    amount: parseUnits("100", 6),
+                  },
+                ],
+              },
+            ],
+          },
+        }),
+      ).toThrow(ReallocationWithdrawalOnTargetMarketError);
     });
   });
 });
