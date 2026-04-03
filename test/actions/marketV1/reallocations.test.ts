@@ -615,6 +615,196 @@ describe("SupplyCollateralBorrow with reallocation fee", () => {
   });
 });
 
+describe("getReallocationData and getReallocations (e2e)", () => {
+  test("should compute reallocations and borrow using getReallocationData + getReallocations", async ({
+    client,
+  }) => {
+    const collateralAmount = parseUnits("10", 8);
+    const borrowAmount = parseUnits("1000", 6);
+
+    await supplyCollateral(
+      client,
+      mainnet.id,
+      CbbtcUsdcMarketV1,
+      collateralAmount,
+    );
+
+    const {
+      markets: {
+        CbbtcUsdcMarketV1: { initialState, finalState },
+      },
+    } = await testInvariants({
+      client,
+      params: {
+        markets: { CbbtcUsdcMarketV1 },
+      },
+      actionFn: async () => {
+        const morphoClient = new MorphoClient(client);
+        const market = morphoClient.marketV1(CbbtcUsdcMarketV1, mainnet.id);
+        const accrualPosition = await market.getPositionData(
+          client.account.address,
+        );
+
+        const block = await client.getBlock();
+
+        const reallocationData = await market.getReallocationData({
+          vaultAddresses: [SteakhouseUsdcVaultV1.address],
+          market: accrualPosition.market,
+          blockNumber: block.number,
+          blockTimestamp: block.timestamp,
+        });
+
+        const reallocations = market.getReallocations({
+          reallocationData,
+          borrowAmount,
+        });
+
+        expect(reallocations.length).toBeGreaterThan(0);
+
+        for (const r of reallocations) {
+          expect(r.vault).toBeDefined();
+          expect(r.fee).toBeGreaterThanOrEqual(0n);
+          expect(r.withdrawals.length).toBeGreaterThan(0);
+          for (const w of r.withdrawals) {
+            expect(w.amount).toBeGreaterThan(0n);
+            expect(w.marketParams).toBeDefined();
+          }
+        }
+
+        const borrow = market.borrow({
+          userAddress: client.account.address,
+          amount: borrowAmount,
+          accrualPosition,
+          reallocations,
+        });
+
+        const requirements = await borrow.getRequirements();
+        const authorization = requirements[0];
+        if (!isRequirementAuthorization(authorization)) {
+          throw new Error("Authorization requirement not found");
+        }
+        await client.sendTransaction(authorization);
+
+        const tx = borrow.buildTx();
+        await client.sendTransaction(tx);
+      },
+    });
+
+    expect(finalState.userLoanTokenBalance).toEqual(
+      initialState.userLoanTokenBalance + borrowAmount,
+    );
+    expect(finalState.position.borrowAssets).toBeGreaterThan(
+      initialState.position.borrowAssets,
+    );
+  });
+
+  test("should compute reallocations for supplyCollateralBorrow", async ({
+    client,
+  }) => {
+    const collateralAmount = parseUnits("10", 8);
+    const borrowAmount = parseUnits("1000", 6);
+
+    await client.deal({
+      erc20: CbbtcUsdcMarketV1.collateralToken,
+      amount: collateralAmount,
+    });
+
+    const {
+      markets: {
+        CbbtcUsdcMarketV1: { initialState, finalState },
+      },
+    } = await testInvariants({
+      client,
+      params: {
+        markets: { CbbtcUsdcMarketV1 },
+      },
+      actionFn: async () => {
+        const morphoClient = new MorphoClient(client);
+        const market = morphoClient.marketV1(CbbtcUsdcMarketV1, mainnet.id);
+        const accrualPosition = await market.getPositionData(
+          client.account.address,
+        );
+
+        const block = await client.getBlock();
+
+        const reallocationData = await market.getReallocationData({
+          vaultAddresses: [SteakhouseUsdcVaultV1.address],
+          market: accrualPosition.market,
+          blockNumber: block.number,
+          blockTimestamp: block.timestamp,
+        });
+
+        const reallocations = market.getReallocations({
+          reallocationData,
+          borrowAmount,
+        });
+
+        const scb = market.supplyCollateralBorrow({
+          userAddress: client.account.address,
+          amount: collateralAmount,
+          borrowAmount,
+          accrualPosition,
+          reallocations,
+        });
+
+        const requirements = await scb.getRequirements();
+        const approval = requirements[0];
+        if (!isRequirementApproval(approval)) {
+          throw new Error("Approval requirement not found");
+        }
+        const authorization = requirements[1];
+        if (!isRequirementAuthorization(authorization)) {
+          throw new Error("Authorization requirement not found");
+        }
+
+        await client.sendTransaction(approval);
+        await client.sendTransaction(authorization);
+
+        const tx = scb.buildTx();
+        await client.sendTransaction(tx);
+      },
+    });
+
+    expect(finalState.userCollateralTokenBalance).toEqual(
+      initialState.userCollateralTokenBalance - collateralAmount,
+    );
+    expect(finalState.userLoanTokenBalance).toEqual(
+      initialState.userLoanTokenBalance + borrowAmount,
+    );
+    expect(finalState.position.collateral).toEqual(
+      initialState.position.collateral + collateralAmount,
+    );
+  });
+
+  test("should return empty reallocations when liquidity is sufficient", async ({
+    client,
+  }) => {
+    const borrowAmount = parseUnits("1", 6); // tiny borrow, liquidity is sufficient
+
+    const morphoClient = new MorphoClient(client);
+    const market = morphoClient.marketV1(CbbtcUsdcMarketV1, mainnet.id);
+    const accrualPosition = await market.getPositionData(
+      client.account.address,
+    );
+
+    const block = await client.getBlock();
+
+    const reallocationData = await market.getReallocationData({
+      vaultAddresses: [SteakhouseUsdcVaultV1.address],
+      market: accrualPosition.market,
+      blockNumber: block.number,
+      blockTimestamp: block.timestamp,
+    });
+
+    const reallocations = market.getReallocations({
+      reallocationData,
+      borrowAmount,
+    });
+
+    expect(reallocations).toEqual([]);
+  });
+});
+
 describe("Reallocation validation errors", () => {
   describe("marketV1Borrow", () => {
     test("should throw NegativeReallocationFeeError for negative fee", () => {

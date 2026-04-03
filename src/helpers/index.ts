@@ -1,3 +1,4 @@
+export { computeReallocations } from "./computeReallocations";
 export { addTransactionMetadata } from "./metadata";
 export { computeMinBorrowSharePrice } from "./slippage";
 export {
