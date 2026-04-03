@@ -19,8 +19,12 @@ import {
   NegativeReallocationFeeError,
   NonPositiveReallocationAmountError,
   ReallocationWithdrawalOnTargetMarketError,
+  RepayExceedsDebtError,
+  RepaySharesExceedDebtError,
   UnsortedReallocationWithdrawalsError,
   type VaultReallocation,
+  WithdrawExceedsCollateralError,
+  WithdrawMakesPositionUnhealthyError,
 } from "../types";
 import { DEFAULT_LLTV_BUFFER } from "./constant";
 
@@ -153,6 +157,119 @@ export const validateNativeCollateral = (
  * @param reallocations - The reallocations to validate.
  * @param targetMarketId - The ID of the market being borrowed from. No withdrawal may reference this market.
  */
+/**
+ * Validates that the resulting position stays within the safe LTV threshold
+ * (LLTV minus buffer) after withdrawing collateral.
+ *
+ * @param accrualPosition - The current accrual position with market data.
+ * @param withdrawAmount - Amount of collateral being withdrawn.
+ * @param marketId - The market identifier (for error messages).
+ * @param lltv - The market's liquidation LTV.
+ * @param borrowAssetsOverride - Optional override for borrow assets (used by repayWithdrawCollateral to simulate post-repay state).
+ */
+export const validatePositionHealthAfterWithdraw = (
+  accrualPosition: AccrualPosition,
+  withdrawAmount: bigint,
+  marketId: MarketId,
+  lltv: bigint,
+  borrowAssetsOverride?: bigint,
+): void => {
+  const borrowAssets = borrowAssetsOverride ?? accrualPosition.borrowAssets;
+
+  if (borrowAssets === 0n) return;
+
+  if (withdrawAmount > accrualPosition.collateral) {
+    throw new WithdrawExceedsCollateralError(
+      withdrawAmount,
+      accrualPosition.collateral,
+      marketId,
+    );
+  }
+
+  const { price } = accrualPosition.market;
+
+  if (price === undefined) {
+    throw new MissingMarketPriceError(marketId);
+  }
+
+  const collateralAfter = accrualPosition.collateral - withdrawAmount;
+  const collateralValueAfter = MathLib.mulDivDown(
+    collateralAfter,
+    price,
+    ORACLE_PRICE_SCALE,
+  );
+
+  const effectiveLltv = lltv - DEFAULT_LLTV_BUFFER;
+  const maxSafeBorrowAfter = MathLib.wMulDown(
+    collateralValueAfter,
+    effectiveLltv,
+  );
+
+  if (borrowAssets > maxSafeBorrowAfter) {
+    const currentCollateralValue = MathLib.mulDivDown(
+      accrualPosition.collateral,
+      price,
+      ORACLE_PRICE_SCALE,
+    );
+    const minCollateralValue = MathLib.wDivUp(borrowAssets, effectiveLltv);
+    const maxSafeWithdrawValue =
+      currentCollateralValue > minCollateralValue
+        ? currentCollateralValue - minCollateralValue
+        : 0n;
+    const maxSafeWithdraw = MathLib.mulDivDown(
+      maxSafeWithdrawValue,
+      ORACLE_PRICE_SCALE,
+      price,
+    );
+    throw new WithdrawMakesPositionUnhealthyError(
+      withdrawAmount,
+      maxSafeWithdraw,
+    );
+  }
+};
+
+/**
+ * Validates that the repay amount does not exceed the outstanding debt.
+ *
+ * @param accrualPosition - The current accrual position.
+ * @param repayAmount - The amount of assets to repay.
+ * @param marketId - The market identifier (for error messages).
+ */
+export const validateRepayAmount = (
+  accrualPosition: AccrualPosition,
+  repayAmount: bigint,
+  marketId: MarketId,
+): void => {
+  if (repayAmount > accrualPosition.borrowAssets) {
+    throw new RepayExceedsDebtError(
+      repayAmount,
+      accrualPosition.borrowAssets,
+      marketId,
+    );
+  }
+};
+
+/**
+ * Validates that the repay shares do not exceed the outstanding borrow shares.
+ *
+ * @param accrualPosition - The current accrual position.
+ * @param repayShares - The amount of shares to repay.
+ * @param marketId - The market identifier (for error messages).
+ */
+export const validateRepayShares = (
+  accrualPosition: AccrualPosition,
+  repayShares: bigint,
+  marketId: MarketId,
+): void => {
+  if (repayShares > accrualPosition.borrowShares) {
+    throw new RepaySharesExceedDebtError(
+      repayShares,
+      accrualPosition.borrowShares,
+      marketId,
+    );
+  }
+};
+
 export const validateReallocations = (
   reallocations: readonly VaultReallocation[],
   targetMarketId: MarketId,

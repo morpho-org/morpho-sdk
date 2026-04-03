@@ -140,6 +140,51 @@ export interface MarketV1SupplyCollateralBorrowAction
     }
   > {}
 
+export interface MarketV1RepayAction
+  extends BaseAction<
+    "marketV1Repay",
+    {
+      market: Hex;
+      assets: bigint;
+      shares: bigint;
+      onBehalf: Address;
+      maxSharePrice: bigint;
+    }
+  > {}
+
+export interface MarketV1WithdrawCollateralAction
+  extends BaseAction<
+    "marketV1WithdrawCollateral",
+    {
+      market: Hex;
+      amount: bigint;
+      receiver: Address;
+    }
+  > {}
+
+export interface MarketV1RepayWithdrawCollateralAction
+  extends BaseAction<
+    "marketV1RepayWithdrawCollateral",
+    {
+      market: Hex;
+      repayAssets: bigint;
+      repayShares: bigint;
+      withdrawAmount: bigint;
+      maxSharePrice: bigint;
+      onBehalf: Address;
+      receiver: Address;
+    }
+  > {}
+
+/**
+ * Enforces that exactly one repay amount source is provided.
+ *
+ * - `amount`: partial repay by exact asset amount.
+ * - `shares`: full repay by exact share count (guarantees full debt repayment
+ *   regardless of interest accrued between tx construction and execution).
+ */
+export type RepayAmountArgs = { amount: bigint } | { shares: bigint };
+
 export interface MorphoAuthorizationAction
   extends BaseAction<
     "morphoAuthorization",
@@ -162,6 +207,9 @@ export type TransactionAction =
   | MarketV1SupplyCollateralAction
   | MarketV1BorrowAction
   | MarketV1SupplyCollateralBorrowAction
+  | MarketV1RepayAction
+  | MarketV1WithdrawCollateralAction
+  | MarketV1RepayWithdrawCollateralAction
   | MorphoAuthorizationAction;
 
 export interface Transaction<TAction extends BaseAction = TransactionAction> {

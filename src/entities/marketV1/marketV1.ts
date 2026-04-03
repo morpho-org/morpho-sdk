@@ -3,6 +3,7 @@ import {
   DEFAULT_SLIPPAGE_TOLERANCE,
   type Market,
   type MarketParams,
+  MathLib,
 } from "@morpho-org/blue-sdk";
 import { fetchAccrualPosition, fetchMarket } from "@morpho-org/blue-sdk-viem";
 import type { Address } from "viem";
@@ -10,15 +11,22 @@ import {
   getMorphoAuthorizationRequirement,
   getRequirements,
   marketV1Borrow,
+  marketV1Repay,
+  marketV1RepayWithdrawCollateral,
   marketV1SupplyCollateral,
   marketV1SupplyCollateralBorrow,
+  marketV1WithdrawCollateral,
 } from "../../actions";
 import {
+  computeMaxRepaySharePrice,
   computeMinBorrowSharePrice,
   validateAccrualPosition,
   validateChainId,
   validateNativeCollateral,
   validatePositionHealth,
+  validatePositionHealthAfterWithdraw,
+  validateRepayAmount,
+  validateRepayShares,
 } from "../../helpers";
 import { MAX_SLIPPAGE_TOLERANCE } from "../../helpers/constant";
 import {
@@ -26,8 +34,11 @@ import {
   type ERC20ApprovalAction,
   ExcessiveSlippageToleranceError,
   type MarketV1BorrowAction,
+  type MarketV1RepayAction,
+  type MarketV1RepayWithdrawCollateralAction,
   type MarketV1SupplyCollateralAction,
   type MarketV1SupplyCollateralBorrowAction,
+  type MarketV1WithdrawCollateralAction,
   MissingAccrualPositionError,
   type MorphoAuthorizationAction,
   type MorphoClientType,
@@ -35,6 +46,9 @@ import {
   NegativeSlippageToleranceError,
   NonPositiveAssetAmountError,
   NonPositiveBorrowAmountError,
+  NonPositiveRepayAmountError,
+  NonPositiveWithdrawCollateralAmountError,
+  type RepayAmountArgs,
   type Requirement,
   type RequirementSignature,
   type Transaction,
@@ -109,6 +123,96 @@ export interface MarketV1Actions {
     buildTx: () => Readonly<Transaction<MarketV1BorrowAction>>;
     getRequirements: () => Promise<
       Readonly<Transaction<MorphoAuthorizationAction>>[]
+    >;
+  };
+
+  /**
+   * Prepares a repay transaction.
+   *
+   * Routed through bundler3 via GeneralAdapter1.
+   * Supports two modes via {@link RepayAmountArgs}:
+   * - **By assets** (`{ amount }`): repays an exact asset amount (partial repay).
+   * - **By shares** (`{ shares }`): repays exact shares (full repay, immune to interest accrual).
+   *
+   * Computes `maxSharePrice` from market borrow state and `slippageTolerance`.
+   *
+   * `getRequirements` returns ERC20 approval for loan token to GeneralAdapter1.
+   * Does NOT require Morpho authorization (anyone can repay on behalf of anyone).
+   *
+   * @param params - Repay parameters including pre-fetched `accrualPosition`.
+   * @returns Object with `buildTx` and `getRequirements`.
+   */
+  repay: (
+    params: {
+      userAddress: Address;
+      accrualPosition: AccrualPosition;
+      slippageTolerance?: bigint;
+    } & RepayAmountArgs,
+  ) => {
+    buildTx: (
+      requirementSignature?: RequirementSignature,
+    ) => Readonly<Transaction<MarketV1RepayAction>>;
+    getRequirements: (params?: {
+      useSimplePermit?: boolean;
+    }) => Promise<(Readonly<Transaction<ERC20ApprovalAction>> | Requirement)[]>;
+  };
+
+  /**
+   * Prepares a withdraw-collateral transaction.
+   *
+   * Routed through bundler3 via `morphoWithdrawCollateral`.
+   * Validates position health after withdrawal using the LLTV buffer.
+   *
+   * `getRequirements` returns `morpho.setAuthorization(generalAdapter1, true)` if not yet authorized.
+   * Does NOT require ERC20 approval (collateral flows out of Morpho, not in).
+   *
+   * @param params - Withdraw collateral parameters including pre-fetched `accrualPosition` for health validation.
+   * @returns Object with `buildTx` and `getRequirements`.
+   */
+  withdrawCollateral: (params: {
+    userAddress: Address;
+    amount: bigint;
+    accrualPosition: AccrualPosition;
+  }) => {
+    buildTx: () => Readonly<Transaction<MarketV1WithdrawCollateralAction>>;
+    getRequirements: () => Promise<
+      Readonly<Transaction<MorphoAuthorizationAction>>[]
+    >;
+  };
+
+  /**
+   * Prepares an atomic repay-and-withdraw-collateral transaction.
+   *
+   * Routed through bundler3. Bundle order: repay FIRST, then withdraw.
+   * Validates combined position health: simulates the repay, then checks
+   * that the resulting position can sustain the collateral withdrawal.
+   *
+   * `getRequirements` returns in parallel:
+   * - ERC20 approval for loan token to GeneralAdapter1 (for the repay).
+   * - `morpho.setAuthorization(generalAdapter1, true)` if not yet authorized (for the withdraw).
+   *
+   * @param params - Combined parameters including pre-fetched `accrualPosition`.
+   * @returns Object with `buildTx` and `getRequirements`.
+   */
+  repayWithdrawCollateral: (
+    params: {
+      userAddress: Address;
+      withdrawAmount: bigint;
+      accrualPosition: AccrualPosition;
+      slippageTolerance?: bigint;
+    } & RepayAmountArgs,
+  ) => {
+    buildTx: (
+      requirementSignature?: RequirementSignature,
+    ) => Readonly<Transaction<MarketV1RepayWithdrawCollateralAction>>;
+    getRequirements: (params?: {
+      useSimplePermit?: boolean;
+    }) => Promise<
+      (
+        | Readonly<Transaction<ERC20ApprovalAction>>
+        | Readonly<Transaction<MorphoAuthorizationAction>>
+        | Requirement
+      )[]
     >;
   };
 
@@ -303,6 +407,291 @@ export class MorphoMarketV1 implements MarketV1Actions {
             receiver: userAddress,
             minSharePrice,
             reallocations,
+          },
+          metadata: this.client.options.metadata,
+        }),
+    };
+  }
+
+  repay(
+    params: {
+      userAddress: Address;
+      accrualPosition: AccrualPosition;
+      slippageTolerance?: bigint;
+    } & RepayAmountArgs,
+  ) {
+    validateChainId(this.client.viemClient.chain?.id, this.chainId);
+
+    const {
+      userAddress,
+      accrualPosition,
+      slippageTolerance = DEFAULT_SLIPPAGE_TOLERANCE,
+    } = params;
+
+    const isSharesMode = "shares" in params;
+
+    if (isSharesMode) {
+      if (params.shares <= 0n) {
+        throw new NonPositiveRepayAmountError(this.marketParams.id);
+      }
+    } else {
+      if (params.amount <= 0n) {
+        throw new NonPositiveRepayAmountError(this.marketParams.id);
+      }
+    }
+
+    if (slippageTolerance < 0n) {
+      throw new NegativeSlippageToleranceError(slippageTolerance);
+    }
+    if (slippageTolerance > MAX_SLIPPAGE_TOLERANCE) {
+      throw new ExcessiveSlippageToleranceError(slippageTolerance);
+    }
+
+    if (!accrualPosition) {
+      throw new MissingAccrualPositionError(this.marketParams.id);
+    }
+
+    validateAccrualPosition(accrualPosition, this.marketParams.id, userAddress);
+
+    let assets: bigint;
+    let shares: bigint;
+    let transferAmount: bigint;
+
+    if (isSharesMode) {
+      validateRepayShares(accrualPosition, params.shares, this.marketParams.id);
+      assets = 0n;
+      shares = params.shares;
+      // Add slippage buffer to cover interest accrued between tx construction and execution.
+      // Without this, the on-chain repay amount may exceed the pre-transferred ERC20 amount.
+      const baseTransferAmount = accrualPosition.market.toBorrowAssets(
+        shares,
+        "Up",
+      );
+      transferAmount = MathLib.wMulUp(
+        baseTransferAmount,
+        MathLib.WAD + slippageTolerance,
+      );
+    } else {
+      validateRepayAmount(accrualPosition, params.amount, this.marketParams.id);
+      assets = params.amount;
+      shares = 0n;
+      transferAmount = params.amount;
+    }
+
+    const maxSharePrice = computeMaxRepaySharePrice(
+      assets,
+      shares,
+      accrualPosition.market,
+      slippageTolerance,
+    );
+
+    return {
+      getRequirements: (reqParams?: { useSimplePermit?: boolean }) =>
+        getRequirements(this.client.viemClient, {
+          address: this.marketParams.loanToken,
+          chainId: this.chainId,
+          supportSignature: this.client.options.supportSignature,
+          supportDeployless: this.client.options.supportDeployless,
+          useSimplePermit: reqParams?.useSimplePermit,
+          args: { amount: transferAmount, from: userAddress },
+        }),
+
+      buildTx: (requirementSignature?: RequirementSignature) =>
+        marketV1Repay({
+          market: {
+            chainId: this.chainId,
+            marketParams: this.marketParams,
+          },
+          args: {
+            assets,
+            shares,
+            transferAmount,
+            onBehalf: userAddress,
+            maxSharePrice,
+            requirementSignature,
+          },
+          metadata: this.client.options.metadata,
+        }),
+    };
+  }
+
+  withdrawCollateral({
+    userAddress,
+    amount,
+    accrualPosition,
+  }: {
+    userAddress: Address;
+    amount: bigint;
+    accrualPosition: AccrualPosition;
+  }) {
+    validateChainId(this.client.viemClient.chain?.id, this.chainId);
+
+    if (amount <= 0n) {
+      throw new NonPositiveWithdrawCollateralAmountError(this.marketParams.id);
+    }
+
+    if (!accrualPosition) {
+      throw new MissingAccrualPositionError(this.marketParams.id);
+    }
+
+    validateAccrualPosition(accrualPosition, this.marketParams.id, userAddress);
+
+    validatePositionHealthAfterWithdraw(
+      accrualPosition,
+      amount,
+      this.marketParams.id,
+      this.marketParams.lltv,
+    );
+
+    return {
+      getRequirements: async () => {
+        const authTx = await getMorphoAuthorizationRequirement(
+          this.client.viemClient,
+          this.chainId,
+          userAddress,
+        );
+        return authTx ? [authTx] : [];
+      },
+
+      buildTx: () =>
+        marketV1WithdrawCollateral({
+          market: {
+            chainId: this.chainId,
+            marketParams: this.marketParams,
+          },
+          args: {
+            amount,
+            receiver: userAddress,
+          },
+          metadata: this.client.options.metadata,
+        }),
+    };
+  }
+
+  repayWithdrawCollateral(
+    params: {
+      userAddress: Address;
+      withdrawAmount: bigint;
+      accrualPosition: AccrualPosition;
+      slippageTolerance?: bigint;
+    } & RepayAmountArgs,
+  ) {
+    validateChainId(this.client.viemClient.chain?.id, this.chainId);
+
+    const {
+      userAddress,
+      withdrawAmount,
+      accrualPosition,
+      slippageTolerance = DEFAULT_SLIPPAGE_TOLERANCE,
+    } = params;
+
+    const isSharesMode = "shares" in params;
+
+    if (isSharesMode) {
+      if (params.shares <= 0n) {
+        throw new NonPositiveRepayAmountError(this.marketParams.id);
+      }
+    } else {
+      if (params.amount <= 0n) {
+        throw new NonPositiveRepayAmountError(this.marketParams.id);
+      }
+    }
+
+    if (withdrawAmount <= 0n) {
+      throw new NonPositiveWithdrawCollateralAmountError(this.marketParams.id);
+    }
+
+    if (slippageTolerance < 0n) {
+      throw new NegativeSlippageToleranceError(slippageTolerance);
+    }
+    if (slippageTolerance > MAX_SLIPPAGE_TOLERANCE) {
+      throw new ExcessiveSlippageToleranceError(slippageTolerance);
+    }
+
+    if (!accrualPosition) {
+      throw new MissingAccrualPositionError(this.marketParams.id);
+    }
+
+    validateAccrualPosition(accrualPosition, this.marketParams.id, userAddress);
+
+    let assets: bigint;
+    let shares: bigint;
+    let transferAmount: bigint;
+
+    if (isSharesMode) {
+      validateRepayShares(accrualPosition, params.shares, this.marketParams.id);
+      assets = 0n;
+      shares = params.shares;
+      const baseTransferAmount = accrualPosition.market.toBorrowAssets(
+        shares,
+        "Up",
+      );
+      transferAmount = MathLib.wMulUp(
+        baseTransferAmount,
+        MathLib.WAD + slippageTolerance,
+      );
+    } else {
+      validateRepayAmount(accrualPosition, params.amount, this.marketParams.id);
+      assets = params.amount;
+      shares = 0n;
+      transferAmount = params.amount;
+    }
+
+    // Simulate repay to get post-repay position, then validate withdraw health
+    const { position: positionAfterRepay } = accrualPosition.repay(
+      assets,
+      shares,
+    );
+    validatePositionHealthAfterWithdraw(
+      positionAfterRepay,
+      withdrawAmount,
+      this.marketParams.id,
+      this.marketParams.lltv,
+    );
+
+    const maxSharePrice = computeMaxRepaySharePrice(
+      assets,
+      shares,
+      accrualPosition.market,
+      slippageTolerance,
+    );
+
+    return {
+      getRequirements: async (reqParams?: { useSimplePermit?: boolean }) => {
+        const [erc20Requirements, authTx] = await Promise.all([
+          getRequirements(this.client.viemClient, {
+            address: this.marketParams.loanToken,
+            chainId: this.chainId,
+            supportSignature: this.client.options.supportSignature,
+            supportDeployless: this.client.options.supportDeployless,
+            useSimplePermit: reqParams?.useSimplePermit,
+            args: { amount: transferAmount, from: userAddress },
+          }),
+          getMorphoAuthorizationRequirement(
+            this.client.viemClient,
+            this.chainId,
+            userAddress,
+          ),
+        ]);
+
+        return [...erc20Requirements, ...(authTx ? [authTx] : [])];
+      },
+
+      buildTx: (requirementSignature?: RequirementSignature) =>
+        marketV1RepayWithdrawCollateral({
+          market: {
+            chainId: this.chainId,
+            marketParams: this.marketParams,
+          },
+          args: {
+            assets,
+            shares,
+            transferAmount,
+            withdrawAmount,
+            onBehalf: userAddress,
+            receiver: userAddress,
+            maxSharePrice,
+            requirementSignature,
           },
           metadata: this.client.options.metadata,
         }),

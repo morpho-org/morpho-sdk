@@ -17,7 +17,11 @@ Centralized type definitions. Barrel-exported via `index.ts`.
   - `ReallocationWithdrawal` — `{ readonly marketParams: MarketParams; readonly amount: bigint }`. Single withdrawal from a source market.
   - `VaultReallocation` — `{ readonly vault: Address; readonly fee: bigint; readonly withdrawals: readonly ReallocationWithdrawal[] }`. Maps 1:1 to a `PublicAllocator.reallocateTo()` call. Fee is in native ETH.
 - `MarketV1BorrowAction` and `MarketV1SupplyCollateralBorrowAction` include optional `reallocationFee?: bigint` in their args to track total fees paid.
-- Custom errors in `error.ts` — one class per error case. Includes native wrapping validation (`NativeAmountOnNonWNativeVaultError`, `ChainWNativeMissingError`, `NegativeNativeAmountError`, `ZeroDepositAmountError`), market-specific: `BorrowExceedsSafeLtvError`, `MissingMarketPriceError`, `ZeroCollateralAmountError`, `NativeAmountOnNonWNativeCollateralError`, and reallocation-specific: `NegativeReallocationFeeError`, `EmptyReallocationWithdrawalsError`, `NonPositiveReallocationAmountError`, `ReallocationWithdrawalOnTargetMarketError`, `UnsortedReallocationWithdrawalsError`.
+- `RepayAmountArgs` — union type: `{ amount: bigint }` (partial repay by assets) or `{ shares: bigint }` (full repay by shares). Exactly one mode.
+- `MarketV1RepayAction` — `{ assets, shares, onBehalf, maxSharePrice }`. Exactly one of assets/shares is non-zero.
+- `MarketV1WithdrawCollateralAction` — `{ amount, receiver }`.
+- `MarketV1RepayWithdrawCollateralAction` — `{ repayAssets, repayShares, withdrawAmount, maxSharePrice, onBehalf, receiver }`.
+- Custom errors in `error.ts` — one class per error case. Includes native wrapping validation (`NativeAmountOnNonWNativeVaultError`, `ChainWNativeMissingError`, `NegativeNativeAmountError`, `ZeroDepositAmountError`), market-specific: `BorrowExceedsSafeLtvError`, `MissingMarketPriceError`, `ZeroCollateralAmountError`, `NativeAmountOnNonWNativeCollateralError`, repay/withdraw-specific: `NonPositiveRepayAmountError`, `NonPositiveWithdrawCollateralAmountError`, `WithdrawExceedsCollateralError`, `WithdrawMakesPositionUnhealthyError`, `RepayExceedsDebtError`, `RepaySharesExceedDebtError`, and reallocation-specific: `NegativeReallocationFeeError`, `EmptyReallocationWithdrawalsError`, `NonPositiveReallocationAmountError`, `ReallocationWithdrawalOnTargetMarketError`, `UnsortedReallocationWithdrawalsError`.
 
 ## Key Constraints
 

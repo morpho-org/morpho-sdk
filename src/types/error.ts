@@ -227,3 +227,47 @@ export class UnsortedReallocationWithdrawalsError extends Error {
     );
   }
 }
+
+export class NonPositiveRepayAmountError extends Error {
+  constructor(market: string) {
+    super(`Repay amount must be positive for market: ${market}`);
+  }
+}
+
+export class NonPositiveWithdrawCollateralAmountError extends Error {
+  constructor(market: string) {
+    super(`Withdraw collateral amount must be positive for market: ${market}`);
+  }
+}
+
+export class WithdrawExceedsCollateralError extends Error {
+  constructor(withdrawAmount: bigint, available: bigint, market: string) {
+    super(
+      `Withdraw amount ${withdrawAmount} exceeds available collateral ${available} for market: ${market}`,
+    );
+  }
+}
+
+export class WithdrawMakesPositionUnhealthyError extends Error {
+  constructor(withdrawAmount: bigint, maxSafeWithdraw: bigint) {
+    super(
+      `Withdrawing ${withdrawAmount} collateral would make position unhealthy. Max safe withdrawal: ${maxSafeWithdraw}`,
+    );
+  }
+}
+
+export class RepayExceedsDebtError extends Error {
+  constructor(repayAmount: bigint, debt: bigint, market: string) {
+    super(
+      `Repay amount ${repayAmount} exceeds outstanding debt ${debt} for market: ${market}`,
+    );
+  }
+}
+
+export class RepaySharesExceedDebtError extends Error {
+  constructor(repayShares: bigint, borrowShares: bigint, market: string) {
+    super(
+      `Repay shares ${repayShares} exceed outstanding borrow shares ${borrowShares} for market: ${market}`,
+    );
+  }
+}

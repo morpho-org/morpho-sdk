@@ -33,7 +33,7 @@ Strict layering: **Client → Entity → Action**. Never skip a layer.
 | Entity       | `src/entities/marketV1/`    | MarketV1 (Morpho Blue): fetches market/position data, delegates to actions   |
 | Actions      | `src/actions/vaultV1/`      | VaultV1 pure tx builders (deposit, withdraw, redeem)                         |
 | Actions      | `src/actions/vaultV2/`      | VaultV2 pure tx builders (deposit, withdraw, redeem, force deallocation ops) |
-| Actions      | `src/actions/marketV1/`     | MarketV1 pure tx builders (supplyCollateral, borrow, supplyCollateralBorrow) |
+| Actions      | `src/actions/marketV1/`     | MarketV1 pure tx builders (supplyCollateral, borrow, supplyCollateralBorrow, repay, withdrawCollateral, repayWithdrawCollateral) |
 | Requirements | `src/actions/requirements/` | Resolves approval / permit / permit2 needs                                   |
 | Types        | `src/types/`                | All type definitions, custom errors. Barrel-exported via `index.ts`          |
 | Helpers      | `src/helpers/`              | Utility functions (metadata handling, constants)                             |
@@ -57,6 +57,9 @@ MarketV1 (Morpho Blue) operations:
 - **supplyCollateral** → `marketV1SupplyCollateral()` — routed through bundler3 via GeneralAdapter1 (`erc20TransferFrom` + `morphoSupplyCollateral`). Supports optional `nativeAmount` for native token wrapping. `getRequirements` returns collateral token approval for GeneralAdapter1.
 - **borrow** → `marketV1Borrow()` — routed through bundler3 via `morphoBorrow`. Requires GeneralAdapter1 authorization on Morpho (`setAuthorization`). `getRequirements` returns authorization tx if needed. Uses `minSharePrice` for slippage protection. LLTV buffer validation prevents instant liquidation. Supports optional **reallocations** for shared liquidity (see below).
 - **supplyCollateralBorrow** → `marketV1SupplyCollateralBorrow()` — bundled via bundler3 (collateral transfer + `morphoSupplyCollateral` + `morphoBorrow`). Requires GeneralAdapter1 authorization on Morpho. LLTV buffer validation prevents instant liquidation. Supports `nativeAmount` for collateral wrapping. Supports optional **reallocations** for shared liquidity (see below).
+- **repay** → `marketV1Repay()` — routed through bundler3 via GeneralAdapter1 (`erc20TransferFrom` + `morphoRepay`). Two modes: by assets (partial repay) or by shares (full repay, immune to interest accrual). Uses `maxSharePrice` for slippage protection. `getRequirements` returns loan token approval for GeneralAdapter1. Does NOT require Morpho authorization.
+- **withdrawCollateral** → `marketV1WithdrawCollateral()` — routed through bundler3 via `morphoWithdrawCollateral`. Requires GeneralAdapter1 authorization on Morpho. Validates position health after withdrawal (LLTV buffer). No ERC20 approval needed.
+- **repayWithdrawCollateral** → `marketV1RepayWithdrawCollateral()` — bundled via bundler3 (`morphoRepay` + `morphoWithdrawCollateral`). Bundle order is critical: repay FIRST to reduce debt, then withdraw. Requires both loan token approval (repay) and Morpho authorization (withdraw). Validates combined position health by simulating repay before checking withdrawal safety.
 
 ## Shared Liquidity & Reallocations (PublicAllocator)
 
