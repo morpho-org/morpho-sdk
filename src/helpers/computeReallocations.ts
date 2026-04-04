@@ -79,6 +79,8 @@ export const computeReallocations = ({
     );
   }
 
+  if (requiredAssets <= 0n) return [];
+
   // Group withdrawals by vault, capping total at requiredAssets.
   const reallocationsMap: Record<Address, { id: MarketId; assets: bigint }[]> =
     {};
@@ -89,6 +91,8 @@ export const computeReallocations = ({
       (item) => item.id === withdrawal.id,
     );
     const reallocatedAssets = MathLib.min(withdrawal.assets, requiredAssets);
+
+    if (reallocatedAssets <= 0n) continue;
 
     if (existing != null) {
       existing.assets += reallocatedAssets;
