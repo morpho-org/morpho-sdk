@@ -491,7 +491,7 @@ export class MorphoMarketV1 implements MarketV1Actions {
     }
 
     const client = this.client.viemClient;
-    const fetchParams = { block, chainId: this.chainId };
+    const fetchParams = { blockNumber: block.number, chainId: this.chainId };
 
     // Phase 1: Fetch all vaults in parallel to get their withdrawQueues.
     const vaults = await Promise.all(
@@ -504,9 +504,14 @@ export class MorphoMarketV1 implements MarketV1Actions {
     const vaultMarketPairs: { vault: Address; marketId: MarketId }[] = [];
 
     for (const vault of vaults) {
+      // Always include target market pair so its config/position is fetched
+      // even when the target market is only in the vault's supplyQueue.
+      vaultMarketPairs.push({ vault: vault.address, marketId: targetMarketId });
       for (const mid of vault.withdrawQueue) {
         allMarketIds.add(mid);
-        vaultMarketPairs.push({ vault: vault.address, marketId: mid });
+        if (mid !== targetMarketId) {
+          vaultMarketPairs.push({ vault: vault.address, marketId: mid });
+        }
       }
     }
 
