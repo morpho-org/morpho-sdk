@@ -43,6 +43,7 @@ import {
   validateRepayShares,
 } from "../../helpers";
 import { MAX_SLIPPAGE_TOLERANCE } from "../../helpers/constant";
+import { validateRepayAssets } from "../../helpers/validate";
 import {
   AccrualPositionMarketMismatchError,
   type DepositAmountArgs,
@@ -57,14 +58,15 @@ import {
   MissingAccrualPositionError,
   type MorphoAuthorizationAction,
   type MorphoClientType,
+  MutuallyExclusiveRepayAmountsError,
   NegativeNativeAmountError,
   NegativeSlippageToleranceError,
   NonPositiveAssetAmountError,
   NonPositiveBorrowAmountError,
   NonPositiveRepayAmountError,
   NonPositiveWithdrawCollateralAmountError,
-  type RepayAmountArgs,
   type ReallocationComputeOptions,
+  type RepayAmountArgs,
   type Requirement,
   type RequirementSignature,
   type Transaction,
@@ -191,9 +193,6 @@ export interface MarketV1Actions {
     accrualPosition: AccrualPosition;
   }) => {
     buildTx: () => Readonly<Transaction<MarketV1WithdrawCollateralAction>>;
-    getRequirements: () => Promise<
-      Readonly<Transaction<MorphoAuthorizationAction>>[]
-    >;
   };
 
   /**
@@ -487,6 +486,10 @@ export class MorphoMarketV1 implements MarketV1Actions {
       slippageTolerance = DEFAULT_SLIPPAGE_TOLERANCE,
     } = params;
 
+    if ("assets" in params && "shares" in params) {
+      throw new MutuallyExclusiveRepayAmountsError(this.marketParams.id);
+    }
+
     const isSharesMode = "shares" in params;
 
     if (isSharesMode) {
@@ -494,7 +497,7 @@ export class MorphoMarketV1 implements MarketV1Actions {
         throw new NonPositiveRepayAmountError(this.marketParams.id);
       }
     } else {
-      if (params.amount <= 0n) {
+      if (params.assets <= 0n) {
         throw new NonPositiveRepayAmountError(this.marketParams.id);
       }
     }
@@ -531,10 +534,10 @@ export class MorphoMarketV1 implements MarketV1Actions {
         MathLib.WAD + slippageTolerance,
       );
     } else {
-      validateRepayAmount(accrualPosition, params.amount, this.marketParams.id);
-      assets = params.amount;
+      validateRepayAssets(accrualPosition, params.assets, this.marketParams.id);
+      assets = params.assets;
       shares = 0n;
-      transferAmount = params.amount;
+      transferAmount = params.assets;
     }
 
     const maxSharePrice = computeMaxRepaySharePrice(
@@ -598,20 +601,10 @@ export class MorphoMarketV1 implements MarketV1Actions {
     validatePositionHealthAfterWithdraw(
       accrualPosition,
       amount,
-      this.marketParams.id,
       this.marketParams.lltv,
     );
 
     return {
-      getRequirements: async () => {
-        const authTx = await getMorphoAuthorizationRequirement(
-          this.client.viemClient,
-          this.chainId,
-          userAddress,
-        );
-        return authTx ? [authTx] : [];
-      },
-
       buildTx: () =>
         marketV1WithdrawCollateral({
           market: {
@@ -620,6 +613,7 @@ export class MorphoMarketV1 implements MarketV1Actions {
           },
           args: {
             amount,
+            onBehalf: userAddress,
             receiver: userAddress,
           },
           metadata: this.client.options.metadata,
@@ -644,6 +638,10 @@ export class MorphoMarketV1 implements MarketV1Actions {
       slippageTolerance = DEFAULT_SLIPPAGE_TOLERANCE,
     } = params;
 
+    if ("assets" in params && "shares" in params) {
+      throw new MutuallyExclusiveRepayAmountsError(this.marketParams.id);
+    }
+
     const isSharesMode = "shares" in params;
 
     if (isSharesMode) {
@@ -651,7 +649,7 @@ export class MorphoMarketV1 implements MarketV1Actions {
         throw new NonPositiveRepayAmountError(this.marketParams.id);
       }
     } else {
-      if (params.amount <= 0n) {
+      if (params.assets <= 0n) {
         throw new NonPositiveRepayAmountError(this.marketParams.id);
       }
     }
@@ -690,10 +688,10 @@ export class MorphoMarketV1 implements MarketV1Actions {
         MathLib.WAD + slippageTolerance,
       );
     } else {
-      validateRepayAmount(accrualPosition, params.amount, this.marketParams.id);
-      assets = params.amount;
+      validateRepayAmount(accrualPosition, params.assets, this.marketParams.id);
+      assets = params.assets;
       shares = 0n;
-      transferAmount = params.amount;
+      transferAmount = params.assets;
     }
 
     // Simulate repay to get post-repay position, then validate withdraw health
@@ -704,7 +702,6 @@ export class MorphoMarketV1 implements MarketV1Actions {
     validatePositionHealthAfterWithdraw(
       positionAfterRepay,
       withdrawAmount,
-      this.marketParams.id,
       this.marketParams.lltv,
     );
 

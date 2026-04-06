@@ -6,6 +6,7 @@ import { addTransactionMetadata } from "../../helpers";
 import {
   type MarketV1RepayWithdrawCollateralAction,
   type Metadata,
+  MutuallyExclusiveRepayAmountsError,
   NonPositiveRepayAmountError,
   NonPositiveWithdrawCollateralAmountError,
   type RequirementSignature,
@@ -75,7 +76,7 @@ export const marketV1RepayWithdrawCollateral = ({
   Transaction<MarketV1RepayWithdrawCollateralAction>
 > => {
   if (assets > 0n && shares > 0n) {
-    throw new NonPositiveRepayAmountError(marketParams.id);
+    throw new MutuallyExclusiveRepayAmountsError(marketParams.id);
   }
 
   if (assets === 0n && shares === 0n) {
@@ -115,6 +116,22 @@ export const marketV1RepayWithdrawCollateral = ({
     type: "morphoRepay",
     args: [marketParams, assets, shares, maxSharePrice, onBehalf, [], false],
   });
+
+  // Skim residual loan tokens back to the user when repaying by shares.
+  // In shares mode, transferAmount is an upper-bound estimate; morphoRepay
+  // consumes only the exact amount needed, leaving a residual in the adapter.
+  if (shares > 0n) {
+    actions.push({
+      type: "erc20Transfer",
+      args: [
+        marketParams.loanToken,
+        onBehalf,
+        transferAmount,
+        generalAdapter1,
+        false,
+      ],
+    });
+  }
 
   actions.push({
     type: "morphoWithdrawCollateral",

@@ -1,7 +1,7 @@
-import type { MarketParams } from "@morpho-org/blue-sdk";
-import { type Action, BundlerAction } from "@morpho-org/bundler-sdk-viem";
+import { getChainAddresses, type MarketParams } from "@morpho-org/blue-sdk";
+import { blueAbi } from "@morpho-org/blue-sdk-viem";
 import { deepFreeze } from "@morpho-org/morpho-ts";
-import type { Address } from "viem";
+import { type Address, encodeFunctionData } from "viem";
 import { addTransactionMetadata } from "../../helpers";
 import {
   type MarketV1WithdrawCollateralAction,
@@ -17,6 +17,7 @@ export interface MarketV1WithdrawCollateralParams {
   };
   args: {
     amount: bigint;
+    onBehalf: Address;
     receiver: Address;
   };
   metadata?: Metadata;
@@ -25,18 +26,17 @@ export interface MarketV1WithdrawCollateralParams {
 /**
  * Prepares a withdraw-collateral transaction for a Morpho Blue market.
  *
- * Routed through bundler3 via `morphoWithdrawCollateral`. The collateral is
- * sent directly from Morpho to the receiver.
+ * Direct call to `morpho.withdrawCollateral`. No bundler needed — collateral
+ * flows out of Morpho, so there is no attack surface requiring the bundler.
  *
- * **Prerequisite:** GeneralAdapter1 must be authorized on Morpho to withdraw
- * collateral on behalf of the user.
+ * The caller (`msg.sender`) must be `onBehalf` or be authorized by them.
  *
  * @param params - Withdraw collateral parameters.
  * @returns Deep-frozen transaction.
  */
 export const marketV1WithdrawCollateral = ({
   market: { chainId, marketParams },
-  args: { amount, receiver },
+  args: { amount, onBehalf, receiver },
   metadata,
 }: MarketV1WithdrawCollateralParams): Readonly<
   Transaction<MarketV1WithdrawCollateralAction>
@@ -45,15 +45,15 @@ export const marketV1WithdrawCollateral = ({
     throw new NonPositiveWithdrawCollateralAmountError(marketParams.id);
   }
 
-  const actions: Action[] = [
-    {
-      type: "morphoWithdrawCollateral",
-      args: [marketParams, amount, receiver, false],
-    },
-  ];
+  const { morpho } = getChainAddresses(chainId);
 
   let tx = {
-    ...BundlerAction.encodeBundle(chainId, actions),
+    to: morpho,
+    data: encodeFunctionData({
+      abi: blueAbi,
+      functionName: "withdrawCollateral",
+      args: [marketParams, amount, onBehalf, receiver],
+    }),
     value: 0n,
   };
 

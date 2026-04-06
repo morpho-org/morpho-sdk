@@ -15,7 +15,7 @@ Utility functions shared across layers.
 
 - `computeMaxRepaySharePrice(repayAssets, repayShares, market, slippageTolerance)` — computes maximum repay share price in RAY. Dual mode: by assets (derives shares via `toBorrowShares("Up")`) or by shares (derives assets via `toBorrowAssets("Up")`). Uses `WAD + slippage` (upper bound, opposite of borrow's lower bound). Capped at `MAX_ABSOLUTE_SHARE_PRICE`.
 
-- `validatePositionHealthAfterWithdraw(accrualPosition, withdrawAmount, marketId, lltv, borrowAssetsOverride?)` — validates position stays healthy after collateral withdrawal. Optional `borrowAssetsOverride` for combined repay+withdraw (simulates post-repay debt). Throws `WithdrawExceedsCollateralError` or `WithdrawMakesPositionUnhealthyError`.
+- `validatePositionHealthAfterWithdraw(accrualPosition, withdrawAmount, lltv)` — validates position stays healthy after collateral withdrawal. Optional `borrowAssetsOverride` for combined repay+withdraw (simulates post-repay debt). Throws `WithdrawExceedsCollateralError` or `WithdrawMakesPositionUnhealthyError`.
 
 - `validateRepayAmount(accrualPosition, repayAmount, marketId)` — validates repay amount does not exceed outstanding debt. Throws `RepayExceedsDebtError`.
 

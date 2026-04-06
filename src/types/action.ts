@@ -179,11 +179,11 @@ export interface MarketV1RepayWithdrawCollateralAction
 /**
  * Enforces that exactly one repay amount source is provided.
  *
- * - `amount`: partial repay by exact asset amount.
+ * - `assets`: partial repay by exact asset amount.
  * - `shares`: full repay by exact share count (guarantees full debt repayment
  *   regardless of interest accrued between tx construction and execution).
  */
-export type RepayAmountArgs = { amount: bigint } | { shares: bigint };
+export type RepayAmountArgs = { assets: bigint } | { shares: bigint };
 
 export interface MorphoAuthorizationAction
   extends BaseAction<

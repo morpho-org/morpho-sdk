@@ -6,6 +6,7 @@ import { addTransactionMetadata } from "../../helpers";
 import {
   type MarketV1RepayAction,
   type Metadata,
+  MutuallyExclusiveRepayAmountsError,
   NonPositiveRepayAmountError,
   type RequirementSignature,
   type Transaction,
@@ -22,7 +23,7 @@ export interface MarketV1RepayParams {
     assets: bigint;
     /** Repay shares amount (0n when repaying by assets). */
     shares: bigint;
-    /** ERC20 amount to transfer to GeneralAdapter1 (computed by entity). */
+    /** ERC20 amount to transfer to GeneralAdapter1. Must be greater than or equal to the repay amount to take into account the slippage. */
     transferAmount: bigint;
     onBehalf: Address;
     /** Maximum repay share price (in ray). Protects against share price manipulation. */
@@ -62,7 +63,7 @@ export const marketV1Repay = ({
   metadata,
 }: MarketV1RepayParams): Readonly<Transaction<MarketV1RepayAction>> => {
   if (assets > 0n && shares > 0n) {
-    throw new NonPositiveRepayAmountError(marketParams.id);
+    throw new MutuallyExclusiveRepayAmountsError(marketParams.id);
   }
 
   if (assets === 0n && shares === 0n) {
@@ -97,6 +98,22 @@ export const marketV1Repay = ({
     type: "morphoRepay",
     args: [marketParams, assets, shares, maxSharePrice, onBehalf, [], false],
   });
+
+  // Skim residual loan tokens back to the user when repaying by shares.
+  // In shares mode, transferAmount is an upper-bound estimate; morphoRepay
+  // consumes only the exact amount needed, leaving a residual in the adapter.
+  if (shares > 0n) {
+    actions.push({
+      type: "erc20Transfer",
+      args: [
+        marketParams.loanToken,
+        onBehalf,
+        transferAmount,
+        generalAdapter1,
+        false,
+      ],
+    });
+  }
 
   let tx = {
     ...BundlerAction.encodeBundle(chainId, actions),

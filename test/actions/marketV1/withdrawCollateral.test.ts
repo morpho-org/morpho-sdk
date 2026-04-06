@@ -3,8 +3,6 @@ import { parseUnits } from "viem";
 import { mainnet } from "viem/chains";
 import { describe, expect } from "vitest";
 import {
-  isRequirementApproval,
-  isRequirementAuthorization,
   MissingAccrualPositionError,
   MorphoClient,
   marketV1WithdrawCollateral,
@@ -47,6 +45,7 @@ describe("WithdrawCollateralMarketV1", () => {
       market: { chainId: mainnet.id, marketParams: WethUsdsMarketV1 },
       args: {
         amount: collateralAmount,
+        onBehalf: client.account.address,
         receiver: client.account.address,
       },
     });
@@ -89,17 +88,8 @@ describe("WithdrawCollateralMarketV1", () => {
 
         const requirements = await withdraw.getRequirements();
 
-        // WithdrawCollateral requires Morpho authorization
-        const authReq = requirements.find(isRequirementAuthorization);
-        expect(authReq).toBeDefined();
-
-        // No ERC20 approval required
-        const approvalReq = requirements.find(isRequirementApproval);
-        expect(approvalReq).toBeUndefined();
-
-        if (authReq) {
-          await client.sendTransaction(authReq);
-        }
+        // Direct Morpho call — no authorization or approval required
+        expect(requirements).toHaveLength(0);
 
         const tx = withdraw.buildTx();
         await client.sendTransaction(tx);

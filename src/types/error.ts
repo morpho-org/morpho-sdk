@@ -228,6 +228,14 @@ export class UnsortedReallocationWithdrawalsError extends Error {
   }
 }
 
+export class MutuallyExclusiveRepayAmountsError extends Error {
+  constructor(market: string) {
+    super(
+      `Exactly one of assets or shares must be non-zero for market: ${market}. Both were provided.`,
+    );
+  }
+}
+
 export class NonPositiveRepayAmountError extends Error {
   constructor(market: string) {
     super(`Repay amount must be positive for market: ${market}`);
@@ -249,9 +257,13 @@ export class WithdrawExceedsCollateralError extends Error {
 }
 
 export class WithdrawMakesPositionUnhealthyError extends Error {
-  constructor(withdrawAmount: bigint, maxSafeWithdraw: bigint) {
+  constructor(
+    withdrawAmount: bigint,
+    borrowAssets: bigint,
+    maxSafeWithdraw: bigint,
+  ) {
     super(
-      `Withdrawing ${withdrawAmount} collateral would make position unhealthy. Max safe withdrawal: ${maxSafeWithdraw}`,
+      `Withdrawing ${withdrawAmount} collateral would make position unhealthy. Max safe withdrawal: ${maxSafeWithdraw}. Borrow assets: ${borrowAssets}.`,
     );
   }
 }

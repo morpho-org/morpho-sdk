@@ -163,33 +163,25 @@ export const validateNativeCollateral = (
  *
  * @param accrualPosition - The current accrual position with market data.
  * @param withdrawAmount - Amount of collateral being withdrawn.
- * @param marketId - The market identifier (for error messages).
  * @param lltv - The market's liquidation LTV.
- * @param borrowAssetsOverride - Optional override for borrow assets (used by repayWithdrawCollateral to simulate post-repay state).
  */
 export const validatePositionHealthAfterWithdraw = (
   accrualPosition: AccrualPosition,
   withdrawAmount: bigint,
-  marketId: MarketId,
   lltv: bigint,
-  borrowAssetsOverride?: bigint,
 ): void => {
-  const borrowAssets = borrowAssetsOverride ?? accrualPosition.borrowAssets;
-
-  if (borrowAssets === 0n) return;
-
   if (withdrawAmount > accrualPosition.collateral) {
     throw new WithdrawExceedsCollateralError(
       withdrawAmount,
       accrualPosition.collateral,
-      marketId,
+      accrualPosition.marketId,
     );
   }
 
   const { price } = accrualPosition.market;
 
   if (price === undefined) {
-    throw new MissingMarketPriceError(marketId);
+    throw new MissingMarketPriceError(accrualPosition.marketId);
   }
 
   const collateralAfter = accrualPosition.collateral - withdrawAmount;
@@ -205,44 +197,30 @@ export const validatePositionHealthAfterWithdraw = (
     effectiveLltv,
   );
 
-  if (borrowAssets > maxSafeBorrowAfter) {
-    const currentCollateralValue = MathLib.mulDivDown(
-      accrualPosition.collateral,
-      price,
-      ORACLE_PRICE_SCALE,
-    );
-    const minCollateralValue = MathLib.wDivUp(borrowAssets, effectiveLltv);
-    const maxSafeWithdrawValue =
-      currentCollateralValue > minCollateralValue
-        ? currentCollateralValue - minCollateralValue
-        : 0n;
-    const maxSafeWithdraw = MathLib.mulDivDown(
-      maxSafeWithdrawValue,
-      ORACLE_PRICE_SCALE,
-      price,
-    );
+  if (accrualPosition.borrowAssets > maxSafeBorrowAfter) {
     throw new WithdrawMakesPositionUnhealthyError(
       withdrawAmount,
-      maxSafeWithdraw,
+      accrualPosition.borrowAssets,
+      maxSafeBorrowAfter,
     );
   }
 };
 
 /**
- * Validates that the repay amount does not exceed the outstanding debt.
+ * Validates that the repay amount assets does not exceed the outstanding debt.
  *
  * @param accrualPosition - The current accrual position.
- * @param repayAmount - The amount of assets to repay.
+ * @param repayAssets - The assets of assets to repay.
  * @param marketId - The market identifier (for error messages).
  */
-export const validateRepayAmount = (
+export const validateRepayAssets = (
   accrualPosition: AccrualPosition,
-  repayAmount: bigint,
+  repayAssets: bigint,
   marketId: MarketId,
 ): void => {
-  if (repayAmount > accrualPosition.borrowAssets) {
+  if (repayAssets > accrualPosition.borrowAssets) {
     throw new RepayExceedsDebtError(
-      repayAmount,
+      repayAssets,
       accrualPosition.borrowAssets,
       marketId,
     );
