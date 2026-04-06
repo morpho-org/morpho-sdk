@@ -1,7 +1,7 @@
 import { getChainAddresses, type MarketParams } from "@morpho-org/blue-sdk";
 import { type Action, BundlerAction } from "@morpho-org/bundler-sdk-viem";
 import { deepFreeze } from "@morpho-org/morpho-ts";
-import type { Address } from "viem";
+import { type Address, maxUint256 } from "viem";
 import { addTransactionMetadata } from "../../helpers";
 import {
   type MarketV1RepayWithdrawCollateralAction,
@@ -126,7 +126,7 @@ export const marketV1RepayWithdrawCollateral = ({
       args: [
         marketParams.loanToken,
         onBehalf,
-        transferAmount,
+        maxUint256,
         generalAdapter1,
         false,
       ],
