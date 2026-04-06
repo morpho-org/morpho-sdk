@@ -44,10 +44,10 @@ Always bundler. Validates:
 ### `repay`
 
 Routed through bundler3 via GeneralAdapter1. Two modes via `RepayAmountArgs`:
-- **By assets** (`{ amount }`): partial repay by exact asset amount.
+- **By assets** (`{ assets }`): partial repay by exact asset amount.
 - **By shares** (`{ shares }`): full repay by exact share count (immune to interest accrual between tx construction and execution).
 
-Validates: amount/shares > 0, slippage tolerance, `validateRepayAmount`/`validateRepayShares`.
+Validates: assets/shares > 0, slippage tolerance, `validateRepayAmount`/`validateRepayShares`.
 Computes `maxSharePrice` via `computeMaxRepaySharePrice` (upper-bound slippage protection).
 In shares mode, `transferAmount = market.toBorrowAssets(shares, "Up")` (upper-bound for ERC20 pull).
 
@@ -56,11 +56,10 @@ Does NOT require Morpho authorization (guard-rail: repay doesn't need it).
 
 ### `withdrawCollateral`
 
-Routed through bundler3 via `morphoWithdrawCollateral`.
+Direct call to `morpho.withdrawCollateral()`. No bundler needed — collateral flows out of Morpho directly to the user. The caller (`msg.sender`) must be `onBehalf`.
 Validates position health after withdrawal via `validatePositionHealthAfterWithdraw` (LLTV buffer).
 
-`getRequirements` returns `morpho.setAuthorization(generalAdapter1, true)` if not yet authorized.
-No ERC20 approval needed (collateral flows out, not in).
+No `getRequirements` — no ERC20 approval or GeneralAdapter1 authorization needed.
 
 ### `repayWithdrawCollateral`
 
@@ -72,4 +71,4 @@ Atomic repay + withdraw. Validates combined health: simulates repay via `accrual
 
 - Validate `chainId` match before any on-chain call.
 - Never encode calldata here — that belongs in Actions.
-- All operations (`supplyCollateral`, `borrow`, `supplyCollateralBorrow`, `repay`, `withdrawCollateral`, `repayWithdrawCollateral`) are routed through bundler3 via GeneralAdapter1.
+- Most operations (`supplyCollateral`, `borrow`, `supplyCollateralBorrow`, `repay`, `repayWithdrawCollateral`) are routed through bundler3 via GeneralAdapter1. Exception: `withdrawCollateral` is a direct Morpho call.

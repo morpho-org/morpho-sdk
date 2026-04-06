@@ -9,10 +9,6 @@ import { MAX_ABSOLUTE_SHARE_PRICE } from "./constant";
  * require(borrowedAssets.rDivDown(borrowedShares) >= minSharePriceE27)
  * ```
  *
- * The computation:
- * 1. Derives expected shares from the borrow amount via `toSharesUp` (worst-case rounding for borrower).
- * 2. Applies slippage tolerance to produce a minimum acceptable assets-per-share ratio.
- *
  * @param borrowAmount - The amount of assets to borrow.
  * @param market - The market to compute the minimum borrow share price for.
  * @param slippageTolerance - Slippage tolerance in WAD (e.g. 0.003e18 = 0.3%).
@@ -24,6 +20,10 @@ export function computeMinBorrowSharePrice(
   slippageTolerance: bigint,
 ): bigint {
   const expectedShares = market.toBorrowShares(borrowAmount, "Down");
+
+  if (expectedShares === 0n) {
+    return 0n;
+  }
 
   return MathLib.mulDivDown(
     borrowAmount,
@@ -66,6 +66,10 @@ export function computeMaxRepaySharePrice(
   } else {
     assets = repayAssets;
     shares = market.toBorrowShares(repayAssets, "Up");
+  }
+
+  if (shares === 0n) {
+    return MAX_ABSOLUTE_SHARE_PRICE;
   }
 
   const maxSharePrice = MathLib.mulDivUp(

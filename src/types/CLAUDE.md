@@ -17,7 +17,7 @@ Centralized type definitions. Barrel-exported via `index.ts`.
   - `ReallocationWithdrawal` — `{ readonly marketParams: MarketParams; readonly amount: bigint }`. Single withdrawal from a source market.
   - `VaultReallocation` — `{ readonly vault: Address; readonly fee: bigint; readonly withdrawals: readonly ReallocationWithdrawal[] }`. Maps 1:1 to a `PublicAllocator.reallocateTo()` call. Fee is in native ETH.
 - `MarketV1BorrowAction` and `MarketV1SupplyCollateralBorrowAction` include optional `reallocationFee?: bigint` in their args to track total fees paid.
-- `RepayAmountArgs` — union type: `{ amount: bigint }` (partial repay by assets) or `{ shares: bigint }` (full repay by shares). Exactly one mode.
+- `RepayAmountArgs` — union type: `{ assets: bigint }` (partial repay by assets) or `{ shares: bigint }` (full repay by shares). Exactly one mode.
 - `MarketV1RepayAction` — `{ assets, shares, onBehalf, maxSharePrice }`. Exactly one of assets/shares is non-zero.
 - `MarketV1WithdrawCollateralAction` — `{ amount, receiver }`.
 - `MarketV1RepayWithdrawCollateralAction` — `{ repayAssets, repayShares, withdrawAmount, maxSharePrice, onBehalf, receiver }`.

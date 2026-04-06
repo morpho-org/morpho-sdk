@@ -30,7 +30,7 @@ Pure functions that build deep-frozen `Transaction<TAction>` objects. Four sub-l
 | `marketV1Borrow`                 | Bundler (general adapter)        | Requires GA1 authorization on Morpho. Uses `minSharePrice` for slippage. Supports `reallocations`. |
 | `marketV1SupplyCollateralBorrow` | Bundler (general adapter)        | Atomic supply + borrow. Requires Morpho authorization for GeneralAdapter1. Supports `reallocations`. |
 | `marketV1Repay`                  | Bundler (general adapter)        | Two modes: by assets (partial) or by shares (full repay). Uses `maxSharePrice` for slippage. No Morpho auth needed. |
-| `marketV1WithdrawCollateral`     | Bundler (general adapter)        | Requires GA1 authorization on Morpho. No ERC20 approval. Validates position health post-withdraw. |
+| `marketV1WithdrawCollateral`     | Direct Morpho call               | No bundler, no GA1 authorization. Caller must be `onBehalf`. Validates position health post-withdraw. |
 | `marketV1RepayWithdrawCollateral`| Bundler (general adapter)        | Atomic repay + withdraw. Order: repay FIRST. Requires both loan token approval and Morpho auth. |
 
 ## `requirements/` — Approval Resolution

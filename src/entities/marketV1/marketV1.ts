@@ -43,7 +43,6 @@ import {
   validateRepayShares,
 } from "../../helpers";
 import { MAX_SLIPPAGE_TOLERANCE } from "../../helpers/constant";
-import { validateRepayAssets } from "../../helpers/validate";
 import {
   AccrualPositionMarketMismatchError,
   type DepositAmountArgs,
@@ -534,7 +533,7 @@ export class MorphoMarketV1 implements MarketV1Actions {
         MathLib.WAD + slippageTolerance,
       );
     } else {
-      validateRepayAssets(accrualPosition, params.assets, this.marketParams.id);
+      validateRepayAmount(accrualPosition, params.assets, this.marketParams.id);
       assets = params.assets;
       shares = 0n;
       transferAmount = params.assets;

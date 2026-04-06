@@ -92,10 +92,11 @@ Bundle action sequence:
 
 ### `marketV1WithdrawCollateral`
 
-Routed through bundler3 via `morphoWithdrawCollateral`. Simplest action — single bundler action.
+Direct call to `morpho.withdrawCollateral()`. No bundler needed — collateral flows out of Morpho directly.
 
-- GeneralAdapter1 must be authorized on Morpho (`setAuthorization`).
-- `morphoWithdrawCollateral` args: `[marketParams, amount, receiver, false]`.
+- Caller (`msg.sender`) must be `onBehalf` or authorized by them on Morpho.
+- No GeneralAdapter1 authorization needed.
+- `withdrawCollateral` args: `[marketParams, amount, onBehalf, receiver]`.
 - No ERC20 approval needed (collateral flows out of Morpho).
 - No native wrapping, no slippage protection (1:1, no share conversion).
 - `tx.value = 0n`.

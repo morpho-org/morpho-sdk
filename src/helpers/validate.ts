@@ -213,7 +213,7 @@ export const validatePositionHealthAfterWithdraw = (
  * @param repayAssets - The assets of assets to repay.
  * @param marketId - The market identifier (for error messages).
  */
-export const validateRepayAssets = (
+export const validateRepayAmount = (
   accrualPosition: AccrualPosition,
   repayAssets: bigint,
   marketId: MarketId,

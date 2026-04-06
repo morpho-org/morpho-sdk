@@ -46,7 +46,7 @@ describe("RepayMarketV1", () => {
 
     const repay = market.repay({
       userAddress: client.account.address,
-      amount: repayAmount,
+      assets: repayAmount,
       accrualPosition,
     });
 
@@ -131,7 +131,7 @@ describe("RepayMarketV1", () => {
     const tx = market
       .repay({
         userAddress: client.account.address,
-        amount: repayAmount,
+        assets: repayAmount,
         accrualPosition,
       })
       .buildTx();
@@ -181,7 +181,7 @@ describe("RepayMarketV1", () => {
 
         const repay = market.repay({
           userAddress: client.account.address,
-          amount: repayAmount,
+          assets: repayAmount,
           accrualPosition,
         });
 
@@ -294,7 +294,7 @@ describe("RepayMarketV1", () => {
     expect(() =>
       market.repay({
         userAddress: client.account.address,
-        amount: borrowAmount * 2n,
+        assets: borrowAmount * 2n,
         accrualPosition,
       }),
     ).toThrow(RepayExceedsDebtError);
@@ -339,7 +339,7 @@ describe("RepayMarketV1", () => {
     expect(() =>
       market.repay({
         userAddress: client.account.address,
-        amount: 0n,
+        assets: 0n,
         accrualPosition,
       }),
     ).toThrow(NonPositiveRepayAmountError);
@@ -354,7 +354,7 @@ describe("RepayMarketV1", () => {
     expect(() =>
       market.repay({
         userAddress: client.account.address,
-        amount: parseUnits("100", 18),
+        assets: parseUnits("100", 18),
         accrualPosition: undefined as unknown as AccrualPosition,
       }),
     ).toThrow(MissingAccrualPositionError);
@@ -381,7 +381,7 @@ describe("RepayMarketV1", () => {
     const tx = market
       .repay({
         userAddress: client.account.address,
-        amount: parseUnits("500", 18),
+        assets: parseUnits("500", 18),
         accrualPosition,
       })
       .buildTx();

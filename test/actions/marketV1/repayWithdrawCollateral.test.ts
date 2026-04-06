@@ -49,7 +49,7 @@ describe("RepayWithdrawCollateralMarketV1", () => {
 
     const action = market.repayWithdrawCollateral({
       userAddress: client.account.address,
-      amount: repayAmount,
+      assets: repayAmount,
       withdrawAmount,
       accrualPosition,
     });
@@ -115,7 +115,7 @@ describe("RepayWithdrawCollateralMarketV1", () => {
 
         const action = market.repayWithdrawCollateral({
           userAddress: client.account.address,
-          amount: repayAmount,
+          assets: repayAmount,
           withdrawAmount,
           accrualPosition,
         });
@@ -234,7 +234,7 @@ describe("RepayWithdrawCollateralMarketV1", () => {
     expect(() =>
       market.repayWithdrawCollateral({
         userAddress: client.account.address,
-        amount: parseUnits("10", 18),
+        assets: parseUnits("10", 18),
         withdrawAmount: parseUnits("9.99", 18),
         accrualPosition,
       }),
@@ -262,7 +262,7 @@ describe("RepayWithdrawCollateralMarketV1", () => {
     expect(() =>
       market.repayWithdrawCollateral({
         userAddress: client.account.address,
-        amount: borrowAmount * 2n,
+        assets: borrowAmount * 2n,
         withdrawAmount: parseUnits("1", 18),
         accrualPosition,
       }),
@@ -279,7 +279,7 @@ describe("RepayWithdrawCollateralMarketV1", () => {
     expect(() =>
       market.repayWithdrawCollateral({
         userAddress: client.account.address,
-        amount: 0n,
+        assets: 0n,
         withdrawAmount: parseUnits("1", 18),
         accrualPosition,
       }),
@@ -309,7 +309,7 @@ describe("RepayWithdrawCollateralMarketV1", () => {
     expect(() =>
       market.repayWithdrawCollateral({
         userAddress: client.account.address,
-        amount: parseUnits("500", 18),
+        assets: parseUnits("500", 18),
         withdrawAmount: 0n,
         accrualPosition,
       }),
@@ -325,7 +325,7 @@ describe("RepayWithdrawCollateralMarketV1", () => {
     expect(() =>
       market.repayWithdrawCollateral({
         userAddress: client.account.address,
-        amount: parseUnits("100", 18),
+        assets: parseUnits("100", 18),
         withdrawAmount: parseUnits("1", 18),
         accrualPosition: undefined as unknown as AccrualPosition,
       }),
@@ -353,7 +353,7 @@ describe("RepayWithdrawCollateralMarketV1", () => {
     const tx = market
       .repayWithdrawCollateral({
         userAddress: client.account.address,
-        amount: parseUnits("500", 18),
+        assets: parseUnits("500", 18),
         withdrawAmount: parseUnits("1", 18),
         accrualPosition,
       })
