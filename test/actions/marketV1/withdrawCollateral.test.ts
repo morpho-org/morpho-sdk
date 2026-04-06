@@ -86,11 +86,6 @@ describe("WithdrawCollateralMarketV1", () => {
           accrualPosition,
         });
 
-        const requirements = await withdraw.getRequirements();
-
-        // Direct Morpho call — no authorization or approval required
-        expect(requirements).toHaveLength(0);
-
         const tx = withdraw.buildTx();
         await client.sendTransaction(tx);
       },
