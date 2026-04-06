@@ -36,7 +36,7 @@ export function computeMinBorrowSharePrice(
  * Computes the maximum repay share price (in RAY, 1e27) for slippage protection.
  *
  * Supports both repay-by-assets and repay-by-shares paths:
- * - By assets: derives expected shares from the repay amount via `toBorrowShares("Up")`.
+ * - By assets: derives expected shares from the repay amount via `toBorrowShares("Down")`.
  * - By shares: derives expected assets from the shares via `toBorrowAssets("Up")`.
  *
  * Direction is opposite of borrow's `minSharePrice`:
@@ -65,7 +65,7 @@ export function computeMaxRepaySharePrice(
     shares = repayShares;
   } else {
     assets = repayAssets;
-    shares = market.toBorrowShares(repayAssets, "Up");
+    shares = market.toBorrowShares(repayAssets, "Down");
   }
 
   if (shares === 0n) {

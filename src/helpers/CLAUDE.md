@@ -13,7 +13,7 @@ Utility functions shared across layers.
 - `encodeForceDeallocateCall(deallocation, onBehalf)` — ABI-encodes a single `VaultV2.forceDeallocate` calldata entry.
 - `Deallocation` interface: `{ adapter, assets, marketParams? }`. When `marketParams` is present, `data` is ABI-encoded `MarketParams` (Morpho Market V1 adapter); when omitted, empty bytes are used (e.g. Vault V1 adapters).
 
-- `computeMaxRepaySharePrice(repayAssets, repayShares, market, slippageTolerance)` — computes maximum repay share price in RAY. Dual mode: by assets (derives shares via `toBorrowShares("Up")`) or by shares (derives assets via `toBorrowAssets("Up")`). Uses `WAD + slippage` (upper bound, opposite of borrow's lower bound). Capped at `MAX_ABSOLUTE_SHARE_PRICE`.
+- `computeMaxRepaySharePrice(repayAssets, repayShares, market, slippageTolerance)` — computes maximum repay share price in RAY. Dual mode: by assets (derives shares via `toBorrowShares("Down")`) or by shares (derives assets via `toBorrowAssets("Up")`). Uses `WAD + slippage` (upper bound, opposite of borrow's lower bound). Capped at `MAX_ABSOLUTE_SHARE_PRICE`.
 
 - `validatePositionHealthAfterWithdraw(accrualPosition, withdrawAmount, lltv)` — validates position stays healthy after collateral withdrawal. Optional `borrowAssetsOverride` for combined repay+withdraw (simulates post-repay debt). Throws `WithdrawExceedsCollateralError` or `WithdrawMakesPositionUnhealthyError`.
 
