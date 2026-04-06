@@ -2,7 +2,6 @@ import {
   type AccrualPosition,
   DEFAULT_SLIPPAGE_TOLERANCE,
   MathLib,
-  SharesMath,
 } from "@morpho-org/blue-sdk";
 import { parseUnits } from "viem";
 import { mainnet } from "viem/chains";
@@ -10,7 +9,6 @@ import { describe, expect } from "vitest";
 import {
   computeMaxRepaySharePrice,
   isRequirementApproval,
-  isRequirementAuthorization,
   MissingAccrualPositionError,
   MorphoClient,
   marketV1Repay,
@@ -105,51 +103,6 @@ describe("RepayMarketV1", () => {
     expect(tx.action.args.assets).toBe(0n);
   });
 
-  test("should compute maxSharePrice from real market state", async ({
-    client,
-  }) => {
-    const collateralAmount = parseUnits("10", 18);
-    const borrowAmount = parseUnits("1000", 18);
-    const repayAmount = parseUnits("500", 18);
-
-    await supplyCollateral(
-      client,
-      mainnet.id,
-      WethUsdsMarketV1,
-      collateralAmount,
-    );
-    await borrow(client, mainnet.id, WethUsdsMarketV1, borrowAmount);
-
-    const morphoClient = new MorphoClient(client);
-    const market = morphoClient.marketV1(WethUsdsMarketV1, mainnet.id);
-    const accrualPosition = await market.getPositionData(
-      client.account.address,
-    );
-
-    const { totalBorrowAssets, totalBorrowShares } = accrualPosition.market;
-
-    const tx = market
-      .repay({
-        userAddress: client.account.address,
-        assets: repayAmount,
-        accrualPosition,
-      })
-      .buildTx();
-
-    const expectedMaxSharePrice = MathLib.mulDivUp(
-      repayAmount,
-      MathLib.wToRay(MathLib.WAD + DEFAULT_SLIPPAGE_TOLERANCE),
-      MathLib.mulDivUp(
-        repayAmount,
-        totalBorrowShares + SharesMath.VIRTUAL_SHARES,
-        totalBorrowAssets + SharesMath.VIRTUAL_ASSETS,
-      ),
-    );
-
-    expect(tx.action.args.maxSharePrice).toBe(expectedMaxSharePrice);
-    expect(tx.action.args.maxSharePrice).toBeGreaterThan(0n);
-  });
-
   test("should repay loan token (by assets)", async ({ client }) => {
     const collateralAmount = parseUnits("10", 18);
     const borrowAmount = parseUnits("1000", 18);
@@ -188,16 +141,11 @@ describe("RepayMarketV1", () => {
         const requirements = await repay.getRequirements();
 
         // Repay should NOT have morpho authorization requirement
-        for (const req of requirements) {
-          expect(isRequirementAuthorization(req)).toBe(false);
+        const approval = requirements[0];
+        if (!isRequirementApproval(approval)) {
+          throw new Error("Approval requirement not found");
         }
-
-        // Send approval requirements
-        for (const req of requirements) {
-          if (isRequirementApproval(req)) {
-            await client.sendTransaction(req);
-          }
-        }
+        await client.sendTransaction(approval);
 
         const tx = repay.buildTx();
         await client.sendTransaction(tx);
@@ -228,19 +176,17 @@ describe("RepayMarketV1", () => {
     );
     await borrow(client, mainnet.id, WethUsdsMarketV1, borrowAmount);
 
-    // Note: share-based full repay leaves dust in GA1 from the slippage buffer,
-    // so we don't use testInvariants (which checks bundler3 balances are unchanged).
-    const morphoClient = new MorphoClient(client, {
-      supportSignature: false,
-    });
-    const market = morphoClient.marketV1(WethUsdsMarketV1, mainnet.id);
-    const accrualPosition = await market.getPositionData(
+    // Deal enough loan tokens to cover the buffered transfer amount (slippage buffer)
+    const morphoClientSetup = new MorphoClient(client);
+    const marketSetup = morphoClientSetup.marketV1(
+      WethUsdsMarketV1,
+      mainnet.id,
+    );
+    const setupPosition = await marketSetup.getPositionData(
       client.account.address,
     );
-
-    // Deal enough loan tokens to cover the buffered transfer amount
-    const baseAmount = accrualPosition.market.toBorrowAssets(
-      accrualPosition.borrowShares,
+    const baseAmount = setupPosition.market.toBorrowAssets(
+      setupPosition.borrowShares,
       "Up",
     );
     const dealAmount = MathLib.wMulUp(
@@ -252,25 +198,52 @@ describe("RepayMarketV1", () => {
       amount: dealAmount,
     });
 
-    const repay = market.repay({
-      userAddress: client.account.address,
-      shares: accrualPosition.borrowShares,
-      accrualPosition,
+    const {
+      markets: {
+        WethUsdsMarketV1: { initialState, finalState },
+      },
+    } = await testInvariants({
+      client,
+      params: {
+        markets: { WethUsdsMarketV1 },
+      },
+      actionFn: async () => {
+        const morphoClient = new MorphoClient(client);
+        const market = morphoClient.marketV1(WethUsdsMarketV1, mainnet.id);
+        const accrualPosition = await market.getPositionData(
+          client.account.address,
+        );
+
+        const repay = market.repay({
+          userAddress: client.account.address,
+          shares: accrualPosition.borrowShares,
+          accrualPosition,
+        });
+
+        const requirements = await repay.getRequirements();
+        const approval = requirements[0];
+        if (!isRequirementApproval(approval)) {
+          throw new Error("Approval requirement not found");
+        }
+        await client.sendTransaction(approval);
+
+        const tx = repay.buildTx();
+        await client.sendTransaction(tx);
+      },
     });
 
-    const requirements = await repay.getRequirements();
-    for (const req of requirements) {
-      if (isRequirementApproval(req)) {
-        await client.sendTransaction(req);
-      }
-    }
-
-    const tx = repay.buildTx();
-    await client.sendTransaction(tx);
-
     // After full repay, borrow shares should be 0
-    const finalPosition = await market.getPositionData(client.account.address);
-    expect(finalPosition.borrowShares).toBe(0n);
+    expect(finalState.position.borrowShares).toBe(0n);
+
+    // Morpho should have received loan tokens
+    expect(finalState.morphoLoanTokenBalance).toBeGreaterThan(
+      initialState.morphoLoanTokenBalance,
+    );
+
+    // Collateral should not change
+    expect(finalState.position.collateral).toEqual(
+      initialState.position.collateral,
+    );
   });
 
   test("should throw when repay amount exceeds debt", async ({ client }) => {

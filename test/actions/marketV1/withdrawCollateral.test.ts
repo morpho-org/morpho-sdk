@@ -103,6 +103,47 @@ describe("WithdrawCollateralMarketV1", () => {
     );
   });
 
+  // full withdraw
+  test("should full withdraw collateral", async ({ client }) => {
+    const collateralAmount = parseUnits("10", 18);
+    const withdrawAmount = collateralAmount;
+
+    await supplyCollateral(
+      client,
+      mainnet.id,
+      WethUsdsMarketV1,
+      collateralAmount,
+    );
+    await borrow(client, mainnet.id, WethUsdsMarketV1, parseUnits("1000", 18));
+
+    const {
+      markets: {
+        WethUsdsMarketV1: { finalState },
+      },
+    } = await testInvariants({
+      client,
+      params: { markets: { WethUsdsMarketV1 } },
+      actionFn: async () => {
+        const morphoClient = new MorphoClient(client);
+        const market = morphoClient.marketV1(WethUsdsMarketV1, mainnet.id);
+        const accrualPosition = await market.getPositionData(
+          client.account.address,
+        );
+
+        const withdraw = market.withdrawCollateral({
+          userAddress: client.account.address,
+          amount: withdrawAmount,
+          accrualPosition,
+        });
+
+        const tx = withdraw.buildTx();
+        await client.sendTransaction(tx);
+      },
+    });
+
+    expect(finalState.position.collateral).toEqual(0n);
+  });
+
   test("should throw when withdraw makes position unhealthy", async ({
     client,
   }) => {

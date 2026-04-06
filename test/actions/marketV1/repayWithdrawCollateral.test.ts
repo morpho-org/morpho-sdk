@@ -122,18 +122,11 @@ describe("RepayWithdrawCollateralMarketV1", () => {
 
         const requirements = await action.getRequirements();
 
-        // Should require ERC20 approval for loan token
-        const hasApproval = requirements.some(isRequirementApproval);
-        expect(hasApproval).toBe(true);
-
-        // Morpho authorization may already be in place from borrow() setup
-        // (which calls setAuthorization directly), so we don't assert hasAuth
-
-        for (const req of requirements) {
-          if (isRequirementApproval(req) || isRequirementAuthorization(req)) {
-            await client.sendTransaction(req);
-          }
+        const approval = requirements[0];
+        if (!isRequirementApproval(approval)) {
+          throw new Error("Approval requirement not found");
         }
+        await client.sendTransaction(approval);
 
         const tx = action.buildTx();
         await client.sendTransaction(tx);
@@ -165,17 +158,17 @@ describe("RepayWithdrawCollateralMarketV1", () => {
     );
     await borrow(client, mainnet.id, WethUsdsMarketV1, borrowAmount);
 
-    const morphoClient = new MorphoClient(client, {
-      supportSignature: false,
-    });
-    const market = morphoClient.marketV1(WethUsdsMarketV1, mainnet.id);
-    const accrualPosition = await market.getPositionData(
+    // Deal enough loan tokens for the full repay (with slippage buffer for interest accrual)
+    const morphoClientSetup = new MorphoClient(client);
+    const marketSetup = morphoClientSetup.marketV1(
+      WethUsdsMarketV1,
+      mainnet.id,
+    );
+    const setupPosition = await marketSetup.getPositionData(
       client.account.address,
     );
-
-    // Deal enough loan tokens for the full repay (with slippage buffer for interest accrual)
-    const baseAmount = accrualPosition.market.toBorrowAssets(
-      accrualPosition.borrowShares,
+    const baseAmount = setupPosition.market.toBorrowAssets(
+      setupPosition.borrowShares,
       "Up",
     );
     const dealAmount = MathLib.wMulUp(
@@ -187,27 +180,56 @@ describe("RepayWithdrawCollateralMarketV1", () => {
       amount: dealAmount,
     });
 
-    const action = market.repayWithdrawCollateral({
-      userAddress: client.account.address,
-      shares: accrualPosition.borrowShares,
-      withdrawAmount: accrualPosition.collateral,
-      accrualPosition,
+    const {
+      markets: {
+        WethUsdsMarketV1: { initialState, finalState },
+      },
+    } = await testInvariants({
+      client,
+      params: {
+        markets: { WethUsdsMarketV1 },
+      },
+      actionFn: async () => {
+        const morphoClient = new MorphoClient(client, {
+          supportSignature: false,
+        });
+        const market = morphoClient.marketV1(WethUsdsMarketV1, mainnet.id);
+        const accrualPosition = await market.getPositionData(
+          client.account.address,
+        );
+
+        const action = market.repayWithdrawCollateral({
+          userAddress: client.account.address,
+          shares: accrualPosition.borrowShares,
+          withdrawAmount: accrualPosition.collateral,
+          accrualPosition,
+        });
+
+        const requirements = await action.getRequirements();
+        for (const req of requirements) {
+          if (isRequirementApproval(req) || isRequirementAuthorization(req)) {
+            await client.sendTransaction(req);
+          }
+        }
+
+        const tx = action.buildTx();
+        await client.sendTransaction(tx);
+      },
     });
 
-    const requirements = await action.getRequirements();
-    for (const req of requirements) {
-      if (isRequirementApproval(req) || isRequirementAuthorization(req)) {
-        await client.sendTransaction(req);
-      }
-    }
-
-    const tx = action.buildTx();
-    await client.sendTransaction(tx);
-
     // Position should be fully closed
-    const finalPosition = await market.getPositionData(client.account.address);
-    expect(finalPosition.borrowShares).toBe(0n);
-    expect(finalPosition.collateral).toBe(0n);
+    expect(finalState.position.borrowShares).toBe(0n);
+    expect(finalState.position.collateral).toBe(0n);
+
+    // Morpho should have received loan tokens
+    expect(finalState.morphoLoanTokenBalance).toBeGreaterThan(
+      initialState.morphoLoanTokenBalance,
+    );
+
+    // User should have received collateral back
+    expect(finalState.userCollateralTokenBalance).toEqual(
+      initialState.userCollateralTokenBalance + collateralAmount,
+    );
   });
 
   test("should throw when withdraw makes position unhealthy (even after repay)", async ({
