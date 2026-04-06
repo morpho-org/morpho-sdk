@@ -70,6 +70,7 @@ import {
   type RequirementSignature,
   type Transaction,
   type VaultReallocation,
+  WithdrawExceedsCollateralError,
   ZeroCollateralAmountError,
 } from "../../types";
 import type { FetchParameters } from "../../types/data";
@@ -597,6 +598,14 @@ export class MorphoMarketV1 implements MarketV1Actions {
 
     validateAccrualPosition(accrualPosition, this.marketParams.id, userAddress);
 
+    if (amount > accrualPosition.collateral) {
+      throw new WithdrawExceedsCollateralError(
+        amount,
+        accrualPosition.collateral,
+        accrualPosition.marketId,
+      );
+    }
+
     validatePositionHealthAfterWithdraw(
       accrualPosition,
       amount,
@@ -691,6 +700,14 @@ export class MorphoMarketV1 implements MarketV1Actions {
       assets = params.assets;
       shares = 0n;
       transferAmount = params.assets;
+    }
+
+    if (withdrawAmount > accrualPosition.collateral) {
+      throw new WithdrawExceedsCollateralError(
+        withdrawAmount,
+        accrualPosition.collateral,
+        accrualPosition.marketId,
+      );
     }
 
     // Simulate repay to get post-repay position, then validate withdraw health

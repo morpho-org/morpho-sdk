@@ -23,7 +23,6 @@ import {
   RepaySharesExceedDebtError,
   UnsortedReallocationWithdrawalsError,
   type VaultReallocation,
-  WithdrawExceedsCollateralError,
   WithdrawMakesPositionUnhealthyError,
 } from "../types";
 import { DEFAULT_LLTV_BUFFER } from "./constant";
@@ -170,12 +169,9 @@ export const validatePositionHealthAfterWithdraw = (
   withdrawAmount: bigint,
   lltv: bigint,
 ): void => {
-  if (withdrawAmount > accrualPosition.collateral) {
-    throw new WithdrawExceedsCollateralError(
-      withdrawAmount,
-      accrualPosition.collateral,
-      accrualPosition.marketId,
-    );
+  // No debt means position is always healthy — oracle price not needed.
+  if (accrualPosition.borrowAssets === 0n) {
+    return;
   }
 
   const { price } = accrualPosition.market;

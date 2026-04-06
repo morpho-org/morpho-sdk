@@ -19,7 +19,7 @@ export function computeMinBorrowSharePrice(
   market: Market,
   slippageTolerance: bigint,
 ): bigint {
-  const expectedShares = market.toBorrowShares(borrowAmount, "Down");
+  const expectedShares = market.toBorrowShares(borrowAmount, "Up");
 
   if (expectedShares === 0n) {
     return 0n;
