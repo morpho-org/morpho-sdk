@@ -316,6 +316,7 @@ describe("RepayWithdrawCollateralMarketV1", () => {
         totalBorrowShares,
         lastUpdate: 0n,
         fee: 0n,
+        price: parseUnits("2000", 36),
       },
     );
 
