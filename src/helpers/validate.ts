@@ -24,8 +24,6 @@ import {
   UnsortedReallocationWithdrawalsError,
   type VaultReallocation,
   WithdrawMakesPositionUnhealthyError,
-  UnsortedReallocationWithdrawalsError,
-  type VaultReallocation,
 } from "../types";
 import { DEFAULT_LLTV_BUFFER } from "./constant";
 

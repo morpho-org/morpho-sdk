@@ -18,7 +18,6 @@ import {
   fetchVault,
   fetchVaultMarketConfig,
 } from "@morpho-org/blue-sdk-viem";
-import { SimulationState } from "@morpho-org/simulation-sdk";
 import { type MinimalBlock, SimulationState } from "@morpho-org/simulation-sdk";
 import type { Address } from "viem";
 import {
@@ -67,7 +66,6 @@ import {
   NonPositiveWithdrawCollateralAmountError,
   type ReallocationComputeOptions,
   type RepayAmountArgs,
-  type ReallocationComputeOptions,
   type Requirement,
   type RequirementSignature,
   type Transaction,
