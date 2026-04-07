@@ -4,10 +4,12 @@ import { deepFreeze } from "@morpho-org/morpho-ts";
 import { type Address, maxUint256 } from "viem";
 import { addTransactionMetadata } from "../../helpers";
 import {
+  InsufficientTransferAmountError,
   type MarketV1RepayWithdrawCollateralAction,
   type Metadata,
   MutuallyExclusiveRepayAmountsError,
   NonPositiveRepayAmountError,
+  NonPositiveTransferAmountError,
   NonPositiveWithdrawCollateralAmountError,
   type RequirementSignature,
   type Transaction,
@@ -93,28 +95,38 @@ export const marketV1RepayWithdrawCollateral = ({
     throw new NonPositiveWithdrawCollateralAmountError(marketParams.id);
   }
 
+  if (transferAmount <= 0n) {
+    throw new NonPositiveTransferAmountError(marketParams.id);
+  }
+
+  if (assets > 0n && transferAmount < assets) {
+    throw new InsufficientTransferAmountError(
+      transferAmount,
+      assets,
+      marketParams.id,
+    );
+  }
+
   const {
     bundler3: { generalAdapter1 },
   } = getChainAddresses(chainId);
 
   const actions: Action[] = [];
 
-  if (transferAmount > 0n) {
-    if (requirementSignature) {
-      actions.push(
-        ...getRequirementsAction({
-          chainId,
-          asset: marketParams.loanToken,
-          amount: transferAmount,
-          requirementSignature,
-        }),
-      );
-    } else {
-      actions.push({
-        type: "erc20TransferFrom",
-        args: [marketParams.loanToken, transferAmount, generalAdapter1, false],
-      });
-    }
+  if (requirementSignature) {
+    actions.push(
+      ...getRequirementsAction({
+        chainId,
+        asset: marketParams.loanToken,
+        amount: transferAmount,
+        requirementSignature,
+      }),
+    );
+  } else {
+    actions.push({
+      type: "erc20TransferFrom",
+      args: [marketParams.loanToken, transferAmount, generalAdapter1, false],
+    });
   }
 
   // REPAY FIRST — reduces debt before withdrawing collateral

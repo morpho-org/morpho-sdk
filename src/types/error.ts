@@ -228,6 +228,20 @@ export class UnsortedReallocationWithdrawalsError extends Error {
   }
 }
 
+export class NonPositiveTransferAmountError extends Error {
+  constructor(market: string) {
+    super(`Transfer amount must be positive for market: ${market}`);
+  }
+}
+
+export class InsufficientTransferAmountError extends Error {
+  constructor(transferAmount: bigint, assets: bigint, market: string) {
+    super(
+      `Transfer amount ${transferAmount} is less than repay assets ${assets} for market: ${market}`,
+    );
+  }
+}
+
 export class MutuallyExclusiveRepayAmountsError extends Error {
   constructor(market: string) {
     super(
