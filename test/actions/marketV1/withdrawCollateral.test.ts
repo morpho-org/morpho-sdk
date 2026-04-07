@@ -104,7 +104,7 @@ describe("WithdrawCollateralMarketV1", () => {
   });
 
   // full withdraw
-  test("should full withdraw collateral", async ({ client }) => {
+  test("should full withdraw collateral (no debt)", async ({ client }) => {
     const collateralAmount = parseUnits("10", 18);
     const withdrawAmount = collateralAmount;
 
@@ -114,7 +114,6 @@ describe("WithdrawCollateralMarketV1", () => {
       WethUsdsMarketV1,
       collateralAmount,
     );
-    await borrow(client, mainnet.id, WethUsdsMarketV1, parseUnits("1000", 18));
 
     const {
       markets: {
