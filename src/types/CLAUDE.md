@@ -23,6 +23,7 @@ Centralized type definitions. Barrel-exported via `index.ts`.
 - `MarketV1RepayWithdrawCollateralAction` — `{ repayAssets, repayShares, withdrawAmount, maxSharePrice, onBehalf, receiver }`.
 - Custom errors in `error.ts` — one class per error case. Includes native wrapping validation (`NativeAmountOnNonWNativeVaultError`, `ChainWNativeMissingError`, `NegativeNativeAmountError`, `ZeroDepositAmountError`), market-specific: `BorrowExceedsSafeLtvError`, `MissingMarketPriceError`, `ZeroCollateralAmountError`, `NativeAmountOnNonWNativeCollateralError`, repay/withdraw-specific: `NonPositiveRepayAmountError`, `NonPositiveWithdrawCollateralAmountError`, `WithdrawExceedsCollateralError`, `WithdrawMakesPositionUnhealthyError`, `RepayExceedsDebtError`, `RepaySharesExceedDebtError`, and reallocation-specific: `NegativeReallocationFeeError`, `EmptyReallocationWithdrawalsError`, `NonPositiveReallocationAmountError`, `ReallocationWithdrawalOnTargetMarketError`, `UnsortedReallocationWithdrawalsError`.
 
+
 ## Key Constraints
 
 - All properties `readonly`. No mutable interfaces.

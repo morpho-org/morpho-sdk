@@ -118,7 +118,6 @@ Bundle action sequence:
 2. morphoRepay(marketParams, assets, shares, maxSharePrice, onBehalf, [], false)
 3. morphoWithdrawCollateral(marketParams, withdrawAmount, receiver, false)
 ```
-
 ## Common Pattern
 
 1. **Validate** inputs (dedicated errors).

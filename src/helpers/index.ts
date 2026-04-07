@@ -13,4 +13,5 @@ export {
   validateReallocations,
   validateRepayAmount,
   validateRepayShares,
+  validateReallocations,
 } from "./validate";

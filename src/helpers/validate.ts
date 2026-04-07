@@ -24,6 +24,8 @@ import {
   UnsortedReallocationWithdrawalsError,
   type VaultReallocation,
   WithdrawMakesPositionUnhealthyError,
+  UnsortedReallocationWithdrawalsError,
+  type VaultReallocation,
 } from "../types";
 import { DEFAULT_LLTV_BUFFER } from "./constant";
 
@@ -95,7 +97,7 @@ export const validatePositionHealth = (
     effectiveLltv,
   );
 
-  const totalBorrowAfter = accrualPosition.borrowAssets + borrowAmount;
+  const totalBorrowAfter = accrualPosition.borrowAssets + borrowAmount + 1n; // +1 to account for share-to-asset rounding (happens when the borrow amount doesn't divide evenly into shares)
 
   if (totalBorrowAfter > maxSafeBorrowAfter) {
     const maxSafeAdditionalBorrow = MathLib.zeroFloorSub(
@@ -156,6 +158,7 @@ export const validateNativeCollateral = (
  * @param reallocations - The reallocations to validate.
  * @param targetMarketId - The ID of the market being borrowed from. No withdrawal may reference this market.
  */
+
 /**
  * Validates that the resulting position stays within the safe LTV threshold
  * (LLTV minus buffer) after withdrawing collateral.

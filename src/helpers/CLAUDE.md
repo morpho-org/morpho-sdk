@@ -33,6 +33,12 @@ Utility functions shared across layers.
   3. `w.amount > 0n` → throws `NonPositiveReallocationAmountError(vault, marketId)`.
   4. `w.marketParams.id !== targetMarketId` → throws `ReallocationWithdrawalOnTargetMarketError(vault, marketId)`.
 
+- `validateReallocations(reallocations: VaultReallocation[], targetMarketId: MarketId)` — validates reallocation parameters before encoding. Called by `marketV1Borrow` and `marketV1SupplyCollateralBorrow`. Checks (per reallocation, per withdrawal):
+  1. `r.fee >= 0n` → throws `NegativeReallocationFeeError(vault)`.
+  2. `r.withdrawals.length > 0` → throws `EmptyReallocationWithdrawalsError(vault)`.
+  3. `w.amount > 0n` → throws `NonPositiveReallocationAmountError(vault, marketId)`.
+  4. `w.marketParams.id !== targetMarketId` → throws `ReallocationWithdrawalOnTargetMarketError(vault, marketId)`.
+
 ## Key Constraints
 
 - Pure functions. Return new objects — never mutate inputs.

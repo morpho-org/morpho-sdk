@@ -19,6 +19,7 @@ import {
   fetchVaultMarketConfig,
 } from "@morpho-org/blue-sdk-viem";
 import { SimulationState } from "@morpho-org/simulation-sdk";
+import { type MinimalBlock, SimulationState } from "@morpho-org/simulation-sdk";
 import type { Address } from "viem";
 import {
   getMorphoAuthorizationRequirement,
@@ -66,6 +67,7 @@ import {
   NonPositiveWithdrawCollateralAmountError,
   type ReallocationComputeOptions,
   type RepayAmountArgs,
+  type ReallocationComputeOptions,
   type Requirement,
   type RequirementSignature,
   type Transaction,
@@ -288,9 +290,7 @@ export interface MarketV1Actions {
   getReallocationData: (params: {
     vaultAddresses: readonly Address[];
     market: Market;
-    blockNumber: bigint;
-    blockTimestamp: bigint;
-    parameters?: FetchParameters;
+    block: MinimalBlock;
   }) => Promise<SimulationState>;
 
   /**
@@ -881,15 +881,11 @@ export class MorphoMarketV1 implements MarketV1Actions {
   async getReallocationData({
     vaultAddresses,
     market,
-    blockNumber,
-    blockTimestamp,
-    parameters,
+    block,
   }: {
     vaultAddresses: readonly Address[];
     market: Market;
-    blockNumber: bigint;
-    blockTimestamp: bigint;
-    parameters?: FetchParameters;
+    block: MinimalBlock;
   }): Promise<SimulationState> {
     validateChainId(this.client.viemClient.chain?.id, this.chainId);
     if (market.id !== this.marketParams.id) {
@@ -900,7 +896,7 @@ export class MorphoMarketV1 implements MarketV1Actions {
     }
 
     const client = this.client.viemClient;
-    const fetchParams = { ...parameters, chainId: this.chainId };
+    const fetchParams = { blockNumber: block.number, chainId: this.chainId };
 
     // Phase 1: Fetch all vaults in parallel to get their withdrawQueues.
     const vaults = await Promise.all(
@@ -913,9 +909,14 @@ export class MorphoMarketV1 implements MarketV1Actions {
     const vaultMarketPairs: { vault: Address; marketId: MarketId }[] = [];
 
     for (const vault of vaults) {
+      // Always include target market pair so its config/position is fetched
+      // even when the target market is only in the vault's supplyQueue.
+      vaultMarketPairs.push({ vault: vault.address, marketId: targetMarketId });
       for (const mid of vault.withdrawQueue) {
         allMarketIds.add(mid);
-        vaultMarketPairs.push({ vault: vault.address, marketId: mid });
+        if (mid !== targetMarketId) {
+          vaultMarketPairs.push({ vault: vault.address, marketId: mid });
+        }
       }
     }
 
@@ -992,10 +993,7 @@ export class MorphoMarketV1 implements MarketV1Actions {
 
     return new SimulationState({
       chainId: this.chainId,
-      block: {
-        number: blockNumber,
-        timestamp: blockTimestamp,
-      },
+      block,
       markets: marketsRecord,
       vaults: vaultsRecord,
       vaultMarketConfigs: vaultMarketConfigsRecord,
