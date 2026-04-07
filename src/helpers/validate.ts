@@ -86,7 +86,7 @@ export const validatePositionHealth = (
     effectiveLltv,
   );
 
-  const totalBorrowAfter = accrualPosition.borrowAssets + borrowAmount;
+  const totalBorrowAfter = accrualPosition.borrowAssets + borrowAmount + 1n; // +1 to account for share-to-asset rounding (happens when the borrow amount doesn't divide evenly into shares)
 
   if (totalBorrowAfter > maxSafeBorrowAfter) {
     const maxSafeAdditionalBorrow = MathLib.zeroFloorSub(
