@@ -27,8 +27,8 @@ Pure functions that build deep-frozen `Transaction<TAction>` objects. Four sub-l
 | Function                         | Route                            | Why                                                                           |
 | -------------------------------- | -------------------------------- | ----------------------------------------------------------------------------- |
 | `marketV1SupplyCollateral`       | Bundler (general adapter)        | Always bundled via GeneralAdapter1. Approval on GA1, not Morpho.              |
-| `marketV1Borrow`                 | Bundler (general adapter)        | Requires GA1 authorization on Morpho. Uses `minSharePrice` for slippage.      |
-| `marketV1SupplyCollateralBorrow` | Bundler (general adapter)        | Atomic supply + borrow. Requires Morpho authorization for GeneralAdapter1.    |
+| `marketV1Borrow`                 | Bundler (general adapter)        | Requires GA1 authorization on Morpho. Uses `minSharePrice` for slippage. Supports `reallocations`. |
+| `marketV1SupplyCollateralBorrow` | Bundler (general adapter)        | Atomic supply + borrow. Requires Morpho authorization for GeneralAdapter1. Supports `reallocations`. |
 
 ## `requirements/` — Approval Resolution
 
@@ -39,6 +39,16 @@ Resolves token approval needs before a deposit or supply collateral:
 3. `supportSignature: true` + no EIP-2612 → permit2 fallback (`getRequirementsPermit2`).
 
 `encode/` sub-folder: low-level calldata encoders for each approval type.
+
+## Shared Liquidity (Reallocations)
+
+`marketV1Borrow` and `marketV1SupplyCollateralBorrow` accept optional `reallocations: VaultReallocation[]`. When present:
+
+1. `validateReallocations(reallocations)` is called (fee >= 0, non-empty withdrawals, positive amounts).
+2. Each `VaultReallocation` is encoded as a `reallocateTo` bundler action (calls `PublicAllocator.reallocateTo()`).
+3. `reallocateTo` actions are placed **before** `morphoBorrow` in the bundle.
+4. Total reallocation fees (sum of `r.fee`) are added to `tx.value`.
+5. `reallocationFee` is tracked in the returned `action.args`.
 
 ## Key Constraints
 

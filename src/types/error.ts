@@ -191,3 +191,39 @@ export class AccrualPositionUserMismatchError extends Error {
     );
   }
 }
+
+export class NegativeReallocationFeeError extends Error {
+  constructor(vault: string) {
+    super(`Reallocation fee must not be negative for vault: ${vault}`);
+  }
+}
+
+export class EmptyReallocationWithdrawalsError extends Error {
+  constructor(vault: string) {
+    super(`Reallocation withdrawals list cannot be empty for vault: ${vault}`);
+  }
+}
+
+export class NonPositiveReallocationAmountError extends Error {
+  constructor(vault: string, market: string) {
+    super(
+      `Reallocation withdrawal amount must be positive for vault ${vault} on market ${market}`,
+    );
+  }
+}
+
+export class ReallocationWithdrawalOnTargetMarketError extends Error {
+  constructor(vault: string, marketId: string) {
+    super(
+      `Reallocation withdrawal cannot include the borrow target market ${marketId} for vault ${vault}.`,
+    );
+  }
+}
+
+export class UnsortedReallocationWithdrawalsError extends Error {
+  constructor(vault: string, marketId: string) {
+    super(
+      `Reallocation withdrawals must be strictly sorted by market ID for vault ${vault}. Market ${marketId} is out of order.`,
+    );
+  }
+}

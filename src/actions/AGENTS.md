@@ -10,7 +10,7 @@ Pure functions that build deep-frozen `Transaction<TAction>` objects. No side ef
 |-----------|------|------|------|
 | **VaultV1 Operations** | `vaultV1/` | Build VaultV1 (MetaMorpho) deposit / withdraw / redeem transactions | [`vaultV1/AGENTS.md`](vaultV1/AGENTS.md) |
 | **VaultV2 Operations** | `vaultV2/` | Build VaultV2 deposit / withdraw / redeem / forceWithdraw / forceRedeem transactions | [`vaultV2/AGENTS.md`](vaultV2/AGENTS.md) |
-| **MarketV1 Operations** | `marketV1/` | Build MarketV1 (Morpho Blue) supplyCollateral / borrow / supplyCollateralBorrow transactions | [`marketV1/AGENTS.md`](marketV1/AGENTS.md) |
+| **MarketV1 Operations** | `marketV1/` | Build MarketV1 (Morpho Blue) supplyCollateral / borrow / supplyCollateralBorrow transactions. Supports shared liquidity via reallocations. | [`marketV1/AGENTS.md`](marketV1/AGENTS.md) |
 | **Requirements** | `requirements/` | Resolve token approval needs before a deposit or supply collateral | [`requirements/AGENTS.md`](requirements/AGENTS.md) |
 
 ## Data Flow
@@ -33,6 +33,10 @@ Entity (MorphoMarketV1)
                     ▼
          Readonly<Transaction<TAction>>  (deep-frozen)
 ```
+
+## Shared Liquidity (Reallocations)
+
+`marketV1Borrow` and `marketV1SupplyCollateralBorrow` accept optional `reallocations: VaultReallocation[]`. Each reallocation becomes a `reallocateTo` bundler action placed before `morphoBorrow`. Fees accumulate in `tx.value`. Validated via `validateReallocations()`.
 
 ## Key Constraints
 

@@ -11,6 +11,10 @@
 - Delegates transaction building to pure action functions.
 - Returns `{ buildTx, getRequirements }` — lazy evaluation, no side effects at construction.
 
+## Shared Liquidity (Reallocations)
+
+`MorphoMarketV1.borrow()` and `MorphoMarketV1.supplyCollateralBorrow()` accept an optional `reallocations: VaultReallocation[]` parameter. The entity passes it through to the action layer without modification — reallocation encoding and validation happen in the action functions. The entity is responsible for computing `minSharePrice` from slippage tolerance and providing the `accrualPosition` for LLTV health checks.
+
 ## Key Constraints
 
 - Validate `chainId` match before any on-chain call.

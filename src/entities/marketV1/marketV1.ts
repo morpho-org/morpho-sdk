@@ -1,10 +1,23 @@
 import {
   type AccrualPosition,
   DEFAULT_SLIPPAGE_TOLERANCE,
+  type Holding,
   type Market,
+  type MarketId,
   type MarketParams,
+  type Position,
+  type Vault,
+  type VaultMarketConfig,
 } from "@morpho-org/blue-sdk";
-import { fetchAccrualPosition, fetchMarket } from "@morpho-org/blue-sdk-viem";
+import {
+  fetchAccrualPosition,
+  fetchHolding,
+  fetchMarket,
+  fetchPosition,
+  fetchVault,
+  fetchVaultMarketConfig,
+} from "@morpho-org/blue-sdk-viem";
+import { type MinimalBlock, SimulationState } from "@morpho-org/simulation-sdk";
 import type { Address } from "viem";
 import {
   getMorphoAuthorizationRequirement,
@@ -15,6 +28,7 @@ import {
 } from "../../actions";
 import {
   computeMinBorrowSharePrice,
+  computeReallocations,
   validateAccrualPosition,
   validateChainId,
   validateNativeCollateral,
@@ -22,6 +36,7 @@ import {
 } from "../../helpers";
 import { MAX_SLIPPAGE_TOLERANCE } from "../../helpers/constant";
 import {
+  AccrualPositionMarketMismatchError,
   type DepositAmountArgs,
   type ERC20ApprovalAction,
   ExcessiveSlippageToleranceError,
@@ -35,9 +50,11 @@ import {
   NegativeSlippageToleranceError,
   NonPositiveAssetAmountError,
   NonPositiveBorrowAmountError,
+  type ReallocationComputeOptions,
   type Requirement,
   type RequirementSignature,
   type Transaction,
+  type VaultReallocation,
   ZeroCollateralAmountError,
 } from "../../types";
 import type { FetchParameters } from "../../types/data";
@@ -89,6 +106,9 @@ export interface MarketV1Actions {
    * Validates position health with LLTV buffer (0.5%) using the pre-fetched `accrualPosition`.
    * Computes `minSharePrice` from market borrow state and `slippageTolerance`.
    *
+   * When `reallocations` is provided, `reallocateTo` actions are prepended to the bundle,
+   * moving liquidity from other markets via the PublicAllocator before borrowing.
+   *
    * `getRequirements` returns `morpho.setAuthorization(generalAdapter1, true)` if not yet authorized,
    * since borrowing through bundler3 requires GeneralAdapter1 authorization on Morpho.
    *
@@ -100,6 +120,7 @@ export interface MarketV1Actions {
     amount: bigint;
     accrualPosition: AccrualPosition;
     slippageTolerance?: bigint;
+    reallocations?: readonly VaultReallocation[];
   }) => {
     buildTx: () => Readonly<Transaction<MarketV1BorrowAction>>;
     getRequirements: () => Promise<
@@ -112,6 +133,9 @@ export interface MarketV1Actions {
    *
    * Routed through the bundler. Validates position health with LLTV buffer
    * to prevent instant liquidation on new positions near the LLTV threshold.
+   *
+   * When `reallocations` is provided, `reallocateTo` actions are prepended before
+   * `morphoBorrow` in the bundle.
    *
    * `getRequirements` returns in parallel:
    * - ERC20 approval or permit for collateral token (to GeneralAdapter1).
@@ -126,6 +150,7 @@ export interface MarketV1Actions {
       accrualPosition: AccrualPosition;
       borrowAmount: bigint;
       slippageTolerance?: bigint;
+      reallocations?: readonly VaultReallocation[];
     } & DepositAmountArgs,
   ) => {
     buildTx: (
@@ -141,6 +166,47 @@ export interface MarketV1Actions {
       )[]
     >;
   };
+
+  /**
+   * Fetches all on-chain data needed to construct a {@link SimulationState}
+   * for computing vault reallocations via the public allocator.
+   *
+   * The returned simulation state can be passed to {@link getReallocations}
+   * to compute the `VaultReallocation[]` array for `borrow()` or
+   * `supplyCollateralBorrow()`.
+   *
+   * @param params.vaultAddresses - Addresses of MetaMorpho vaults that allocate to this market.
+   * @param params.market - The target market data (from {@link getPositionData} or {@link getMarketData}).
+   * @param params.blockNumber - The block number to fetch data at.
+   * @param params.blockTimestamp - The block timestamp corresponding to `blockNumber`.
+   * @param params.parameters - Optional fetch parameters (state overrides).
+   * @returns A SimulationState populated with all required data.
+   */
+  getReallocationData: (params: {
+    vaultAddresses: readonly Address[];
+    market: Market;
+    block: MinimalBlock;
+  }) => Promise<SimulationState>;
+
+  /**
+   * Computes vault reallocations for a borrow on this market.
+   *
+   * Uses the shared liquidity algorithm to determine which vaults should
+   * reallocate liquidity to this market via the PublicAllocator, based on
+   * post-borrow utilization targets.
+   *
+   * @param params.reallocationData - The current on-chain state (from {@link getReallocationData}).
+   * @param params.borrowAmount - The intended borrow amount.
+   * @param params.options - Optional reallocation computation options
+   *        (utilization targets, reallocatable vaults filter, etc.).
+   * @returns Array of vault reallocations ready to pass to `borrow()` or
+   *          `supplyCollateralBorrow()`. Empty array if no reallocation is needed.
+   */
+  getReallocations: (params: {
+    reallocationData: SimulationState;
+    borrowAmount: bigint;
+    options?: ReallocationComputeOptions;
+  }) => readonly VaultReallocation[];
 }
 
 export class MorphoMarketV1 implements MarketV1Actions {
@@ -233,11 +299,13 @@ export class MorphoMarketV1 implements MarketV1Actions {
     userAddress,
     accrualPosition,
     slippageTolerance = DEFAULT_SLIPPAGE_TOLERANCE,
+    reallocations,
   }: {
     amount: bigint;
     userAddress: Address;
     accrualPosition: AccrualPosition;
     slippageTolerance?: bigint;
+    reallocations?: readonly VaultReallocation[];
   }) {
     validateChainId(this.client.viemClient.chain?.id, this.chainId);
 
@@ -291,6 +359,7 @@ export class MorphoMarketV1 implements MarketV1Actions {
             amount,
             receiver: userAddress,
             minSharePrice,
+            reallocations,
           },
           metadata: this.client.options.metadata,
         }),
@@ -304,11 +373,13 @@ export class MorphoMarketV1 implements MarketV1Actions {
     borrowAmount,
     nativeAmount,
     slippageTolerance = DEFAULT_SLIPPAGE_TOLERANCE,
+    reallocations,
   }: {
     userAddress: Address;
     accrualPosition: AccrualPosition;
     borrowAmount: bigint;
     slippageTolerance?: bigint;
+    reallocations?: readonly VaultReallocation[];
   } & DepositAmountArgs) {
     validateChainId(this.client.viemClient.chain?.id, this.chainId);
 
@@ -395,9 +466,151 @@ export class MorphoMarketV1 implements MarketV1Actions {
             receiver: userAddress,
             minSharePrice,
             requirementSignature,
+            reallocations,
           },
           metadata: this.client.options.metadata,
         }),
     };
+  }
+
+  async getReallocationData({
+    vaultAddresses,
+    market,
+    block,
+  }: {
+    vaultAddresses: readonly Address[];
+    market: Market;
+    block: MinimalBlock;
+  }): Promise<SimulationState> {
+    validateChainId(this.client.viemClient.chain?.id, this.chainId);
+    if (market.id !== this.marketParams.id) {
+      throw new AccrualPositionMarketMismatchError(
+        market.id,
+        this.marketParams.id,
+      );
+    }
+
+    const client = this.client.viemClient;
+    const fetchParams = { blockNumber: block.number, chainId: this.chainId };
+
+    // Phase 1: Fetch all vaults in parallel to get their withdrawQueues.
+    const vaults = await Promise.all(
+      vaultAddresses.map((addr) => fetchVault(addr, client, fetchParams)),
+    );
+
+    // Collect unique market IDs from all vault withdrawQueues + target market.
+    const targetMarketId = this.marketParams.id;
+    const allMarketIds = new Set<MarketId>([targetMarketId]);
+    const vaultMarketPairs: { vault: Address; marketId: MarketId }[] = [];
+
+    for (const vault of vaults) {
+      // Always include target market pair so its config/position is fetched
+      // even when the target market is only in the vault's supplyQueue.
+      vaultMarketPairs.push({ vault: vault.address, marketId: targetMarketId });
+      for (const mid of vault.withdrawQueue) {
+        allMarketIds.add(mid);
+        if (mid !== targetMarketId) {
+          vaultMarketPairs.push({ vault: vault.address, marketId: mid });
+        }
+      }
+    }
+
+    // Phase 2: Fetch all source markets, vault configs, and positions in parallel.
+    const sourceMarketIds = [...allMarketIds].filter(
+      (mid) => mid !== targetMarketId,
+    );
+
+    const loanToken = market.params.loanToken;
+
+    const [markets, configs, positions, holdings] = await Promise.all([
+      Promise.all(
+        sourceMarketIds.map((mid) => fetchMarket(mid, client, fetchParams)),
+      ),
+      Promise.all(
+        vaultMarketPairs.map(({ vault, marketId: mid }) =>
+          fetchVaultMarketConfig(vault, mid, client, fetchParams).then(
+            (config) => ({ vault, mid, config }),
+          ),
+        ),
+      ),
+      Promise.all(
+        vaultMarketPairs.map(({ vault, marketId: mid }) =>
+          fetchPosition(vault, mid, client, fetchParams).then((position) => ({
+            vault,
+            mid,
+            position,
+          })),
+        ),
+      ),
+      Promise.all(
+        vaultAddresses.map((addr) =>
+          fetchHolding(addr, loanToken, client, fetchParams),
+        ),
+      ),
+    ]);
+
+    // Assemble records for SimulationState.
+    const marketsRecord: Record<MarketId, Market | undefined> = {
+      [targetMarketId]: market,
+    };
+    for (const m of markets) {
+      marketsRecord[m.id] = m;
+    }
+
+    const vaultsRecord: Record<Address, Vault | undefined> = {};
+    for (const v of vaults) {
+      vaultsRecord[v.address] = v;
+    }
+
+    const vaultMarketConfigsRecord: Record<
+      Address,
+      Record<MarketId, VaultMarketConfig | undefined>
+    > = {};
+    for (const { vault, mid, config } of configs) {
+      (vaultMarketConfigsRecord[vault] ??= {})[mid] = config;
+    }
+
+    const positionsRecord: Record<
+      Address,
+      Record<MarketId, Position | undefined>
+    > = {};
+    for (const { vault, mid, position } of positions) {
+      (positionsRecord[vault] ??= {})[mid] = position;
+    }
+
+    const holdingsRecord: Record<
+      Address,
+      Record<Address, Holding | undefined>
+    > = {};
+    for (const holding of holdings) {
+      (holdingsRecord[holding.user] ??= {})[holding.token] = holding;
+    }
+
+    return new SimulationState({
+      chainId: this.chainId,
+      block,
+      markets: marketsRecord,
+      vaults: vaultsRecord,
+      vaultMarketConfigs: vaultMarketConfigsRecord,
+      positions: positionsRecord,
+      holdings: holdingsRecord,
+    });
+  }
+
+  getReallocations({
+    reallocationData,
+    borrowAmount,
+    options,
+  }: {
+    reallocationData: SimulationState;
+    borrowAmount: bigint;
+    options?: ReallocationComputeOptions;
+  }): readonly VaultReallocation[] {
+    return computeReallocations({
+      reallocationData,
+      marketId: this.marketParams.id,
+      borrowAmount,
+      options: { enabled: true, ...options },
+    });
   }
 }

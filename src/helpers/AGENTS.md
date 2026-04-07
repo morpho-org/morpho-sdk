@@ -14,8 +14,11 @@ Utility functions shared across layers.
 - `Deallocation` interface: `{ adapter, assets, marketParams? }`. When `marketParams` is present, `data` is ABI-encoded `MarketParams` (Morpho Market V1 adapter); when omitted, empty bytes are used (e.g. Vault V1 adapters).
 
 - `constant.ts` — shared constants:
+
   - `MAX_SLIPPAGE_TOLERANCE` = 10% (WAD/10). For vault deposit share price.
   - `DEFAULT_LLTV_BUFFER` = 0.5% (WAD/200). Hardcoded safety margin below LLTV for `supplyCollateralBorrow`.
+
+- `validateReallocations(reallocations, targetMarketId)` — validates reallocation params: fee >= 0, non-empty withdrawals, positive amounts, no withdrawal on the borrow target market, and withdrawal market IDs must be strictly ascending (required by `PublicAllocator.reallocateTo`). Throws `NegativeReallocationFeeError`, `EmptyReallocationWithdrawalsError`, `NonPositiveReallocationAmountError`, `ReallocationWithdrawalOnTargetMarketError`.
 
 ## Key Constraints
 

@@ -28,6 +28,20 @@ Routed through bundler3 via `morphoBorrow`. Specifies exact asset amount (`share
 - Uses `minSharePrice` (computed from market state + slippage tolerance) for slippage protection.
 - `morphoBorrow` args: `[marketParams, amount, 0n (shares), minSharePrice, receiver, false]`.
 
+**With reallocations** (`reallocations?: VaultReallocation[]`):
+
+Bundle action sequence:
+```
+1. reallocateTo(vault, fee, withdrawals, targetMarketParams, false)  ← per VaultReallocation
+   ...repeat for each reallocation...
+2. morphoBorrow(marketParams, amount, 0n, minSharePrice, receiver, false)
+```
+
+- `validateReallocations()` is called before encoding (fee >= 0, non-empty withdrawals, each amount > 0).
+- `reallocationFee = sum(r.fee)` → set as `tx.value`.
+- `reallocateTo` args: `[r.vault, r.fee, r.withdrawals.map(w => ({ marketParams, amount })), targetMarketParams, false]`.
+- `reallocationFee` is tracked in `action.args.reallocationFee`.
+
 ### `marketV1SupplyCollateralBorrow`
 
 Atomic bundled: collateral transfer + `morphoSupplyCollateral` + `morphoBorrow`.
@@ -37,6 +51,23 @@ Atomic bundled: collateral transfer + `morphoSupplyCollateral` + `morphoBorrow`.
 - `onBehalf` for supply collateral = user. Borrow `onBehalf` = initiator (handled by adapter).
 - Supports `nativeAmount` wrapping for collateral.
 - Zero loss: all collateral to Morpho, all borrowed tokens to receiver.
+
+**With reallocations** (`reallocations?: VaultReallocation[]`):
+
+Bundle action sequence:
+```
+1. (optional) nativeTransfer + wrapNative           ← if nativeAmount
+2. (optional) erc20TransferFrom / permit actions     ← if ERC20 amount
+3. morphoSupplyCollateral(marketParams, totalCollateral, onBehalf, [], false)
+4. reallocateTo(vault, fee, withdrawals, targetMarketParams, false)  ← per VaultReallocation
+   ...repeat for each reallocation...
+5. morphoBorrow(marketParams, borrowAmount, 0n, minSharePrice, receiver, false)
+```
+
+- Reallocations are inserted **between** `morphoSupplyCollateral` and `morphoBorrow`.
+- `tx.value = (nativeAmount ?? 0n) + reallocationFee` — combines native wrapping and reallocation fees.
+- Same validation as `marketV1Borrow` via `validateReallocations()`.
+- `reallocationFee` is tracked in `action.args.reallocationFee`.
 
 ## Common Pattern
 

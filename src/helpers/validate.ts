@@ -13,8 +13,14 @@ import {
   BorrowExceedsSafeLtvError,
   ChainIdMismatchError,
   ChainWNativeMissingError,
+  EmptyReallocationWithdrawalsError,
   MissingMarketPriceError,
   NativeAmountOnNonWNativeCollateralError,
+  NegativeReallocationFeeError,
+  NonPositiveReallocationAmountError,
+  ReallocationWithdrawalOnTargetMarketError,
+  UnsortedReallocationWithdrawalsError,
+  type VaultReallocation,
 } from "../types";
 import { DEFAULT_LLTV_BUFFER } from "./constant";
 
@@ -131,5 +137,54 @@ export const validateNativeCollateral = (
   }
   if (!isAddressEqual(collateralToken, wNative)) {
     throw new NativeAmountOnNonWNativeCollateralError(collateralToken, wNative);
+  }
+};
+
+/**
+ * Validates that vault reallocations are well-formed.
+ *
+ * Enforces the following invariants for each {@link VaultReallocation}:
+ * - `fee` must be non-negative.
+ * - `withdrawals` must be non-empty.
+ * - Every withdrawal `amount` must be strictly positive.
+ * - No withdrawal may target `targetMarketId` (the borrow market).
+ * - Withdrawal market IDs must be strictly ascending (required by `PublicAllocator.reallocateTo`).
+ *
+ * @param reallocations - The reallocations to validate.
+ * @param targetMarketId - The ID of the market being borrowed from. No withdrawal may reference this market.
+ */
+export const validateReallocations = (
+  reallocations: readonly VaultReallocation[],
+  targetMarketId: MarketId,
+): void => {
+  for (const r of reallocations) {
+    if (r.fee < 0n) {
+      throw new NegativeReallocationFeeError(r.vault);
+    }
+    if (r.withdrawals.length === 0) {
+      throw new EmptyReallocationWithdrawalsError(r.vault);
+    }
+    let prevId: MarketId | undefined;
+    for (const w of r.withdrawals) {
+      if (w.amount <= 0n) {
+        throw new NonPositiveReallocationAmountError(
+          r.vault,
+          w.marketParams.id,
+        );
+      }
+      if (w.marketParams.id === targetMarketId) {
+        throw new ReallocationWithdrawalOnTargetMarketError(
+          r.vault,
+          w.marketParams.id,
+        );
+      }
+      if (prevId !== undefined && w.marketParams.id <= prevId) {
+        throw new UnsortedReallocationWithdrawalsError(
+          r.vault,
+          w.marketParams.id,
+        );
+      }
+      prevId = w.marketParams.id;
+    }
   }
 };

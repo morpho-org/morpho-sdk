@@ -28,6 +28,9 @@ Routed through bundler3 via `morphoBorrow`. Specifies exact asset amount (`share
 - Uses `minSharePrice` (computed from market state + slippage tolerance) for slippage protection.
 - `morphoBorrow` args: `[marketParams, amount, 0n (shares), minSharePrice, receiver, false]`.
 
+**With reallocations** (`reallocations?: VaultReallocation[]`):
+Bundle: `[reallocateTo × N] → morphoBorrow`. Each `reallocateTo` calls `PublicAllocator.reallocateTo(vault, fee, withdrawals, targetMarket)`. Fees summed as `tx.value`. Validated via `validateReallocations()`.
+
 ### `marketV1SupplyCollateralBorrow`
 
 Atomic bundled: collateral transfer + `morphoSupplyCollateral` + `morphoBorrow`.
@@ -37,6 +40,9 @@ Atomic bundled: collateral transfer + `morphoSupplyCollateral` + `morphoBorrow`.
 - `onBehalf` for supply collateral = user. Borrow `onBehalf` = initiator (handled by adapter).
 - Supports `nativeAmount` wrapping for collateral.
 - Zero loss: all collateral to Morpho, all borrowed tokens to receiver.
+
+**With reallocations** (`reallocations?: VaultReallocation[]`):
+Bundle: `[nativeWrap?] → [erc20Transfer?] → morphoSupplyCollateral → [reallocateTo × N] → morphoBorrow`. Reallocations inserted between supply and borrow. `tx.value = (nativeAmount ?? 0n) + reallocationFee`.
 
 ## Common Pattern
 
