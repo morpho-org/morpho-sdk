@@ -66,16 +66,12 @@ export const marketV1Repay = ({
   },
   metadata,
 }: MarketV1RepayParams): Readonly<Transaction<MarketV1RepayAction>> => {
-  if (assets < 0n || shares < 0n) {
+  if (assets <= 0n || shares <= 0n) {
     throw new NonPositiveRepayAmountError(marketParams.id);
   }
 
   if (assets > 0n && shares > 0n) {
     throw new MutuallyExclusiveRepayAmountsError(marketParams.id);
-  }
-
-  if (assets === 0n && shares === 0n) {
-    throw new NonPositiveRepayAmountError(marketParams.id);
   }
 
   const {
