@@ -19,8 +19,11 @@ import {
   NegativeReallocationFeeError,
   NonPositiveReallocationAmountError,
   ReallocationWithdrawalOnTargetMarketError,
+  RepayExceedsDebtError,
+  RepaySharesExceedDebtError,
   UnsortedReallocationWithdrawalsError,
   type VaultReallocation,
+  WithdrawMakesPositionUnhealthyError,
 } from "../types";
 import { DEFAULT_LLTV_BUFFER } from "./constant";
 
@@ -153,6 +156,95 @@ export const validateNativeCollateral = (
  * @param reallocations - The reallocations to validate.
  * @param targetMarketId - The ID of the market being borrowed from. No withdrawal may reference this market.
  */
+
+/**
+ * Validates that the resulting position stays within the safe LTV threshold
+ * (LLTV minus buffer) after withdrawing collateral.
+ *
+ * @param accrualPosition - The current accrual position with market data.
+ * @param withdrawAmount - Amount of collateral being withdrawn.
+ * @param lltv - The market's liquidation LTV.
+ */
+export const validatePositionHealthAfterWithdraw = (
+  accrualPosition: AccrualPosition,
+  withdrawAmount: bigint,
+  lltv: bigint,
+): void => {
+  // No debt means position is always healthy — oracle price not needed.
+  if (accrualPosition.borrowAssets === 0n) {
+    return;
+  }
+
+  const { price } = accrualPosition.market;
+
+  if (price === undefined) {
+    throw new MissingMarketPriceError(accrualPosition.marketId);
+  }
+
+  const collateralAfter = accrualPosition.collateral - withdrawAmount;
+  const collateralValueAfter = MathLib.mulDivDown(
+    collateralAfter,
+    price,
+    ORACLE_PRICE_SCALE,
+  );
+
+  const effectiveLltv = lltv - DEFAULT_LLTV_BUFFER;
+  const maxSafeBorrowAfter = MathLib.wMulDown(
+    collateralValueAfter,
+    effectiveLltv,
+  );
+
+  if (accrualPosition.borrowAssets > maxSafeBorrowAfter) {
+    throw new WithdrawMakesPositionUnhealthyError(
+      withdrawAmount,
+      accrualPosition.borrowAssets,
+      maxSafeBorrowAfter,
+    );
+  }
+};
+
+/**
+ * Validates that the repay amount assets does not exceed the outstanding debt.
+ *
+ * @param accrualPosition - The current accrual position.
+ * @param repayAssets - The assets of assets to repay.
+ * @param marketId - The market identifier (for error messages).
+ */
+export const validateRepayAmount = (
+  accrualPosition: AccrualPosition,
+  repayAssets: bigint,
+  marketId: MarketId,
+): void => {
+  if (repayAssets > accrualPosition.borrowAssets) {
+    throw new RepayExceedsDebtError(
+      repayAssets,
+      accrualPosition.borrowAssets,
+      marketId,
+    );
+  }
+};
+
+/**
+ * Validates that the repay shares do not exceed the outstanding borrow shares.
+ *
+ * @param accrualPosition - The current accrual position.
+ * @param repayShares - The amount of shares to repay.
+ * @param marketId - The market identifier (for error messages).
+ */
+export const validateRepayShares = (
+  accrualPosition: AccrualPosition,
+  repayShares: bigint,
+  marketId: MarketId,
+): void => {
+  if (repayShares > accrualPosition.borrowShares) {
+    throw new RepaySharesExceedDebtError(
+      repayShares,
+      accrualPosition.borrowShares,
+      marketId,
+    );
+  }
+};
+
 export const validateReallocations = (
   reallocations: readonly VaultReallocation[],
   targetMarketId: MarketId,

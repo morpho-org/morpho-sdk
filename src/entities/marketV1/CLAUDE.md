@@ -41,8 +41,34 @@ Always bundler. Validates:
 - ERC20 approval for GeneralAdapter1 (collateral token).
 - `morpho.setAuthorization(generalAdapter1, true)` tx if not yet authorized (reads via `publicActions`).
 
+### `repay`
+
+Routed through bundler3 via GeneralAdapter1. Two modes via `RepayAmountArgs`:
+- **By assets** (`{ assets }`): partial repay by exact asset amount.
+- **By shares** (`{ shares }`): full repay by exact share count (immune to interest accrual between tx construction and execution).
+
+Validates: assets/shares > 0, slippage tolerance, `validateRepayAmount`/`validateRepayShares`.
+Computes `maxSharePrice` via `computeMaxRepaySharePrice` (upper-bound slippage protection).
+In shares mode, `transferAmount = market.toBorrowAssets(shares, "Up")` (upper-bound for ERC20 pull).
+
+`getRequirements` returns loan token approval for GeneralAdapter1.
+Does NOT require Morpho authorization (guard-rail: repay doesn't need it).
+
+### `withdrawCollateral`
+
+Direct call to `morpho.withdrawCollateral()`. No bundler needed — collateral flows out of Morpho directly to the user. The caller (`msg.sender`) must be `onBehalf`.
+Validates position health after withdrawal via `validatePositionHealthAfterWithdraw` (LLTV buffer).
+
+No `getRequirements` — no ERC20 approval or GeneralAdapter1 authorization needed.
+
+### `repayWithdrawCollateral`
+
+Atomic repay + withdraw. Validates combined health: simulates repay via `accrualPosition.repay(assets, shares)`, then checks withdrawal safety on the resulting position.
+
+`getRequirements` returns both loan token approval and Morpho authorization.
+
 ## Key Constraints
 
 - Validate `chainId` match before any on-chain call.
 - Never encode calldata here — that belongs in Actions.
-- All operations (`supplyCollateral`, `borrow`, `supplyCollateralBorrow`) are routed through bundler3 via GeneralAdapter1.
+- Most operations (`supplyCollateral`, `borrow`, `supplyCollateralBorrow`, `repay`, `repayWithdrawCollateral`) are routed through bundler3 via GeneralAdapter1. Exception: `withdrawCollateral` is a direct Morpho call.

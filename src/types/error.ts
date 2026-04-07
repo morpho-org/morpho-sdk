@@ -227,3 +227,79 @@ export class UnsortedReallocationWithdrawalsError extends Error {
     );
   }
 }
+
+export class NonPositiveTransferAmountError extends Error {
+  constructor(market: string) {
+    super(`Transfer amount must be positive for market: ${market}`);
+  }
+}
+
+export class InsufficientTransferAmountError extends Error {
+  constructor(transferAmount: bigint, assets: bigint, market: string) {
+    super(
+      `Transfer amount ${transferAmount} is less than repay assets ${assets} for market: ${market}`,
+    );
+  }
+}
+
+export class MutuallyExclusiveRepayAmountsError extends Error {
+  constructor(market: string) {
+    super(
+      `Exactly one of assets or shares must be non-zero for market: ${market}. Both were provided.`,
+    );
+  }
+}
+
+export class NonPositiveRepayAmountError extends Error {
+  constructor(market: string) {
+    super(`Repay amount must be positive for market: ${market}`);
+  }
+}
+
+export class NonPositiveWithdrawCollateralAmountError extends Error {
+  constructor(market: string) {
+    super(`Withdraw collateral amount must be positive for market: ${market}`);
+  }
+}
+
+export class WithdrawExceedsCollateralError extends Error {
+  constructor(withdrawAmount: bigint, available: bigint, market: string) {
+    super(
+      `Withdraw amount ${withdrawAmount} exceeds available collateral ${available} for market: ${market}`,
+    );
+  }
+}
+
+export class WithdrawMakesPositionUnhealthyError extends Error {
+  constructor(
+    withdrawAmount: bigint,
+    borrowAssets: bigint,
+    maxSafeBorrow: bigint,
+  ) {
+    super(
+      `Withdrawing ${withdrawAmount} collateral would make position unhealthy. Max safe borrow after withdrawal: ${maxSafeBorrow}. Actual Borrow assets: ${borrowAssets}.`,
+    );
+  }
+}
+
+export class ShareDivideByZeroError extends Error {
+  constructor(market: string) {
+    super(`Share divide by zero error for market: ${market}`);
+  }
+}
+
+export class RepayExceedsDebtError extends Error {
+  constructor(repayAmount: bigint, debt: bigint, market: string) {
+    super(
+      `Repay amount ${repayAmount} exceeds outstanding debt ${debt} for market: ${market}`,
+    );
+  }
+}
+
+export class RepaySharesExceedDebtError extends Error {
+  constructor(repayShares: bigint, borrowShares: bigint, market: string) {
+    super(
+      `Repay shares ${repayShares} exceed outstanding borrow shares ${borrowShares} for market: ${market}`,
+    );
+  }
+}
