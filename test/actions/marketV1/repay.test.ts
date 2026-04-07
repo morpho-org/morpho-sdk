@@ -64,6 +64,7 @@ describe("RepayMarketV1", () => {
         shares: 0n,
         transferAmount: repayAmount,
         onBehalf: client.account.address,
+        receiver: client.account.address,
         maxSharePrice,
       },
     });

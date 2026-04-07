@@ -569,6 +569,7 @@ export class MorphoMarketV1 implements MarketV1Actions {
             shares,
             transferAmount,
             onBehalf: userAddress,
+            receiver: userAddress,
             maxSharePrice,
             requirementSignature,
           },

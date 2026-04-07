@@ -148,6 +148,7 @@ export interface MarketV1RepayAction
       assets: bigint;
       shares: bigint;
       onBehalf: Address;
+      receiver: Address;
       maxSharePrice: bigint;
     }
   > {}

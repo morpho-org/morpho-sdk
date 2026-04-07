@@ -25,7 +25,10 @@ export interface MarketV1RepayParams {
     shares: bigint;
     /** ERC20 amount to transfer to GeneralAdapter1. Must be greater than or equal to the repay amount to take into account the slippage. */
     transferAmount: bigint;
+    /** Address whose debt is being repaid. */
     onBehalf: Address;
+    /** Receives residual loan tokens in shares mode. */
+    receiver: Address;
     /** Maximum repay share price (in ray). Protects against share price manipulation. */
     maxSharePrice: bigint;
     requirementSignature?: RequirementSignature;
@@ -57,6 +60,7 @@ export const marketV1Repay = ({
     shares,
     transferAmount,
     onBehalf,
+    receiver,
     maxSharePrice,
     requirementSignature,
   },
@@ -99,7 +103,7 @@ export const marketV1Repay = ({
     args: [marketParams, assets, shares, maxSharePrice, onBehalf, [], false],
   });
 
-  // Skim residual loan tokens back to the user when repaying by shares.
+  // Skim residual loan tokens back to the payer when repaying by shares.
   // In shares mode, transferAmount is an upper-bound estimate; morphoRepay
   // consumes only the exact amount needed, leaving a residual in the adapter.
   if (shares > 0n) {
@@ -107,7 +111,7 @@ export const marketV1Repay = ({
       type: "erc20Transfer",
       args: [
         marketParams.loanToken,
-        onBehalf,
+        receiver,
         maxUint256,
         generalAdapter1,
         false,
@@ -133,6 +137,7 @@ export const marketV1Repay = ({
         assets,
         shares,
         onBehalf,
+        receiver,
         maxSharePrice,
       },
     },
