@@ -274,10 +274,10 @@ export class WithdrawMakesPositionUnhealthyError extends Error {
   constructor(
     withdrawAmount: bigint,
     borrowAssets: bigint,
-    maxSafeWithdraw: bigint,
+    maxSafeBorrow: bigint,
   ) {
     super(
-      `Withdrawing ${withdrawAmount} collateral would make position unhealthy. Max safe withdrawal: ${maxSafeWithdraw}. Borrow assets: ${borrowAssets}.`,
+      `Withdrawing ${withdrawAmount} collateral would make position unhealthy. Max safe borrow after withdrawal: ${maxSafeBorrow}. Actual Borrow assets: ${borrowAssets}.`,
     );
   }
 }
