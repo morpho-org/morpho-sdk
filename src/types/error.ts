@@ -282,6 +282,12 @@ export class WithdrawMakesPositionUnhealthyError extends Error {
   }
 }
 
+export class ShareDivideByZeroError extends Error {
+  constructor(market: string) {
+    super(`Share divide by zero error for market: ${market}`);
+  }
+}
+
 export class RepayExceedsDebtError extends Error {
   constructor(repayAmount: bigint, debt: bigint, market: string) {
     super(

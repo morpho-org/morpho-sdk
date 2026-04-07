@@ -1,4 +1,5 @@
 import { type Market, MathLib } from "@morpho-org/blue-sdk";
+import { ShareDivideByZeroError } from "../types";
 import { MAX_ABSOLUTE_SHARE_PRICE } from "./constant";
 
 /**
@@ -69,7 +70,7 @@ export function computeMaxRepaySharePrice(
   }
 
   if (shares === 0n) {
-    return MAX_ABSOLUTE_SHARE_PRICE;
+    throw new ShareDivideByZeroError(market.params.id);
   }
 
   const maxSharePrice = MathLib.mulDivUp(

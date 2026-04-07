@@ -1,5 +1,6 @@
 import {
   type AccrualPosition,
+  AccrualPosition as AccrualPositionClass,
   DEFAULT_SLIPPAGE_TOLERANCE,
   MathLib,
 } from "@morpho-org/blue-sdk";
@@ -16,6 +17,7 @@ import {
   NonPositiveRepayAmountError,
   NonPositiveWithdrawCollateralAmountError,
   RepayExceedsDebtError,
+  ShareDivideByZeroError,
   WithdrawMakesPositionUnhealthyError,
 } from "../../../src";
 import { WethUsdsMarketV1 } from "../../fixtures/marketV1";
@@ -289,6 +291,47 @@ describe("RepayWithdrawCollateralMarketV1", () => {
         accrualPosition,
       }),
     ).toThrow(RepayExceedsDebtError);
+  });
+
+  test("should throw when repay amount is too small to convert to shares", async ({
+    client,
+  }) => {
+    // Construct a market where interest has diverged totalBorrowAssets from
+    // totalBorrowShares enough that 1 wei converts to 0 borrow shares.
+    const totalBorrowShares = parseUnits("100000000", 18);
+    const totalBorrowAssets = totalBorrowShares + parseUnits("1", 18);
+
+    const accrualPosition = new AccrualPositionClass(
+      {
+        user: client.account.address,
+        supplyShares: 0n,
+        borrowShares: parseUnits("1000", 18),
+        collateral: parseUnits("10", 18),
+      },
+      {
+        params: WethUsdsMarketV1,
+        totalSupplyAssets: totalBorrowAssets * 2n,
+        totalSupplyShares: totalBorrowShares * 2n,
+        totalBorrowAssets,
+        totalBorrowShares,
+        lastUpdate: 0n,
+        fee: 0n,
+      },
+    );
+
+    expect(accrualPosition.market.toBorrowShares(1n, "Down")).toBe(0n);
+
+    const morphoClient = new MorphoClient(client);
+    const market = morphoClient.marketV1(WethUsdsMarketV1, mainnet.id);
+
+    expect(() =>
+      market.repayWithdrawCollateral({
+        userAddress: client.account.address,
+        assets: 1n,
+        withdrawAmount: parseUnits("1", 18),
+        accrualPosition,
+      }),
+    ).toThrow(ShareDivideByZeroError);
   });
 
   test("should throw when repay amount is non-positive", async ({ client }) => {

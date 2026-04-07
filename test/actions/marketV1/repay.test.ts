@@ -1,5 +1,6 @@
 import {
   type AccrualPosition,
+  AccrualPosition as AccrualPositionClass,
   DEFAULT_SLIPPAGE_TOLERANCE,
   MathLib,
 } from "@morpho-org/blue-sdk";
@@ -15,6 +16,7 @@ import {
   NonPositiveRepayAmountError,
   RepayExceedsDebtError,
   RepaySharesExceedDebtError,
+  ShareDivideByZeroError,
 } from "../../../src";
 import { WethUsdsMarketV1 } from "../../fixtures/marketV1";
 import { testInvariants } from "../../helpers/invariants";
@@ -272,6 +274,49 @@ describe("RepayMarketV1", () => {
         accrualPosition,
       }),
     ).toThrow(RepayExceedsDebtError);
+  });
+
+  test("should throw when repay amount is too small to convert to shares", async ({
+    client,
+  }) => {
+    // Construct a market where interest has diverged totalBorrowAssets from
+    // totalBorrowShares enough that 1 wei converts to 0 borrow shares.
+    // Formula: shares = mulDivDown(assets, totalBorrowShares + 1e6, totalBorrowAssets + 1)
+    // For shares == 0: totalBorrowAssets must exceed totalBorrowShares + 999_999.
+    const totalBorrowShares = parseUnits("100000000", 18); // 100M shares
+    const totalBorrowAssets = totalBorrowShares + parseUnits("1", 18); // +1e18 gap (>> 1e6 virtual offset)
+
+    const accrualPosition = new AccrualPositionClass(
+      {
+        user: client.account.address,
+        supplyShares: 0n,
+        borrowShares: parseUnits("1000", 18),
+        collateral: parseUnits("10", 18),
+      },
+      {
+        params: WethUsdsMarketV1,
+        totalSupplyAssets: totalBorrowAssets * 2n,
+        totalSupplyShares: totalBorrowShares * 2n,
+        totalBorrowAssets,
+        totalBorrowShares,
+        lastUpdate: 0n,
+        fee: 0n,
+      },
+    );
+
+    // Verify our setup: 1 wei should round to 0 shares on this market
+    expect(accrualPosition.market.toBorrowShares(1n, "Down")).toBe(0n);
+
+    const morphoClient = new MorphoClient(client);
+    const market = morphoClient.marketV1(WethUsdsMarketV1, mainnet.id);
+
+    expect(() =>
+      market.repay({
+        userAddress: client.account.address,
+        assets: 1n,
+        accrualPosition,
+      }),
+    ).toThrow(ShareDivideByZeroError);
   });
 
   test("should throw when repay shares exceed borrow shares", async ({
