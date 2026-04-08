@@ -14,12 +14,21 @@ You are helping the user prepare a release. The workflow analyzes changes since 
 
 ### Step 1: Switch to main and Validate Working Tree
 
-Always start from an up-to-date `main` branch:
+**Hard requirement:** Releases MUST always be based on the latest `main`. Never release from a feature branch or a stale local main.
+
+First, switch to `main` and pull the latest changes. If either command fails, **stop immediately** and report the error to the user:
 
 ```bash
-git checkout main
-git pull origin main
+git checkout main && git pull origin main
 ```
+
+Then verify you are on `main`:
+
+```bash
+git branch --show-current
+```
+
+If the output is not `main`, **abort** and inform the user.
 
 Then check for uncommitted changes:
 
