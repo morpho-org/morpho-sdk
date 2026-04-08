@@ -8,12 +8,12 @@ import {
 import { isDefined } from "@morpho-org/morpho-ts";
 import { type Address, isAddressEqual } from "viem";
 import {
-  AccrualPositionMarketMismatchError,
   AccrualPositionUserMismatchError,
   BorrowExceedsSafeLtvError,
   ChainIdMismatchError,
   ChainWNativeMissingError,
   EmptyReallocationWithdrawalsError,
+  MarketIdMismatchError,
   MissingMarketPriceError,
   NativeAmountOnNonWNativeCollateralError,
   NegativeReallocationFeeError,
@@ -29,7 +29,7 @@ import { DEFAULT_LLTV_BUFFER } from "./constant";
 
 /**
  * Validates that the accrual position belongs to the expected market and user.
- * Throws {@link AccrualPositionMarketMismatchError} if the position's market ID
+ * Throws {@link MarketIdMismatchError} if the position's market ID
  * does not match the expected market.
  * Throws {@link AccrualPositionUserMismatchError} if the position's user
  * does not match the expected user.
@@ -44,10 +44,7 @@ export const validateAccrualPosition = (
   expectedUser: Address,
 ): void => {
   if (positionData.marketId !== expectedMarketId) {
-    throw new AccrualPositionMarketMismatchError(
-      positionData.marketId,
-      expectedMarketId,
-    );
+    throw new MarketIdMismatchError(positionData.marketId, expectedMarketId);
   }
   if (!isAddressEqual(positionData.user, expectedUser)) {
     throw new AccrualPositionUserMismatchError(positionData.user, expectedUser);
@@ -140,20 +137,6 @@ export const validateNativeCollateral = (
 };
 
 /**
- * Validates that vault reallocations are well-formed.
- *
- * Enforces the following invariants for each {@link VaultReallocation}:
- * - `fee` must be non-negative.
- * - `withdrawals` must be non-empty.
- * - Every withdrawal `amount` must be strictly positive.
- * - No withdrawal may target `targetMarketId` (the borrow market).
- * - Withdrawal market IDs must be strictly ascending (required by `PublicAllocator.reallocateTo`).
- *
- * @param reallocations - The reallocations to validate.
- * @param targetMarketId - The ID of the market being borrowed from. No withdrawal may reference this market.
- */
-
-/**
  * Validates that the resulting position stays within the safe LTV threshold
  * (LLTV minus buffer) after withdrawing collateral.
  *
@@ -241,6 +224,19 @@ export const validateRepayShares = (
   }
 };
 
+/**
+ * Validates that vault reallocations are well-formed.
+ *
+ * Enforces the following invariants for each {@link VaultReallocation}:
+ * - `fee` must be non-negative.
+ * - `withdrawals` must be non-empty.
+ * - Every withdrawal `amount` must be strictly positive.
+ * - No withdrawal may target `targetMarketId` (the borrow market).
+ * - Withdrawal market IDs must be strictly ascending (required by `PublicAllocator.reallocateTo`).
+ *
+ * @param reallocations - The reallocations to validate.
+ * @param targetMarketId - The ID of the market being borrowed from. No withdrawal may reference this market.
+ */
 export const validateReallocations = (
   reallocations: readonly VaultReallocation[],
   targetMarketId: MarketId,

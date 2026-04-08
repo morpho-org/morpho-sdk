@@ -44,10 +44,10 @@ import {
 } from "../../helpers";
 import { MAX_SLIPPAGE_TOLERANCE } from "../../helpers/constant";
 import {
-  AccrualPositionMarketMismatchError,
   type DepositAmountArgs,
   type ERC20ApprovalAction,
   ExcessiveSlippageToleranceError,
+  MarketIdMismatchError,
   type MarketV1BorrowAction,
   type MarketV1RepayAction,
   type MarketV1RepayWithdrawCollateralAction,
@@ -178,14 +178,15 @@ export interface MarketV1Actions {
   /**
    * Prepares a withdraw-collateral transaction.
    *
-   * Routed through bundler3 via `morphoWithdrawCollateral`.
+   * Direct call to `morpho.withdrawCollateral()` — no bundler, no GeneralAdapter1.
+   * The caller (`msg.sender`) must be `onBehalf`.
    * Validates position health after withdrawal using the LLTV buffer.
    *
-   * `getRequirements` returns `morpho.setAuthorization(generalAdapter1, true)` if not yet authorized.
-   * Does NOT require ERC20 approval (collateral flows out of Morpho, not in).
+   * No `getRequirements` — no ERC20 approval or GeneralAdapter1 authorization needed
+   * (collateral flows out of Morpho, not in).
    *
    * @param params - Withdraw collateral parameters including pre-fetched `positionData` for health validation.
-   * @returns Object with `buildTx` and `getRequirements`.
+   * @returns Object with `buildTx`.
    */
   withdrawCollateral: (params: {
     userAddress: Address;
@@ -884,10 +885,7 @@ export class MorphoMarketV1 implements MarketV1Actions {
   }): Promise<SimulationState> {
     validateChainId(this.client.viemClient.chain?.id, this.chainId);
     if (market.id !== this.marketParams.id) {
-      throw new AccrualPositionMarketMismatchError(
-        market.id,
-        this.marketParams.id,
-      );
+      throw new MarketIdMismatchError(market.id, this.marketParams.id);
     }
 
     const client = this.client.viemClient;

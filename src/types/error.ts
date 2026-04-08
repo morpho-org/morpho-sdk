@@ -176,10 +176,10 @@ export class MissingMarketPriceError extends Error {
   }
 }
 
-export class AccrualPositionMarketMismatchError extends Error {
-  constructor(positionMarketId: string, expectedMarketId: string) {
+export class MarketIdMismatchError extends Error {
+  constructor(marketId: string, expectedMarketId: string) {
     super(
-      `Accrual position market ${positionMarketId} does not match expected market ${expectedMarketId}`,
+      `Market ${marketId} does not match expected market ${expectedMarketId}`,
     );
   }
 }
@@ -234,10 +234,10 @@ export class NonPositiveTransferAmountError extends Error {
   }
 }
 
-export class InsufficientTransferAmountError extends Error {
+export class TransferAmountNotEqualToAssetsError extends Error {
   constructor(transferAmount: bigint, assets: bigint, market: string) {
     super(
-      `Transfer amount ${transferAmount} is less than repay assets ${assets} for market: ${market}`,
+      `Transfer amount ${transferAmount} is not equal to repay assets ${assets} for market: ${market}`,
     );
   }
 }

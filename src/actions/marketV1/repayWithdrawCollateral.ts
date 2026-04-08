@@ -4,7 +4,6 @@ import { deepFreeze } from "@morpho-org/morpho-ts";
 import { type Address, maxUint256 } from "viem";
 import { addTransactionMetadata } from "../../helpers";
 import {
-  InsufficientTransferAmountError,
   type MarketV1RepayWithdrawCollateralAction,
   type Metadata,
   MutuallyExclusiveRepayAmountsError,
@@ -13,6 +12,7 @@ import {
   NonPositiveWithdrawCollateralAmountError,
   type RequirementSignature,
   type Transaction,
+  TransferAmountNotEqualToAssetsError,
 } from "../../types";
 import { getRequirementsAction } from "../requirements/getRequirementsAction";
 
@@ -99,8 +99,8 @@ export const marketV1RepayWithdrawCollateral = ({
     throw new NonPositiveTransferAmountError(marketParams.id);
   }
 
-  if (assets > 0n && transferAmount < assets) {
-    throw new InsufficientTransferAmountError(
+  if (assets > 0n && transferAmount !== assets) {
+    throw new TransferAmountNotEqualToAssetsError(
       transferAmount,
       assets,
       marketParams.id,
