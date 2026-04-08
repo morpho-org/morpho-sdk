@@ -32,22 +32,20 @@ describe("SupplyCollateralBorrowMarketV1", () => {
 
     const morphoClient = new MorphoClient(client);
     const market = morphoClient.marketV1(WethUsdsMarketV1, mainnet.id);
-    const accrualPosition = await market.getPositionData(
-      client.account.address,
-    );
+    const positionData = await market.getPositionData(client.account.address);
 
     const tx = market
       .supplyCollateralBorrow({
         userAddress: client.account.address,
         amount,
         borrowAmount,
-        accrualPosition,
+        positionData,
       })
       .buildTx();
 
     const minSharePrice = computeMinBorrowSharePrice(
       borrowAmount,
-      accrualPosition.market,
+      positionData.market,
       DEFAULT_SLIPPAGE_TOLERANCE,
     );
 
@@ -83,7 +81,7 @@ describe("SupplyCollateralBorrowMarketV1", () => {
       actionFn: async () => {
         const morphoClient = new MorphoClient(client);
         const market = morphoClient.marketV1(WethUsdsMarketV1, mainnet.id);
-        const accrualPosition = await market.getPositionData(
+        const positionData = await market.getPositionData(
           client.account.address,
         );
 
@@ -91,7 +89,7 @@ describe("SupplyCollateralBorrowMarketV1", () => {
           userAddress: client.account.address,
           amount,
           borrowAmount,
-          accrualPosition,
+          positionData,
         });
 
         const requirements = await scb.getRequirements();
@@ -158,7 +156,7 @@ describe("SupplyCollateralBorrowMarketV1", () => {
       actionFn: async () => {
         const morphoClient = new MorphoClient(client);
         const market = morphoClient.marketV1(WethUsdsMarketV1, mainnet.id);
-        const accrualPosition = await market.getPositionData(
+        const positionData = await market.getPositionData(
           client.account.address,
         );
 
@@ -166,7 +164,7 @@ describe("SupplyCollateralBorrowMarketV1", () => {
           userAddress: client.account.address,
           nativeAmount,
           borrowAmount,
-          accrualPosition,
+          positionData,
         });
 
         const requirements = await scb.getRequirements();
@@ -230,7 +228,7 @@ describe("SupplyCollateralBorrowMarketV1", () => {
       actionFn: async () => {
         const morphoClient = new MorphoClient(client);
         const market = morphoClient.marketV1(WethUsdsMarketV1, mainnet.id);
-        const accrualPosition = await market.getPositionData(
+        const positionData = await market.getPositionData(
           client.account.address,
         );
 
@@ -239,7 +237,7 @@ describe("SupplyCollateralBorrowMarketV1", () => {
           amount,
           nativeAmount,
           borrowAmount,
-          accrualPosition,
+          positionData,
         });
 
         const requirements = await scb.getRequirements();
@@ -316,7 +314,7 @@ describe("SupplyCollateralBorrowMarketV1", () => {
       actionFn: async () => {
         const morphoClient = new MorphoClient(client);
         const market = morphoClient.marketV1(WethUsdsMarketV1, mainnet.id);
-        const accrualPosition = await market.getPositionData(
+        const positionData = await market.getPositionData(
           client.account.address,
         );
 
@@ -324,7 +322,7 @@ describe("SupplyCollateralBorrowMarketV1", () => {
           userAddress: client.account.address,
           amount,
           borrowAmount,
-          accrualPosition,
+          positionData,
         });
 
         const requirements = await scb.getRequirements();
@@ -378,7 +376,7 @@ describe("SupplyCollateralBorrowMarketV1", () => {
           supportSignature: true,
         });
         const market = morphoClient.marketV1(UsdcEurcvMarketV1, mainnet.id);
-        const accrualPosition = await market.getPositionData(
+        const positionData = await market.getPositionData(
           client.account.address,
         );
 
@@ -386,7 +384,7 @@ describe("SupplyCollateralBorrowMarketV1", () => {
           userAddress: client.account.address,
           amount,
           borrowAmount,
-          accrualPosition,
+          positionData,
         });
 
         const requirements = await scb.getRequirements({
@@ -459,7 +457,7 @@ describe("SupplyCollateralBorrowMarketV1", () => {
           supportSignature: true,
         });
         const market = morphoClient.marketV1(WethUsdsMarketV1, mainnet.id);
-        const accrualPosition = await market.getPositionData(
+        const positionData = await market.getPositionData(
           client.account.address,
         );
 
@@ -467,7 +465,7 @@ describe("SupplyCollateralBorrowMarketV1", () => {
           userAddress: client.account.address,
           amount,
           borrowAmount,
-          accrualPosition,
+          positionData,
         });
 
         const requirements = await scb.getRequirements();
@@ -526,7 +524,7 @@ describe("SupplyCollateralBorrowMarketV1", () => {
   });
 
   describe("errors", () => {
-    test("should throw MissingAccrualPositionError when accrualPosition is not provided", async ({
+    test("should throw MissingAccrualPositionError when positionData is not provided", async ({
       client,
     }) => {
       const morphoClient = new MorphoClient(client);
@@ -537,7 +535,7 @@ describe("SupplyCollateralBorrowMarketV1", () => {
           userAddress: client.account.address,
           amount: parseUnits("1", 18),
           borrowAmount: parseUnits("100", 18),
-          accrualPosition: undefined as unknown as AccrualPosition,
+          positionData: undefined as unknown as AccrualPosition,
         }),
       ).toThrow(MissingAccrualPositionError);
     });
@@ -547,16 +545,14 @@ describe("SupplyCollateralBorrowMarketV1", () => {
     }) => {
       const morphoClient = new MorphoClient(client);
       const market = morphoClient.marketV1(WethUsdsMarketV1, mainnet.id);
-      const accrualPosition = await market.getPositionData(
-        client.account.address,
-      );
+      const positionData = await market.getPositionData(client.account.address);
 
       expect(() =>
         market.supplyCollateralBorrow({
           userAddress: client.account.address,
           amount: parseUnits("1", 18),
           borrowAmount: parseUnits("10000", 18),
-          accrualPosition,
+          positionData,
         }),
       ).toThrow(BorrowExceedsSafeLtvError);
     });
@@ -583,7 +579,7 @@ describe("SupplyCollateralBorrowMarketV1", () => {
           userAddress: client.account.address,
           amount: 1n,
           borrowAmount: parseUnits("10000", 18),
-          accrualPosition: newAccrualPosition,
+          positionData: newAccrualPosition,
         }),
       ).toThrow(BorrowExceedsSafeLtvError);
     });
@@ -593,16 +589,14 @@ describe("SupplyCollateralBorrowMarketV1", () => {
     }) => {
       const morphoClient = new MorphoClient(client);
       const market = morphoClient.marketV1(WethUsdsMarketV1, mainnet.id);
-      const accrualPosition = await market.getPositionData(
-        client.account.address,
-      );
+      const positionData = await market.getPositionData(client.account.address);
 
       expect(() =>
         market.supplyCollateralBorrow({
           userAddress: client.account.address,
           amount: parseUnits("10", 18),
           borrowAmount: parseUnits("1000", 18),
-          accrualPosition,
+          positionData,
           slippageTolerance: MAX_SLIPPAGE_TOLERANCE + 1n,
         }),
       ).toThrow(ExcessiveSlippageToleranceError);

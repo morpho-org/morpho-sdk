@@ -119,7 +119,7 @@ export interface MarketV1Actions {
    * Prepares a borrow transaction.
    *
    * Routed through bundler3 via `morphoBorrow`.
-   * Validates position health with LLTV buffer (0.5%) using the pre-fetched `accrualPosition`.
+   * Validates position health with LLTV buffer (0.5%) using the pre-fetched `positionData`.
    * Computes `minSharePrice` from market borrow state and `slippageTolerance`.
    *
    * When `reallocations` is provided, `reallocateTo` actions are prepended to the bundle,
@@ -128,13 +128,13 @@ export interface MarketV1Actions {
    * `getRequirements` returns `morpho.setAuthorization(generalAdapter1, true)` if not yet authorized,
    * since borrowing through bundler3 requires GeneralAdapter1 authorization on Morpho.
    *
-   * @param params - Borrow parameters including pre-fetched `accrualPosition` for health validation.
+   * @param params - Borrow parameters including pre-fetched `positionData` for health validation.
    * @returns Object with `buildTx` and `getRequirements`.
    */
   borrow: (params: {
     userAddress: Address;
     amount: bigint;
-    accrualPosition: AccrualPosition;
+    positionData: AccrualPosition;
     slippageTolerance?: bigint;
     reallocations?: readonly VaultReallocation[];
   }) => {
@@ -157,13 +157,13 @@ export interface MarketV1Actions {
    * `getRequirements` returns ERC20 approval for loan token to GeneralAdapter1.
    * Does NOT require Morpho authorization (anyone can repay on behalf of anyone).
    *
-   * @param params - Repay parameters including pre-fetched `accrualPosition`.
+   * @param params - Repay parameters including pre-fetched `positionData`.
    * @returns Object with `buildTx` and `getRequirements`.
    */
   repay: (
     params: {
       userAddress: Address;
-      accrualPosition: AccrualPosition;
+      positionData: AccrualPosition;
       slippageTolerance?: bigint;
     } & RepayAmountArgs,
   ) => {
@@ -184,13 +184,13 @@ export interface MarketV1Actions {
    * `getRequirements` returns `morpho.setAuthorization(generalAdapter1, true)` if not yet authorized.
    * Does NOT require ERC20 approval (collateral flows out of Morpho, not in).
    *
-   * @param params - Withdraw collateral parameters including pre-fetched `accrualPosition` for health validation.
+   * @param params - Withdraw collateral parameters including pre-fetched `positionData` for health validation.
    * @returns Object with `buildTx` and `getRequirements`.
    */
   withdrawCollateral: (params: {
     userAddress: Address;
     amount: bigint;
-    accrualPosition: AccrualPosition;
+    positionData: AccrualPosition;
   }) => {
     buildTx: () => Readonly<Transaction<MarketV1WithdrawCollateralAction>>;
   };
@@ -206,14 +206,14 @@ export interface MarketV1Actions {
    * - ERC20 approval for loan token to GeneralAdapter1 (for the repay).
    * - `morpho.setAuthorization(generalAdapter1, true)` if not yet authorized (for the withdraw).
    *
-   * @param params - Combined parameters including pre-fetched `accrualPosition`.
+   * @param params - Combined parameters including pre-fetched `positionData`.
    * @returns Object with `buildTx` and `getRequirements`.
    */
   repayWithdrawCollateral: (
     params: {
       userAddress: Address;
       withdrawAmount: bigint;
-      accrualPosition: AccrualPosition;
+      positionData: AccrualPosition;
       slippageTolerance?: bigint;
     } & RepayAmountArgs,
   ) => {
@@ -244,13 +244,13 @@ export interface MarketV1Actions {
    * - ERC20 approval or permit for collateral token (to GeneralAdapter1).
    * - `morpho.setAuthorization(generalAdapter1, true)` if adapter is not yet authorized.
    *
-   * @param params - Combined parameters including pre-fetched `accrualPosition` for health validation.
+   * @param params - Combined parameters including pre-fetched `positionData` for health validation.
    * @returns Object with `buildTx` and `getRequirements`.
    */
   supplyCollateralBorrow: (
     params: {
       userAddress: Address;
-      accrualPosition: AccrualPosition;
+      positionData: AccrualPosition;
       borrowAmount: bigint;
       slippageTolerance?: bigint;
       reallocations?: readonly VaultReallocation[];
@@ -400,13 +400,13 @@ export class MorphoMarketV1 implements MarketV1Actions {
   borrow({
     amount,
     userAddress,
-    accrualPosition,
+    positionData,
     slippageTolerance = DEFAULT_SLIPPAGE_TOLERANCE,
     reallocations,
   }: {
     amount: bigint;
     userAddress: Address;
-    accrualPosition: AccrualPosition;
+    positionData: AccrualPosition;
     slippageTolerance?: bigint;
     reallocations?: readonly VaultReallocation[];
   }) {
@@ -423,14 +423,14 @@ export class MorphoMarketV1 implements MarketV1Actions {
       throw new ExcessiveSlippageToleranceError(slippageTolerance);
     }
 
-    if (!accrualPosition) {
+    if (!positionData) {
       throw new MissingAccrualPositionError(this.marketParams.id);
     }
 
-    validateAccrualPosition(accrualPosition, this.marketParams.id, userAddress);
+    validateAccrualPosition(positionData, this.marketParams.id, userAddress);
 
     validatePositionHealth(
-      accrualPosition,
+      positionData,
       0n,
       amount,
       this.marketParams.id,
@@ -438,7 +438,7 @@ export class MorphoMarketV1 implements MarketV1Actions {
     );
     const minSharePrice = computeMinBorrowSharePrice(
       amount,
-      accrualPosition.market,
+      positionData.market,
       slippageTolerance,
     );
 
@@ -472,7 +472,7 @@ export class MorphoMarketV1 implements MarketV1Actions {
   repay(
     params: {
       userAddress: Address;
-      accrualPosition: AccrualPosition;
+      positionData: AccrualPosition;
       slippageTolerance?: bigint;
     } & RepayAmountArgs,
   ) {
@@ -480,7 +480,7 @@ export class MorphoMarketV1 implements MarketV1Actions {
 
     const {
       userAddress,
-      accrualPosition,
+      positionData,
       slippageTolerance = DEFAULT_SLIPPAGE_TOLERANCE,
     } = params;
 
@@ -507,23 +507,23 @@ export class MorphoMarketV1 implements MarketV1Actions {
       throw new ExcessiveSlippageToleranceError(slippageTolerance);
     }
 
-    if (!accrualPosition) {
+    if (!positionData) {
       throw new MissingAccrualPositionError(this.marketParams.id);
     }
 
-    validateAccrualPosition(accrualPosition, this.marketParams.id, userAddress);
+    validateAccrualPosition(positionData, this.marketParams.id, userAddress);
 
     let assets: bigint;
     let shares: bigint;
     let transferAmount: bigint;
 
     if (isSharesMode) {
-      validateRepayShares(accrualPosition, params.shares, this.marketParams.id);
+      validateRepayShares(positionData, params.shares, this.marketParams.id);
       assets = 0n;
       shares = params.shares;
       // Add slippage buffer to cover interest accrued between tx construction and execution.
       // Without this, the on-chain repay amount may exceed the pre-transferred ERC20 amount.
-      const baseTransferAmount = accrualPosition.market.toBorrowAssets(
+      const baseTransferAmount = positionData.market.toBorrowAssets(
         shares,
         "Up",
       );
@@ -532,7 +532,7 @@ export class MorphoMarketV1 implements MarketV1Actions {
         MathLib.WAD + slippageTolerance,
       );
     } else {
-      validateRepayAmount(accrualPosition, params.assets, this.marketParams.id);
+      validateRepayAmount(positionData, params.assets, this.marketParams.id);
       assets = params.assets;
       shares = 0n;
       transferAmount = params.assets;
@@ -541,7 +541,7 @@ export class MorphoMarketV1 implements MarketV1Actions {
     const maxSharePrice = computeMaxRepaySharePrice(
       assets,
       shares,
-      accrualPosition.market,
+      positionData.market,
       slippageTolerance,
     );
 
@@ -579,11 +579,11 @@ export class MorphoMarketV1 implements MarketV1Actions {
   withdrawCollateral({
     userAddress,
     amount,
-    accrualPosition,
+    positionData,
   }: {
     userAddress: Address;
     amount: bigint;
-    accrualPosition: AccrualPosition;
+    positionData: AccrualPosition;
   }) {
     validateChainId(this.client.viemClient.chain?.id, this.chainId);
 
@@ -591,22 +591,22 @@ export class MorphoMarketV1 implements MarketV1Actions {
       throw new NonPositiveWithdrawCollateralAmountError(this.marketParams.id);
     }
 
-    if (!accrualPosition) {
+    if (!positionData) {
       throw new MissingAccrualPositionError(this.marketParams.id);
     }
 
-    validateAccrualPosition(accrualPosition, this.marketParams.id, userAddress);
+    validateAccrualPosition(positionData, this.marketParams.id, userAddress);
 
-    if (amount > accrualPosition.collateral) {
+    if (amount > positionData.collateral) {
       throw new WithdrawExceedsCollateralError(
         amount,
-        accrualPosition.collateral,
-        accrualPosition.marketId,
+        positionData.collateral,
+        positionData.marketId,
       );
     }
 
     validatePositionHealthAfterWithdraw(
-      accrualPosition,
+      positionData,
       amount,
       this.marketParams.lltv,
     );
@@ -632,7 +632,7 @@ export class MorphoMarketV1 implements MarketV1Actions {
     params: {
       userAddress: Address;
       withdrawAmount: bigint;
-      accrualPosition: AccrualPosition;
+      positionData: AccrualPosition;
       slippageTolerance?: bigint;
     } & RepayAmountArgs,
   ) {
@@ -641,7 +641,7 @@ export class MorphoMarketV1 implements MarketV1Actions {
     const {
       userAddress,
       withdrawAmount,
-      accrualPosition,
+      positionData,
       slippageTolerance = DEFAULT_SLIPPAGE_TOLERANCE,
     } = params;
 
@@ -672,21 +672,21 @@ export class MorphoMarketV1 implements MarketV1Actions {
       throw new ExcessiveSlippageToleranceError(slippageTolerance);
     }
 
-    if (!accrualPosition) {
+    if (!positionData) {
       throw new MissingAccrualPositionError(this.marketParams.id);
     }
 
-    validateAccrualPosition(accrualPosition, this.marketParams.id, userAddress);
+    validateAccrualPosition(positionData, this.marketParams.id, userAddress);
 
     let assets: bigint;
     let shares: bigint;
     let transferAmount: bigint;
 
     if (isSharesMode) {
-      validateRepayShares(accrualPosition, params.shares, this.marketParams.id);
+      validateRepayShares(positionData, params.shares, this.marketParams.id);
       assets = 0n;
       shares = params.shares;
-      const baseTransferAmount = accrualPosition.market.toBorrowAssets(
+      const baseTransferAmount = positionData.market.toBorrowAssets(
         shares,
         "Up",
       );
@@ -695,25 +695,22 @@ export class MorphoMarketV1 implements MarketV1Actions {
         MathLib.WAD + slippageTolerance,
       );
     } else {
-      validateRepayAmount(accrualPosition, params.assets, this.marketParams.id);
+      validateRepayAmount(positionData, params.assets, this.marketParams.id);
       assets = params.assets;
       shares = 0n;
       transferAmount = params.assets;
     }
 
-    if (withdrawAmount > accrualPosition.collateral) {
+    if (withdrawAmount > positionData.collateral) {
       throw new WithdrawExceedsCollateralError(
         withdrawAmount,
-        accrualPosition.collateral,
-        accrualPosition.marketId,
+        positionData.collateral,
+        positionData.marketId,
       );
     }
 
     // Simulate repay to get post-repay position, then validate withdraw health
-    const { position: positionAfterRepay } = accrualPosition.repay(
-      assets,
-      shares,
-    );
+    const { position: positionAfterRepay } = positionData.repay(assets, shares);
     validatePositionHealthAfterWithdraw(
       positionAfterRepay,
       withdrawAmount,
@@ -723,7 +720,7 @@ export class MorphoMarketV1 implements MarketV1Actions {
     const maxSharePrice = computeMaxRepaySharePrice(
       assets,
       shares,
-      accrualPosition.market,
+      positionData.market,
       slippageTolerance,
     );
 
@@ -772,14 +769,14 @@ export class MorphoMarketV1 implements MarketV1Actions {
   supplyCollateralBorrow({
     amount = 0n,
     userAddress,
-    accrualPosition,
+    positionData,
     borrowAmount,
     nativeAmount,
     slippageTolerance = DEFAULT_SLIPPAGE_TOLERANCE,
     reallocations,
   }: {
     userAddress: Address;
-    accrualPosition: AccrualPosition;
+    positionData: AccrualPosition;
     borrowAmount: bigint;
     slippageTolerance?: bigint;
     reallocations?: readonly VaultReallocation[];
@@ -798,11 +795,11 @@ export class MorphoMarketV1 implements MarketV1Actions {
       throw new NonPositiveBorrowAmountError(this.marketParams.id);
     }
 
-    if (!accrualPosition) {
+    if (!positionData) {
       throw new MissingAccrualPositionError(this.marketParams.id);
     }
 
-    validateAccrualPosition(accrualPosition, this.marketParams.id, userAddress);
+    validateAccrualPosition(positionData, this.marketParams.id, userAddress);
 
     const totalCollateral = amount + (nativeAmount ?? 0n);
     if (totalCollateral === 0n) {
@@ -821,7 +818,7 @@ export class MorphoMarketV1 implements MarketV1Actions {
     }
 
     validatePositionHealth(
-      accrualPosition,
+      positionData,
       totalCollateral,
       borrowAmount,
       this.marketParams.id,
@@ -830,7 +827,7 @@ export class MorphoMarketV1 implements MarketV1Actions {
 
     const minSharePrice = computeMinBorrowSharePrice(
       borrowAmount,
-      accrualPosition.market,
+      positionData.market,
       slippageTolerance,
     );
 

@@ -40,14 +40,12 @@ describe("RepayMarketV1", () => {
 
     const morphoClient = new MorphoClient(client);
     const market = morphoClient.marketV1(WethUsdsMarketV1, mainnet.id);
-    const accrualPosition = await market.getPositionData(
-      client.account.address,
-    );
+    const positionData = await market.getPositionData(client.account.address);
 
     const repay = market.repay({
       userAddress: client.account.address,
       assets: repayAmount,
-      accrualPosition,
+      positionData,
     });
 
     const tx = repay.buildTx();
@@ -55,7 +53,7 @@ describe("RepayMarketV1", () => {
     const maxSharePrice = computeMaxRepaySharePrice(
       repayAmount,
       0n,
-      accrualPosition.market,
+      positionData.market,
       DEFAULT_SLIPPAGE_TOLERANCE,
     );
 
@@ -90,19 +88,17 @@ describe("RepayMarketV1", () => {
 
     const morphoClient = new MorphoClient(client);
     const market = morphoClient.marketV1(WethUsdsMarketV1, mainnet.id);
-    const accrualPosition = await market.getPositionData(
-      client.account.address,
-    );
+    const positionData = await market.getPositionData(client.account.address);
 
     const repay = market.repay({
       userAddress: client.account.address,
-      shares: accrualPosition.borrowShares,
-      accrualPosition,
+      shares: positionData.borrowShares,
+      positionData,
     });
 
     const tx = repay.buildTx();
 
-    expect(tx.action.args.shares).toBe(accrualPosition.borrowShares);
+    expect(tx.action.args.shares).toBe(positionData.borrowShares);
     expect(tx.action.args.assets).toBe(0n);
   });
 
@@ -131,14 +127,14 @@ describe("RepayMarketV1", () => {
       actionFn: async () => {
         const morphoClient = new MorphoClient(client);
         const market = morphoClient.marketV1(WethUsdsMarketV1, mainnet.id);
-        const accrualPosition = await market.getPositionData(
+        const positionData = await market.getPositionData(
           client.account.address,
         );
 
         const repay = market.repay({
           userAddress: client.account.address,
           assets: repayAmount,
-          accrualPosition,
+          positionData,
         });
 
         const requirements = await repay.getRequirements();
@@ -213,14 +209,14 @@ describe("RepayMarketV1", () => {
       actionFn: async () => {
         const morphoClient = new MorphoClient(client);
         const market = morphoClient.marketV1(WethUsdsMarketV1, mainnet.id);
-        const accrualPosition = await market.getPositionData(
+        const positionData = await market.getPositionData(
           client.account.address,
         );
 
         const repay = market.repay({
           userAddress: client.account.address,
-          shares: accrualPosition.borrowShares,
-          accrualPosition,
+          shares: positionData.borrowShares,
+          positionData,
         });
 
         const requirements = await repay.getRequirements();
@@ -263,15 +259,13 @@ describe("RepayMarketV1", () => {
 
     const morphoClient = new MorphoClient(client);
     const market = morphoClient.marketV1(WethUsdsMarketV1, mainnet.id);
-    const accrualPosition = await market.getPositionData(
-      client.account.address,
-    );
+    const positionData = await market.getPositionData(client.account.address);
 
     expect(() =>
       market.repay({
         userAddress: client.account.address,
         assets: borrowAmount * 2n,
-        accrualPosition,
+        positionData,
       }),
     ).toThrow(RepayExceedsDebtError);
   });
@@ -286,7 +280,7 @@ describe("RepayMarketV1", () => {
     const totalBorrowShares = parseUnits("100000000", 18); // 100M shares
     const totalBorrowAssets = totalBorrowShares + parseUnits("1", 18); // +1e18 gap (>> 1e6 virtual offset)
 
-    const accrualPosition = new AccrualPositionClass(
+    const positionData = new AccrualPositionClass(
       {
         user: client.account.address,
         supplyShares: 0n,
@@ -305,7 +299,7 @@ describe("RepayMarketV1", () => {
     );
 
     // Verify our setup: 1 wei should round to 0 shares on this market
-    expect(accrualPosition.market.toBorrowShares(1n, "Down")).toBe(0n);
+    expect(positionData.market.toBorrowShares(1n, "Down")).toBe(0n);
 
     const morphoClient = new MorphoClient(client);
     const market = morphoClient.marketV1(WethUsdsMarketV1, mainnet.id);
@@ -314,7 +308,7 @@ describe("RepayMarketV1", () => {
       market.repay({
         userAddress: client.account.address,
         assets: 1n,
-        accrualPosition,
+        positionData,
       }),
     ).toThrow(ShareDivideByZeroError);
   });
@@ -335,15 +329,13 @@ describe("RepayMarketV1", () => {
 
     const morphoClient = new MorphoClient(client);
     const market = morphoClient.marketV1(WethUsdsMarketV1, mainnet.id);
-    const accrualPosition = await market.getPositionData(
-      client.account.address,
-    );
+    const positionData = await market.getPositionData(client.account.address);
 
     expect(() =>
       market.repay({
         userAddress: client.account.address,
-        shares: accrualPosition.borrowShares * 2n,
-        accrualPosition,
+        shares: positionData.borrowShares * 2n,
+        positionData,
       }),
     ).toThrow(RepaySharesExceedDebtError);
   });
@@ -351,20 +343,18 @@ describe("RepayMarketV1", () => {
   test("should throw when repay amount is non-positive", async ({ client }) => {
     const morphoClient = new MorphoClient(client);
     const market = morphoClient.marketV1(WethUsdsMarketV1, mainnet.id);
-    const accrualPosition = await market.getPositionData(
-      client.account.address,
-    );
+    const positionData = await market.getPositionData(client.account.address);
 
     expect(() =>
       market.repay({
         userAddress: client.account.address,
         assets: 0n,
-        accrualPosition,
+        positionData,
       }),
     ).toThrow(NonPositiveRepayAmountError);
   });
 
-  test("should revert when accrualPosition is not provided", async ({
+  test("should revert when positionData is not provided", async ({
     client,
   }) => {
     const morphoClient = new MorphoClient(client);
@@ -374,7 +364,7 @@ describe("RepayMarketV1", () => {
       market.repay({
         userAddress: client.account.address,
         assets: parseUnits("100", 18),
-        accrualPosition: undefined as unknown as AccrualPosition,
+        positionData: undefined as unknown as AccrualPosition,
       }),
     ).toThrow(MissingAccrualPositionError);
   });
@@ -393,15 +383,13 @@ describe("RepayMarketV1", () => {
 
     const morphoClient = new MorphoClient(client);
     const market = morphoClient.marketV1(WethUsdsMarketV1, mainnet.id);
-    const accrualPosition = await market.getPositionData(
-      client.account.address,
-    );
+    const positionData = await market.getPositionData(client.account.address);
 
     const tx = market
       .repay({
         userAddress: client.account.address,
         assets: parseUnits("500", 18),
-        accrualPosition,
+        positionData,
       })
       .buildTx();
 

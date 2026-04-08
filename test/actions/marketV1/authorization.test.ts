@@ -26,15 +26,13 @@ describe("AuthorizationMarketV1", () => {
 
       const morphoClient = new MorphoClient(client);
       const market = morphoClient.marketV1(WethUsdsMarketV1, mainnet.id);
-      const accrualPosition = await market.getPositionData(
-        client.account.address,
-      );
+      const positionData = await market.getPositionData(client.account.address);
 
       const requirements = await market
         .borrow({
           userAddress: client.account.address,
           amount: parseUnits("100", 18),
-          accrualPosition,
+          positionData,
         })
         .getRequirements();
 
@@ -58,15 +56,13 @@ describe("AuthorizationMarketV1", () => {
 
       const morphoClient = new MorphoClient(client);
       const market = morphoClient.marketV1(WethUsdsMarketV1, mainnet.id);
-      const accrualPosition = await market.getPositionData(
-        client.account.address,
-      );
+      const positionData = await market.getPositionData(client.account.address);
 
       const borrowRequirements = await market
         .borrow({
           userAddress: client.account.address,
           amount: parseUnits("100", 18),
-          accrualPosition,
+          positionData,
         })
         .getRequirements();
 
@@ -75,7 +71,7 @@ describe("AuthorizationMarketV1", () => {
           userAddress: client.account.address,
           nativeAmount: parseUnits("5", 18),
           borrowAmount: parseUnits("100", 18),
-          accrualPosition,
+          positionData,
         })
         .getRequirements();
 
@@ -97,15 +93,13 @@ describe("AuthorizationMarketV1", () => {
 
       const morphoClient = new MorphoClient(client);
       const market = morphoClient.marketV1(WethUsdsMarketV1, mainnet.id);
-      const accrualPosition = await market.getPositionData(
-        client.account.address,
-      );
+      const positionData = await market.getPositionData(client.account.address);
 
       const requirementsBefore = await market
         .borrow({
           userAddress: client.account.address,
           amount: parseUnits("100", 18),
-          accrualPosition,
+          positionData,
         })
         .getRequirements();
 
@@ -119,7 +113,7 @@ describe("AuthorizationMarketV1", () => {
         .borrow({
           userAddress: client.account.address,
           amount: parseUnits("100", 18),
-          accrualPosition,
+          positionData,
         })
         .getRequirements();
 

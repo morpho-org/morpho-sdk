@@ -45,15 +45,13 @@ describe("RepayWithdrawCollateralMarketV1", () => {
 
     const morphoClient = new MorphoClient(client);
     const market = morphoClient.marketV1(WethUsdsMarketV1, mainnet.id);
-    const accrualPosition = await market.getPositionData(
-      client.account.address,
-    );
+    const positionData = await market.getPositionData(client.account.address);
 
     const action = market.repayWithdrawCollateral({
       userAddress: client.account.address,
       assets: repayAmount,
       withdrawAmount,
-      accrualPosition,
+      positionData,
     });
 
     const tx = action.buildTx();
@@ -61,7 +59,7 @@ describe("RepayWithdrawCollateralMarketV1", () => {
     const maxSharePrice = computeMaxRepaySharePrice(
       repayAmount,
       0n,
-      accrualPosition.market,
+      positionData.market,
       DEFAULT_SLIPPAGE_TOLERANCE,
     );
 
@@ -111,7 +109,7 @@ describe("RepayWithdrawCollateralMarketV1", () => {
           supportSignature: false,
         });
         const market = morphoClient.marketV1(WethUsdsMarketV1, mainnet.id);
-        const accrualPosition = await market.getPositionData(
+        const positionData = await market.getPositionData(
           client.account.address,
         );
 
@@ -119,7 +117,7 @@ describe("RepayWithdrawCollateralMarketV1", () => {
           userAddress: client.account.address,
           assets: repayAmount,
           withdrawAmount,
-          accrualPosition,
+          positionData,
         });
 
         const requirements = await action.getRequirements();
@@ -196,15 +194,15 @@ describe("RepayWithdrawCollateralMarketV1", () => {
           supportSignature: false,
         });
         const market = morphoClient.marketV1(WethUsdsMarketV1, mainnet.id);
-        const accrualPosition = await market.getPositionData(
+        const positionData = await market.getPositionData(
           client.account.address,
         );
 
         const action = market.repayWithdrawCollateral({
           userAddress: client.account.address,
-          shares: accrualPosition.borrowShares,
-          withdrawAmount: accrualPosition.collateral,
-          accrualPosition,
+          shares: positionData.borrowShares,
+          withdrawAmount: positionData.collateral,
+          positionData,
         });
 
         const requirements = await action.getRequirements();
@@ -250,9 +248,7 @@ describe("RepayWithdrawCollateralMarketV1", () => {
 
     const morphoClient = new MorphoClient(client);
     const market = morphoClient.marketV1(WethUsdsMarketV1, mainnet.id);
-    const accrualPosition = await market.getPositionData(
-      client.account.address,
-    );
+    const positionData = await market.getPositionData(client.account.address);
 
     // Small repay + huge withdraw → still unhealthy
     expect(() =>
@@ -260,7 +256,7 @@ describe("RepayWithdrawCollateralMarketV1", () => {
         userAddress: client.account.address,
         assets: parseUnits("10", 18),
         withdrawAmount: parseUnits("9.99", 18),
-        accrualPosition,
+        positionData,
       }),
     ).toThrow(WithdrawMakesPositionUnhealthyError);
   });
@@ -279,16 +275,14 @@ describe("RepayWithdrawCollateralMarketV1", () => {
 
     const morphoClient = new MorphoClient(client);
     const market = morphoClient.marketV1(WethUsdsMarketV1, mainnet.id);
-    const accrualPosition = await market.getPositionData(
-      client.account.address,
-    );
+    const positionData = await market.getPositionData(client.account.address);
 
     expect(() =>
       market.repayWithdrawCollateral({
         userAddress: client.account.address,
         assets: borrowAmount * 2n,
         withdrawAmount: parseUnits("1", 18),
-        accrualPosition,
+        positionData,
       }),
     ).toThrow(RepayExceedsDebtError);
   });
@@ -301,7 +295,7 @@ describe("RepayWithdrawCollateralMarketV1", () => {
     const totalBorrowShares = parseUnits("100000000", 18);
     const totalBorrowAssets = totalBorrowShares + parseUnits("1", 18);
 
-    const accrualPosition = new AccrualPositionClass(
+    const positionData = new AccrualPositionClass(
       {
         user: client.account.address,
         supplyShares: 0n,
@@ -320,7 +314,7 @@ describe("RepayWithdrawCollateralMarketV1", () => {
       },
     );
 
-    expect(accrualPosition.market.toBorrowShares(1n, "Down")).toBe(0n);
+    expect(positionData.market.toBorrowShares(1n, "Down")).toBe(0n);
 
     const morphoClient = new MorphoClient(client);
     const market = morphoClient.marketV1(WethUsdsMarketV1, mainnet.id);
@@ -330,7 +324,7 @@ describe("RepayWithdrawCollateralMarketV1", () => {
         userAddress: client.account.address,
         assets: 1n,
         withdrawAmount: parseUnits("1", 18),
-        accrualPosition,
+        positionData,
       }),
     ).toThrow(ShareDivideByZeroError);
   });
@@ -338,16 +332,14 @@ describe("RepayWithdrawCollateralMarketV1", () => {
   test("should throw when repay amount is non-positive", async ({ client }) => {
     const morphoClient = new MorphoClient(client);
     const market = morphoClient.marketV1(WethUsdsMarketV1, mainnet.id);
-    const accrualPosition = await market.getPositionData(
-      client.account.address,
-    );
+    const positionData = await market.getPositionData(client.account.address);
 
     expect(() =>
       market.repayWithdrawCollateral({
         userAddress: client.account.address,
         assets: 0n,
         withdrawAmount: parseUnits("1", 18),
-        accrualPosition,
+        positionData,
       }),
     ).toThrow(NonPositiveRepayAmountError);
   });
@@ -368,21 +360,19 @@ describe("RepayWithdrawCollateralMarketV1", () => {
 
     const morphoClient = new MorphoClient(client);
     const market = morphoClient.marketV1(WethUsdsMarketV1, mainnet.id);
-    const accrualPosition = await market.getPositionData(
-      client.account.address,
-    );
+    const positionData = await market.getPositionData(client.account.address);
 
     expect(() =>
       market.repayWithdrawCollateral({
         userAddress: client.account.address,
         assets: parseUnits("500", 18),
         withdrawAmount: 0n,
-        accrualPosition,
+        positionData,
       }),
     ).toThrow(NonPositiveWithdrawCollateralAmountError);
   });
 
-  test("should revert when accrualPosition is not provided", async ({
+  test("should revert when positionData is not provided", async ({
     client,
   }) => {
     const morphoClient = new MorphoClient(client);
@@ -393,7 +383,7 @@ describe("RepayWithdrawCollateralMarketV1", () => {
         userAddress: client.account.address,
         assets: parseUnits("100", 18),
         withdrawAmount: parseUnits("1", 18),
-        accrualPosition: undefined as unknown as AccrualPosition,
+        positionData: undefined as unknown as AccrualPosition,
       }),
     ).toThrow(MissingAccrualPositionError);
   });
@@ -412,16 +402,14 @@ describe("RepayWithdrawCollateralMarketV1", () => {
 
     const morphoClient = new MorphoClient(client);
     const market = morphoClient.marketV1(WethUsdsMarketV1, mainnet.id);
-    const accrualPosition = await market.getPositionData(
-      client.account.address,
-    );
+    const positionData = await market.getPositionData(client.account.address);
 
     const tx = market
       .repayWithdrawCollateral({
         userAddress: client.account.address,
         assets: parseUnits("500", 18),
         withdrawAmount: parseUnits("1", 18),
-        accrualPosition,
+        positionData,
       })
       .buildTx();
 

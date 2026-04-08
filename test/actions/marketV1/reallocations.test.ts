@@ -67,14 +67,14 @@ describe("Borrow with single vault reallocation (e2e)", () => {
       actionFn: async () => {
         const morphoClient = new MorphoClient(client);
         const market = morphoClient.marketV1(CbbtcUsdcMarketV1, mainnet.id);
-        const accrualPosition = await market.getPositionData(
+        const positionData = await market.getPositionData(
           client.account.address,
         );
 
         const borrow = market.borrow({
           userAddress: client.account.address,
           amount: borrowAmount,
-          accrualPosition,
+          positionData,
           reallocations,
         });
 
@@ -152,14 +152,14 @@ describe("Borrow with multiple source market withdrawals", () => {
       actionFn: async () => {
         const morphoClient = new MorphoClient(client);
         const market = morphoClient.marketV1(CbbtcUsdcMarketV1, mainnet.id);
-        const accrualPosition = await market.getPositionData(
+        const positionData = await market.getPositionData(
           client.account.address,
         );
 
         const borrow = market.borrow({
           userAddress: client.account.address,
           amount: borrowAmount,
-          accrualPosition,
+          positionData,
           reallocations,
         });
 
@@ -253,14 +253,14 @@ describe("Borrow with reallocation fee", () => {
       actionFn: async () => {
         const morphoClient = new MorphoClient(client);
         const market = morphoClient.marketV1(CbbtcUsdcMarketV1, mainnet.id);
-        const accrualPosition = await market.getPositionData(
+        const positionData = await market.getPositionData(
           client.account.address,
         );
 
         const borrow = market.borrow({
           userAddress: client.account.address,
           amount: borrowAmount,
-          accrualPosition,
+          positionData,
           reallocations,
         });
 
@@ -342,7 +342,7 @@ describe("SupplyCollateralBorrow with single vault reallocation", () => {
       actionFn: async () => {
         const morphoClient = new MorphoClient(client);
         const market = morphoClient.marketV1(CbbtcUsdcMarketV1, mainnet.id);
-        const accrualPosition = await market.getPositionData(
+        const positionData = await market.getPositionData(
           client.account.address,
         );
 
@@ -350,7 +350,7 @@ describe("SupplyCollateralBorrow with single vault reallocation", () => {
           userAddress: client.account.address,
           amount: collateralAmount,
           borrowAmount,
-          accrualPosition,
+          positionData,
           reallocations,
         });
 
@@ -436,7 +436,7 @@ describe("SupplyCollateralBorrow with multiple source market withdrawals", () =>
       actionFn: async () => {
         const morphoClient = new MorphoClient(client);
         const market = morphoClient.marketV1(CbbtcUsdcMarketV1, mainnet.id);
-        const accrualPosition = await market.getPositionData(
+        const positionData = await market.getPositionData(
           client.account.address,
         );
 
@@ -444,7 +444,7 @@ describe("SupplyCollateralBorrow with multiple source market withdrawals", () =>
           userAddress: client.account.address,
           amount: collateralAmount,
           borrowAmount,
-          accrualPosition,
+          positionData,
           reallocations,
         });
 
@@ -549,7 +549,7 @@ describe("SupplyCollateralBorrow with reallocation fee", () => {
       actionFn: async () => {
         const morphoClient = new MorphoClient(client);
         const market = morphoClient.marketV1(CbbtcUsdcMarketV1, mainnet.id);
-        const accrualPosition = await market.getPositionData(
+        const positionData = await market.getPositionData(
           client.account.address,
         );
 
@@ -557,7 +557,7 @@ describe("SupplyCollateralBorrow with reallocation fee", () => {
           userAddress: client.account.address,
           amount: collateralAmount,
           borrowAmount,
-          accrualPosition,
+          positionData,
           reallocations,
         });
 
@@ -641,7 +641,7 @@ describe("getReallocationData and getReallocations", () => {
       actionFn: async () => {
         const morphoClient = new MorphoClient(client);
         const market = morphoClient.marketV1(CbbtcUsdcMarketV1, mainnet.id);
-        const accrualPosition = await market.getPositionData(
+        const positionData = await market.getPositionData(
           client.account.address,
         );
 
@@ -649,7 +649,7 @@ describe("getReallocationData and getReallocations", () => {
 
         const reallocationData = await market.getReallocationData({
           vaultAddresses: [SteakhouseUsdcVaultV1.address],
-          market: accrualPosition.market,
+          market: positionData.market,
           block,
         });
 
@@ -673,7 +673,7 @@ describe("getReallocationData and getReallocations", () => {
         const borrow = market.borrow({
           userAddress: client.account.address,
           amount: borrowAmount,
-          accrualPosition,
+          positionData,
           reallocations,
         });
 
@@ -720,7 +720,7 @@ describe("getReallocationData and getReallocations", () => {
       actionFn: async () => {
         const morphoClient = new MorphoClient(client);
         const market = morphoClient.marketV1(CbbtcUsdcMarketV1, mainnet.id);
-        const accrualPosition = await market.getPositionData(
+        const positionData = await market.getPositionData(
           client.account.address,
         );
 
@@ -728,7 +728,7 @@ describe("getReallocationData and getReallocations", () => {
 
         const reallocationData = await market.getReallocationData({
           vaultAddresses: [SteakhouseUsdcVaultV1.address],
-          market: accrualPosition.market,
+          market: positionData.market,
           block,
         });
 
@@ -743,7 +743,7 @@ describe("getReallocationData and getReallocations", () => {
           userAddress: client.account.address,
           amount: collateralAmount,
           borrowAmount,
-          accrualPosition,
+          positionData,
           reallocations,
         });
 
@@ -783,15 +783,13 @@ describe("getReallocationData and getReallocations", () => {
 
     const morphoClient = new MorphoClient(client);
     const market = morphoClient.marketV1(CbbtcUsdcMarketV1, mainnet.id);
-    const accrualPosition = await market.getPositionData(
-      client.account.address,
-    );
+    const positionData = await market.getPositionData(client.account.address);
 
     const block = await client.getBlock();
 
     const reallocationData = await market.getReallocationData({
       vaultAddresses: [SteakhouseUsdcVaultV1.address],
-      market: accrualPosition.market,
+      market: positionData.market,
       block,
     });
 

@@ -34,26 +34,23 @@ import { DEFAULT_LLTV_BUFFER } from "./constant";
  * Throws {@link AccrualPositionUserMismatchError} if the position's user
  * does not match the expected user.
  *
- * @param accrualPosition - The accrual position to validate.
+ * @param positionData - The accrual position to validate.
  * @param expectedMarketId - The market ID the position must belong to.
  * @param expectedUser - The user address the position must belong to.
  */
 export const validateAccrualPosition = (
-  accrualPosition: AccrualPosition,
+  positionData: AccrualPosition,
   expectedMarketId: MarketId,
   expectedUser: Address,
 ): void => {
-  if (accrualPosition.marketId !== expectedMarketId) {
+  if (positionData.marketId !== expectedMarketId) {
     throw new AccrualPositionMarketMismatchError(
-      accrualPosition.marketId,
+      positionData.marketId,
       expectedMarketId,
     );
   }
-  if (!isAddressEqual(accrualPosition.user, expectedUser)) {
-    throw new AccrualPositionUserMismatchError(
-      accrualPosition.user,
-      expectedUser,
-    );
+  if (!isAddressEqual(positionData.user, expectedUser)) {
+    throw new AccrualPositionUserMismatchError(positionData.user, expectedUser);
   }
 };
 
@@ -61,27 +58,26 @@ export const validateAccrualPosition = (
  * Validates that the resulting position stays within the safe LTV threshold
  * (LLTV minus buffer) after supplying additional collateral and borrowing.
  *
- * @param accrualPosition - The current accrual position with market data.
+ * @param positionData - The current accrual position with market data.
  * @param additionalCollateral - Amount of collateral being added.
  * @param borrowAmount - Amount being borrowed.
  * @param marketId - The market identifier (for error messages).
  * @param lltv - The market's liquidation LTV.
  */
 export const validatePositionHealth = (
-  accrualPosition: AccrualPosition,
+  positionData: AccrualPosition,
   additionalCollateral: bigint,
   borrowAmount: bigint,
   marketId: MarketId,
   lltv: bigint,
 ): void => {
-  const { price } = accrualPosition.market;
+  const { price } = positionData.market;
 
   if (price === undefined) {
     throw new MissingMarketPriceError(marketId);
   }
 
-  const totalCollateralAfter =
-    accrualPosition.collateral + additionalCollateral;
+  const totalCollateralAfter = positionData.collateral + additionalCollateral;
   const collateralValueAfter = MathLib.mulDivDown(
     totalCollateralAfter,
     price,
@@ -95,12 +91,12 @@ export const validatePositionHealth = (
     effectiveLltv,
   );
 
-  const totalBorrowAfter = accrualPosition.borrowAssets + borrowAmount + 1n; // +1 to account for share-to-asset rounding (happens when the borrow amount doesn't divide evenly into shares)
+  const totalBorrowAfter = positionData.borrowAssets + borrowAmount + 1n; // +1 to account for share-to-asset rounding (happens when the borrow amount doesn't divide evenly into shares)
 
   if (totalBorrowAfter > maxSafeBorrowAfter) {
     const maxSafeAdditionalBorrow = MathLib.zeroFloorSub(
       maxSafeBorrowAfter,
-      accrualPosition.borrowAssets,
+      positionData.borrowAssets,
     );
     throw new BorrowExceedsSafeLtvError(borrowAmount, maxSafeAdditionalBorrow);
   }
@@ -161,27 +157,27 @@ export const validateNativeCollateral = (
  * Validates that the resulting position stays within the safe LTV threshold
  * (LLTV minus buffer) after withdrawing collateral.
  *
- * @param accrualPosition - The current accrual position with market data.
+ * @param positionData - The current accrual position with market data.
  * @param withdrawAmount - Amount of collateral being withdrawn.
  * @param lltv - The market's liquidation LTV.
  */
 export const validatePositionHealthAfterWithdraw = (
-  accrualPosition: AccrualPosition,
+  positionData: AccrualPosition,
   withdrawAmount: bigint,
   lltv: bigint,
 ): void => {
   // No debt means position is always healthy — oracle price not needed.
-  if (accrualPosition.borrowAssets === 0n) {
+  if (positionData.borrowAssets === 0n) {
     return;
   }
 
-  const { price } = accrualPosition.market;
+  const { price } = positionData.market;
 
   if (price === undefined) {
-    throw new MissingMarketPriceError(accrualPosition.marketId);
+    throw new MissingMarketPriceError(positionData.marketId);
   }
 
-  const collateralAfter = accrualPosition.collateral - withdrawAmount;
+  const collateralAfter = positionData.collateral - withdrawAmount;
   const collateralValueAfter = MathLib.mulDivDown(
     collateralAfter,
     price,
@@ -194,10 +190,10 @@ export const validatePositionHealthAfterWithdraw = (
     effectiveLltv,
   );
 
-  if (accrualPosition.borrowAssets > maxSafeBorrowAfter) {
+  if (positionData.borrowAssets > maxSafeBorrowAfter) {
     throw new WithdrawMakesPositionUnhealthyError(
       withdrawAmount,
-      accrualPosition.borrowAssets,
+      positionData.borrowAssets,
       maxSafeBorrowAfter,
     );
   }
@@ -206,19 +202,19 @@ export const validatePositionHealthAfterWithdraw = (
 /**
  * Validates that the repay amount assets does not exceed the outstanding debt.
  *
- * @param accrualPosition - The current accrual position.
+ * @param positionData - The current accrual position.
  * @param repayAssets - The assets of assets to repay.
  * @param marketId - The market identifier (for error messages).
  */
 export const validateRepayAmount = (
-  accrualPosition: AccrualPosition,
+  positionData: AccrualPosition,
   repayAssets: bigint,
   marketId: MarketId,
 ): void => {
-  if (repayAssets > accrualPosition.borrowAssets) {
+  if (repayAssets > positionData.borrowAssets) {
     throw new RepayExceedsDebtError(
       repayAssets,
-      accrualPosition.borrowAssets,
+      positionData.borrowAssets,
       marketId,
     );
   }
@@ -227,19 +223,19 @@ export const validateRepayAmount = (
 /**
  * Validates that the repay shares do not exceed the outstanding borrow shares.
  *
- * @param accrualPosition - The current accrual position.
+ * @param positionData - The current accrual position.
  * @param repayShares - The amount of shares to repay.
  * @param marketId - The market identifier (for error messages).
  */
 export const validateRepayShares = (
-  accrualPosition: AccrualPosition,
+  positionData: AccrualPosition,
   repayShares: bigint,
   marketId: MarketId,
 ): void => {
-  if (repayShares > accrualPosition.borrowShares) {
+  if (repayShares > positionData.borrowShares) {
     throw new RepaySharesExceedDebtError(
       repayShares,
-      accrualPosition.borrowShares,
+      positionData.borrowShares,
       marketId,
     );
   }
