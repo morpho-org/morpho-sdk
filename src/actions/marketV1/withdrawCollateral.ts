@@ -10,6 +10,7 @@ import {
   type Transaction,
 } from "../../types";
 
+/** Parameters for {@link marketV1WithdrawCollateral}. */
 export interface MarketV1WithdrawCollateralParams {
   market: {
     readonly chainId: number;

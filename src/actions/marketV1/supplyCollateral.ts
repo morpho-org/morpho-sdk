@@ -18,6 +18,7 @@ import {
 } from "../../types";
 import { getRequirementsAction } from "../requirements/getRequirementsAction";
 
+/** Parameters for {@link marketV1SupplyCollateral}. */
 export interface MarketV1SupplyCollateralParams {
   market: {
     readonly chainId: number;

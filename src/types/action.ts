@@ -121,7 +121,7 @@ export interface MarketV1BorrowAction
       amount: bigint;
       receiver: Address;
       minSharePrice: bigint;
-      reallocationFee?: bigint;
+      reallocationFee: bigint;
     }
   > {}
 
@@ -136,7 +136,7 @@ export interface MarketV1SupplyCollateralBorrowAction
       onBehalf: Address;
       receiver: Address;
       nativeAmount?: bigint;
-      reallocationFee?: bigint;
+      reallocationFee: bigint;
     }
   > {}
 

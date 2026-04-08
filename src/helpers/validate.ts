@@ -16,12 +16,16 @@ import {
   EmptyReallocationWithdrawalsError,
   MarketIdMismatchError,
   MissingMarketPriceError,
+  MutuallyExclusiveRepayAmountsError,
   NativeAmountOnNonWNativeCollateralError,
   NegativeReallocationFeeError,
   NonPositiveReallocationAmountError,
+  NonPositiveRepayAmountError,
+  NonPositiveTransferAmountError,
   ReallocationWithdrawalOnTargetMarketError,
   RepayExceedsDebtError,
   RepaySharesExceedDebtError,
+  TransferAmountNotEqualToAssetsError,
   UnsortedReallocationWithdrawalsError,
   type VaultReallocation,
   WithdrawMakesPositionUnhealthyError,
@@ -217,7 +221,7 @@ export const validatePositionHealthAfterWithdraw = (
  * Validates that the repay amount assets does not exceed the outstanding debt.
  *
  * @param positionData - The current accrual position.
- * @param repayAssets - The assets of assets to repay.
+ * @param repayAssets - The amount of assets to repay.
  * @param marketId - The market identifier (for error messages).
  */
 export const validateRepayAmount = (
@@ -250,6 +254,46 @@ export const validateRepayShares = (
     throw new RepaySharesExceedDebtError(
       repayShares,
       positionData.borrowShares,
+      marketId,
+    );
+  }
+};
+
+/**
+ * Validates the common repay input parameters shared by `marketV1Repay`
+ * and `marketV1RepayWithdrawCollateral`.
+ *
+ * @param assets - Repay assets amount (0n when repaying by shares).
+ * @param shares - Repay shares amount (0n when repaying by assets).
+ * @param transferAmount - ERC20 amount to transfer to GeneralAdapter1.
+ * @param marketId - The market identifier (for error messages).
+ */
+export const validateRepayParams = (
+  assets: bigint,
+  shares: bigint,
+  transferAmount: bigint,
+  marketId: MarketId,
+): void => {
+  if (assets < 0n || shares < 0n) {
+    throw new NonPositiveRepayAmountError(marketId);
+  }
+
+  if (assets > 0n && shares > 0n) {
+    throw new MutuallyExclusiveRepayAmountsError(marketId);
+  }
+
+  if (assets === 0n && shares === 0n) {
+    throw new NonPositiveRepayAmountError(marketId);
+  }
+
+  if (transferAmount <= 0n) {
+    throw new NonPositiveTransferAmountError(marketId);
+  }
+
+  if (assets > 0n && transferAmount !== assets) {
+    throw new TransferAmountNotEqualToAssetsError(
+      transferAmount,
+      assets,
       marketId,
     );
   }

@@ -11,6 +11,7 @@ import {
   type VaultReallocation,
 } from "../../types";
 
+/** Parameters for {@link marketV1Borrow}. */
 export interface MarketV1BorrowParams {
   market: {
     readonly chainId: number;

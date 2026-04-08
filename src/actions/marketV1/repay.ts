@@ -2,19 +2,16 @@ import { getChainAddresses, type MarketParams } from "@morpho-org/blue-sdk";
 import { type Action, BundlerAction } from "@morpho-org/bundler-sdk-viem";
 import { deepFreeze } from "@morpho-org/morpho-ts";
 import { type Address, maxUint256 } from "viem";
-import { addTransactionMetadata } from "../../helpers";
-import {
-  type MarketV1RepayAction,
-  type Metadata,
-  MutuallyExclusiveRepayAmountsError,
-  NonPositiveRepayAmountError,
-  NonPositiveTransferAmountError,
-  type RequirementSignature,
-  type Transaction,
-  TransferAmountNotEqualToAssetsError,
+import { addTransactionMetadata, validateRepayParams } from "../../helpers";
+import type {
+  MarketV1RepayAction,
+  Metadata,
+  RequirementSignature,
+  Transaction,
 } from "../../types";
 import { getRequirementsAction } from "../requirements/getRequirementsAction";
 
+/** Parameters for {@link marketV1Repay}. */
 export interface MarketV1RepayParams {
   market: {
     readonly chainId: number;
@@ -68,29 +65,7 @@ export const marketV1Repay = ({
   },
   metadata,
 }: MarketV1RepayParams): Readonly<Transaction<MarketV1RepayAction>> => {
-  if (assets < 0n || shares < 0n) {
-    throw new NonPositiveRepayAmountError(marketParams.id);
-  }
-
-  if (assets > 0n && shares > 0n) {
-    throw new MutuallyExclusiveRepayAmountsError(marketParams.id);
-  }
-
-  if (assets === 0n && shares === 0n) {
-    throw new NonPositiveRepayAmountError(marketParams.id);
-  }
-
-  if (transferAmount <= 0n) {
-    throw new NonPositiveTransferAmountError(marketParams.id);
-  }
-
-  if (assets > 0n && transferAmount !== assets) {
-    throw new TransferAmountNotEqualToAssetsError(
-      transferAmount,
-      assets,
-      marketParams.id,
-    );
-  }
+  validateRepayParams(assets, shares, transferAmount, marketParams.id);
 
   const {
     bundler3: { generalAdapter1 },

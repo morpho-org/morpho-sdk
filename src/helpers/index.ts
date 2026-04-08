@@ -12,6 +12,7 @@ export {
   validatePositionHealthAfterWithdraw,
   validateReallocations,
   validateRepayAmount,
+  validateRepayParams,
   validateRepayShares,
   validateUserAddress,
 } from "./validate";

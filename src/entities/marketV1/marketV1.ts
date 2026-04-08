@@ -282,9 +282,7 @@ export interface MarketV1Actions {
    *
    * @param params.vaultAddresses - Addresses of MetaMorpho vaults that allocate to this market.
    * @param params.market - The target market data (from {@link getPositionData} or {@link getMarketData}).
-   * @param params.blockNumber - The block number to fetch data at.
-   * @param params.blockTimestamp - The block timestamp corresponding to `blockNumber`.
-   * @param params.parameters - Optional fetch parameters (state overrides).
+   * @param params.block - The block to fetch data at (number and timestamp).
    * @returns A SimulationState populated with all required data.
    */
   getReallocationData: (params: {
