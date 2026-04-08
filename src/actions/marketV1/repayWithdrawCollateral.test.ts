@@ -7,6 +7,7 @@ import { test } from "../../../test/setup";
 import {
   MutuallyExclusiveRepayAmountsError,
   NonPositiveRepayAmountError,
+  NonPositiveRepayMaxSharePriceError,
   NonPositiveTransferAmountError,
   NonPositiveWithdrawCollateralAmountError,
   TransferAmountNotEqualToAssetsError,
@@ -37,7 +38,7 @@ describe("marketV1RepayWithdrawCollateral unit tests", () => {
         withdrawAmount,
         onBehalf: client.account.address,
         receiver: client.account.address,
-        maxSharePrice: 0n,
+        maxSharePrice: 1n,
       },
     });
 
@@ -74,7 +75,7 @@ describe("marketV1RepayWithdrawCollateral unit tests", () => {
         withdrawAmount,
         onBehalf: client.account.address,
         receiver: client.account.address,
-        maxSharePrice: 0n,
+        maxSharePrice: 1n,
       },
     });
 
@@ -86,6 +87,50 @@ describe("marketV1RepayWithdrawCollateral unit tests", () => {
     expect(tx.action.args.withdrawAmount).toBe(withdrawAmount);
     expect(tx.to).toBe(bundler3);
     expect(tx.value).toBe(0n);
+  });
+
+  test("should throw NonPositiveRepayMaxSharePriceError when maxSharePrice is zero", async ({
+    client,
+  }) => {
+    expect(() =>
+      marketV1RepayWithdrawCollateral({
+        market: {
+          chainId: mainnet.id,
+          marketParams: WethUsdsMarketV1,
+        },
+        args: {
+          assets: parseUnits("100", 6),
+          shares: 0n,
+          transferAmount: parseUnits("100", 6),
+          withdrawAmount: parseUnits("1", 18),
+          onBehalf: client.account.address,
+          receiver: client.account.address,
+          maxSharePrice: 0n,
+        },
+      }),
+    ).toThrow(NonPositiveRepayMaxSharePriceError);
+  });
+
+  test("should throw NonPositiveRepayMaxSharePriceError when maxSharePrice is negative", async ({
+    client,
+  }) => {
+    expect(() =>
+      marketV1RepayWithdrawCollateral({
+        market: {
+          chainId: mainnet.id,
+          marketParams: WethUsdsMarketV1,
+        },
+        args: {
+          assets: parseUnits("100", 6),
+          shares: 0n,
+          transferAmount: parseUnits("100", 6),
+          withdrawAmount: parseUnits("1", 18),
+          onBehalf: client.account.address,
+          receiver: client.account.address,
+          maxSharePrice: -1n,
+        },
+      }),
+    ).toThrow(NonPositiveRepayMaxSharePriceError);
   });
 
   test("should throw MutuallyExclusiveRepayAmountsError when both assets and shares are non-zero", async ({
@@ -104,7 +149,7 @@ describe("marketV1RepayWithdrawCollateral unit tests", () => {
           withdrawAmount: parseUnits("1", 18),
           onBehalf: client.account.address,
           receiver: client.account.address,
-          maxSharePrice: 0n,
+          maxSharePrice: 1n,
         },
       }),
     ).toThrow(MutuallyExclusiveRepayAmountsError);
@@ -126,7 +171,7 @@ describe("marketV1RepayWithdrawCollateral unit tests", () => {
           withdrawAmount: parseUnits("1", 18),
           onBehalf: client.account.address,
           receiver: client.account.address,
-          maxSharePrice: 0n,
+          maxSharePrice: 1n,
         },
       }),
     ).toThrow(NonPositiveRepayAmountError);
@@ -148,7 +193,7 @@ describe("marketV1RepayWithdrawCollateral unit tests", () => {
           withdrawAmount: parseUnits("1", 18),
           onBehalf: client.account.address,
           receiver: client.account.address,
-          maxSharePrice: 0n,
+          maxSharePrice: 1n,
         },
       }),
     ).toThrow(NonPositiveRepayAmountError);
@@ -170,7 +215,7 @@ describe("marketV1RepayWithdrawCollateral unit tests", () => {
           withdrawAmount: parseUnits("1", 18),
           onBehalf: client.account.address,
           receiver: client.account.address,
-          maxSharePrice: 0n,
+          maxSharePrice: 1n,
         },
       }),
     ).toThrow(NonPositiveRepayAmountError);
@@ -192,7 +237,7 @@ describe("marketV1RepayWithdrawCollateral unit tests", () => {
           withdrawAmount: 0n,
           onBehalf: client.account.address,
           receiver: client.account.address,
-          maxSharePrice: 0n,
+          maxSharePrice: 1n,
         },
       }),
     ).toThrow(NonPositiveWithdrawCollateralAmountError);
@@ -214,7 +259,7 @@ describe("marketV1RepayWithdrawCollateral unit tests", () => {
           withdrawAmount: -1n,
           onBehalf: client.account.address,
           receiver: client.account.address,
-          maxSharePrice: 0n,
+          maxSharePrice: 1n,
         },
       }),
     ).toThrow(NonPositiveWithdrawCollateralAmountError);
@@ -236,7 +281,7 @@ describe("marketV1RepayWithdrawCollateral unit tests", () => {
           withdrawAmount: parseUnits("1", 18),
           onBehalf: client.account.address,
           receiver: client.account.address,
-          maxSharePrice: 0n,
+          maxSharePrice: 1n,
         },
       }),
     ).toThrow(NonPositiveTransferAmountError);
@@ -258,7 +303,7 @@ describe("marketV1RepayWithdrawCollateral unit tests", () => {
           withdrawAmount: parseUnits("1", 18),
           onBehalf: client.account.address,
           receiver: client.account.address,
-          maxSharePrice: 0n,
+          maxSharePrice: 1n,
         },
       }),
     ).toThrow(NonPositiveTransferAmountError);
@@ -283,7 +328,7 @@ describe("marketV1RepayWithdrawCollateral unit tests", () => {
           withdrawAmount: parseUnits("1", 18),
           onBehalf: client.account.address,
           receiver: client.account.address,
-          maxSharePrice: 0n,
+          maxSharePrice: 1n,
         },
       }),
     ).toThrow(TransferAmountNotEqualToAssetsError);
@@ -309,7 +354,7 @@ describe("marketV1RepayWithdrawCollateral unit tests", () => {
         withdrawAmount: parseUnits("1", 18),
         onBehalf: client.account.address,
         receiver: client.account.address,
-        maxSharePrice: 0n,
+        maxSharePrice: 1n,
       },
     });
 
@@ -329,7 +374,7 @@ describe("marketV1RepayWithdrawCollateral unit tests", () => {
         withdrawAmount: parseUnits("1", 18),
         onBehalf: client.account.address,
         receiver: client.account.address,
-        maxSharePrice: 0n,
+        maxSharePrice: 1n,
       },
     });
 
@@ -355,7 +400,7 @@ describe("marketV1RepayWithdrawCollateral unit tests", () => {
         withdrawAmount: parseUnits("1", 18),
         onBehalf: client.account.address,
         receiver: client.account.address,
-        maxSharePrice: 0n,
+        maxSharePrice: 1n,
       },
       metadata: { origin: "a1b2c3d4" },
     });

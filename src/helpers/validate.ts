@@ -21,6 +21,7 @@ import {
   NegativeReallocationFeeError,
   NonPositiveReallocationAmountError,
   NonPositiveRepayAmountError,
+  NonPositiveRepayMaxSharePriceError,
   NonPositiveTransferAmountError,
   ReallocationWithdrawalOnTargetMarketError,
   RepayExceedsDebtError,
@@ -266,14 +267,20 @@ export const validateRepayShares = (
  * @param assets - Repay assets amount (0n when repaying by shares).
  * @param shares - Repay shares amount (0n when repaying by assets).
  * @param transferAmount - ERC20 amount to transfer to GeneralAdapter1.
+ * @param maxSharePrice - Maximum repay share price (in ray). Must be positive.
  * @param marketId - The market identifier (for error messages).
  */
 export const validateRepayParams = (
   assets: bigint,
   shares: bigint,
   transferAmount: bigint,
+  maxSharePrice: bigint,
   marketId: MarketId,
 ): void => {
+  if (maxSharePrice <= 0n) {
+    throw new NonPositiveRepayMaxSharePriceError(marketId);
+  }
+
   if (assets < 0n || shares < 0n) {
     throw new NonPositiveRepayAmountError(marketId);
   }

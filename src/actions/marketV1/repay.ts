@@ -65,7 +65,13 @@ export const marketV1Repay = ({
   },
   metadata,
 }: MarketV1RepayParams): Readonly<Transaction<MarketV1RepayAction>> => {
-  validateRepayParams(assets, shares, transferAmount, marketParams.id);
+  validateRepayParams(
+    assets,
+    shares,
+    transferAmount,
+    maxSharePrice,
+    marketParams.id,
+  );
 
   const {
     bundler3: { generalAdapter1 },

@@ -256,6 +256,12 @@ export class NonPositiveRepayAmountError extends Error {
   }
 }
 
+export class NonPositiveRepayMaxSharePriceError extends Error {
+  constructor(market: string) {
+    super(`Max share price must be positive for market: ${market}`);
+  }
+}
+
 export class NonPositiveWithdrawCollateralAmountError extends Error {
   constructor(market: string) {
     super(`Withdraw collateral amount must be positive for market: ${market}`);

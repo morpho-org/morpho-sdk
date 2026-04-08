@@ -7,6 +7,7 @@ import { test } from "../../../test/setup";
 import {
   MutuallyExclusiveRepayAmountsError,
   NonPositiveRepayAmountError,
+  NonPositiveRepayMaxSharePriceError,
   NonPositiveTransferAmountError,
   TransferAmountNotEqualToAssetsError,
 } from "../../types";
@@ -32,7 +33,7 @@ describe("marketV1Repay unit tests", () => {
         transferAmount: assets,
         onBehalf: client.account.address,
         receiver: client.account.address,
-        maxSharePrice: 0n,
+        maxSharePrice: 1n,
       },
     });
 
@@ -64,7 +65,7 @@ describe("marketV1Repay unit tests", () => {
         transferAmount,
         onBehalf: client.account.address,
         receiver: client.account.address,
-        maxSharePrice: 0n,
+        maxSharePrice: 1n,
       },
     });
 
@@ -75,6 +76,48 @@ describe("marketV1Repay unit tests", () => {
     expect(tx.action.args.transferAmount).toBe(transferAmount);
     expect(tx.to).toBe(bundler3);
     expect(tx.value).toBe(0n);
+  });
+
+  test("should throw NonPositiveRepayMaxSharePriceError when maxSharePrice is zero", async ({
+    client,
+  }) => {
+    expect(() =>
+      marketV1Repay({
+        market: {
+          chainId: mainnet.id,
+          marketParams: WethUsdsMarketV1,
+        },
+        args: {
+          assets: parseUnits("100", 6),
+          shares: 0n,
+          transferAmount: parseUnits("100", 6),
+          onBehalf: client.account.address,
+          receiver: client.account.address,
+          maxSharePrice: 0n,
+        },
+      }),
+    ).toThrow(NonPositiveRepayMaxSharePriceError);
+  });
+
+  test("should throw NonPositiveRepayMaxSharePriceError when maxSharePrice is negative", async ({
+    client,
+  }) => {
+    expect(() =>
+      marketV1Repay({
+        market: {
+          chainId: mainnet.id,
+          marketParams: WethUsdsMarketV1,
+        },
+        args: {
+          assets: parseUnits("100", 6),
+          shares: 0n,
+          transferAmount: parseUnits("100", 6),
+          onBehalf: client.account.address,
+          receiver: client.account.address,
+          maxSharePrice: -1n,
+        },
+      }),
+    ).toThrow(NonPositiveRepayMaxSharePriceError);
   });
 
   test("should throw MutuallyExclusiveRepayAmountsError when both assets and shares are non-zero", async ({
@@ -92,7 +135,7 @@ describe("marketV1Repay unit tests", () => {
           transferAmount: parseUnits("100", 6),
           onBehalf: client.account.address,
           receiver: client.account.address,
-          maxSharePrice: 0n,
+          maxSharePrice: 1n,
         },
       }),
     ).toThrow(MutuallyExclusiveRepayAmountsError);
@@ -113,7 +156,7 @@ describe("marketV1Repay unit tests", () => {
           transferAmount: parseUnits("100", 6),
           onBehalf: client.account.address,
           receiver: client.account.address,
-          maxSharePrice: 0n,
+          maxSharePrice: 1n,
         },
       }),
     ).toThrow(NonPositiveRepayAmountError);
@@ -134,7 +177,7 @@ describe("marketV1Repay unit tests", () => {
           transferAmount: parseUnits("100", 6),
           onBehalf: client.account.address,
           receiver: client.account.address,
-          maxSharePrice: 0n,
+          maxSharePrice: 1n,
         },
       }),
     ).toThrow(NonPositiveRepayAmountError);
@@ -155,7 +198,7 @@ describe("marketV1Repay unit tests", () => {
           transferAmount: parseUnits("100", 6),
           onBehalf: client.account.address,
           receiver: client.account.address,
-          maxSharePrice: 0n,
+          maxSharePrice: 1n,
         },
       }),
     ).toThrow(NonPositiveRepayAmountError);
@@ -176,7 +219,7 @@ describe("marketV1Repay unit tests", () => {
           transferAmount: 0n,
           onBehalf: client.account.address,
           receiver: client.account.address,
-          maxSharePrice: 0n,
+          maxSharePrice: 1n,
         },
       }),
     ).toThrow(NonPositiveTransferAmountError);
@@ -197,7 +240,7 @@ describe("marketV1Repay unit tests", () => {
           transferAmount: -1n,
           onBehalf: client.account.address,
           receiver: client.account.address,
-          maxSharePrice: 0n,
+          maxSharePrice: 1n,
         },
       }),
     ).toThrow(NonPositiveTransferAmountError);
@@ -221,7 +264,7 @@ describe("marketV1Repay unit tests", () => {
           transferAmount,
           onBehalf: client.account.address,
           receiver: client.account.address,
-          maxSharePrice: 0n,
+          maxSharePrice: 1n,
         },
       }),
     ).toThrow(TransferAmountNotEqualToAssetsError);
@@ -246,7 +289,7 @@ describe("marketV1Repay unit tests", () => {
         transferAmount: parseUnits("100", 6),
         onBehalf: client.account.address,
         receiver: client.account.address,
-        maxSharePrice: 0n,
+        maxSharePrice: 1n,
       },
     });
 
@@ -265,7 +308,7 @@ describe("marketV1Repay unit tests", () => {
         transferAmount: parseUnits("100", 6),
         onBehalf: client.account.address,
         receiver: client.account.address,
-        maxSharePrice: 0n,
+        maxSharePrice: 1n,
       },
     });
 
@@ -290,7 +333,7 @@ describe("marketV1Repay unit tests", () => {
         transferAmount: assets,
         onBehalf: client.account.address,
         receiver: client.account.address,
-        maxSharePrice: 0n,
+        maxSharePrice: 1n,
       },
       metadata: { origin: "a1b2c3d4" },
     });
