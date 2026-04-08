@@ -5,6 +5,7 @@ import { type Client, verifyTypedData } from "viem";
 import { signTypedData } from "viem/actions";
 import {
   AddressMismatchError,
+  InvalidSignatureError,
   MissingClientPropertyError,
   type Permit2Action,
   type Requirement,
@@ -74,11 +75,15 @@ export const encodeErc20Permit2 = (
         account: client.account,
       });
 
-      await verifyTypedData({
+      const isValid = await verifyTypedData({
         ...typedData,
         address: userAddress,
         signature,
       });
+
+      if (!isValid) {
+        throw new InvalidSignatureError();
+      }
 
       return deepFreeze({
         args: {

@@ -147,6 +147,7 @@ export interface MarketV1RepayAction
       market: Hex;
       assets: bigint;
       shares: bigint;
+      transferAmount: bigint;
       onBehalf: Address;
       receiver: Address;
       maxSharePrice: bigint;
@@ -170,6 +171,7 @@ export interface MarketV1RepayWithdrawCollateralAction
       market: Hex;
       repayAssets: bigint;
       repayShares: bigint;
+      transferAmount: bigint;
       withdrawAmount: bigint;
       maxSharePrice: bigint;
       onBehalf: Address;

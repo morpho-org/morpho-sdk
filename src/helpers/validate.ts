@@ -9,6 +9,7 @@ import { isDefined } from "@morpho-org/morpho-ts";
 import { type Address, isAddressEqual } from "viem";
 import {
   AccrualPositionUserMismatchError,
+  AddressMismatchError,
   BorrowExceedsSafeLtvError,
   ChainIdMismatchError,
   ChainWNativeMissingError,
@@ -26,6 +27,29 @@ import {
   WithdrawMakesPositionUnhealthyError,
 } from "../types";
 import { DEFAULT_LLTV_BUFFER } from "./constant";
+
+/**
+ * Validates that the provided user address matches the client's connected account.
+ * Only enforced when the client has an account — skips validation for public clients
+ * (e.g., when building transactions to be signed externally).
+ *
+ * Throws {@link AddressMismatchError} if the client account is present
+ * and does not match `userAddress`.
+ *
+ * @param clientAccountAddress - The client's account address (may be undefined).
+ * @param userAddress - The user address provided by the caller.
+ */
+export const validateUserAddress = (
+  clientAccountAddress: Address | undefined,
+  userAddress: Address,
+): void => {
+  if (
+    clientAccountAddress !== undefined &&
+    !isAddressEqual(clientAccountAddress, userAddress)
+  ) {
+    throw new AddressMismatchError(clientAccountAddress, userAddress);
+  }
+};
 
 /**
  * Validates that the accrual position belongs to the expected market and user.

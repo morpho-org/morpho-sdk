@@ -152,6 +152,7 @@ export const marketV1Repay = ({
         market: marketParams.id,
         assets,
         shares,
+        transferAmount,
         onBehalf,
         receiver,
         maxSharePrice,

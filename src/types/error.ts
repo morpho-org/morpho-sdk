@@ -296,6 +296,14 @@ export class RepayExceedsDebtError extends Error {
   }
 }
 
+export class InvalidSignatureError extends Error {
+  constructor() {
+    super(
+      "Signature verification failed: the signed data does not match the expected signer address",
+    );
+  }
+}
+
 export class RepaySharesExceedDebtError extends Error {
   constructor(repayShares: bigint, borrowShares: bigint, market: string) {
     super(

@@ -173,6 +173,7 @@ export const marketV1RepayWithdrawCollateral = ({
         market: marketParams.id,
         repayAssets: assets,
         repayShares: shares,
+        transferAmount,
         withdrawAmount,
         maxSharePrice,
         onBehalf,
