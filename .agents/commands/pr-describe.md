@@ -58,25 +58,60 @@ Derive all PR content from the changes:
 
 ## What's New (feat PRs only)
 
-[Include ONLY for `feat` PRs. List new capabilities in a table.
-Each row gets a circle emoji (🟣🔴🟤🟠🟡🔵🟢) to draw attention.
+[Include ONLY for `feat` PRs that introduce new features.
+Do NOT use this section for refactors, fixes, or internal changes.
+
+Use colored circle badges (🟣🔴🟤🟠🟡🔵🟢) ONLY when presenting new features.
 Pick a different color per row. Keep descriptions ultra-short.]
 
-| | Feature | Description |
-|---|---------|-------------|
-| 🟣 | deposit | Route deposits through bundler3 via general adapter |
-| 🔵 | withdraw | Direct vault withdrawal with share-to-asset conversion |
+|     | Feature  | Description                                            |
+| --- | -------- | ------------------------------------------------------ |
+| 🟣  | deposit  | Route deposits through bundler3 via general adapter    |
+| 🔵  | withdraw | Direct vault withdrawal with share-to-asset conversion |
+
+[Additionally, present each new function with a simple summary table
+to give reviewers a quick overview of signatures and purpose:]
+
+| Function            | Parameters                         | Returns       | Purpose                                    |
+| ------------------- | ---------------------------------- | ------------- | ------------------------------------------ |
+| `vaultV1Deposit()`  | `client, { vault, assets, owner }` | `Transaction` | Build a deposit tx routed through bundler3 |
+| `vaultV1Withdraw()` | `client, { vault, assets, owner }` | `Transaction` | Build a direct vault withdrawal tx         |
 
 ## Architecture (optional)
 
 [Include ONLY if the change introduces or modifies architectural relationships.
-Use a mermaid diagram to illustrate the new/changed structure.]
 
-<!--
-Example:
+- If the PR adds a **new transaction feature** (deposit, withdraw, redeem, etc.),
+  create a **transactional flow** mermaid diagram showing the call chain from
+  user entry point to on-chain execution:
+
 ```mermaid
 graph LR
-  Client --> Entity --> Action
+  User -->|"deposit()"| Client
+  Client --> VaultEntity
+  VaultEntity --> DepositAction
+  DepositAction -->|"bundle"| GeneralAdapter
+  GeneralAdapter --> Bundler3
+  Bundler3 -->|"tx"| Vault
+```
+
+- If the PR adds **non-transactional features or modules**, create a
+  **component architecture** mermaid diagram showing how the new pieces
+  relate to existing ones:
+
+```mermaid
+graph TD
+  NewModule --> ExistingLayerA
+  NewModule --> ExistingLayerB
+  ExistingLayerA --> SharedDependency
+```
+
+Pick whichever style best represents the change. Do NOT include both unless
+the PR genuinely covers both cases.]
+
+<!--
+Always use `graph LR` for transaction flows (left-to-right = temporal order)
+and `graph TD` for architecture diagrams (top-down = dependency direction).
 ````
 
 -->
