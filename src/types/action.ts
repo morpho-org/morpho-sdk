@@ -1,4 +1,5 @@
 import type { Address, Client, Hex } from "viem";
+import type { Deallocation } from "./deallocation";
 
 export interface BaseAction<
   TType extends string = string,
@@ -20,9 +21,10 @@ export interface VaultV2DepositAction
     "vaultV2Deposit",
     {
       vault: Address;
-      assets: bigint;
+      amount: bigint;
       maxSharePrice: bigint;
       recipient: Address;
+      nativeAmount?: bigint;
     }
   > {}
 
@@ -31,7 +33,7 @@ export interface VaultV2WithdrawAction
     "vaultV2Withdraw",
     {
       vault: Address;
-      assets: bigint;
+      amount: bigint;
       recipient: Address;
     }
   > {}
@@ -46,11 +48,70 @@ export interface VaultV2RedeemAction
     }
   > {}
 
+export interface VaultV2ForceWithdrawAction
+  extends BaseAction<
+    "vaultV2ForceWithdraw",
+    {
+      vault: Address;
+      deallocations: readonly Deallocation[];
+      withdraw: { amount: bigint; recipient: Address };
+      onBehalf: Address;
+    }
+  > {}
+
+export interface VaultV2ForceRedeemAction
+  extends BaseAction<
+    "vaultV2ForceRedeem",
+    {
+      vault: Address;
+      deallocations: readonly Deallocation[];
+      redeem: { shares: bigint; recipient: Address };
+      onBehalf: Address;
+    }
+  > {}
+
+export interface VaultV1DepositAction
+  extends BaseAction<
+    "vaultV1Deposit",
+    {
+      vault: Address;
+      amount: bigint;
+      maxSharePrice: bigint;
+      recipient: Address;
+      nativeAmount?: bigint;
+    }
+  > {}
+
+export interface VaultV1WithdrawAction
+  extends BaseAction<
+    "vaultV1Withdraw",
+    {
+      vault: Address;
+      amount: bigint;
+      recipient: Address;
+    }
+  > {}
+
+export interface VaultV1RedeemAction
+  extends BaseAction<
+    "vaultV1Redeem",
+    {
+      vault: Address;
+      shares: bigint;
+      recipient: Address;
+    }
+  > {}
+
 export type TransactionAction =
   | ERC20ApprovalAction
   | VaultV2DepositAction
   | VaultV2WithdrawAction
-  | VaultV2RedeemAction;
+  | VaultV2RedeemAction
+  | VaultV2ForceWithdrawAction
+  | VaultV2ForceRedeemAction
+  | VaultV1DepositAction
+  | VaultV1WithdrawAction
+  | VaultV1RedeemAction;
 
 export interface Transaction<TAction extends BaseAction = TransactionAction> {
   readonly to: Address;
@@ -58,6 +119,17 @@ export interface Transaction<TAction extends BaseAction = TransactionAction> {
   readonly data: Hex;
   readonly action: TAction;
 }
+
+/**
+ * Enforces that at least one deposit amount source is provided.
+ *
+ * - `amount` alone: standard ERC20 deposit.
+ * - `nativeAmount` alone: pure native-wrap deposit (vault asset must be wNative).
+ * - Both: mixed deposit (ERC20 transfer + native wrap).
+ */
+export type DepositAmountArgs =
+  | { amount: bigint; nativeAmount?: bigint }
+  | { nativeAmount: bigint; amount?: bigint };
 
 export interface PermitArgs {
   owner: Address;

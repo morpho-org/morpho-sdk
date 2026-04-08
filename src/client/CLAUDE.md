@@ -7,7 +7,7 @@ Entry point of the SDK. `MorphoClient` wraps a viem `Client` and exposes vault a
 ## Intent
 
 - Manages SDK options: `supportSignature`, `supportDeployless`, `metadata`.
-- Factory for entities: `client.vaultV2(address, chainId)` → `MorphoVaultV2`.
+- Factory for entities: `client.vaultV1(address, chainId)` → `MorphoVaultV1`, `client.vaultV2(address, chainId)` → `MorphoVaultV2`.
 - Never holds state beyond configuration. Never calls actions directly.
 
 ## Key Constraint

@@ -10,8 +10,12 @@ import {
 import { test } from "../../../test/setup";
 import {
   DepositAmountMismatchError,
+  DepositAssetMismatchError,
   isRequirementApproval,
   isRequirementSignature,
+  NonPositiveAssetAmountError,
+  NonPositiveMaxSharePriceError,
+  ZeroDepositAmountError,
 } from "../../types";
 import { getRequirements } from "../requirements";
 import * as getRequirementsActionModule from "../requirements/getRequirementsAction";
@@ -65,7 +69,7 @@ describe("depositVaultV2 unit tests", () => {
         asset: dai,
       },
       args: {
-        assets,
+        amount: assets,
         maxSharePrice,
         recipient: client.account.address,
         requirementSignature,
@@ -76,7 +80,7 @@ describe("depositVaultV2 unit tests", () => {
     expect(tx).toBeDefined();
     expect(tx.action.type).toBe("vaultV2Deposit");
     expect(tx.action.args.vault).toBe(mockVaultAddress);
-    expect(tx.action.args.assets).toBe(assets);
+    expect(tx.action.args.amount).toBe(assets);
     expect(tx.action.args.maxSharePrice).toBe(maxSharePrice);
     expect(tx.action.args.recipient).toBe(client.account.address);
     expect(tx.to).toBeDefined();
@@ -125,7 +129,7 @@ describe("depositVaultV2 unit tests", () => {
         asset: usdc,
       },
       args: {
-        assets,
+        amount: assets,
         maxSharePrice,
         recipient: client.account.address,
         requirementSignature,
@@ -137,7 +141,7 @@ describe("depositVaultV2 unit tests", () => {
     expect(tx).toBeDefined();
     expect(tx.action.type).toBe("vaultV2Deposit");
     expect(tx.action.args.vault).toBe(KeyrockUsdcVaultV2.address);
-    expect(tx.action.args.assets).toBe(assets);
+    expect(tx.action.args.amount).toBe(assets);
     expect(tx.action.args.maxSharePrice).toBe(maxSharePrice);
     expect(tx.action.args.recipient).toBe(client.account.address);
     expect(tx.to).toBeDefined();
@@ -185,7 +189,7 @@ describe("depositVaultV2 unit tests", () => {
         asset: wNative,
       },
       args: {
-        assets,
+        amount: assets,
         maxSharePrice,
         recipient: client.account.address,
         requirementSignature,
@@ -195,7 +199,7 @@ describe("depositVaultV2 unit tests", () => {
     expect(tx).toBeDefined();
     expect(tx.action.type).toBe("vaultV2Deposit");
     expect(tx.action.args.vault).toBe(KpkWETHVaultV2.address);
-    expect(tx.action.args.assets).toBe(assets);
+    expect(tx.action.args.amount).toBe(assets);
     expect(tx.action.args.maxSharePrice).toBe(maxSharePrice);
     expect(tx.action.args.recipient).toBe(client.account.address);
     expect(tx.to).toBeDefined();
@@ -239,13 +243,32 @@ describe("depositVaultV2 unit tests", () => {
           asset: usdc,
         },
         args: {
-          assets: depositAmount,
+          amount: depositAmount,
           maxSharePrice,
           recipient: client.account.address,
           requirementSignature,
         },
       }),
     ).toThrow(DepositAmountMismatchError);
+  });
+
+  test("should throw NonPositiveAssetAmountError when assets is negative", async ({
+    client,
+  }) => {
+    expect(() =>
+      vaultV2Deposit({
+        vault: {
+          chainId: mainnet.id,
+          address: KeyrockUsdcVaultV2.address,
+          asset: KeyrockUsdcVaultV2.asset,
+        },
+        args: {
+          amount: -1n,
+          maxSharePrice: 1000000n,
+          recipient: client.account.address,
+        },
+      }),
+    ).toThrow(NonPositiveAssetAmountError);
   });
 
   test("should create deposit bundle without requirement signature", async ({
@@ -266,7 +289,7 @@ describe("depositVaultV2 unit tests", () => {
         asset: usdc,
       },
       args: {
-        assets,
+        amount: assets,
         maxSharePrice,
         recipient: client.account.address,
       },
@@ -277,11 +300,116 @@ describe("depositVaultV2 unit tests", () => {
     expect(tx).toBeDefined();
     expect(tx.action.type).toBe("vaultV2Deposit");
     expect(tx.action.args.vault).toBe(KeyrockUsdcVaultV2.address);
-    expect(tx.action.args.assets).toBe(assets);
+    expect(tx.action.args.amount).toBe(assets);
     expect(tx.action.args.maxSharePrice).toBe(maxSharePrice);
     expect(tx.action.args.recipient).toBe(client.account.address);
     expect(tx.to).toBeDefined();
     expect(tx.data).toBeDefined();
     expect(tx.value).toBe(0n);
+  });
+
+  test("should throw ZeroDepositAmountError when assets and nativeAmount are both zero", async ({
+    client,
+  }) => {
+    expect(() =>
+      vaultV2Deposit({
+        vault: {
+          chainId: mainnet.id,
+          address: KeyrockUsdcVaultV2.address,
+          asset: KeyrockUsdcVaultV2.asset,
+        },
+        args: {
+          amount: 0n,
+          maxSharePrice: 1000000n,
+          recipient: client.account.address,
+        },
+      }),
+    ).toThrow(ZeroDepositAmountError);
+  });
+
+  test("should throw NonPositiveMaxSharePriceError when maxSharePrice is zero", async ({
+    client,
+  }) => {
+    expect(() =>
+      vaultV2Deposit({
+        vault: {
+          chainId: mainnet.id,
+          address: KeyrockUsdcVaultV2.address,
+          asset: KeyrockUsdcVaultV2.asset,
+        },
+        args: {
+          amount: parseUnits("100", 6),
+          maxSharePrice: 0n,
+          recipient: client.account.address,
+        },
+      }),
+    ).toThrow(NonPositiveMaxSharePriceError);
+  });
+
+  test("should throw NonPositiveMaxSharePriceError when maxSharePrice is negative", async ({
+    client,
+  }) => {
+    expect(() =>
+      vaultV2Deposit({
+        vault: {
+          chainId: mainnet.id,
+          address: KeyrockUsdcVaultV2.address,
+          asset: KeyrockUsdcVaultV2.asset,
+        },
+        args: {
+          amount: parseUnits("100", 6),
+          maxSharePrice: -1n,
+          recipient: client.account.address,
+        },
+      }),
+    ).toThrow(NonPositiveMaxSharePriceError);
+  });
+
+  test("should throw DepositAssetMismatchError when signature asset does not match deposit asset", async ({
+    client,
+  }) => {
+    const assets = parseUnits("100", 18);
+    const maxSharePrice = 1000000000000000000n;
+
+    const requirements = await getRequirements(client, {
+      address: dai,
+      chainId: mainnet.id,
+      supportSignature: true,
+      args: {
+        amount: assets,
+        from: client.account.address,
+      },
+    });
+
+    const approvalPermit2 = requirements[0];
+    if (!isRequirementApproval(approvalPermit2)) {
+      throw new Error("Approval requirement not found");
+    }
+
+    const permit2Requirement = requirements[1];
+    if (!isRequirementSignature(permit2Requirement)) {
+      throw new Error("Permit2 requirement not found");
+    }
+
+    const requirementSignature = await permit2Requirement.sign(
+      client,
+      client.account.address,
+    );
+
+    expect(() =>
+      vaultV2Deposit({
+        vault: {
+          chainId: mainnet.id,
+          address: KpkWETHVaultV2.address,
+          asset: wNative,
+        },
+        args: {
+          amount: assets,
+          maxSharePrice,
+          recipient: client.account.address,
+          requirementSignature,
+        },
+      }),
+    ).toThrow(DepositAssetMismatchError);
   });
 });

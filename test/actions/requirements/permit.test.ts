@@ -4,7 +4,7 @@ import { testInvariants } from "test/helpers/invariants";
 import { isHex, parseUnits } from "viem";
 import { mainnet } from "viem/chains";
 import { describe, expect } from "vitest";
-import { test } from "../setup";
+import { test } from "../../setup";
 
 describe("Permit", () => {
   test("should deposit USDC with permit version 2", async ({ client }) => {
@@ -28,9 +28,11 @@ describe("Permit", () => {
         const morpho = new MorphoClient(client, { supportSignature: true });
 
         const vault = morpho.vaultV2(KeyrockUsdcVaultV2.address, mainnet.id);
-        const deposit = await vault.deposit({
+        const accrualVault = await vault.getData();
+        const deposit = vault.deposit({
           userAddress: client.account.address,
-          assets: amount,
+          amount: amount,
+          accrualVault,
         });
         const requirements_1 = await deposit.getRequirements({
           useSimplePermit: true,

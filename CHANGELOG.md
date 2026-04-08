@@ -1,5 +1,11 @@
 # @morpho-org/consumer-sdk
 
+## 0.3.0
+
+### Minor Changes
+
+- 33af11e: Add `forceWithdraw` and `forceRedeem` VaultV2 operations that allow users to free liquidity from non-liquidity adapters (e.g., Morpho Market V1 adapters, Vault V1 adapters) and withdraw or redeem in a single atomic transaction via VaultV2's native `multicall`. `forceWithdraw` is asset-based (specify exact assets to withdraw), while `forceRedeem` is share-based (specify exact shares to redeem). A penalty is taken from the caller for each deallocation to discourage allocation manipulation, applied as a share burn that keeps the share price stable. Includes new `Deallocation` type, `encodeForceDeallocateCall` helper, dedicated error classes (`EmptyDeallocationsError`, `DeallocationsExceedWithdrawError`), and entity-level integration on `MorphoVaultV2`.
+
 ## 0.2.0
 
 ### Minor Changes

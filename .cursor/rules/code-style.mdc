@@ -52,9 +52,9 @@ export interface VaultV2DepositAction
 Create specific error classes in `src/types/error.ts`:
 
 ```typescript
-export class ZeroAssetAmountError extends Error {
+export class NonPositiveAssetAmountError extends Error {
   constructor(asset: Address) {
-    super(`Asset amount cannot be zero for address: ${asset}`);
+    super(`Asset amount must be positive for address ${asset}`);
   }
 }
 ```

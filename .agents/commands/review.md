@@ -25,18 +25,19 @@ In GitHub Actions, use:
 
 When reviewing, refer to these project docs as needed:
 
-| Document            | Path                       | Use For                                    |
-| ------------------- | -------------------------- | ------------------------------------------ |
-| **Project Context** | `CLAUDE.md`                | Architecture, non-negotiables, conventions |
-| **Types**           | `src/types/`               | Action types, error classes, entity types   |
-| **Test Helpers**    | `test/helpers/`            | Test invariants and vault helpers           |
-| **Test Fixtures**   | `test/fixtures/`           | Shared test data                            |
+| Document            | Path             | Use For                                    |
+| ------------------- | ---------------- | ------------------------------------------ |
+| **Project Context** | `CLAUDE.md`      | Architecture, non-negotiables, conventions |
+| **Types**           | `src/types/`     | Action types, error classes, entity types  |
+| **Test Helpers**    | `test/helpers/`  | Test invariants and vault helpers          |
+| **Test Fixtures**   | `test/fixtures/` | Shared test data                           |
 
 ## Prompt
 
 You are an expert code reviewer specializing in TypeScript SDK development, viem (EVM client library), and DeFi protocol integrations — specifically the Morpho Protocol.
 
 **IMPORTANT**: Before reviewing:
+
 1. Read `CLAUDE.md` to understand the project architecture, non-negotiables, and code standards
 2. Understand the **Client → Entity → Action** layering — never accept code that skips a layer
 
@@ -60,10 +61,10 @@ Detect your environment to determine the review mode:
    **Morpho Protocol Security** (CRITICAL — review these FIRST):
 
    - **General adapter for deposits**: Deposits MUST go through the general adapter (bundler3). It enforces `maxSharePrice` — bypassing it opens an inflation attack vector
-   - **`maxSharePrice` validation**: Every deposit must include a non-zero `maxSharePrice`. Check for `ZeroMaxSharePriceError` usage
+   - **`maxSharePrice` validation**: Every deposit must include a positive `maxSharePrice`. Check for `NonPositiveMaxSharePriceError` usage
    - **`chainId` match**: Verify that `chainId` is validated between client and action params before any on-chain call. Check for `ChainIdMismatchError` usage
    - **Address validation**: Client address and args address must match. Check for `AddressMismatchError` usage
-   - **Zero-amount guards**: Assets and shares amounts must be validated (non-zero). Check for `ZeroAssetAmountError` / `ZeroSharesAmountError`
+   - **Positive-amount guards**: Assets and shares amounts must be validated (positive). Check for `NonPositiveAssetAmountError` / `NonPositiveSharesAmountError`
    - **Approval flow correctness**: Approval amounts must be >= spend amounts. Permit / Permit2 signature flows must be correct
 
    **Immutability** (CRITICAL):
@@ -157,6 +158,7 @@ gh api repos/{owner}/{repo}/pulls/{pr_number}/comments \
 ```
 
 **Parameters:**
+
 - `path`: File path relative to repo root
 - `line`: Line number in the NEW file (after changes)
 - `side`: Always use "RIGHT" for commenting on new code
@@ -170,9 +172,9 @@ After all inline comments, submit a formal PR review with your verdict.
 
 Use `gh pr review` with one of these two verdicts:
 
-| Verdict | Command | When to use |
-|---------|---------|-------------|
-| **Approve** | `gh pr review $PR_NUMBER --comment --body "..."` | No critical or important issues (minor issues OK) |
+| Verdict             | Command                                                  | When to use                                       |
+| ------------------- | -------------------------------------------------------- | ------------------------------------------------- |
+| **Approve**         | `gh pr review $PR_NUMBER --comment --body "..."`         | No critical or important issues (minor issues OK) |
 | **Request Changes** | `gh pr review $PR_NUMBER --request-changes --body "..."` | Any critical issues, or multiple important issues |
 
 **Note:** For approvals, use `--comment` with the `<!-- CLAUDE_VERDICT:APPROVE -->` marker. The workflow will auto-approve.
@@ -181,12 +183,15 @@ Use `gh pr review` with one of these two verdicts:
 
 ```markdown
 <!-- CLAUDE_VERDICT:APPROVE -->   <!-- Only include for approvals -->
+
 ## Code Review Summary
 
 ### Overview
+
 <Brief summary of the PR and overall assessment>
 
 ### Findings
+
 - 🔴 Critical: X issues
 - 🟡 Important: X issues
 - 🔵 Minor: X issues
@@ -194,7 +199,9 @@ Use `gh pr review` with one of these two verdicts:
 See inline comments for details.
 
 ### SDK Compliance
+
 <!-- Check [x] or uncheck [ ] based on actual review findings -->
+
 - [ ] Deposits routed through general adapter (bundler3) with `maxSharePrice`
 - [ ] `chainId` validated between client and params
 - [ ] All `Transaction` objects are `deepFreeze`-d
@@ -207,7 +214,9 @@ See inline comments for details.
 - [ ] Barrel exports updated in `index.ts` files
 
 ### Verdict
+
 <!-- Use one of: -->
+
 ✅ **Approved** - Code looks good!
 ❌ **Changes Requested** - Please address the issues above.
 ```

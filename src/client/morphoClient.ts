@@ -1,5 +1,5 @@
 import type { Address, Client } from "viem";
-import { MorphoVaultV2 } from "../entities";
+import { MorphoVaultV1, MorphoVaultV2 } from "../entities";
 import type { Metadata, MorphoClientType } from "../types";
 
 export class MorphoClient implements MorphoClientType {
@@ -22,6 +22,10 @@ export class MorphoClient implements MorphoClientType {
       supportSignature: _options?.supportSignature ?? false,
       supportDeployless: _options?.supportDeployless,
     };
+  }
+
+  public vaultV1(vault: Address, chainId: number) {
+    return new MorphoVaultV1(this, vault, chainId);
   }
 
   public vaultV2(vault: Address, chainId: number) {

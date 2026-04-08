@@ -8,11 +8,12 @@ alwaysApply: false
 
 ## Core Concepts
 
-- **Vault (VaultV2)**: A Morpho vault contract. Users deposit assets and receive shares proportional to their ownership.
+- **VaultV1 (MetaMorpho)**: The original Morpho vault contract. ERC4626-compliant. Uses `metaMorphoAbi`.
+- **VaultV2**: The next-generation Morpho vault contract. Uses `vaultV2Abi`. Adds forceWithdraw/forceRedeem.
 - **Assets**: The underlying ERC20 token (e.g., USDC, WETH) deposited into a vault.
 - **Shares**: Tokens representing proportional ownership of a vault's assets.
 
-## Vault Operations
+## Vault Operations (V1 and V2)
 
 ### Deposit
 
@@ -21,16 +22,34 @@ alwaysApply: false
 - Enforces `maxSharePrice` via the general adapter to prevent inflation attacks.
 - Default slippage tolerance: 0.03%.
 - CRITICAL: Never bypass the general adapter. It protects against inflation attacks on vaults without dead deposit protection.
+- Applies to both VaultV1 and VaultV2.
 
 ### Withdraw
 
 - Converts a specific amount of assets out of the vault (burns shares).
 - Direct vault call (no bundler needed).
+- Applies to both VaultV1 and VaultV2.
 
 ### Redeem
 
 - Converts a specific amount of shares back into assets.
 - Direct vault call (no bundler needed).
+- Applies to both VaultV1 and VaultV2.
+
+## VaultV2-Only Operations
+
+### Force Withdraw
+
+- Bundles one or more on-chain `forceDeallocate` calls + a final `withdraw` to exit illiquid vaults.
+- A penalty is taken as a share burn for each deallocation; withdrawn assets are returned to the vault (share price stays stable).
+- Executed atomically via VaultV2's native `multicall`.
+
+### Force Redeem
+
+- Share-based counterpart to Force Withdraw — bundles `forceDeallocate` calls + a final `redeem`.
+- Useful for maximum withdrawal scenarios where specifying an exact asset amount is impractical.
+- Same penalty mechanism as Force Withdraw.
+- Executed atomically via VaultV2's native `multicall`.
 
 ## Requirements System
 
@@ -46,6 +65,7 @@ Requirement types:
 ```
 
 Flow controlled by `supportSignature` option on MorphoClient:
+
 - `false` (default): Returns `Transaction<ERC20ApprovalAction>` (classic approval tx).
 - `true`: Tries permit, then permit2. Returns `Requirement` with a `sign()` method.
 
