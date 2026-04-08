@@ -94,7 +94,7 @@ export const validatePositionHealth = (
 ): void => {
   const { price } = positionData.market;
 
-  if (price === undefined) {
+  if (!price) {
     throw new MissingMarketPriceError(marketId);
   }
 
@@ -105,7 +105,8 @@ export const validatePositionHealth = (
     ORACLE_PRICE_SCALE,
   );
 
-  const effectiveLltv = lltv - DEFAULT_LLTV_BUFFER;
+  const effectiveLltv =
+    lltv > DEFAULT_LLTV_BUFFER ? lltv - DEFAULT_LLTV_BUFFER : 0n;
 
   const maxSafeBorrowAfter = MathLib.wMulDown(
     collateralValueAfter,
@@ -167,12 +168,17 @@ export const validateNativeCollateral = (
  * @param positionData - The current accrual position with market data.
  * @param withdrawAmount - Amount of collateral being withdrawn.
  * @param lltv - The market's liquidation LTV.
+ * @param marketId - The market identifier (for error messages).
  */
 export const validatePositionHealthAfterWithdraw = (
   positionData: AccrualPosition,
   withdrawAmount: bigint,
   lltv: bigint,
+  marketId: MarketId,
 ): void => {
+  if (positionData.marketId !== marketId) {
+    throw new MarketIdMismatchError(positionData.marketId, marketId);
+  }
   // No debt means position is always healthy — oracle price not needed.
   if (positionData.borrowAssets === 0n) {
     return;
@@ -180,7 +186,7 @@ export const validatePositionHealthAfterWithdraw = (
 
   const { price } = positionData.market;
 
-  if (price === undefined) {
+  if (!price) {
     throw new MissingMarketPriceError(positionData.marketId);
   }
 
@@ -191,7 +197,8 @@ export const validatePositionHealthAfterWithdraw = (
     ORACLE_PRICE_SCALE,
   );
 
-  const effectiveLltv = lltv - DEFAULT_LLTV_BUFFER;
+  const effectiveLltv =
+    lltv > DEFAULT_LLTV_BUFFER ? lltv - DEFAULT_LLTV_BUFFER : 0n;
   const maxSafeBorrowAfter = MathLib.wMulDown(
     collateralValueAfter,
     effectiveLltv,

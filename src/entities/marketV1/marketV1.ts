@@ -618,6 +618,7 @@ export class MorphoMarketV1 implements MarketV1Actions {
       positionData,
       amount,
       this.marketParams.lltv,
+      this.marketParams.id,
     );
 
     return {
@@ -728,6 +729,7 @@ export class MorphoMarketV1 implements MarketV1Actions {
       positionAfterRepay,
       withdrawAmount,
       this.marketParams.lltv,
+      this.marketParams.id,
     );
 
     const maxSharePrice = computeMaxRepaySharePrice(

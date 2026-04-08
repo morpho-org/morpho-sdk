@@ -57,8 +57,10 @@ export const computeReallocations = ({
         newTotalSupplyAssets;
 
   // Phase 1: "friendly" reallocations respecting withdrawal utilization targets.
-  const { withdrawals, data: friendlyReallocationData } =
+  const { withdrawals: friendlyWithdrawals, data: friendlyReallocationData } =
     data.getMarketPublicReallocations(market.id, options);
+
+  const withdrawals = [...friendlyWithdrawals];
 
   const friendlyReallocationMarket = friendlyReallocationData.getMarket(
     market.id,
