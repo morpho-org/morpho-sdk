@@ -160,6 +160,7 @@ export interface MarketV1WithdrawCollateralAction
     {
       market: Hex;
       amount: bigint;
+      onBehalf: Address;
       receiver: Address;
     }
   > {}

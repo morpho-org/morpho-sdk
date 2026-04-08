@@ -31,6 +31,7 @@ describe("marketV1WithdrawCollateral unit tests", () => {
     expect(tx.action.type).toBe("marketV1WithdrawCollateral");
     expect(tx.action.args.market).toBe(WethUsdsMarketV1.id);
     expect(tx.action.args.amount).toBe(amount);
+    expect(tx.action.args.onBehalf).toBe(client.account.address);
     expect(tx.action.args.receiver).toBe(client.account.address);
     expect(tx.to).toBe(morpho);
     expect(tx.data).toBeDefined();

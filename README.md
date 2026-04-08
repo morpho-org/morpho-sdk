@@ -184,12 +184,12 @@ const tx = buildTx(requirementSignature);
 ### Borrow
 
 ```typescript
-const accrualPosition = await market.getPositionData("0xUser...");
+const positionData = await market.getPositionData("0xUser...");
 
 const { buildTx, getRequirements } = market.borrow({
   amount: 500000000000000000n,
   userAddress: "0xUser...",
-  accrualPosition,
+  positionData,
 });
 
 const requirements = await getRequirements();
@@ -199,13 +199,13 @@ const tx = buildTx();
 ### Supply Collateral & Borrow
 
 ```typescript
-const accrualPosition = await market.getPositionData("0xUser...");
+const positionData = await market.getPositionData("0xUser...");
 
 const { buildTx, getRequirements } = market.supplyCollateralBorrow({
   amount: 1000000000000000000n,
   borrowAmount: 500000000000000000n,
   userAddress: "0xUser...",
-  accrualPosition,
+  positionData,
 });
 
 const requirements = await getRequirements();
@@ -232,13 +232,13 @@ const reallocations: VaultReallocation[] = [
   },
 ];
 
-const accrualPosition = await market.getPositionData("0xUser...");
+const positionData = await market.getPositionData("0xUser...");
 
 // Borrow with reallocations
 const { buildTx, getRequirements } = market.borrow({
   amount: 500000000000000000n,
   userAddress: "0xUser...",
-  accrualPosition,
+  positionData,
   reallocations,
 });
 
@@ -254,7 +254,7 @@ const { buildTx, getRequirements } = market.supplyCollateralBorrow({
   amount: 1000000000000000000n,
   borrowAmount: 500000000000000000n,
   userAddress: "0xUser...",
-  accrualPosition,
+  positionData,
   reallocations,
 });
 ```

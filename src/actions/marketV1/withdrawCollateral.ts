@@ -69,6 +69,7 @@ export const marketV1WithdrawCollateral = ({
       args: {
         market: marketParams.id,
         amount,
+        onBehalf,
         receiver,
       },
     },
