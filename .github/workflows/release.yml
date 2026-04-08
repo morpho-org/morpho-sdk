@@ -1,32 +1,24 @@
 name: Release
 
 on:
-  pull_request:
-    types: [closed]
-    branches: [main]
+  workflow_run:
+    workflows: ["CI"]
+    types:
+      - completed
+    branches:
+      - main
+
+concurrency: ${{ github.workflow }}-${{ github.ref }}
 
 permissions:
   id-token: write
   contents: write
+  pull-requests: write
 
 jobs:
-  lint:
-    if: github.event.pull_request.merged == true && startsWith(github.event.pull_request.head.ref, 'chore/release-')
-    uses: ./.github/workflows/lint.yml
-
-  build:
-    if: github.event.pull_request.merged == true && startsWith(github.event.pull_request.head.ref, 'chore/release-')
-    uses: ./.github/workflows/build.yml
-
-  test:
-    if: github.event.pull_request.merged == true && startsWith(github.event.pull_request.head.ref, 'chore/release-')
-    uses: ./.github/workflows/test.yml
-    secrets:
-      MAINNET_RPC_URL: ${{ secrets.MAINNET_RPC_URL }}
-
   release:
-    name: Publish to npm
-    needs: [lint, build, test]
+    name: Release
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     env:
       CI: true
@@ -42,6 +34,7 @@ jobs:
       - name: Checkout Repo
         uses: actions/checkout@v4
         with:
+          ref: ${{ github.event.workflow_run.head_branch }}
           token: ${{ steps.app-token.outputs.token }}
 
       - name: Setup pnpm
@@ -53,29 +46,21 @@ jobs:
           node-version: 20.x
           cache: pnpm
           registry-url: https://registry.npmjs.org
-          scope: "@morpho-org"
+          scope: '@morpho-org'
 
+      # Required to use OIDC trusted publishing.
       - run: npm install -g npm@latest
 
       - name: Install Dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Build
-        run: pnpm build
-
-      - name: Get version
-        id: version
-        run: echo "version=$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
-
-      - name: Publish to npm
-        run: pnpm publish --access public --no-git-checks
-        env:
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-
-      - name: Create Git Tag
-        run: |
-          git tag v${{ steps.version.outputs.version }}
-          git push origin v${{ steps.version.outputs.version }}
+      - name: Create Release Pull Request or Publish to npm
+        id: changesets
+        uses: changesets/action@v1
+        with:
+          publish: pnpm release --access public
         env:
           GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          CI: true
+          HUSKY: 0
