@@ -13,6 +13,7 @@ import {
   NegativeNativeAmountError,
   NonPositiveAssetAmountError,
   NonPositiveBorrowAmountError,
+  NonPositiveMinBorrowSharePriceError,
   type RequirementSignature,
   type Transaction,
   type VaultReallocation,
@@ -81,6 +82,10 @@ export const marketV1SupplyCollateralBorrow = ({
 
   if (borrowAmount <= 0n) {
     throw new NonPositiveBorrowAmountError(marketParams.id);
+  }
+
+  if (minSharePrice < 0n) {
+    throw new NonPositiveMinBorrowSharePriceError(marketParams.id);
   }
 
   const totalCollateral = amount + (nativeAmount ?? 0n);

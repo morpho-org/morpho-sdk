@@ -33,7 +33,7 @@ export const computeReallocations = ({
   readonly borrowAmount: bigint;
   readonly options?: ReallocationComputeOptions;
 }): readonly VaultReallocation[] => {
-  if (!options?.enabled) return [];
+  if (options?.enabled === false) return [];
 
   const market = data.getMarket(marketId).accrueInterest(data.block.timestamp);
 
@@ -41,8 +41,8 @@ export const computeReallocations = ({
   const newTotalSupplyAssets = market.totalSupplyAssets;
 
   const supplyTargetUtilization =
-    options.supplyTargetUtilization?.[market.params.id] ??
-    options.defaultSupplyTargetUtilization ??
+    options?.supplyTargetUtilization?.[market.params.id] ??
+    options?.defaultSupplyTargetUtilization ??
     DEFAULT_SUPPLY_TARGET_UTILIZATION;
 
   if (
