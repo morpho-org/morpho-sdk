@@ -34,7 +34,7 @@ jobs:
       - name: Checkout Repo
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.workflow_run.head_branch }}
+          ref: main
           token: ${{ steps.app-token.outputs.token }}
 
       - name: Setup pnpm

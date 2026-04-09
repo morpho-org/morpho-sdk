@@ -1,0 +1,2 @@
+/.github/CODEOWNERS @morpho-org/security
+/.github/workflows/release.yml @morpho-org/security
