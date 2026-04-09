@@ -127,6 +127,8 @@ export interface MarketV1Actions {
    * `getRequirements` returns `morpho.setAuthorization(generalAdapter1, true)` if not yet authorized,
    * since borrowing through bundler3 requires GeneralAdapter1 authorization on Morpho.
    *
+   * **Stale `positionData` may cause unexpected health.**
+   *
    * @param params - Borrow parameters including pre-fetched `positionData` for health validation.
    * @returns Object with `buildTx` and `getRequirements`.
    */
@@ -156,6 +158,8 @@ export interface MarketV1Actions {
    * `getRequirements` returns ERC20 approval for loan token to GeneralAdapter1.
    * Does NOT require Morpho authorization (anyone can repay on behalf of anyone).
    *
+   * **Shares mode:** `slippageTolerance` also caps `transferAmount`.
+   *
    * @param params - Repay parameters including pre-fetched `positionData`.
    * @returns Object with `buildTx` and `getRequirements`.
    */
@@ -184,6 +188,8 @@ export interface MarketV1Actions {
    * No `getRequirements` — no ERC20 approval or GeneralAdapter1 authorization needed
    * (collateral flows out of Morpho, not in).
    *
+   * **No on-chain slippage guard — stale `positionData` risks liquidation.**
+   *
    * @param params - Withdraw collateral parameters including pre-fetched `positionData` for health validation.
    * @returns Object with `buildTx`.
    */
@@ -205,6 +211,8 @@ export interface MarketV1Actions {
    * `getRequirements` returns in parallel:
    * - ERC20 approval for loan token to GeneralAdapter1 (for the repay).
    * - `morpho.setAuthorization(generalAdapter1, true)` if not yet authorized (for the withdraw).
+   *
+   * **Stale `positionData` risks underestimated debt and unsafe withdrawal.**
    *
    * @param params - Combined parameters including pre-fetched `positionData`.
    * @returns Object with `buildTx` and `getRequirements`.
@@ -244,6 +252,8 @@ export interface MarketV1Actions {
    * - ERC20 approval or permit for collateral token (to GeneralAdapter1).
    * - `morpho.setAuthorization(generalAdapter1, true)` if adapter is not yet authorized.
    *
+   * **Stale `positionData` may cause unexpected health.**
+   *
    * @param params - Combined parameters including pre-fetched `positionData` for health validation.
    * @returns Object with `buildTx` and `getRequirements`.
    */
@@ -277,6 +287,8 @@ export interface MarketV1Actions {
    * The returned simulation state can be passed to {@link getReallocations}
    * to compute the `VaultReallocation[]` array for `borrow()` or
    * `supplyCollateralBorrow()`.
+   *
+   * **Stale data reverts on-chain (fail-safe).**
    *
    * @param params.vaultAddresses - Addresses of MetaMorpho vaults that allocate to this market.
    * @param params.market - The target market data (from {@link getPositionData} or {@link getMarketData}).
