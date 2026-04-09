@@ -12,7 +12,25 @@ Prepare and open a release PR that, once merged to `main`, triggers npm publish 
 
 You are helping the user prepare a release. The workflow analyzes changes since the last published version, bumps the version in `package.json`, and opens a PR on a `chore/release-v<version>` branch. Merging the PR to `main` triggers CI to publish on npm.
 
-### Step 1: Validate Working Tree
+### Step 1: Switch to main and Validate Working Tree
+
+**Hard requirement:** Releases MUST always be based on the latest `main`. Never release from a feature branch or a stale local main.
+
+First, switch to `main` and pull the latest changes. If either command fails, **stop immediately** and report the error to the user:
+
+```bash
+git checkout main && git pull origin main
+```
+
+Then verify you are on `main`:
+
+```bash
+git branch --show-current
+```
+
+If the output is not `main`, **abort** and inform the user.
+
+Then check for uncommitted changes:
 
 ```bash
 git status --porcelain
@@ -113,11 +131,29 @@ pnpm lint && pnpm build
 
 Both must pass. Fix any issues before continuing.
 
-### Step 8: Create Release Branch and PR
+### Step 8: Update CHANGELOG.md
+
+Prepend a new entry to `CHANGELOG.md` following the existing format:
+
+```markdown
+## <new-version>
+
+### Minor Changes (if any feat commits)
+
+- <commit-hash>: <Description of the feature>
+
+### Patch Changes (if any fix/perf/refactor commits)
+
+- <commit-hash>: <Description of the fix>
+```
+
+Write accurate, detailed descriptions by reading the diffs. Match the style of existing entries.
+
+### Step 9: Create Release Branch and PR
 
 ```bash
 git checkout -b chore/release-v<new-version>
-git add package.json
+git add package.json CHANGELOG.md
 git commit -m "chore(release): v<new-version>"
 git push -u origin chore/release-v<new-version>
 ```
@@ -145,7 +181,7 @@ EOF
 )"
 ```
 
-### Step 9: Final Output
+### Step 10: Final Output
 
 Return to the user:
 
