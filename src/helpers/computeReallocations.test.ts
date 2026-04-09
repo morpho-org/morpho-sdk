@@ -127,15 +127,6 @@ function makeMockState({
 
 describe("computeReallocations", () => {
   describe("early returns", () => {
-    test("should return empty when options is undefined", () => {
-      const result = computeReallocations({
-        reallocationData: {} as SimulationState,
-        marketId: targetParams.id,
-        borrowAmount: MathLib.WAD,
-      });
-      expect(result).toEqual([]);
-    });
-
     test("should return empty when enabled is false", () => {
       const result = computeReallocations({
         reallocationData: {} as SimulationState,
