@@ -2,7 +2,11 @@ import { type MarketId, MarketUtils, MathLib } from "@morpho-org/blue-sdk";
 import { DEFAULT_SUPPLY_TARGET_UTILIZATION } from "@morpho-org/bundler-sdk-viem";
 import type { SimulationState } from "@morpho-org/simulation-sdk";
 import type { Address } from "viem";
-import type { ReallocationComputeOptions, VaultReallocation } from "../types";
+import {
+  MissingPublicAllocatorConfigError,
+  type ReallocationComputeOptions,
+  type VaultReallocation,
+} from "../types";
 
 /**
  * Computes vault reallocations for a borrow operation on a target market.
@@ -114,7 +118,13 @@ export const computeReallocations = ({
     .filter(([, vaultWithdrawals]) => vaultWithdrawals.length > 0)
     .map(([vault, vaultWithdrawals]) => ({
       vault: vault as Address,
-      fee: data.getVault(vault as Address).publicAllocatorConfig?.fee ?? 0n,
+      fee: (() => {
+        const config = data.getVault(vault as Address).publicAllocatorConfig;
+        if (config == null) {
+          throw new MissingPublicAllocatorConfigError(vault);
+        }
+        return config.fee;
+      })(),
       withdrawals: vaultWithdrawals
         // Reallocation withdrawals must be sorted by market id in ascending order.
         .sort(({ id: idA }, { id: idB }) => (idA > idB ? 1 : -1))

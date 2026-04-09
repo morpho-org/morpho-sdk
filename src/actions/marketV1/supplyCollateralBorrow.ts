@@ -5,7 +5,6 @@ import type { Address } from "viem";
 import {
   addTransactionMetadata,
   validateNativeCollateral,
-  validateReallocations,
 } from "../../helpers";
 import {
   type DepositAmountArgs,
@@ -20,6 +19,7 @@ import {
   ZeroCollateralAmountError,
 } from "../../types";
 import { getRequirementsAction } from "../requirements/getRequirementsAction";
+import { buildReallocationActions } from "./buildReallocationActions";
 
 /** Parameters for {@link marketV1SupplyCollateralBorrow}. */
 export interface MarketV1SupplyCollateralBorrowParams {
@@ -95,7 +95,7 @@ export const marketV1SupplyCollateralBorrow = ({
 
   const actions: Action[] = [];
 
-  if (nativeAmount) {
+  if (nativeAmount !== undefined && nativeAmount > 0n) {
     validateNativeCollateral(chainId, marketParams.collateralToken);
 
     actions.push(
@@ -133,26 +133,12 @@ export const marketV1SupplyCollateralBorrow = ({
     args: [marketParams, totalCollateral, onBehalf, [], false],
   });
 
-  const reallocationFee =
-    reallocations?.reduce((sum, r) => sum + r.fee, 0n) ?? 0n;
+  let reallocationFee = 0n;
 
   if (reallocations && reallocations.length > 0) {
-    validateReallocations(reallocations, marketParams.id);
-    for (const r of reallocations) {
-      actions.push({
-        type: "reallocateTo",
-        args: [
-          r.vault,
-          r.fee,
-          r.withdrawals.map((w) => ({
-            marketParams: w.marketParams,
-            amount: w.amount,
-          })),
-          marketParams,
-          false,
-        ],
-      });
-    }
+    const result = buildReallocationActions(reallocations, marketParams);
+    actions.push(...result.actions);
+    reallocationFee = result.fee;
   }
 
   actions.push({

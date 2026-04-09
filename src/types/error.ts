@@ -317,3 +317,17 @@ export class RepaySharesExceedDebtError extends Error {
     );
   }
 }
+
+export class MissingPublicAllocatorConfigError extends Error {
+  constructor(vault: string) {
+    super(
+      `Vault ${vault} has no public allocator configured but was selected for reallocation`,
+    );
+  }
+}
+
+export class NonPositiveMinBorrowSharePriceError extends Error {
+  constructor(market: string) {
+    super(`Min share price must be non-negative for market: ${market}`);
+  }
+}

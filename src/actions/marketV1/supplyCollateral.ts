@@ -70,7 +70,7 @@ export const marketV1SupplyCollateral = ({
 
   const actions: Action[] = [];
 
-  if (nativeAmount) {
+  if (nativeAmount !== undefined && nativeAmount > 0n) {
     validateNativeCollateral(chainId, marketParams.collateralToken);
 
     actions.push(

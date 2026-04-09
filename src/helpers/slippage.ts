@@ -1,5 +1,8 @@
 import { type Market, MathLib } from "@morpho-org/blue-sdk";
-import { ShareDivideByZeroError } from "../types";
+import {
+  ExcessiveSlippageToleranceError,
+  ShareDivideByZeroError,
+} from "../types";
 import { MAX_ABSOLUTE_SHARE_PRICE } from "./constant";
 
 /**
@@ -20,10 +23,14 @@ export function computeMinBorrowSharePrice(
   market: Market,
   slippageTolerance: bigint,
 ): bigint {
+  if (slippageTolerance >= MathLib.WAD) {
+    throw new ExcessiveSlippageToleranceError(slippageTolerance);
+  }
+
   const expectedShares = market.toBorrowShares(borrowAmount, "Up");
 
   if (expectedShares === 0n) {
-    return 0n;
+    throw new ShareDivideByZeroError(market.params.id);
   }
 
   return MathLib.mulDivDown(
@@ -58,6 +65,10 @@ export function computeMaxRepaySharePrice(
   market: Market,
   slippageTolerance: bigint,
 ): bigint {
+  if (slippageTolerance >= MathLib.WAD) {
+    throw new ExcessiveSlippageToleranceError(slippageTolerance);
+  }
+
   let assets: bigint;
   let shares: bigint;
 

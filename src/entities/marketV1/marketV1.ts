@@ -41,13 +41,12 @@ import {
   validatePositionHealthAfterWithdraw,
   validateRepayAmount,
   validateRepayShares,
+  validateSlippageTolerance,
   validateUserAddress,
 } from "../../helpers";
-import { MAX_SLIPPAGE_TOLERANCE } from "../../helpers/constant";
 import {
   type DepositAmountArgs,
   type ERC20ApprovalAction,
-  ExcessiveSlippageToleranceError,
   MarketIdMismatchError,
   type MarketV1BorrowAction,
   type MarketV1RepayAction,
@@ -60,7 +59,6 @@ import {
   type MorphoClientType,
   MutuallyExclusiveRepayAmountsError,
   NegativeNativeAmountError,
-  NegativeSlippageToleranceError,
   NonPositiveAssetAmountError,
   NonPositiveBorrowAmountError,
   NonPositiveRepayAmountError,
@@ -366,7 +364,7 @@ export class MorphoMarketV1 implements MarketV1Actions {
       throw new ZeroCollateralAmountError(this.marketParams.id);
     }
 
-    if (nativeAmount) {
+    if (nativeAmount !== undefined && nativeAmount > 0n) {
       validateNativeCollateral(this.chainId, this.marketParams.collateralToken);
     }
 
@@ -418,12 +416,7 @@ export class MorphoMarketV1 implements MarketV1Actions {
       throw new NonPositiveBorrowAmountError(this.marketParams.id);
     }
 
-    if (slippageTolerance < 0n) {
-      throw new NegativeSlippageToleranceError(slippageTolerance);
-    }
-    if (slippageTolerance > MAX_SLIPPAGE_TOLERANCE) {
-      throw new ExcessiveSlippageToleranceError(slippageTolerance);
-    }
+    validateSlippageTolerance(slippageTolerance);
 
     if (!positionData) {
       throw new MissingAccrualPositionError(this.marketParams.id);
@@ -506,12 +499,7 @@ export class MorphoMarketV1 implements MarketV1Actions {
       }
     }
 
-    if (slippageTolerance < 0n) {
-      throw new NegativeSlippageToleranceError(slippageTolerance);
-    }
-    if (slippageTolerance > MAX_SLIPPAGE_TOLERANCE) {
-      throw new ExcessiveSlippageToleranceError(slippageTolerance);
-    }
+    validateSlippageTolerance(slippageTolerance);
 
     if (!positionData) {
       throw new MissingAccrualPositionError(this.marketParams.id);
@@ -677,12 +665,7 @@ export class MorphoMarketV1 implements MarketV1Actions {
       throw new NonPositiveWithdrawCollateralAmountError(this.marketParams.id);
     }
 
-    if (slippageTolerance < 0n) {
-      throw new NegativeSlippageToleranceError(slippageTolerance);
-    }
-    if (slippageTolerance > MAX_SLIPPAGE_TOLERANCE) {
-      throw new ExcessiveSlippageToleranceError(slippageTolerance);
-    }
+    validateSlippageTolerance(slippageTolerance);
 
     if (!positionData) {
       throw new MissingAccrualPositionError(this.marketParams.id);
@@ -820,14 +803,9 @@ export class MorphoMarketV1 implements MarketV1Actions {
       throw new ZeroCollateralAmountError(this.marketParams.id);
     }
 
-    if (slippageTolerance < 0n) {
-      throw new NegativeSlippageToleranceError(slippageTolerance);
-    }
-    if (slippageTolerance > MAX_SLIPPAGE_TOLERANCE) {
-      throw new ExcessiveSlippageToleranceError(slippageTolerance);
-    }
+    validateSlippageTolerance(slippageTolerance);
 
-    if (nativeAmount) {
+    if (nativeAmount !== undefined && nativeAmount > 0n) {
       validateNativeCollateral(this.chainId, this.marketParams.collateralToken);
     }
 

@@ -2,14 +2,16 @@ import type { MarketParams } from "@morpho-org/blue-sdk";
 import { type Action, BundlerAction } from "@morpho-org/bundler-sdk-viem";
 import { deepFreeze } from "@morpho-org/morpho-ts";
 import type { Address } from "viem";
-import { addTransactionMetadata, validateReallocations } from "../../helpers";
+import { addTransactionMetadata } from "../../helpers";
 import {
   type MarketV1BorrowAction,
   type Metadata,
   NonPositiveBorrowAmountError,
+  NonPositiveMinBorrowSharePriceError,
   type Transaction,
   type VaultReallocation,
 } from "../../types";
+import { buildReallocationActions } from "./buildReallocationActions";
 
 /** Parameters for {@link marketV1Borrow}. */
 export interface MarketV1BorrowParams {
@@ -51,28 +53,17 @@ export const marketV1Borrow = ({
     throw new NonPositiveBorrowAmountError(marketParams.id);
   }
 
-  const actions: Action[] = [];
+  if (minSharePrice < 0n) {
+    throw new NonPositiveMinBorrowSharePriceError(marketParams.id);
+  }
 
-  const reallocationFee =
-    reallocations?.reduce((sum, r) => sum + r.fee, 0n) ?? 0n;
+  const actions: Action[] = [];
+  let reallocationFee = 0n;
 
   if (reallocations && reallocations.length > 0) {
-    validateReallocations(reallocations, marketParams.id);
-    for (const r of reallocations) {
-      actions.push({
-        type: "reallocateTo",
-        args: [
-          r.vault,
-          r.fee,
-          r.withdrawals.map((w) => ({
-            marketParams: w.marketParams,
-            amount: w.amount,
-          })),
-          marketParams,
-          false,
-        ],
-      });
-    }
+    const result = buildReallocationActions(reallocations, marketParams);
+    actions.push(...result.actions);
+    reallocationFee = result.fee;
   }
 
   actions.push({

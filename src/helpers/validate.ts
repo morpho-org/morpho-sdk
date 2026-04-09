@@ -14,11 +14,13 @@ import {
   ChainIdMismatchError,
   ChainWNativeMissingError,
   EmptyReallocationWithdrawalsError,
+  ExcessiveSlippageToleranceError,
   MarketIdMismatchError,
   MissingMarketPriceError,
   MutuallyExclusiveRepayAmountsError,
   NativeAmountOnNonWNativeCollateralError,
   NegativeReallocationFeeError,
+  NegativeSlippageToleranceError,
   NonPositiveReallocationAmountError,
   NonPositiveRepayAmountError,
   NonPositiveRepayMaxSharePriceError,
@@ -29,9 +31,10 @@ import {
   TransferAmountNotEqualToAssetsError,
   UnsortedReallocationWithdrawalsError,
   type VaultReallocation,
+  WithdrawExceedsCollateralError,
   WithdrawMakesPositionUnhealthyError,
 } from "../types";
-import { DEFAULT_LLTV_BUFFER } from "./constant";
+import { DEFAULT_LLTV_BUFFER, MAX_SLIPPAGE_TOLERANCE } from "./constant";
 
 /**
  * Validates that the provided user address matches the client's connected account.
@@ -184,6 +187,14 @@ export const validatePositionHealthAfterWithdraw = (
   if (positionData.marketId !== marketId) {
     throw new MarketIdMismatchError(positionData.marketId, marketId);
   }
+  if (withdrawAmount > positionData.collateral) {
+    throw new WithdrawExceedsCollateralError(
+      withdrawAmount,
+      positionData.collateral,
+      marketId,
+    );
+  }
+
   // No debt means position is always healthy — oracle price not needed.
   if (positionData.borrowAssets === 0n) {
     return;
@@ -352,5 +363,22 @@ export const validateReallocations = (
       }
       prevId = w.marketParams.id;
     }
+  }
+};
+
+/**
+ * Validates that a slippage tolerance is within an acceptable range.
+ *
+ * Throws {@link NegativeSlippageToleranceError} if negative.
+ * Throws {@link ExcessiveSlippageToleranceError} if greater than {@link MAX_SLIPPAGE_TOLERANCE}.
+ *
+ * @param slippageTolerance - The slippage tolerance in WAD.
+ */
+export const validateSlippageTolerance = (slippageTolerance: bigint): void => {
+  if (slippageTolerance < 0n) {
+    throw new NegativeSlippageToleranceError(slippageTolerance);
+  }
+  if (slippageTolerance > MAX_SLIPPAGE_TOLERANCE) {
+    throw new ExcessiveSlippageToleranceError(slippageTolerance);
   }
 };

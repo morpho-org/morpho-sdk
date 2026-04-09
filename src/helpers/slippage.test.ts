@@ -38,9 +38,10 @@ const highSharePriceMarket = new Market({
 const slippage03 = (3n * MathLib.WAD) / 1000n; // 0.3%
 
 describe("computeMinBorrowSharePrice", () => {
-  test("should return 0n when borrowAmount is zero", () => {
-    const result = computeMinBorrowSharePrice(0n, normalMarket, slippage03);
-    expect(result).toBe(0n);
+  test("should throw ShareDivideByZeroError when borrowAmount is zero", () => {
+    expect(() =>
+      computeMinBorrowSharePrice(0n, normalMarket, slippage03),
+    ).toThrow(ShareDivideByZeroError);
   });
 
   test("should return a positive share price for a normal borrow", () => {

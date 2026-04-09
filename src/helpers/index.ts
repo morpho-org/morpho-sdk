@@ -14,5 +14,6 @@ export {
   validateRepayAmount,
   validateRepayParams,
   validateRepayShares,
+  validateSlippageTolerance,
   validateUserAddress,
 } from "./validate";
