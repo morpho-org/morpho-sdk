@@ -1,5 +1,11 @@
 # @morpho-org/consumer-sdk
 
+## 0.4.0
+
+### Minor Changes
+
+- 1b5f2bd: Add VaultV1 (MetaMorpho) support with `deposit`, `withdraw`, and `redeem` operations. Deposit is routed through bundler3 with general adapter enforcement (`maxSharePrice` protection against inflation attacks). Withdraw and redeem are direct vault calls. Both VaultV1 and VaultV2 deposits now support optional `nativeAmount` parameter for native token wrapping via `GeneralAdapter1.wrapNative()` on wNative vaults (e.g. deposit ETH directly into a WETH vault). Includes new `MorphoVaultV1` entity, action builders, dedicated error classes, and comprehensive test coverage.
+
 ## 0.3.0
 
 ### Minor Changes
