@@ -76,13 +76,13 @@ export const marketV1RepayWithdrawCollateral = ({
 }: MarketV1RepayWithdrawCollateralParams): Readonly<
   Transaction<MarketV1RepayWithdrawCollateralAction>
 > => {
-  validateRepayParams(
+  validateRepayParams({
     assets,
     shares,
     transferAmount,
     maxSharePrice,
-    marketParams.id,
-  );
+    marketId: marketParams.id,
+  });
 
   if (withdrawAmount <= 0n) {
     throw new NonPositiveWithdrawCollateralAmountError(marketParams.id);

@@ -20,12 +20,12 @@ describe("WithdrawCollateralMarketV1", () => {
   test("should create withdrawCollateral bundle", async ({ client }) => {
     const collateralAmount = parseUnits("10", 18);
 
-    await supplyCollateral(
+    await supplyCollateral({
       client,
-      mainnet.id,
-      WethUsdsMarketV1,
+      chainId: mainnet.id,
+      market: WethUsdsMarketV1,
       collateralAmount,
-    );
+    });
 
     const morphoClient = new MorphoClient(client);
     const market = morphoClient.marketV1(WethUsdsMarketV1, mainnet.id);
@@ -55,12 +55,12 @@ describe("WithdrawCollateralMarketV1", () => {
     const collateralAmount = parseUnits("10", 18);
     const withdrawAmount = parseUnits("5", 18);
 
-    await supplyCollateral(
+    await supplyCollateral({
       client,
-      mainnet.id,
-      WethUsdsMarketV1,
+      chainId: mainnet.id,
+      market: WethUsdsMarketV1,
       collateralAmount,
-    );
+    });
 
     const {
       markets: {
@@ -106,12 +106,12 @@ describe("WithdrawCollateralMarketV1", () => {
     const collateralAmount = parseUnits("10", 18);
     const withdrawAmount = collateralAmount;
 
-    await supplyCollateral(
+    await supplyCollateral({
       client,
-      mainnet.id,
-      WethUsdsMarketV1,
+      chainId: mainnet.id,
+      market: WethUsdsMarketV1,
       collateralAmount,
-    );
+    });
 
     const {
       markets: {
@@ -147,13 +147,18 @@ describe("WithdrawCollateralMarketV1", () => {
     const collateralAmount = parseUnits("10", 18);
     const borrowAmount = parseUnits("1000", 18);
 
-    await supplyCollateral(
+    await supplyCollateral({
       client,
-      mainnet.id,
-      WethUsdsMarketV1,
+      chainId: mainnet.id,
+      market: WethUsdsMarketV1,
       collateralAmount,
-    );
-    await borrow(client, mainnet.id, WethUsdsMarketV1, borrowAmount);
+    });
+    await borrow({
+      client,
+      chainId: mainnet.id,
+      market: WethUsdsMarketV1,
+      borrowAmount,
+    });
 
     const morphoClient = new MorphoClient(client);
     const market = morphoClient.marketV1(WethUsdsMarketV1, mainnet.id);
@@ -172,15 +177,20 @@ describe("WithdrawCollateralMarketV1", () => {
   test("should throw when withdraw exceeds collateral", async ({ client }) => {
     const collateralAmount = parseUnits("10", 18);
 
-    await supplyCollateral(
+    await supplyCollateral({
       client,
-      mainnet.id,
-      WethUsdsMarketV1,
+      chainId: mainnet.id,
+      market: WethUsdsMarketV1,
       collateralAmount,
-    );
+    });
 
     // Create a borrow position so borrowAssets > 0 (triggers the check path)
-    await borrow(client, mainnet.id, WethUsdsMarketV1, parseUnits("100", 18));
+    await borrow({
+      client,
+      chainId: mainnet.id,
+      market: WethUsdsMarketV1,
+      borrowAmount: parseUnits("100", 18),
+    });
 
     const morphoClient = new MorphoClient(client);
     const market = morphoClient.marketV1(WethUsdsMarketV1, mainnet.id);
@@ -229,12 +239,12 @@ describe("WithdrawCollateralMarketV1", () => {
   test("should return deep-frozen transaction", async ({ client }) => {
     const collateralAmount = parseUnits("10", 18);
 
-    await supplyCollateral(
+    await supplyCollateral({
       client,
-      mainnet.id,
-      WethUsdsMarketV1,
+      chainId: mainnet.id,
+      market: WethUsdsMarketV1,
       collateralAmount,
-    );
+    });
 
     const morphoClient = new MorphoClient(client);
     const market = morphoClient.marketV1(WethUsdsMarketV1, mainnet.id);

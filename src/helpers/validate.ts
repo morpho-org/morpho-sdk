@@ -66,15 +66,17 @@ export const validateUserAddress = (
  * Throws {@link AccrualPositionUserMismatchError} if the position's user
  * does not match the expected user.
  *
- * @param positionData - The accrual position to validate.
- * @param expectedMarketId - The market ID the position must belong to.
- * @param expectedUser - The user address the position must belong to.
+ * @param params - Validation parameters.
+ * @param params.positionData - The accrual position to validate.
+ * @param params.expectedMarketId - The market ID the position must belong to.
+ * @param params.expectedUser - The user address the position must belong to.
  */
-export const validateAccrualPosition = (
-  positionData: AccrualPosition,
-  expectedMarketId: MarketId,
-  expectedUser: Address,
-): void => {
+export const validateAccrualPosition = (params: {
+  positionData: AccrualPosition;
+  expectedMarketId: MarketId;
+  expectedUser: Address;
+}): void => {
+  const { positionData, expectedMarketId, expectedUser } = params;
   if (positionData.marketId !== expectedMarketId) {
     throw new MarketIdMismatchError(positionData.marketId, expectedMarketId);
   }
@@ -87,19 +89,22 @@ export const validateAccrualPosition = (
  * Validates that the resulting position stays within the safe LTV threshold
  * (LLTV minus buffer) after supplying additional collateral and borrowing.
  *
- * @param positionData - The current accrual position with market data.
- * @param additionalCollateral - Amount of collateral being added.
- * @param borrowAmount - Amount being borrowed.
- * @param marketId - The market identifier (for error messages).
- * @param lltv - The market's liquidation LTV.
+ * @param params - Validation parameters.
+ * @param params.positionData - The current accrual position with market data.
+ * @param params.additionalCollateral - Amount of collateral being added.
+ * @param params.borrowAmount - Amount being borrowed.
+ * @param params.marketId - The market identifier (for error messages).
+ * @param params.lltv - The market's liquidation LTV.
  */
-export const validatePositionHealth = (
-  positionData: AccrualPosition,
-  additionalCollateral: bigint,
-  borrowAmount: bigint,
-  marketId: MarketId,
-  lltv: bigint,
-): void => {
+export const validatePositionHealth = (params: {
+  positionData: AccrualPosition;
+  additionalCollateral: bigint;
+  borrowAmount: bigint;
+  marketId: MarketId;
+  lltv: bigint;
+}): void => {
+  const { positionData, additionalCollateral, borrowAmount, marketId, lltv } =
+    params;
   const { price } = positionData.market;
 
   if (!price) {
@@ -173,26 +178,29 @@ export const validateNativeCollateral = (
  * Validates that the resulting position stays within the safe LTV threshold
  * (LLTV minus buffer) after withdrawing collateral.
  *
- * @param positionData - The current accrual position with market data.
- * @param withdrawAmount - Amount of collateral being withdrawn.
- * @param lltv - The market's liquidation LTV.
- * @param marketId - The market identifier (for error messages).
+ * @param params - Validation parameters.
+ * @param params.positionData - The current accrual position with market data.
+ * @param params.withdrawAmount - Amount of collateral being withdrawn.
+ * @param params.lltv - The market's liquidation LTV.
+ * @param params.marketId - The market identifier (for error messages).
  */
-export const validatePositionHealthAfterWithdraw = (
-  positionData: AccrualPosition,
-  withdrawAmount: bigint,
-  lltv: bigint,
-  marketId: MarketId,
-): void => {
+export const validatePositionHealthAfterWithdraw = (params: {
+  positionData: AccrualPosition;
+  withdrawAmount: bigint;
+  lltv: bigint;
+  marketId: MarketId;
+}): void => {
+  const { positionData, withdrawAmount, lltv, marketId } = params;
+
   if (positionData.marketId !== marketId) {
     throw new MarketIdMismatchError(positionData.marketId, marketId);
   }
   if (withdrawAmount > positionData.collateral) {
-    throw new WithdrawExceedsCollateralError(
+    throw new WithdrawExceedsCollateralError({
       withdrawAmount,
-      positionData.collateral,
-      marketId,
-    );
+      available: positionData.collateral,
+      market: marketId,
+    });
   }
 
   // No debt means position is always healthy — oracle price not needed.
@@ -221,53 +229,57 @@ export const validatePositionHealthAfterWithdraw = (
   );
 
   if (positionData.borrowAssets > maxSafeBorrowAfter) {
-    throw new WithdrawMakesPositionUnhealthyError(
+    throw new WithdrawMakesPositionUnhealthyError({
       withdrawAmount,
-      positionData.borrowAssets,
-      maxSafeBorrowAfter,
-    );
+      borrowAssets: positionData.borrowAssets,
+      maxSafeBorrow: maxSafeBorrowAfter,
+    });
   }
 };
 
 /**
  * Validates that the repay amount assets does not exceed the outstanding debt.
  *
- * @param positionData - The current accrual position.
- * @param repayAssets - The amount of assets to repay.
- * @param marketId - The market identifier (for error messages).
+ * @param params - Validation parameters.
+ * @param params.positionData - The current accrual position.
+ * @param params.repayAssets - The amount of assets to repay.
+ * @param params.marketId - The market identifier (for error messages).
  */
-export const validateRepayAmount = (
-  positionData: AccrualPosition,
-  repayAssets: bigint,
-  marketId: MarketId,
-): void => {
+export const validateRepayAmount = (params: {
+  positionData: AccrualPosition;
+  repayAssets: bigint;
+  marketId: MarketId;
+}): void => {
+  const { positionData, repayAssets, marketId } = params;
   if (repayAssets > positionData.borrowAssets) {
-    throw new RepayExceedsDebtError(
-      repayAssets,
-      positionData.borrowAssets,
-      marketId,
-    );
+    throw new RepayExceedsDebtError({
+      repayAmount: repayAssets,
+      debt: positionData.borrowAssets,
+      market: marketId,
+    });
   }
 };
 
 /**
  * Validates that the repay shares do not exceed the outstanding borrow shares.
  *
- * @param positionData - The current accrual position.
- * @param repayShares - The amount of shares to repay.
- * @param marketId - The market identifier (for error messages).
+ * @param params - Validation parameters.
+ * @param params.positionData - The current accrual position.
+ * @param params.repayShares - The amount of shares to repay.
+ * @param params.marketId - The market identifier (for error messages).
  */
-export const validateRepayShares = (
-  positionData: AccrualPosition,
-  repayShares: bigint,
-  marketId: MarketId,
-): void => {
+export const validateRepayShares = (params: {
+  positionData: AccrualPosition;
+  repayShares: bigint;
+  marketId: MarketId;
+}): void => {
+  const { positionData, repayShares, marketId } = params;
   if (repayShares > positionData.borrowShares) {
-    throw new RepaySharesExceedDebtError(
+    throw new RepaySharesExceedDebtError({
       repayShares,
-      positionData.borrowShares,
-      marketId,
-    );
+      borrowShares: positionData.borrowShares,
+      market: marketId,
+    });
   }
 };
 
@@ -275,19 +287,22 @@ export const validateRepayShares = (
  * Validates the common repay input parameters shared by `marketV1Repay`
  * and `marketV1RepayWithdrawCollateral`.
  *
- * @param assets - Repay assets amount (0n when repaying by shares).
- * @param shares - Repay shares amount (0n when repaying by assets).
- * @param transferAmount - ERC20 amount to transfer to GeneralAdapter1.
- * @param maxSharePrice - Maximum repay share price (in ray). Must be positive.
- * @param marketId - The market identifier (for error messages).
+ * @param params - Validation parameters.
+ * @param params.assets - Repay assets amount (0n when repaying by shares).
+ * @param params.shares - Repay shares amount (0n when repaying by assets).
+ * @param params.transferAmount - ERC20 amount to transfer to GeneralAdapter1.
+ * @param params.maxSharePrice - Maximum repay share price (in ray). Must be positive.
+ * @param params.marketId - The market identifier (for error messages).
  */
-export const validateRepayParams = (
-  assets: bigint,
-  shares: bigint,
-  transferAmount: bigint,
-  maxSharePrice: bigint,
-  marketId: MarketId,
-): void => {
+export const validateRepayParams = (params: {
+  assets: bigint;
+  shares: bigint;
+  transferAmount: bigint;
+  maxSharePrice: bigint;
+  marketId: MarketId;
+}): void => {
+  const { assets, shares, transferAmount, maxSharePrice, marketId } = params;
+
   if (maxSharePrice <= 0n) {
     throw new NonPositiveRepayMaxSharePriceError(marketId);
   }
@@ -309,11 +324,11 @@ export const validateRepayParams = (
   }
 
   if (assets > 0n && transferAmount !== assets) {
-    throw new TransferAmountNotEqualToAssetsError(
+    throw new TransferAmountNotEqualToAssetsError({
       transferAmount,
       assets,
-      marketId,
-    );
+      market: marketId,
+    });
   }
 };
 

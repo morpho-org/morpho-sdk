@@ -30,13 +30,18 @@ describe("RepayMarketV1", () => {
     const borrowAmount = parseUnits("1000", 18);
     const repayAmount = parseUnits("500", 18);
 
-    await supplyCollateral(
+    await supplyCollateral({
       client,
-      mainnet.id,
-      WethUsdsMarketV1,
+      chainId: mainnet.id,
+      market: WethUsdsMarketV1,
       collateralAmount,
-    );
-    await borrow(client, mainnet.id, WethUsdsMarketV1, borrowAmount);
+    });
+    await borrow({
+      client,
+      chainId: mainnet.id,
+      market: WethUsdsMarketV1,
+      borrowAmount,
+    });
 
     const morphoClient = new MorphoClient(client);
     const market = morphoClient.marketV1(WethUsdsMarketV1, mainnet.id);
@@ -50,12 +55,12 @@ describe("RepayMarketV1", () => {
 
     const tx = repay.buildTx();
 
-    const maxSharePrice = computeMaxRepaySharePrice(
-      repayAmount,
-      0n,
-      positionData.market,
-      DEFAULT_SLIPPAGE_TOLERANCE,
-    );
+    const maxSharePrice = computeMaxRepaySharePrice({
+      repayAssets: repayAmount,
+      repayShares: 0n,
+      market: positionData.market,
+      slippageTolerance: DEFAULT_SLIPPAGE_TOLERANCE,
+    });
 
     const directTx = marketV1Repay({
       market: { chainId: mainnet.id, marketParams: WethUsdsMarketV1 },
@@ -78,13 +83,18 @@ describe("RepayMarketV1", () => {
     const collateralAmount = parseUnits("10", 18);
     const borrowAmount = parseUnits("1000", 18);
 
-    await supplyCollateral(
+    await supplyCollateral({
       client,
-      mainnet.id,
-      WethUsdsMarketV1,
+      chainId: mainnet.id,
+      market: WethUsdsMarketV1,
       collateralAmount,
-    );
-    await borrow(client, mainnet.id, WethUsdsMarketV1, borrowAmount);
+    });
+    await borrow({
+      client,
+      chainId: mainnet.id,
+      market: WethUsdsMarketV1,
+      borrowAmount,
+    });
 
     const morphoClient = new MorphoClient(client);
     const market = morphoClient.marketV1(WethUsdsMarketV1, mainnet.id);
@@ -107,13 +117,18 @@ describe("RepayMarketV1", () => {
     const borrowAmount = parseUnits("1000", 18);
     const repayAmount = parseUnits("500", 18);
 
-    await supplyCollateral(
+    await supplyCollateral({
       client,
-      mainnet.id,
-      WethUsdsMarketV1,
+      chainId: mainnet.id,
+      market: WethUsdsMarketV1,
       collateralAmount,
-    );
-    await borrow(client, mainnet.id, WethUsdsMarketV1, borrowAmount);
+    });
+    await borrow({
+      client,
+      chainId: mainnet.id,
+      market: WethUsdsMarketV1,
+      borrowAmount,
+    });
 
     const {
       markets: {
@@ -167,13 +182,18 @@ describe("RepayMarketV1", () => {
     const collateralAmount = parseUnits("10", 18);
     const borrowAmount = parseUnits("1000", 18);
 
-    await supplyCollateral(
+    await supplyCollateral({
       client,
-      mainnet.id,
-      WethUsdsMarketV1,
+      chainId: mainnet.id,
+      market: WethUsdsMarketV1,
       collateralAmount,
-    );
-    await borrow(client, mainnet.id, WethUsdsMarketV1, borrowAmount);
+    });
+    await borrow({
+      client,
+      chainId: mainnet.id,
+      market: WethUsdsMarketV1,
+      borrowAmount,
+    });
 
     // Deal enough loan tokens to cover the buffered transfer amount (slippage buffer)
     const morphoClientSetup = new MorphoClient(client);
@@ -249,13 +269,18 @@ describe("RepayMarketV1", () => {
     const collateralAmount = parseUnits("10", 18);
     const borrowAmount = parseUnits("1000", 18);
 
-    await supplyCollateral(
+    await supplyCollateral({
       client,
-      mainnet.id,
-      WethUsdsMarketV1,
+      chainId: mainnet.id,
+      market: WethUsdsMarketV1,
       collateralAmount,
-    );
-    await borrow(client, mainnet.id, WethUsdsMarketV1, borrowAmount);
+    });
+    await borrow({
+      client,
+      chainId: mainnet.id,
+      market: WethUsdsMarketV1,
+      borrowAmount,
+    });
 
     const morphoClient = new MorphoClient(client);
     const market = morphoClient.marketV1(WethUsdsMarketV1, mainnet.id);
@@ -319,13 +344,18 @@ describe("RepayMarketV1", () => {
     const collateralAmount = parseUnits("10", 18);
     const borrowAmount = parseUnits("1000", 18);
 
-    await supplyCollateral(
+    await supplyCollateral({
       client,
-      mainnet.id,
-      WethUsdsMarketV1,
+      chainId: mainnet.id,
+      market: WethUsdsMarketV1,
       collateralAmount,
-    );
-    await borrow(client, mainnet.id, WethUsdsMarketV1, borrowAmount);
+    });
+    await borrow({
+      client,
+      chainId: mainnet.id,
+      market: WethUsdsMarketV1,
+      borrowAmount,
+    });
 
     const morphoClient = new MorphoClient(client);
     const market = morphoClient.marketV1(WethUsdsMarketV1, mainnet.id);
@@ -373,13 +403,18 @@ describe("RepayMarketV1", () => {
     const collateralAmount = parseUnits("10", 18);
     const borrowAmount = parseUnits("1000", 18);
 
-    await supplyCollateral(
+    await supplyCollateral({
       client,
-      mainnet.id,
-      WethUsdsMarketV1,
+      chainId: mainnet.id,
+      market: WethUsdsMarketV1,
       collateralAmount,
-    );
-    await borrow(client, mainnet.id, WethUsdsMarketV1, borrowAmount);
+    });
+    await borrow({
+      client,
+      chainId: mainnet.id,
+      market: WethUsdsMarketV1,
+      borrowAmount,
+    });
 
     const morphoClient = new MorphoClient(client);
     const market = morphoClient.marketV1(WethUsdsMarketV1, mainnet.id);

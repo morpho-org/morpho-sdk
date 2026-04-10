@@ -89,13 +89,13 @@ export class DepositAssetMismatchError extends Error {
 }
 
 export class DeallocationsExceedWithdrawError extends Error {
-  constructor(
-    vault: Address,
-    withdrawAmount: bigint,
-    totalDeallocated: bigint,
-  ) {
+  constructor(params: {
+    vault: Address;
+    withdrawAmount: bigint;
+    totalDeallocated: bigint;
+  }) {
     super(
-      `Total deallocated amount (${totalDeallocated}) exceed withdraw amount (${withdrawAmount}) for vault: ${vault}`,
+      `Total deallocated amount (${params.totalDeallocated}) exceed withdraw amount (${params.withdrawAmount}) for vault: ${params.vault}`,
     );
   }
 }
@@ -235,9 +235,13 @@ export class NonPositiveTransferAmountError extends Error {
 }
 
 export class TransferAmountNotEqualToAssetsError extends Error {
-  constructor(transferAmount: bigint, assets: bigint, market: string) {
+  constructor(params: {
+    transferAmount: bigint;
+    assets: bigint;
+    market: string;
+  }) {
     super(
-      `Transfer amount ${transferAmount} is not equal to repay assets ${assets} for market: ${market}`,
+      `Transfer amount ${params.transferAmount} is not equal to repay assets ${params.assets} for market: ${params.market}`,
     );
   }
 }
@@ -269,21 +273,25 @@ export class NonPositiveWithdrawCollateralAmountError extends Error {
 }
 
 export class WithdrawExceedsCollateralError extends Error {
-  constructor(withdrawAmount: bigint, available: bigint, market: string) {
+  constructor(params: {
+    withdrawAmount: bigint;
+    available: bigint;
+    market: string;
+  }) {
     super(
-      `Withdraw amount ${withdrawAmount} exceeds available collateral ${available} for market: ${market}`,
+      `Withdraw amount ${params.withdrawAmount} exceeds available collateral ${params.available} for market: ${params.market}`,
     );
   }
 }
 
 export class WithdrawMakesPositionUnhealthyError extends Error {
-  constructor(
-    withdrawAmount: bigint,
-    borrowAssets: bigint,
-    maxSafeBorrow: bigint,
-  ) {
+  constructor(params: {
+    withdrawAmount: bigint;
+    borrowAssets: bigint;
+    maxSafeBorrow: bigint;
+  }) {
     super(
-      `Withdrawing ${withdrawAmount} collateral would make position unhealthy. Max safe borrow after withdrawal: ${maxSafeBorrow}. Actual Borrow assets: ${borrowAssets}.`,
+      `Withdrawing ${params.withdrawAmount} collateral would make position unhealthy. Max safe borrow after withdrawal: ${params.maxSafeBorrow}. Actual Borrow assets: ${params.borrowAssets}.`,
     );
   }
 }
@@ -295,9 +303,9 @@ export class ShareDivideByZeroError extends Error {
 }
 
 export class RepayExceedsDebtError extends Error {
-  constructor(repayAmount: bigint, debt: bigint, market: string) {
+  constructor(params: { repayAmount: bigint; debt: bigint; market: string }) {
     super(
-      `Repay amount ${repayAmount} exceeds outstanding debt ${debt} for market: ${market}`,
+      `Repay amount ${params.repayAmount} exceeds outstanding debt ${params.debt} for market: ${params.market}`,
     );
   }
 }
@@ -311,9 +319,13 @@ export class InvalidSignatureError extends Error {
 }
 
 export class RepaySharesExceedDebtError extends Error {
-  constructor(repayShares: bigint, borrowShares: bigint, market: string) {
+  constructor(params: {
+    repayShares: bigint;
+    borrowShares: bigint;
+    market: string;
+  }) {
     super(
-      `Repay shares ${repayShares} exceed outstanding borrow shares ${borrowShares} for market: ${market}`,
+      `Repay shares ${params.repayShares} exceed outstanding borrow shares ${params.borrowShares} for market: ${params.market}`,
     );
   }
 }

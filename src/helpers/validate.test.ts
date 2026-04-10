@@ -112,23 +112,35 @@ describe("validateAccrualPosition", () => {
   test("should pass when position matches market and user", () => {
     const pos = makePosition();
     expect(() =>
-      validateAccrualPosition(pos, marketParams.id, USER_A),
+      validateAccrualPosition({
+        positionData: pos,
+        expectedMarketId: marketParams.id,
+        expectedUser: USER_A,
+      }),
     ).not.toThrow();
   });
 
   test("should throw MarketIdMismatchError when market IDs differ", () => {
     const pos = makePosition();
     const otherMarketId = new MarketParams(CbbtcUsdcMarketV1).id;
-    expect(() => validateAccrualPosition(pos, otherMarketId, USER_A)).toThrow(
-      MarketIdMismatchError,
-    );
+    expect(() =>
+      validateAccrualPosition({
+        positionData: pos,
+        expectedMarketId: otherMarketId,
+        expectedUser: USER_A,
+      }),
+    ).toThrow(MarketIdMismatchError);
   });
 
   test("should throw AccrualPositionUserMismatchError when users differ", () => {
     const pos = makePosition({ user: USER_A });
-    expect(() => validateAccrualPosition(pos, marketParams.id, USER_B)).toThrow(
-      AccrualPositionUserMismatchError,
-    );
+    expect(() =>
+      validateAccrualPosition({
+        positionData: pos,
+        expectedMarketId: marketParams.id,
+        expectedUser: USER_B,
+      }),
+    ).toThrow(AccrualPositionUserMismatchError);
   });
 });
 
@@ -149,7 +161,13 @@ describe("validatePositionHealth", () => {
     // borrowing 80% of collateral should be safe.
     const borrowAmount = (8n * 10n ** 17n) / 10n; // 0.08 in 18-dec ≈ 8%
     expect(() =>
-      validatePositionHealth(pos, 0n, borrowAmount, marketParams.id, lltv),
+      validatePositionHealth({
+        positionData: pos,
+        additionalCollateral: 0n,
+        borrowAmount,
+        marketId: marketParams.id,
+        lltv,
+      }),
     ).not.toThrow();
   });
 
@@ -158,7 +176,13 @@ describe("validatePositionHealth", () => {
       market: makeMarket({ price: undefined }),
     });
     expect(() =>
-      validatePositionHealth(pos, 0n, 10n ** 18n, marketParams.id, lltv),
+      validatePositionHealth({
+        positionData: pos,
+        additionalCollateral: 0n,
+        borrowAmount: 10n ** 18n,
+        marketId: marketParams.id,
+        lltv,
+      }),
     ).toThrow(MissingMarketPriceError);
   });
 
@@ -171,7 +195,13 @@ describe("validatePositionHealth", () => {
     // With 1:1 price, borrowing 90% of collateral exceeds the 85.5% effective LLTV.
     const borrowAmount = (9n * 10n ** 18n) / 10n;
     expect(() =>
-      validatePositionHealth(pos, 0n, borrowAmount, marketParams.id, lltv),
+      validatePositionHealth({
+        positionData: pos,
+        additionalCollateral: 0n,
+        borrowAmount,
+        marketId: marketParams.id,
+        lltv,
+      }),
     ).toThrow(BorrowExceedsSafeLtvError);
   });
 
@@ -185,13 +215,13 @@ describe("validatePositionHealth", () => {
     const borrowAmount = (9n * 10n ** 18n) / 10n;
     // …but adding 1e18 more collateral makes total 2e18 → 45% LTV, safe.
     expect(() =>
-      validatePositionHealth(
-        pos,
-        10n ** 18n,
+      validatePositionHealth({
+        positionData: pos,
+        additionalCollateral: 10n ** 18n,
         borrowAmount,
-        marketParams.id,
+        marketId: marketParams.id,
         lltv,
-      ),
+      }),
     ).not.toThrow();
   });
 });
@@ -253,12 +283,12 @@ describe("validatePositionHealthAfterWithdraw", () => {
       market: makeMarket({ price: undefined }),
     });
     expect(() =>
-      validatePositionHealthAfterWithdraw(
-        pos,
-        10n ** 18n,
+      validatePositionHealthAfterWithdraw({
+        positionData: pos,
+        withdrawAmount: 10n ** 18n,
         lltv,
-        marketParams.id,
-      ),
+        marketId: marketParams.id,
+      }),
     ).not.toThrow();
   });
 
@@ -272,12 +302,12 @@ describe("validatePositionHealthAfterWithdraw", () => {
     });
     // Withdraw a small amount — position should remain healthy.
     expect(() =>
-      validatePositionHealthAfterWithdraw(
-        pos,
-        10n ** 14n,
+      validatePositionHealthAfterWithdraw({
+        positionData: pos,
+        withdrawAmount: 10n ** 14n,
         lltv,
-        marketParams.id,
-      ),
+        marketId: marketParams.id,
+      }),
     ).not.toThrow();
   });
 
@@ -288,12 +318,12 @@ describe("validatePositionHealthAfterWithdraw", () => {
       market,
     });
     expect(() =>
-      validatePositionHealthAfterWithdraw(
-        pos,
-        10n ** 14n,
+      validatePositionHealthAfterWithdraw({
+        positionData: pos,
+        withdrawAmount: 10n ** 14n,
         lltv,
-        marketParams.id,
-      ),
+        marketId: marketParams.id,
+      }),
     ).toThrow(MissingMarketPriceError);
   });
 
@@ -307,12 +337,12 @@ describe("validatePositionHealthAfterWithdraw", () => {
     });
     // Withdrawing most of the collateral makes position unhealthy.
     expect(() =>
-      validatePositionHealthAfterWithdraw(
-        pos,
-        (9n * 10n ** 17n) / 10n,
+      validatePositionHealthAfterWithdraw({
+        positionData: pos,
+        withdrawAmount: (9n * 10n ** 17n) / 10n,
         lltv,
-        marketParams.id,
-      ),
+        marketId: marketParams.id,
+      }),
     ).toThrow(WithdrawMakesPositionUnhealthyError);
   });
 });
@@ -329,7 +359,11 @@ describe("validateRepayAmount", () => {
       market,
     });
     expect(() =>
-      validateRepayAmount(pos, pos.borrowAssets, marketParams.id),
+      validateRepayAmount({
+        positionData: pos,
+        repayAssets: pos.borrowAssets,
+        marketId: marketParams.id,
+      }),
     ).not.toThrow();
   });
 
@@ -340,7 +374,11 @@ describe("validateRepayAmount", () => {
       market,
     });
     expect(() =>
-      validateRepayAmount(pos, pos.borrowAssets + 1n, marketParams.id),
+      validateRepayAmount({
+        positionData: pos,
+        repayAssets: pos.borrowAssets + 1n,
+        marketId: marketParams.id,
+      }),
     ).toThrow(RepayExceedsDebtError);
   });
 });
@@ -357,7 +395,11 @@ describe("validateRepayShares", () => {
       market,
     });
     expect(() =>
-      validateRepayShares(pos, pos.borrowShares, marketParams.id),
+      validateRepayShares({
+        positionData: pos,
+        repayShares: pos.borrowShares,
+        marketId: marketParams.id,
+      }),
     ).not.toThrow();
   });
 
@@ -368,7 +410,11 @@ describe("validateRepayShares", () => {
       market,
     });
     expect(() =>
-      validateRepayShares(pos, pos.borrowShares + 1n, marketParams.id),
+      validateRepayShares({
+        positionData: pos,
+        repayShares: pos.borrowShares + 1n,
+        marketId: marketParams.id,
+      }),
     ).toThrow(RepaySharesExceedDebtError);
   });
 });

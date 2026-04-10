@@ -43,11 +43,11 @@ describe("SupplyCollateralBorrowMarketV1", () => {
       })
       .buildTx();
 
-    const minSharePrice = computeMinBorrowSharePrice(
+    const minSharePrice = computeMinBorrowSharePrice({
       borrowAmount,
-      positionData.market,
-      DEFAULT_SLIPPAGE_TOLERANCE,
-    );
+      market: positionData.market,
+      slippageTolerance: DEFAULT_SLIPPAGE_TOLERANCE,
+    });
 
     const directTx = marketV1SupplyCollateralBorrow({
       market: { chainId: mainnet.id, marketParams: WethUsdsMarketV1 },
@@ -563,12 +563,12 @@ describe("SupplyCollateralBorrowMarketV1", () => {
       const morphoClient = new MorphoClient(client);
       const market = morphoClient.marketV1(WethUsdsMarketV1, mainnet.id);
 
-      await supplyCollateral(
+      await supplyCollateral({
         client,
-        mainnet.id,
-        WethUsdsMarketV1,
-        parseUnits("1", 18),
-      );
+        chainId: mainnet.id,
+        market: WethUsdsMarketV1,
+        collateralAmount: parseUnits("1", 18),
+      });
 
       const newAccrualPosition = await market.getPositionData(
         client.account.address,

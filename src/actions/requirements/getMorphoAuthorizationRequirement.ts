@@ -16,16 +16,19 @@ import {
  *
  * Required before any bundled borrow on behalf of the user (e.g. `supplyCollateralBorrow`).
  *
- * @param viemClient - Connected viem client.
- * @param chainId - Target chain ID (used to look up Morpho and GeneralAdapter1 addresses).
- * @param userAddress - The user who needs to authorize GeneralAdapter1.
+ * @param params - Request parameters.
+ * @param params.viemClient - Connected viem client.
+ * @param params.chainId - Target chain ID (used to look up Morpho and GeneralAdapter1 addresses).
+ * @param params.userAddress - The user who needs to authorize GeneralAdapter1.
  * @returns Deep-frozen authorization transaction, or `null` if already authorized.
  */
-export const getMorphoAuthorizationRequirement = async (
-  viemClient: Client,
-  chainId: number,
-  userAddress: Address,
-): Promise<Readonly<Transaction<MorphoAuthorizationAction>> | null> => {
+export const getMorphoAuthorizationRequirement = async (params: {
+  viemClient: Client;
+  chainId: number;
+  userAddress: Address;
+}): Promise<Readonly<Transaction<MorphoAuthorizationAction>> | null> => {
+  const { viemClient, chainId, userAddress } = params;
+
   if (viemClient.chain?.id !== chainId) {
     throw new ChainIdMismatchError(viemClient.chain?.id, chainId);
   }

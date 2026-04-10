@@ -35,12 +35,12 @@ describe("Borrow with single vault reallocation (e2e)", () => {
     const borrowAmount = parseUnits("1000", 6); // USDC 6 decimals
     const reallocationAmount = parseUnits("2000", 6);
 
-    await supplyCollateral(
+    await supplyCollateral({
       client,
-      mainnet.id,
-      CbbtcUsdcMarketV1,
+      chainId: mainnet.id,
+      market: CbbtcUsdcMarketV1,
       collateralAmount,
-    );
+    });
 
     const reallocations: readonly VaultReallocation[] = [
       {
@@ -118,12 +118,12 @@ describe("Borrow with multiple source market withdrawals", () => {
     const reallocationAmount1 = parseUnits("1500", 6);
     const reallocationAmount2 = parseUnits("1000", 6);
 
-    await supplyCollateral(
+    await supplyCollateral({
       client,
-      mainnet.id,
-      CbbtcUsdcMarketV1,
+      chainId: mainnet.id,
+      market: CbbtcUsdcMarketV1,
       collateralAmount,
-    );
+    });
 
     const reallocations: readonly VaultReallocation[] = [
       {
@@ -200,12 +200,12 @@ describe("Borrow with reallocation fee", () => {
     const reallocationFee = parseUnits("0.01", 18); // 0.01 ETH
     const reallocationAmount = parseUnits("2000", 6);
 
-    await supplyCollateral(
+    await supplyCollateral({
       client,
-      mainnet.id,
-      CbbtcUsdcMarketV1,
+      chainId: mainnet.id,
+      market: CbbtcUsdcMarketV1,
       collateralAmount,
-    );
+    });
 
     // Impersonate the PA admin to set a fee on the Steakhouse vault
     const { publicAllocator } = getChainAddresses(mainnet.id);
@@ -622,12 +622,12 @@ describe("getReallocationData and getReallocations", () => {
     const collateralAmount = parseUnits("1000", 8);
     const borrowAmount = parseUnits("50000000", 6);
 
-    await supplyCollateral(
+    await supplyCollateral({
       client,
-      mainnet.id,
-      CbbtcUsdcMarketV1,
+      chainId: mainnet.id,
+      market: CbbtcUsdcMarketV1,
       collateralAmount,
-    );
+    });
 
     const {
       markets: {

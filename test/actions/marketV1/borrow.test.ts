@@ -26,12 +26,12 @@ describe("BorrowMarketV1", () => {
     const collateralAmount = parseUnits("10", 18);
     const amount = parseUnits("100", 18);
 
-    await supplyCollateral(
+    await supplyCollateral({
       client,
-      mainnet.id,
-      WethUsdsMarketV1,
+      chainId: mainnet.id,
+      market: WethUsdsMarketV1,
       collateralAmount,
-    );
+    });
 
     const morphoClient = new MorphoClient(client);
     const market = morphoClient.marketV1(WethUsdsMarketV1, mainnet.id);
@@ -45,11 +45,11 @@ describe("BorrowMarketV1", () => {
 
     const tx = borrow.buildTx();
 
-    const minSharePrice = computeMinBorrowSharePrice(
-      amount,
-      positionData.market,
-      DEFAULT_SLIPPAGE_TOLERANCE,
-    );
+    const minSharePrice = computeMinBorrowSharePrice({
+      borrowAmount: amount,
+      market: positionData.market,
+      slippageTolerance: DEFAULT_SLIPPAGE_TOLERANCE,
+    });
 
     const directTx = marketV1Borrow({
       market: { chainId: mainnet.id, marketParams: WethUsdsMarketV1 },
@@ -71,12 +71,12 @@ describe("BorrowMarketV1", () => {
       erc20: WethUsdsMarketV1.collateralToken,
       amount: collateralAmount,
     });
-    await supplyCollateral(
+    await supplyCollateral({
       client,
-      mainnet.id,
-      WethUsdsMarketV1,
+      chainId: mainnet.id,
+      market: WethUsdsMarketV1,
       collateralAmount,
-    );
+    });
 
     const morphoClient = new MorphoClient(client);
     const market = morphoClient.marketV1(WethUsdsMarketV1, mainnet.id);
@@ -106,12 +106,12 @@ describe("BorrowMarketV1", () => {
     const collateralAmount = parseUnits("10", 18);
     const borrowAmount = parseUnits("1000", 18);
 
-    await supplyCollateral(
+    await supplyCollateral({
       client,
-      mainnet.id,
-      WethUsdsMarketV1,
+      chainId: mainnet.id,
+      market: WethUsdsMarketV1,
       collateralAmount,
-    );
+    });
 
     const {
       markets: {
@@ -176,12 +176,12 @@ describe("BorrowMarketV1", () => {
     const collateralAmount = parseUnits("1", 18);
     const borrowAmount = parseUnits("10000", 18);
 
-    await supplyCollateral(
+    await supplyCollateral({
       client,
-      mainnet.id,
-      WethUsdsMarketV1,
+      chainId: mainnet.id,
+      market: WethUsdsMarketV1,
       collateralAmount,
-    );
+    });
 
     const morphoClient = new MorphoClient(client);
     const market = morphoClient.marketV1(WethUsdsMarketV1, mainnet.id);

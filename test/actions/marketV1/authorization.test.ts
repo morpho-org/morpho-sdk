@@ -17,12 +17,12 @@ describe("AuthorizationMarketV1", () => {
         bundler3: { generalAdapter1 },
       } = getChainAddresses(mainnet.id);
 
-      await supplyCollateral(
+      await supplyCollateral({
         client,
-        mainnet.id,
-        WethUsdsMarketV1,
-        parseUnits("10", 18),
-      );
+        chainId: mainnet.id,
+        market: WethUsdsMarketV1,
+        collateralAmount: parseUnits("10", 18),
+      });
 
       const morphoClient = new MorphoClient(client);
       const market = morphoClient.marketV1(WethUsdsMarketV1, mainnet.id);
@@ -47,12 +47,12 @@ describe("AuthorizationMarketV1", () => {
     test("should include setAuthorization in both borrow and supplyCollateralBorrow requirements", async ({
       client,
     }) => {
-      await supplyCollateral(
+      await supplyCollateral({
         client,
-        mainnet.id,
-        WethUsdsMarketV1,
-        parseUnits("10", 18),
-      );
+        chainId: mainnet.id,
+        market: WethUsdsMarketV1,
+        collateralAmount: parseUnits("10", 18),
+      });
 
       const morphoClient = new MorphoClient(client);
       const market = morphoClient.marketV1(WethUsdsMarketV1, mainnet.id);
@@ -84,12 +84,12 @@ describe("AuthorizationMarketV1", () => {
     test("should return no setAuthorization requirement when GeneralAdapter1 is already authorized", async ({
       client,
     }) => {
-      await supplyCollateral(
+      await supplyCollateral({
         client,
-        mainnet.id,
-        WethUsdsMarketV1,
-        parseUnits("10", 18),
-      );
+        chainId: mainnet.id,
+        market: WethUsdsMarketV1,
+        collateralAmount: parseUnits("10", 18),
+      });
 
       const morphoClient = new MorphoClient(client);
       const market = morphoClient.marketV1(WethUsdsMarketV1, mainnet.id);

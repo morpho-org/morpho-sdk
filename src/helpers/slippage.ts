@@ -13,16 +13,19 @@ import { MAX_ABSOLUTE_SHARE_PRICE } from "./constant";
  * require(borrowedAssets.rDivDown(borrowedShares) >= minSharePriceE27)
  * ```
  *
- * @param borrowAmount - The amount of assets to borrow.
- * @param market - The market to compute the minimum borrow share price for.
- * @param slippageTolerance - Slippage tolerance in WAD (e.g. 0.003e18 = 0.3%).
+ * @param params - Computation parameters.
+ * @param params.borrowAmount - The amount of assets to borrow.
+ * @param params.market - The market to compute the minimum borrow share price for.
+ * @param params.slippageTolerance - Slippage tolerance in WAD (e.g. 0.003e18 = 0.3%).
  * @returns minSharePriceE27 in RAY scale (1e27).
  */
-export function computeMinBorrowSharePrice(
-  borrowAmount: bigint,
-  market: Market,
-  slippageTolerance: bigint,
-): bigint {
+export function computeMinBorrowSharePrice(params: {
+  borrowAmount: bigint;
+  market: Market;
+  slippageTolerance: bigint;
+}): bigint {
+  const { borrowAmount, market, slippageTolerance } = params;
+
   if (slippageTolerance >= MathLib.WAD) {
     throw new ExcessiveSlippageToleranceError(slippageTolerance);
   }
@@ -53,18 +56,21 @@ export function computeMinBorrowSharePrice(
  *
  * Capped at {@link MAX_ABSOLUTE_SHARE_PRICE} to prevent absurd values.
  *
- * @param repayAssets - The amount of assets to repay (0n when repaying by shares).
- * @param repayShares - The amount of shares to repay (0n when repaying by assets).
- * @param market - The market to compute the maximum repay share price for.
- * @param slippageTolerance - Slippage tolerance in WAD (e.g. 0.003e18 = 0.3%).
+ * @param params - Computation parameters.
+ * @param params.repayAssets - The amount of assets to repay (0n when repaying by shares).
+ * @param params.repayShares - The amount of shares to repay (0n when repaying by assets).
+ * @param params.market - The market to compute the maximum repay share price for.
+ * @param params.slippageTolerance - Slippage tolerance in WAD (e.g. 0.003e18 = 0.3%).
  * @returns maxSharePriceE27 in RAY scale (1e27).
  */
-export function computeMaxRepaySharePrice(
-  repayAssets: bigint,
-  repayShares: bigint,
-  market: Market,
-  slippageTolerance: bigint,
-): bigint {
+export function computeMaxRepaySharePrice(params: {
+  repayAssets: bigint;
+  repayShares: bigint;
+  market: Market;
+  slippageTolerance: bigint;
+}): bigint {
+  const { repayAssets, repayShares, market, slippageTolerance } = params;
+
   if (slippageTolerance >= MathLib.WAD) {
     throw new ExcessiveSlippageToleranceError(slippageTolerance);
   }

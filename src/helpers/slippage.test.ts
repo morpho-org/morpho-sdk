@@ -43,32 +43,44 @@ const slippage03 = (3n * MathLib.WAD) / 1000n; // 0.3%
 describe("computeMinBorrowSharePrice", () => {
   test("should throw ShareDivideByZeroError when borrowAmount is zero", () => {
     expect(() =>
-      computeMinBorrowSharePrice(0n, normalMarket, slippage03),
+      computeMinBorrowSharePrice({
+        borrowAmount: 0n,
+        market: normalMarket,
+        slippageTolerance: slippage03,
+      }),
     ).toThrow(ShareDivideByZeroError);
   });
 
   test("should return a positive share price for a normal borrow", () => {
-    const result = computeMinBorrowSharePrice(
-      10n ** 18n,
-      normalMarket,
-      slippage03,
-    );
+    const result = computeMinBorrowSharePrice({
+      borrowAmount: 10n ** 18n,
+      market: normalMarket,
+      slippageTolerance: slippage03,
+    });
     expect(result).toBeGreaterThan(0n);
   });
 
   test("should return a lower price with higher slippage tolerance", () => {
     const amount = 10n ** 18n;
-    const low = computeMinBorrowSharePrice(amount, normalMarket, slippage03);
-    const high = computeMinBorrowSharePrice(
-      amount,
-      normalMarket,
-      (10n * MathLib.WAD) / 1000n, // 1%
-    );
+    const low = computeMinBorrowSharePrice({
+      borrowAmount: amount,
+      market: normalMarket,
+      slippageTolerance: slippage03,
+    });
+    const high = computeMinBorrowSharePrice({
+      borrowAmount: amount,
+      market: normalMarket,
+      slippageTolerance: (10n * MathLib.WAD) / 1000n, // 1%
+    });
     expect(high).toBeLessThan(low);
   });
 
   test("should return approximately RAY with zero slippage on a 1:1 market", () => {
-    const result = computeMinBorrowSharePrice(10n ** 18n, normalMarket, 0n);
+    const result = computeMinBorrowSharePrice({
+      borrowAmount: 10n ** 18n,
+      market: normalMarket,
+      slippageTolerance: 0n,
+    });
     // With virtual shares offset, result is close to but not exactly RAY.
     expect(result).toBeGreaterThan((MathLib.RAY * 99n) / 100n);
     expect(result).toBeLessThanOrEqual(MathLib.RAY);
@@ -76,79 +88,102 @@ describe("computeMinBorrowSharePrice", () => {
 
   test("should throw ExcessiveSlippageToleranceError when slippage equals WAD", () => {
     expect(() =>
-      computeMinBorrowSharePrice(10n ** 18n, normalMarket, MathLib.WAD),
+      computeMinBorrowSharePrice({
+        borrowAmount: 10n ** 18n,
+        market: normalMarket,
+        slippageTolerance: MathLib.WAD,
+      }),
     ).toThrow(ExcessiveSlippageToleranceError);
   });
 
   test("should throw ExcessiveSlippageToleranceError when slippage exceeds WAD", () => {
     expect(() =>
-      computeMinBorrowSharePrice(10n ** 18n, normalMarket, MathLib.WAD + 1n),
+      computeMinBorrowSharePrice({
+        borrowAmount: 10n ** 18n,
+        market: normalMarket,
+        slippageTolerance: MathLib.WAD + 1n,
+      }),
     ).toThrow(ExcessiveSlippageToleranceError);
   });
 });
 
 describe("computeMaxRepaySharePrice", () => {
   test("should compute max share price via by-assets path", () => {
-    const result = computeMaxRepaySharePrice(
-      10n ** 18n,
-      0n,
-      normalMarket,
-      slippage03,
-    );
+    const result = computeMaxRepaySharePrice({
+      repayAssets: 10n ** 18n,
+      repayShares: 0n,
+      market: normalMarket,
+      slippageTolerance: slippage03,
+    });
     expect(result).toBeGreaterThan(0n);
   });
 
   test("should compute max share price via by-shares path", () => {
-    const result = computeMaxRepaySharePrice(
-      0n,
-      10n ** 18n,
-      normalMarket,
-      slippage03,
-    );
+    const result = computeMaxRepaySharePrice({
+      repayAssets: 0n,
+      repayShares: 10n ** 18n,
+      market: normalMarket,
+      slippageTolerance: slippage03,
+    });
     expect(result).toBeGreaterThan(0n);
   });
 
   test("should return a higher price with higher slippage tolerance", () => {
-    const low = computeMaxRepaySharePrice(
-      10n ** 18n,
-      0n,
-      normalMarket,
-      slippage03,
-    );
-    const high = computeMaxRepaySharePrice(
-      10n ** 18n,
-      0n,
-      normalMarket,
-      (10n * MathLib.WAD) / 1000n,
-    );
+    const low = computeMaxRepaySharePrice({
+      repayAssets: 10n ** 18n,
+      repayShares: 0n,
+      market: normalMarket,
+      slippageTolerance: slippage03,
+    });
+    const high = computeMaxRepaySharePrice({
+      repayAssets: 10n ** 18n,
+      repayShares: 0n,
+      market: normalMarket,
+      slippageTolerance: (10n * MathLib.WAD) / 1000n,
+    });
     expect(high).toBeGreaterThan(low);
   });
 
   test("should cap at MAX_ABSOLUTE_SHARE_PRICE for extreme share prices", () => {
-    const result = computeMaxRepaySharePrice(
-      0n,
-      1n,
-      highSharePriceMarket,
-      slippage03,
-    );
+    const result = computeMaxRepaySharePrice({
+      repayAssets: 0n,
+      repayShares: 1n,
+      market: highSharePriceMarket,
+      slippageTolerance: slippage03,
+    });
     expect(result).toBe(MAX_ABSOLUTE_SHARE_PRICE);
   });
 
   test("should throw ShareDivideByZeroError when computed shares is zero", () => {
     expect(() =>
-      computeMaxRepaySharePrice(1n, 0n, highSharePriceMarket, slippage03),
+      computeMaxRepaySharePrice({
+        repayAssets: 1n,
+        repayShares: 0n,
+        market: highSharePriceMarket,
+        slippageTolerance: slippage03,
+      }),
     ).toThrow(ShareDivideByZeroError);
   });
 
   test("should throw ExcessiveSlippageToleranceError when slippage equals WAD", () => {
     expect(() =>
-      computeMaxRepaySharePrice(10n ** 18n, 0n, normalMarket, MathLib.WAD),
+      computeMaxRepaySharePrice({
+        repayAssets: 10n ** 18n,
+        repayShares: 0n,
+        market: normalMarket,
+        slippageTolerance: MathLib.WAD,
+      }),
     ).toThrow(ExcessiveSlippageToleranceError);
   });
 
   test("should throw ExcessiveSlippageToleranceError when slippage exceeds WAD", () => {
     expect(() =>
-      computeMaxRepaySharePrice(10n ** 18n, 0n, normalMarket, MathLib.WAD + 1n),
+      computeMaxRepaySharePrice({
+        repayAssets: 10n ** 18n,
+        repayShares: 0n,
+        market: normalMarket,
+        slippageTolerance: MathLib.WAD + 1n,
+      }),
     ).toThrow(ExcessiveSlippageToleranceError);
   });
 });

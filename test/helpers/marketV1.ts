@@ -7,12 +7,13 @@ import { blueAbi } from "@morpho-org/blue-sdk-viem";
 import type { AnvilTestClient } from "@morpho-org/test";
 import { encodeFunctionData } from "viem";
 
-export async function supplyCollateral(
-  client: AnvilTestClient,
-  chainId: number,
-  market: MarketParams,
-  collateralAmount: bigint,
-) {
+export async function supplyCollateral(params: {
+  client: AnvilTestClient;
+  chainId: number;
+  market: MarketParams;
+  collateralAmount: bigint;
+}) {
+  const { client, chainId, market, collateralAmount } = params;
   const { morpho } = getChainAddresses(chainId);
   await client.deal({
     erc20: market.collateralToken,
@@ -37,12 +38,13 @@ export async function supplyCollateral(
  * Sets up a borrow position by supplying collateral and borrowing.
  * The user must already have collateral supplied to the market.
  */
-export async function borrow(
-  client: AnvilTestClient,
-  chainId: number,
-  market: MarketParams,
-  borrowAmount: bigint,
-) {
+export async function borrow(params: {
+  client: AnvilTestClient;
+  chainId: number;
+  market: MarketParams;
+  borrowAmount: bigint;
+}) {
+  const { client, chainId, market, borrowAmount } = params;
   const { morpho } = getChainAddresses(chainId);
   const {
     bundler3: { generalAdapter1 },

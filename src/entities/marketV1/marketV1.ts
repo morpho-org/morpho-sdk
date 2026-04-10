@@ -436,28 +436,32 @@ export class MorphoMarketV1 implements MarketV1Actions {
       throw new MissingAccrualPositionError(this.marketParams.id);
     }
 
-    validateAccrualPosition(positionData, this.marketParams.id, userAddress);
-
-    validatePositionHealth(
+    validateAccrualPosition({
       positionData,
-      0n,
-      amount,
-      this.marketParams.id,
-      this.marketParams.lltv,
-    );
-    const minSharePrice = computeMinBorrowSharePrice(
-      amount,
-      positionData.market,
+      expectedMarketId: this.marketParams.id,
+      expectedUser: userAddress,
+    });
+
+    validatePositionHealth({
+      positionData,
+      additionalCollateral: 0n,
+      borrowAmount: amount,
+      marketId: this.marketParams.id,
+      lltv: this.marketParams.lltv,
+    });
+    const minSharePrice = computeMinBorrowSharePrice({
+      borrowAmount: amount,
+      market: positionData.market,
       slippageTolerance,
-    );
+    });
 
     return {
       getRequirements: async () => {
-        const authTx = await getMorphoAuthorizationRequirement(
-          this.client.viemClient,
-          this.chainId,
+        const authTx = await getMorphoAuthorizationRequirement({
+          viemClient: this.client.viemClient,
+          chainId: this.chainId,
           userAddress,
-        );
+        });
         return authTx ? [authTx] : [];
       },
 
@@ -519,14 +523,22 @@ export class MorphoMarketV1 implements MarketV1Actions {
       throw new MissingAccrualPositionError(this.marketParams.id);
     }
 
-    validateAccrualPosition(positionData, this.marketParams.id, userAddress);
+    validateAccrualPosition({
+      positionData,
+      expectedMarketId: this.marketParams.id,
+      expectedUser: userAddress,
+    });
 
     let assets: bigint;
     let shares: bigint;
     let transferAmount: bigint;
 
     if (isSharesMode) {
-      validateRepayShares(positionData, params.shares, this.marketParams.id);
+      validateRepayShares({
+        positionData,
+        repayShares: params.shares,
+        marketId: this.marketParams.id,
+      });
       assets = 0n;
       shares = params.shares;
       // Add slippage buffer to cover interest accrued between tx construction and execution.
@@ -540,18 +552,22 @@ export class MorphoMarketV1 implements MarketV1Actions {
         MathLib.WAD + slippageTolerance,
       );
     } else {
-      validateRepayAmount(positionData, params.assets, this.marketParams.id);
+      validateRepayAmount({
+        positionData,
+        repayAssets: params.assets,
+        marketId: this.marketParams.id,
+      });
       assets = params.assets;
       shares = 0n;
       transferAmount = params.assets;
     }
 
-    const maxSharePrice = computeMaxRepaySharePrice(
-      assets,
-      shares,
-      positionData.market,
+    const maxSharePrice = computeMaxRepaySharePrice({
+      repayAssets: assets,
+      repayShares: shares,
+      market: positionData.market,
       slippageTolerance,
-    );
+    });
 
     return {
       getRequirements: (reqParams?: { useSimplePermit?: boolean }) =>
@@ -604,22 +620,26 @@ export class MorphoMarketV1 implements MarketV1Actions {
       throw new MissingAccrualPositionError(this.marketParams.id);
     }
 
-    validateAccrualPosition(positionData, this.marketParams.id, userAddress);
+    validateAccrualPosition({
+      positionData,
+      expectedMarketId: this.marketParams.id,
+      expectedUser: userAddress,
+    });
 
     if (amount > positionData.collateral) {
-      throw new WithdrawExceedsCollateralError(
-        amount,
-        positionData.collateral,
-        positionData.marketId,
-      );
+      throw new WithdrawExceedsCollateralError({
+        withdrawAmount: amount,
+        available: positionData.collateral,
+        market: positionData.marketId,
+      });
     }
 
-    validatePositionHealthAfterWithdraw(
+    validatePositionHealthAfterWithdraw({
       positionData,
-      amount,
-      this.marketParams.lltv,
-      this.marketParams.id,
-    );
+      withdrawAmount: amount,
+      lltv: this.marketParams.lltv,
+      marketId: this.marketParams.id,
+    });
 
     return {
       buildTx: () =>
@@ -685,14 +705,22 @@ export class MorphoMarketV1 implements MarketV1Actions {
       throw new MissingAccrualPositionError(this.marketParams.id);
     }
 
-    validateAccrualPosition(positionData, this.marketParams.id, userAddress);
+    validateAccrualPosition({
+      positionData,
+      expectedMarketId: this.marketParams.id,
+      expectedUser: userAddress,
+    });
 
     let assets: bigint;
     let shares: bigint;
     let transferAmount: bigint;
 
     if (isSharesMode) {
-      validateRepayShares(positionData, params.shares, this.marketParams.id);
+      validateRepayShares({
+        positionData,
+        repayShares: params.shares,
+        marketId: this.marketParams.id,
+      });
       assets = 0n;
       shares = params.shares;
       const baseTransferAmount = positionData.market.toBorrowAssets(
@@ -704,35 +732,39 @@ export class MorphoMarketV1 implements MarketV1Actions {
         MathLib.WAD + slippageTolerance,
       );
     } else {
-      validateRepayAmount(positionData, params.assets, this.marketParams.id);
+      validateRepayAmount({
+        positionData,
+        repayAssets: params.assets,
+        marketId: this.marketParams.id,
+      });
       assets = params.assets;
       shares = 0n;
       transferAmount = params.assets;
     }
 
     if (withdrawAmount > positionData.collateral) {
-      throw new WithdrawExceedsCollateralError(
+      throw new WithdrawExceedsCollateralError({
         withdrawAmount,
-        positionData.collateral,
-        positionData.marketId,
-      );
+        available: positionData.collateral,
+        market: positionData.marketId,
+      });
     }
 
     // Simulate repay to get post-repay position, then validate withdraw health
     const { position: positionAfterRepay } = positionData.repay(assets, shares);
-    validatePositionHealthAfterWithdraw(
-      positionAfterRepay,
+    validatePositionHealthAfterWithdraw({
+      positionData: positionAfterRepay,
       withdrawAmount,
-      this.marketParams.lltv,
-      this.marketParams.id,
-    );
+      lltv: this.marketParams.lltv,
+      marketId: this.marketParams.id,
+    });
 
-    const maxSharePrice = computeMaxRepaySharePrice(
-      assets,
-      shares,
-      positionData.market,
+    const maxSharePrice = computeMaxRepaySharePrice({
+      repayAssets: assets,
+      repayShares: shares,
+      market: positionData.market,
       slippageTolerance,
-    );
+    });
 
     return {
       getRequirements: async (reqParams?: { useSimplePermit?: boolean }) => {
@@ -745,11 +777,11 @@ export class MorphoMarketV1 implements MarketV1Actions {
             useSimplePermit: reqParams?.useSimplePermit,
             args: { amount: transferAmount, from: userAddress },
           }),
-          getMorphoAuthorizationRequirement(
-            this.client.viemClient,
-            this.chainId,
+          getMorphoAuthorizationRequirement({
+            viemClient: this.client.viemClient,
+            chainId: this.chainId,
             userAddress,
-          ),
+          }),
         ]);
 
         return [...erc20Requirements, ...(authTx ? [authTx] : [])];
@@ -810,7 +842,11 @@ export class MorphoMarketV1 implements MarketV1Actions {
       throw new MissingAccrualPositionError(this.marketParams.id);
     }
 
-    validateAccrualPosition(positionData, this.marketParams.id, userAddress);
+    validateAccrualPosition({
+      positionData,
+      expectedMarketId: this.marketParams.id,
+      expectedUser: userAddress,
+    });
 
     const totalCollateral = amount + (nativeAmount ?? 0n);
     if (totalCollateral === 0n) {
@@ -823,19 +859,19 @@ export class MorphoMarketV1 implements MarketV1Actions {
       validateNativeCollateral(this.chainId, this.marketParams.collateralToken);
     }
 
-    validatePositionHealth(
+    validatePositionHealth({
       positionData,
-      totalCollateral,
+      additionalCollateral: totalCollateral,
       borrowAmount,
-      this.marketParams.id,
-      this.marketParams.lltv,
-    );
+      marketId: this.marketParams.id,
+      lltv: this.marketParams.lltv,
+    });
 
-    const minSharePrice = computeMinBorrowSharePrice(
+    const minSharePrice = computeMinBorrowSharePrice({
       borrowAmount,
-      positionData.market,
+      market: positionData.market,
       slippageTolerance,
-    );
+    });
 
     return {
       getRequirements: async (params?: { useSimplePermit?: boolean }) => {
@@ -848,11 +884,11 @@ export class MorphoMarketV1 implements MarketV1Actions {
             useSimplePermit: params?.useSimplePermit,
             args: { amount, from: userAddress },
           }),
-          getMorphoAuthorizationRequirement(
-            this.client.viemClient,
-            this.chainId,
+          getMorphoAuthorizationRequirement({
+            viemClient: this.client.viemClient,
+            chainId: this.chainId,
             userAddress,
-          ),
+          }),
         ]);
 
         return [...erc20Requirements, ...(authTx ? [authTx] : [])];
