@@ -89,6 +89,48 @@ describe("marketV1RepayWithdrawCollateral unit tests", () => {
     expect(tx.value).toBe(0n);
   });
 
+  test("should include erc20Transfer skim (maxUint256) in by-shares bundle but not in by-assets bundle", async ({
+    client,
+  }) => {
+    const withdrawAmount = parseUnits("1", 18);
+
+    const sharesTx = marketV1RepayWithdrawCollateral({
+      market: {
+        chainId: mainnet.id,
+        marketParams: WethUsdsMarketV1,
+      },
+      args: {
+        assets: 0n,
+        shares: parseUnits("500", 6),
+        transferAmount: parseUnits("600", 6),
+        withdrawAmount,
+        onBehalf: client.account.address,
+        receiver: client.account.address,
+        maxSharePrice: 1n,
+      },
+    });
+
+    const assetsTx = marketV1RepayWithdrawCollateral({
+      market: {
+        chainId: mainnet.id,
+        marketParams: WethUsdsMarketV1,
+      },
+      args: {
+        assets: parseUnits("500", 6),
+        shares: 0n,
+        transferAmount: parseUnits("500", 6),
+        withdrawAmount,
+        onBehalf: client.account.address,
+        receiver: client.account.address,
+        maxSharePrice: 1n,
+      },
+    });
+
+    const maxUint256Hex = "f".repeat(64);
+    expect(sharesTx.data.toLowerCase()).toContain(maxUint256Hex);
+    expect(assetsTx.data.toLowerCase()).not.toContain(maxUint256Hex);
+  });
+
   test("should throw NonPositiveRepayMaxSharePriceError when maxSharePrice is zero", async ({
     client,
   }) => {

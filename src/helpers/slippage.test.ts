@@ -1,7 +1,10 @@
 import { Market, MarketParams, MathLib } from "@morpho-org/blue-sdk";
 import { describe, expect, test } from "vitest";
 import { WethUsdsMarketV1 } from "../../test/fixtures/marketV1";
-import { ShareDivideByZeroError } from "../types";
+import {
+  ExcessiveSlippageToleranceError,
+  ShareDivideByZeroError,
+} from "../types";
 import { MAX_ABSOLUTE_SHARE_PRICE } from "./constant";
 import {
   computeMaxRepaySharePrice,
@@ -70,6 +73,18 @@ describe("computeMinBorrowSharePrice", () => {
     expect(result).toBeGreaterThan((MathLib.RAY * 99n) / 100n);
     expect(result).toBeLessThanOrEqual(MathLib.RAY);
   });
+
+  test("should throw ExcessiveSlippageToleranceError when slippage equals WAD", () => {
+    expect(() =>
+      computeMinBorrowSharePrice(10n ** 18n, normalMarket, MathLib.WAD),
+    ).toThrow(ExcessiveSlippageToleranceError);
+  });
+
+  test("should throw ExcessiveSlippageToleranceError when slippage exceeds WAD", () => {
+    expect(() =>
+      computeMinBorrowSharePrice(10n ** 18n, normalMarket, MathLib.WAD + 1n),
+    ).toThrow(ExcessiveSlippageToleranceError);
+  });
 });
 
 describe("computeMaxRepaySharePrice", () => {
@@ -123,5 +138,17 @@ describe("computeMaxRepaySharePrice", () => {
     expect(() =>
       computeMaxRepaySharePrice(1n, 0n, highSharePriceMarket, slippage03),
     ).toThrow(ShareDivideByZeroError);
+  });
+
+  test("should throw ExcessiveSlippageToleranceError when slippage equals WAD", () => {
+    expect(() =>
+      computeMaxRepaySharePrice(10n ** 18n, 0n, normalMarket, MathLib.WAD),
+    ).toThrow(ExcessiveSlippageToleranceError);
+  });
+
+  test("should throw ExcessiveSlippageToleranceError when slippage exceeds WAD", () => {
+    expect(() =>
+      computeMaxRepaySharePrice(10n ** 18n, 0n, normalMarket, MathLib.WAD + 1n),
+    ).toThrow(ExcessiveSlippageToleranceError);
   });
 });

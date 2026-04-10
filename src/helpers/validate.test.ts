@@ -2,6 +2,7 @@ import {
   AccrualPosition,
   Market,
   MarketParams,
+  MathLib,
   ORACLE_PRICE_SCALE,
 } from "@morpho-org/blue-sdk";
 import type { Address } from "viem";
@@ -17,10 +18,12 @@ import {
   BorrowExceedsSafeLtvError,
   ChainIdMismatchError,
   EmptyReallocationWithdrawalsError,
+  ExcessiveSlippageToleranceError,
   MarketIdMismatchError,
   MissingMarketPriceError,
   NativeAmountOnNonWNativeCollateralError,
   NegativeReallocationFeeError,
+  NegativeSlippageToleranceError,
   NonPositiveReallocationAmountError,
   ReallocationWithdrawalOnTargetMarketError,
   RepayExceedsDebtError,
@@ -29,6 +32,7 @@ import {
   type VaultReallocation,
   WithdrawMakesPositionUnhealthyError,
 } from "../types";
+import { MAX_SLIPPAGE_TOLERANCE } from "./constant";
 import {
   validateAccrualPosition,
   validateChainId,
@@ -38,6 +42,7 @@ import {
   validateReallocations,
   validateRepayAmount,
   validateRepayShares,
+  validateSlippageTolerance,
   validateUserAddress,
 } from "./validate";
 
@@ -464,5 +469,40 @@ describe("validateReallocations", () => {
         targetMarketId,
       ),
     ).toThrow(UnsortedReallocationWithdrawalsError);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// validateSlippageTolerance
+// ---------------------------------------------------------------------------
+
+describe("validateSlippageTolerance", () => {
+  test("should pass with zero slippage", () => {
+    expect(() => validateSlippageTolerance(0n)).not.toThrow();
+  });
+
+  test("should pass with a normal slippage value", () => {
+    // 0.3% slippage
+    expect(() =>
+      validateSlippageTolerance((3n * MathLib.WAD) / 1000n),
+    ).not.toThrow();
+  });
+
+  test("should pass at the upper boundary (MAX_SLIPPAGE_TOLERANCE)", () => {
+    expect(() =>
+      validateSlippageTolerance(MAX_SLIPPAGE_TOLERANCE),
+    ).not.toThrow();
+  });
+
+  test("should throw NegativeSlippageToleranceError when slippage is negative", () => {
+    expect(() => validateSlippageTolerance(-1n)).toThrow(
+      NegativeSlippageToleranceError,
+    );
+  });
+
+  test("should throw ExcessiveSlippageToleranceError just above MAX_SLIPPAGE_TOLERANCE", () => {
+    expect(() =>
+      validateSlippageTolerance(MAX_SLIPPAGE_TOLERANCE + 1n),
+    ).toThrow(ExcessiveSlippageToleranceError);
   });
 });

@@ -14,6 +14,7 @@ import {
   NegativeNativeAmountError,
   NonPositiveAssetAmountError,
   NonPositiveBorrowAmountError,
+  NonPositiveMinBorrowSharePriceError,
   ZeroCollateralAmountError,
 } from "../../types";
 import { getRequirements } from "../requirements";
@@ -222,6 +223,26 @@ describe("marketV1SupplyCollateralBorrow unit tests", () => {
         },
       }),
     ).toThrow(NonPositiveBorrowAmountError);
+  });
+
+  test("should throw NonPositiveMinBorrowSharePriceError when minSharePrice is negative", async ({
+    client,
+  }) => {
+    expect(() =>
+      marketV1SupplyCollateralBorrow({
+        market: {
+          chainId: mainnet.id,
+          marketParams: WethUsdsMarketV1,
+        },
+        args: {
+          amount: parseUnits("1", 18),
+          borrowAmount: parseUnits("100", 6),
+          onBehalf: client.account.address,
+          receiver: client.account.address,
+          minSharePrice: -1n,
+        },
+      }),
+    ).toThrow(NonPositiveMinBorrowSharePriceError);
   });
 
   test("should throw ZeroCollateralAmountError when total collateral is zero", async ({

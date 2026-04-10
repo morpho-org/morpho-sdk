@@ -5,7 +5,10 @@ import { describe, expect } from "vitest";
 import { WethUsdsMarketV1 } from "../../../test/fixtures/marketV1";
 
 import { test } from "../../../test/setup";
-import { NonPositiveBorrowAmountError } from "../../types";
+import {
+  NonPositiveBorrowAmountError,
+  NonPositiveMinBorrowSharePriceError,
+} from "../../types";
 import { marketV1Borrow } from "./borrow";
 
 describe("marketV1Borrow unit tests", () => {
@@ -71,6 +74,24 @@ describe("marketV1Borrow unit tests", () => {
         },
       }),
     ).toThrow(NonPositiveBorrowAmountError);
+  });
+
+  test("should throw NonPositiveMinBorrowSharePriceError when minSharePrice is negative", async ({
+    client,
+  }) => {
+    expect(() =>
+      marketV1Borrow({
+        market: {
+          chainId: mainnet.id,
+          marketParams: WethUsdsMarketV1,
+        },
+        args: {
+          amount: parseUnits("100", 6),
+          minSharePrice: -1n,
+          receiver: client.account.address,
+        },
+      }),
+    ).toThrow(NonPositiveMinBorrowSharePriceError);
   });
 
   test("should return a deep-frozen transaction object", async ({ client }) => {

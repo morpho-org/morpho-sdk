@@ -148,6 +148,37 @@ describe("computeReallocations", () => {
       });
       expect(result).toEqual([]);
     });
+
+    test("should proceed with reallocation when options is undefined", () => {
+      // Regression: previously `!options?.enabled` short-circuited when options
+      // was undefined, blocking reallocation entirely. The fix uses
+      // `options?.enabled === false`, so undefined now means "enabled".
+      const borrowAmount = 500n * MathLib.WAD; // → 100% utilization, above 90.5% default target
+
+      const friendlyTargetMarket = makeMarket(targetParams, {
+        totalSupplyAssets: 1500n * MathLib.WAD,
+        totalBorrowAssets: 500n * MathLib.WAD,
+      });
+
+      const data = makeMockState({
+        friendlyWithdrawals: [
+          { id: sourceA.id, vault: VAULT_A, assets: 300n * MathLib.WAD },
+        ],
+        friendlyTargetMarket,
+        vaultFees: { [VAULT_A]: 1000n },
+      });
+
+      const result = computeReallocations({
+        reallocationData: data,
+        marketId: targetParams.id,
+        borrowAmount,
+        // No options at all — must NOT early-return.
+      });
+
+      expect(result).toHaveLength(1);
+      expect(result[0]!.vault).toBe(VAULT_A);
+      expect(result[0]!.withdrawals[0]!.amount).toBeGreaterThan(0n);
+    });
   });
 
   // ---------------------------------------------------------------------------
