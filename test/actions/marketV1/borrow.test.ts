@@ -187,7 +187,6 @@ describe("BorrowMarketV1", () => {
     const market = morphoClient.marketV1(WethUsdsMarketV1, mainnet.id);
     const positionData = await market.getPositionData(client.account.address);
 
-    market;
     expect(() =>
       market.borrow({
         userAddress: client.account.address,

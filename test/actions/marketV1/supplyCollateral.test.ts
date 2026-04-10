@@ -100,7 +100,9 @@ describe("SupplyCollateralMarketV1", () => {
     client,
   }) => {
     const amount = parseUnits("0.5", 18);
-    const { morpho } = getChainAddresses(mainnet.id);
+    const {
+      bundler3: { generalAdapter1 },
+    } = getChainAddresses(mainnet.id);
 
     await client.deal({
       erc20: CbbtcUsdcMarketV1.collateralToken,
@@ -109,7 +111,7 @@ describe("SupplyCollateralMarketV1", () => {
 
     await client.approve({
       address: CbbtcUsdcMarketV1.collateralToken,
-      args: [morpho, MathLib.MAX_UINT_256],
+      args: [generalAdapter1, MathLib.MAX_UINT_256],
     });
 
     const {
@@ -131,14 +133,7 @@ describe("SupplyCollateralMarketV1", () => {
         });
 
         const requirements = await supplyCollateral.getRequirements();
-        expect(requirements.length).toBe(1);
-
-        const approveTx = requirements[0];
-        if (!isRequirementApproval(approveTx)) {
-          throw new Error("Expected approval requirement");
-        }
-
-        await client.sendTransaction(approveTx);
+        expect(requirements.length).toBe(0);
 
         const tx = supplyCollateral.buildTx();
 
