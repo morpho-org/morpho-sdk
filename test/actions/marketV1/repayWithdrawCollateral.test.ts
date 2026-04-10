@@ -22,8 +22,8 @@ import {
 } from "../../../src";
 import { WethUsdsMarketV1 } from "../../fixtures/marketV1";
 import { testInvariants } from "../../helpers/invariants";
-import { supplyCollateral } from "../../helpers/marketV1";
-import { borrow } from "../../helpers/marketV1Borrow";
+import { borrow, supplyCollateral } from "../../helpers/marketV1";
+
 import { test } from "../../setup";
 
 describe("RepayWithdrawCollateralMarketV1", () => {

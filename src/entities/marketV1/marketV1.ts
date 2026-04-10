@@ -335,6 +335,7 @@ export class MorphoMarketV1 implements MarketV1Actions {
     return fetchMarket(this.marketParams.id, this.client.viemClient, {
       ...parameters,
       chainId: this.chainId,
+      deployless: this.client.options.supportDeployless,
     });
   }
 
@@ -350,6 +351,7 @@ export class MorphoMarketV1 implements MarketV1Actions {
       this.client.viemClient,
       {
         ...parameters,
+        deployless: this.client.options.supportDeployless,
         chainId: this.chainId,
       },
     );
@@ -892,7 +894,11 @@ export class MorphoMarketV1 implements MarketV1Actions {
     }
 
     const client = this.client.viemClient;
-    const fetchParams = { blockNumber: block.number, chainId: this.chainId };
+    const fetchParams = {
+      blockNumber: block.number,
+      chainId: this.chainId,
+      deployless: this.client.options.supportDeployless,
+    };
 
     // Phase 1: Fetch all vaults in parallel to get their withdrawQueues.
     const vaults = await Promise.all(
