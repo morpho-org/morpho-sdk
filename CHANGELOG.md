@@ -1,5 +1,16 @@
 # @morpho-org/consumer-sdk
 
+## 0.5.0
+
+### Minor Changes
+
+- 2bb4058: Add MarketV1 (Morpho Blue) support with full suite of operations: `supplyCollateral`, `borrow`, `supplyCollateralBorrow`, `repay`, `withdrawCollateral`, and `repayWithdrawCollateral`. Most actions are routed through bundler3 via GeneralAdapter1 with slippage protection (`minSharePrice`/`maxSharePrice`), LLTV buffer validation, and comprehensive position health checks (`withdrawCollateral` is a direct Morpho call). Includes shared liquidity reallocations via PublicAllocator for borrow operations, new `MorphoMarketV1` entity with `getMarketData`/`getPositionData`, and deployless read support.
+
+### Patch Changes
+
+- 3e045c0: Fix total borrow calculation to include +1 wei adjustment for share-to-asset rounding in debt validation after borrowing.
+- 537539a: Fix chain ID validation in VaultV1 and VaultV2 `getData` methods.
+
 ## 0.4.0
 
 ### Minor Changes
