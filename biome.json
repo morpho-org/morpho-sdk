@@ -22,6 +22,14 @@
         "noForEach": "off",
         "noBannedTypes": "off"
       },
+      "nursery": {
+        "useMaxParams": {
+          "level": "error",
+          "options": {
+            "max": 3
+          }
+        }
+      },
       "correctness": {
         "noUnusedImports": "error",
         "noUnusedVariables": "error",

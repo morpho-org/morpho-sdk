@@ -3,11 +3,12 @@ import { vaultV2FactoryAbi } from "@morpho-org/blue-sdk-viem";
 import type { AnvilTestClient } from "@morpho-org/test";
 import { type Address, decodeEventLog, parseEventLogs, toHex } from "viem";
 
-export async function createVaultV2(
-  client: AnvilTestClient,
-  asset: Address,
-  chainId: number,
-) {
+export async function createVaultV2(params: {
+  client: AnvilTestClient;
+  asset: Address;
+  chainId: number;
+}) {
+  const { client, asset, chainId } = params;
   const { vaultV2Factory } = getChainAddresses(chainId);
 
   if (!vaultV2Factory) {

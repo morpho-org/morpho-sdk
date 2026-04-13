@@ -1,6 +1,6 @@
 # Actions Layer
 
-> Full context: [CLAUDE.md](../../CLAUDE.md)
+> Full context: [AGENTS.md](../../AGENTS.md)
 
 Pure functions that build deep-frozen `Transaction<TAction>` objects. No side effects, no state.
 
@@ -10,7 +10,8 @@ Pure functions that build deep-frozen `Transaction<TAction>` objects. No side ef
 |-----------|------|------|------|
 | **VaultV1 Operations** | `vaultV1/` | Build VaultV1 (MetaMorpho) deposit / withdraw / redeem transactions | [`vaultV1/AGENTS.md`](vaultV1/AGENTS.md) |
 | **VaultV2 Operations** | `vaultV2/` | Build VaultV2 deposit / withdraw / redeem / forceWithdraw / forceRedeem transactions | [`vaultV2/AGENTS.md`](vaultV2/AGENTS.md) |
-| **Requirements** | `requirements/` | Resolve token approval needs before a deposit | [`requirements/AGENTS.md`](requirements/AGENTS.md) |
+| **MarketV1 Operations** | `marketV1/` | Build MarketV1 (Morpho Blue) supplyCollateral / borrow / supplyCollateralBorrow transactions. Supports shared liquidity via reallocations. | [`marketV1/AGENTS.md`](marketV1/AGENTS.md) |
+| **Requirements** | `requirements/` | Resolve token approval needs before a deposit or supply collateral | [`requirements/AGENTS.md`](requirements/AGENTS.md) |
 
 ## Data Flow
 
@@ -22,10 +23,20 @@ Entity (MorphoVaultV1)                          Entity (MorphoVaultV2)
   └─ redeem ──► vaultV1Redeem()   ← direct        ├─ redeem ───────────► vaultV2Redeem()            ← direct
                                                    ├─ forceWithdraw ────► vaultV2ForceWithdraw()      ← multicall
                                                    └─ forceRedeem ──────► vaultV2ForceRedeem()        ← multicall
+
+Entity (MorphoMarketV1)
+  │
+  ├─ supplyCollateral ──────► marketV1SupplyCollateral()       ← bundler (general adapter)
+  ├─ borrow ────────────────► marketV1Borrow()                 ← bundler (general adapter)
+  └─ supplyCollateralBorrow ► marketV1SupplyCollateralBorrow() ← bundler (general adapter)
                     │
                     ▼
          Readonly<Transaction<TAction>>  (deep-frozen)
 ```
+
+## Shared Liquidity (Reallocations)
+
+`marketV1Borrow` and `marketV1SupplyCollateralBorrow` accept optional `reallocations: VaultReallocation[]`. Each reallocation becomes a `reallocateTo` bundler action placed before `morphoBorrow`. Fees accumulate in `tx.value`. Validated via `validateReallocations()`.
 
 ## Key Constraints
 
@@ -44,4 +55,5 @@ Barrel `index.ts` re-exports all sub-layers:
 export * from "./requirements";
 export * from "./vaultV1";
 export * from "./vaultV2";
+export * from "./marketV1";
 ```

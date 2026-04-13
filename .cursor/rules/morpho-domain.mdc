@@ -79,10 +79,37 @@ Flow controlled by `supportSignature` option on MorphoClient:
 
 Optional `{ origin: string, timestamp?: boolean }` appended to transaction calldata for analytics and traceability. Applied via `addTransactionMetadata()` helper.
 
+## MarketV1 (Morpho Blue) Operations
+
+### Supply Collateral
+
+- Supplies collateral tokens to a Morpho Blue market position.
+- **Routed through the bundler** via GeneralAdapter1 (`erc20TransferFrom` + `morphoSupplyCollateral`).
+- Supports optional `nativeAmount` for native token wrapping (collateral must be wNative).
+- Approval target is **GeneralAdapter1**, not the Morpho contract.
+
+### Borrow
+
+- Borrows loan tokens from a Morpho Blue market against existing collateral.
+- **Routed through the bundler** via `morphoBorrow`.
+- Requires GeneralAdapter1 authorization on Morpho (`setAuthorization`).
+- Uses `minSharePrice` for slippage protection.
+- LLTV buffer (0.5%) prevents instant liquidation.
+
+### Supply Collateral & Borrow (atomic)
+
+- Atomically supplies collateral and borrows in a single bundler transaction.
+- Combines collateral transfer + `morphoSupplyCollateral` + `morphoBorrow`.
+- Requires both ERC20 approval for GeneralAdapter1 and Morpho authorization.
+- LLTV buffer validation prevents instant liquidation on new positions.
+- Supports `nativeAmount` for collateral wrapping.
+
 ## Security Rules
 
 1. Always validate `maxSharePrice > 0` for deposits.
 2. Always validate `assets > 0` or `shares > 0` for operations.
-3. Always check chain ID matches between client and vault.
+3. Always check chain ID matches between client and vault/market.
 4. All returned transactions must be deep-frozen (immutable).
 5. Signatures are used-and-discarded, never stored.
+6. Never bypass the general adapter for deposits or market supply collateral.
+7. LLTV buffer validation is mandatory for borrow and supplyCollateralBorrow.

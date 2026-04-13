@@ -68,11 +68,11 @@ export const vaultV2ForceWithdraw = ({
 
   const totalDeallocated = deallocations.reduce((sum, d) => sum + d.amount, 0n);
   if (withdraw.amount < totalDeallocated) {
-    throw new DeallocationsExceedWithdrawError(
-      vaultAddress,
-      withdraw.amount,
+    throw new DeallocationsExceedWithdrawError({
+      vault: vaultAddress,
+      withdrawAmount: withdraw.amount,
       totalDeallocated,
-    );
+    });
   }
 
   const calls: Hex[] = [];

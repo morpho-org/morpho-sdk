@@ -253,7 +253,11 @@ describe("Permit2", () => {
       amount,
     });
 
-    const { address } = await createVaultV2(client, dai, mainnet.id);
+    const { address } = await createVaultV2({
+      client,
+      asset: dai,
+      chainId: mainnet.id,
+    });
     const DaiVaultV2 = {
       address,
       asset: dai,

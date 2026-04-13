@@ -52,6 +52,12 @@ export class NegativeSlippageToleranceError extends Error {
   }
 }
 
+export class MissingAccrualPositionError extends Error {
+  constructor(market: string) {
+    super(`Accrual position is missing for market: ${market}`);
+  }
+}
+
 export class ExcessiveSlippageToleranceError extends Error {
   constructor(slippageTolerance: bigint) {
     super(
@@ -83,13 +89,13 @@ export class DepositAssetMismatchError extends Error {
 }
 
 export class DeallocationsExceedWithdrawError extends Error {
-  constructor(
-    vault: Address,
-    withdrawAmount: bigint,
-    totalDeallocated: bigint,
-  ) {
+  constructor(params: {
+    vault: Address;
+    withdrawAmount: bigint;
+    totalDeallocated: bigint;
+  }) {
     super(
-      `Total deallocated amount (${totalDeallocated}) exceed withdraw amount (${withdrawAmount}) for vault: ${vault}`,
+      `Total deallocated amount (${params.totalDeallocated}) exceed withdraw amount (${params.withdrawAmount}) for vault: ${params.vault}`,
     );
   }
 }
@@ -129,5 +135,211 @@ export class VaultAddressMismatchError extends Error {
     super(
       `Vault address mismatch between vault: ${vaultAddress} and args: ${argsVaultAddress}`,
     );
+  }
+}
+
+export class NonPositiveBorrowAmountError extends Error {
+  constructor(market: string) {
+    super(`Borrow amount must be positive for market: ${market}`);
+  }
+}
+
+export class ZeroCollateralAmountError extends Error {
+  constructor(market: string) {
+    super(
+      `Total collateral amount must be positive for market: ${market}. Both amount and nativeAmount are zero.`,
+    );
+  }
+}
+
+export class NativeAmountOnNonWNativeCollateralError extends Error {
+  constructor(collateralToken: Address, wNative: Address) {
+    super(
+      `Cannot use nativeAmount: collateral token ${collateralToken} is not the wrapped native token ${wNative}`,
+    );
+  }
+}
+
+export class BorrowExceedsSafeLtvError extends Error {
+  constructor(borrowAmount: bigint, maxSafeBorrow: bigint) {
+    super(
+      `Borrow amount ${borrowAmount} exceeds safe maximum ${maxSafeBorrow} (LLTV minus buffer). Reduce borrow or increase collateral.`,
+    );
+  }
+}
+
+export class MissingMarketPriceError extends Error {
+  constructor(market: string) {
+    super(
+      `Oracle price unavailable for market ${market}. Cannot validate position health.`,
+    );
+  }
+}
+
+export class MarketIdMismatchError extends Error {
+  constructor(marketId: string, expectedMarketId: string) {
+    super(
+      `Market ${marketId} does not match expected market ${expectedMarketId}`,
+    );
+  }
+}
+
+export class AccrualPositionUserMismatchError extends Error {
+  constructor(positionUser: string, expectedUser: string) {
+    super(
+      `Accrual position user ${positionUser} does not match expected user ${expectedUser}`,
+    );
+  }
+}
+
+export class NegativeReallocationFeeError extends Error {
+  constructor(vault: string) {
+    super(`Reallocation fee must not be negative for vault: ${vault}`);
+  }
+}
+
+export class EmptyReallocationWithdrawalsError extends Error {
+  constructor(vault: string) {
+    super(`Reallocation withdrawals list cannot be empty for vault: ${vault}`);
+  }
+}
+
+export class NonPositiveReallocationAmountError extends Error {
+  constructor(vault: string, market: string) {
+    super(
+      `Reallocation withdrawal amount must be positive for vault ${vault} on market ${market}`,
+    );
+  }
+}
+
+export class ReallocationWithdrawalOnTargetMarketError extends Error {
+  constructor(vault: string, marketId: string) {
+    super(
+      `Reallocation withdrawal cannot include the borrow target market ${marketId} for vault ${vault}.`,
+    );
+  }
+}
+
+export class UnsortedReallocationWithdrawalsError extends Error {
+  constructor(vault: string, marketId: string) {
+    super(
+      `Reallocation withdrawals must be strictly sorted by market ID for vault ${vault}. Market ${marketId} is out of order.`,
+    );
+  }
+}
+
+export class NonPositiveTransferAmountError extends Error {
+  constructor(market: string) {
+    super(`Transfer amount must be positive for market: ${market}`);
+  }
+}
+
+export class TransferAmountNotEqualToAssetsError extends Error {
+  constructor(params: {
+    transferAmount: bigint;
+    assets: bigint;
+    market: string;
+  }) {
+    super(
+      `Transfer amount ${params.transferAmount} is not equal to repay assets ${params.assets} for market: ${params.market}`,
+    );
+  }
+}
+
+export class MutuallyExclusiveRepayAmountsError extends Error {
+  constructor(market: string) {
+    super(
+      `Exactly one of assets or shares must be non-zero for market: ${market}. Both were provided.`,
+    );
+  }
+}
+
+export class NonPositiveRepayAmountError extends Error {
+  constructor(market: string) {
+    super(`Repay amount must be positive for market: ${market}`);
+  }
+}
+
+export class NonPositiveRepayMaxSharePriceError extends Error {
+  constructor(market: string) {
+    super(`Max share price must be positive for market: ${market}`);
+  }
+}
+
+export class NonPositiveWithdrawCollateralAmountError extends Error {
+  constructor(market: string) {
+    super(`Withdraw collateral amount must be positive for market: ${market}`);
+  }
+}
+
+export class WithdrawExceedsCollateralError extends Error {
+  constructor(params: {
+    withdrawAmount: bigint;
+    available: bigint;
+    market: string;
+  }) {
+    super(
+      `Withdraw amount ${params.withdrawAmount} exceeds available collateral ${params.available} for market: ${params.market}`,
+    );
+  }
+}
+
+export class WithdrawMakesPositionUnhealthyError extends Error {
+  constructor(params: {
+    withdrawAmount: bigint;
+    borrowAssets: bigint;
+    maxSafeBorrow: bigint;
+  }) {
+    super(
+      `Withdrawing ${params.withdrawAmount} collateral would make position unhealthy. Max safe borrow after withdrawal: ${params.maxSafeBorrow}. Actual Borrow assets: ${params.borrowAssets}.`,
+    );
+  }
+}
+
+export class ShareDivideByZeroError extends Error {
+  constructor(market: string) {
+    super(`Share divide by zero error for market: ${market}`);
+  }
+}
+
+export class RepayExceedsDebtError extends Error {
+  constructor(params: { repayAmount: bigint; debt: bigint; market: string }) {
+    super(
+      `Repay amount ${params.repayAmount} exceeds outstanding debt ${params.debt} for market: ${params.market}`,
+    );
+  }
+}
+
+export class InvalidSignatureError extends Error {
+  constructor() {
+    super(
+      "Signature verification failed: the signed data does not match the expected signer address",
+    );
+  }
+}
+
+export class RepaySharesExceedDebtError extends Error {
+  constructor(params: {
+    repayShares: bigint;
+    borrowShares: bigint;
+    market: string;
+  }) {
+    super(
+      `Repay shares ${params.repayShares} exceed outstanding borrow shares ${params.borrowShares} for market: ${params.market}`,
+    );
+  }
+}
+
+export class MissingPublicAllocatorConfigError extends Error {
+  constructor(vault: string) {
+    super(
+      `Vault ${vault} has no public allocator configured but was selected for reallocation`,
+    );
+  }
+}
+
+export class NonPositiveMinBorrowSharePriceError extends Error {
+  constructor(market: string) {
+    super(`Min share price must be non-negative for market: ${market}`);
   }
 }

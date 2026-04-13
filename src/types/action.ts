@@ -102,6 +102,102 @@ export interface VaultV1RedeemAction
     }
   > {}
 
+export interface MarketV1SupplyCollateralAction
+  extends BaseAction<
+    "marketV1SupplyCollateral",
+    {
+      market: Hex;
+      amount: bigint;
+      onBehalf: Address;
+      nativeAmount?: bigint;
+    }
+  > {}
+
+export interface MarketV1BorrowAction
+  extends BaseAction<
+    "marketV1Borrow",
+    {
+      market: Hex;
+      amount: bigint;
+      receiver: Address;
+      minSharePrice: bigint;
+      reallocationFee: bigint;
+    }
+  > {}
+
+export interface MarketV1SupplyCollateralBorrowAction
+  extends BaseAction<
+    "marketV1SupplyCollateralBorrow",
+    {
+      market: Hex;
+      collateralAmount: bigint;
+      borrowAmount: bigint;
+      minSharePrice: bigint;
+      onBehalf: Address;
+      receiver: Address;
+      nativeAmount?: bigint;
+      reallocationFee: bigint;
+    }
+  > {}
+
+export interface MarketV1RepayAction
+  extends BaseAction<
+    "marketV1Repay",
+    {
+      market: Hex;
+      assets: bigint;
+      shares: bigint;
+      transferAmount: bigint;
+      onBehalf: Address;
+      receiver: Address;
+      maxSharePrice: bigint;
+    }
+  > {}
+
+export interface MarketV1WithdrawCollateralAction
+  extends BaseAction<
+    "marketV1WithdrawCollateral",
+    {
+      market: Hex;
+      amount: bigint;
+      onBehalf: Address;
+      receiver: Address;
+    }
+  > {}
+
+export interface MarketV1RepayWithdrawCollateralAction
+  extends BaseAction<
+    "marketV1RepayWithdrawCollateral",
+    {
+      market: Hex;
+      repayAssets: bigint;
+      repayShares: bigint;
+      transferAmount: bigint;
+      withdrawAmount: bigint;
+      maxSharePrice: bigint;
+      onBehalf: Address;
+      receiver: Address;
+    }
+  > {}
+
+/**
+ * Enforces that exactly one repay amount source is provided.
+ *
+ * - `assets`: partial repay by exact asset amount.
+ * - `shares`: full repay by exact share count (guarantees full debt repayment
+ *   regardless of interest accrued between tx construction and execution).
+ */
+export type RepayAmountArgs = { assets: bigint } | { shares: bigint };
+
+export interface MorphoAuthorizationAction
+  extends BaseAction<
+    "morphoAuthorization",
+    {
+      authorized: Address;
+      isAuthorized: boolean;
+    }
+  > {}
+
 export type TransactionAction =
   | ERC20ApprovalAction
   | VaultV2DepositAction
@@ -111,7 +207,14 @@ export type TransactionAction =
   | VaultV2ForceRedeemAction
   | VaultV1DepositAction
   | VaultV1WithdrawAction
-  | VaultV1RedeemAction;
+  | VaultV1RedeemAction
+  | MarketV1SupplyCollateralAction
+  | MarketV1BorrowAction
+  | MarketV1SupplyCollateralBorrowAction
+  | MarketV1RepayAction
+  | MarketV1WithdrawCollateralAction
+  | MarketV1RepayWithdrawCollateralAction
+  | MorphoAuthorizationAction;
 
 export interface Transaction<TAction extends BaseAction = TransactionAction> {
   readonly to: Address;
@@ -173,18 +276,45 @@ export interface RequirementSignature {
 }
 
 export function isRequirementApproval(
-  requirement: Transaction<ERC20ApprovalAction> | Requirement | undefined,
+  requirement:
+    | Transaction<ERC20ApprovalAction>
+    | Transaction<MorphoAuthorizationAction>
+    | Requirement
+    | undefined,
 ): requirement is Transaction<ERC20ApprovalAction> {
   return (
     requirement !== undefined &&
     "to" in requirement &&
     "value" in requirement &&
-    "data" in requirement
+    "data" in requirement &&
+    "action" in requirement &&
+    requirement.action.type === "erc20Approval"
+  );
+}
+
+export function isRequirementAuthorization(
+  requirement:
+    | Transaction<ERC20ApprovalAction>
+    | Transaction<MorphoAuthorizationAction>
+    | Requirement
+    | undefined,
+): requirement is Transaction<MorphoAuthorizationAction> {
+  return (
+    requirement !== undefined &&
+    "to" in requirement &&
+    "value" in requirement &&
+    "data" in requirement &&
+    "action" in requirement &&
+    requirement.action.type === "morphoAuthorization"
   );
 }
 
 export function isRequirementSignature(
-  requirement: Transaction<ERC20ApprovalAction> | Requirement | undefined,
+  requirement:
+    | Transaction<ERC20ApprovalAction>
+    | Transaction<MorphoAuthorizationAction>
+    | Requirement
+    | undefined,
 ): requirement is Requirement {
   return (
     requirement !== undefined &&

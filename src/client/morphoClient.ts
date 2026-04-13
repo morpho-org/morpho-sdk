@@ -1,5 +1,6 @@
+import type { MarketParams } from "@morpho-org/blue-sdk";
 import type { Address, Client } from "viem";
-import { MorphoVaultV1, MorphoVaultV2 } from "../entities";
+import { MorphoMarketV1, MorphoVaultV1, MorphoVaultV2 } from "../entities";
 import type { Metadata, MorphoClientType } from "../types";
 
 export class MorphoClient implements MorphoClientType {
@@ -30,5 +31,9 @@ export class MorphoClient implements MorphoClientType {
 
   public vaultV2(vault: Address, chainId: number) {
     return new MorphoVaultV2(this, vault, chainId);
+  }
+
+  public marketV1(marketParams: MarketParams, chainId: number) {
+    return new MorphoMarketV1(this, marketParams, chainId);
   }
 }

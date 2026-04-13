@@ -6,6 +6,7 @@ import { signTypedData } from "viem/actions";
 import {
   AddressMismatchError,
   ChainIdMismatchError,
+  InvalidSignatureError,
   MissingClientPropertyError,
   type PermitAction,
   type Requirement,
@@ -72,11 +73,15 @@ export const encodeErc20Permit = async (
         account: client.account,
       });
 
-      await verifyTypedData({
+      const isValid = await verifyTypedData({
         ...typedData,
         address: userAddress, // Verify against the permit's owner.
         signature,
       });
+
+      if (!isValid) {
+        throw new InvalidSignatureError();
+      }
 
       return deepFreeze({
         args: {

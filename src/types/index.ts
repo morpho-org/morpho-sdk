@@ -4,3 +4,4 @@ export * from "./deallocation";
 export * from "./entity";
 export * from "./error";
 export * from "./metadata";
+export * from "./sharedLiquidity";
