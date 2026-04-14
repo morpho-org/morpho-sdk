@@ -81,9 +81,9 @@ Rename, document, and release the SDK publicly as `@morpho-org/morpho-sdk@1.0.0`
   - **Target:** April 18, 2026
   - **Owner per item noted inline**
 
-  1. **Scrub git history** _(Owner: Benjamin)_
+  1. **Clean git history artifacts** _(Owner: Benjamin)_
      - Commit `ac9aa9f` contains a hardcoded Sentry DSN in `src/telemetry/sentry.ts` (since deleted from working tree). This will be publicly visible in git history.
-     - **Decision needed:** either scrub with `git filter-repo` or rotate the Sentry DSN and accept the leak.
+     - **Decision: rotate the Sentry DSN.** The old DSN will remain in history but will be invalidated. This avoids a destructive `git filter-repo` / force push. Rotation must happen before the repo goes public.
      - Delete all Conductor checkpoint refs before pushing to public repo:
        ```
        git for-each-ref --format='delete %(refname)' refs/conductor-checkpoints/ | git update-ref --stdin
@@ -271,7 +271,7 @@ Start with a clean git history to eliminate the Sentry DSN and conductor refs.
 ## Security
 
 - **Codebase audit result (working tree):** No hardcoded secrets, API keys, private URLs, or internal references found in current source code, tests, or configuration
-- **Git history:** Commit `ac9aa9f` contains a Sentry DSN in a since-deleted file. Must be scrubbed or DSN rotated before going public.
+- **Git history:** Commit `ac9aa9f` contains a Sentry DSN in a since-deleted file. Decision: rotate the DSN before going public (non-destructive, no history rewrite).
 - **Conductor refs:** 50+ `refs/conductor-checkpoints/` refs expose internal session metadata. Must be deleted before pushing to public repo.
 - **Test data:** All test fixtures use public Ethereum mainnet contract addresses only
 - **Environment variables:** Only `MAINNET_RPC_URL` required for tests, properly managed via GitHub Secrets in CI. CI triggers must be restricted to prevent secret leakage on non-main branches.
@@ -306,7 +306,7 @@ Post-release monitoring:
 
 ## Open Questions
 
-1. **Sentry DSN disposition:** Scrub commit `ac9aa9f` with `git filter-repo`, or rotate the Sentry DSN and accept the history leak? Filter-repo rewrites history (force push), while rotation is non-destructive but leaves the old DSN visible.
+1. ~~**Sentry DSN disposition:**~~ **Resolved — rotate the DSN.** Old DSN stays in history but is invalidated before going public. Non-destructive, no force push needed.
 2. **npm name reservation:** Is `@morpho-org/morpho-sdk` available on npm? Should we reserve it with a placeholder publish before starting work?
 3. **Cantina scan failure scenario:** If critical vulnerabilities are found, what is the maximum acceptable delay past April 27? Does the Tether WDK team have a hard deadline or is there flexibility?
 4. **Dependency pinning:** Should `@morpho-org/*` production dependencies use exact versions instead of caret ranges for supply chain safety? This trades automatic patch updates for manual version bumps.
