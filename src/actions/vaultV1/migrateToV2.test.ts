@@ -9,7 +9,10 @@ import {
   KpkWETHVaultV2,
 } from "../../../test/fixtures/vaultV2";
 import { test } from "../../../test/setup";
-import { NonPositiveMaxSharePriceError } from "../../types";
+import {
+  NegativeMinRedeemSharePriceError,
+  NonPositiveMaxSharePriceError,
+} from "../../types";
 import { vaultV1MigrateToV2 } from "./migrateToV2";
 
 describe("vaultV1MigrateToV2 unit tests", () => {
@@ -134,6 +137,45 @@ describe("vaultV1MigrateToV2 unit tests", () => {
         },
       }),
     ).toThrow(NonPositiveMaxSharePriceError);
+  });
+
+  test("should throw NegativeMinRedeemSharePriceError when minSharePrice is negative", async ({
+    client,
+  }) => {
+    expect(() =>
+      vaultV1MigrateToV2({
+        vault: {
+          chainId: mainnet.id,
+          address: SteakhouseUsdcVaultV1.address,
+        },
+        args: {
+          targetVault: KeyrockUsdcVaultV2.address,
+          minSharePrice: -1n,
+          maxSharePrice: 1000000000000000000000000000n,
+          recipient: client.account.address,
+          owner: client.account.address,
+        },
+      }),
+    ).toThrow(NegativeMinRedeemSharePriceError);
+  });
+
+  test("should accept minSharePrice of 0n", async ({ client }) => {
+    const tx = vaultV1MigrateToV2({
+      vault: {
+        chainId: mainnet.id,
+        address: SteakhouseUsdcVaultV1.address,
+      },
+      args: {
+        targetVault: KeyrockUsdcVaultV2.address,
+        minSharePrice: 0n,
+        maxSharePrice: 1000000000000000000000000000n,
+        recipient: client.account.address,
+        owner: client.account.address,
+      },
+    });
+
+    expect(tx).toBeDefined();
+    expect(tx.action.type).toBe("vaultV1MigrateToV2");
   });
 
   test("should return a deep-frozen transaction object", async ({ client }) => {

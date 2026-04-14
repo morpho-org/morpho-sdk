@@ -5,6 +5,7 @@ import type { Address } from "viem";
 import { addTransactionMetadata } from "../../helpers";
 import {
   type Metadata,
+  NegativeMinRedeemSharePriceError,
   NonPositiveMaxSharePriceError,
   type Transaction,
   type VaultV1MigrateToV2Action,
@@ -64,6 +65,10 @@ export const vaultV1MigrateToV2 = ({
 }: VaultV1MigrateToV2Params): Readonly<
   Transaction<VaultV1MigrateToV2Action>
 > => {
+  if (minSharePrice < 0n) {
+    throw new NegativeMinRedeemSharePriceError(sourceVault);
+  }
+
   if (maxSharePrice <= 0n) {
     throw new NonPositiveMaxSharePriceError(targetVault);
   }

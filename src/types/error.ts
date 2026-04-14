@@ -343,3 +343,9 @@ export class NonPositiveMinBorrowSharePriceError extends Error {
     super(`Min share price must be non-negative for market: ${market}`);
   }
 }
+
+export class NegativeMinRedeemSharePriceError extends Error {
+  constructor(vault: Address) {
+    super(`Min share price must be non-negative for vault: ${vault}`);
+  }
+}
