@@ -102,6 +102,16 @@ export interface VaultV1RedeemAction
     }
   > {}
 
+export interface VaultV1MigrateToV2Action
+  extends BaseAction<
+    "vaultV1MigrateToV2",
+    {
+      sourceVault: Address;
+      targetVault: Address;
+      recipient: Address;
+    }
+  > {}
+
 export interface MarketV1SupplyCollateralAction
   extends BaseAction<
     "marketV1SupplyCollateral",
@@ -208,6 +218,7 @@ export type TransactionAction =
   | VaultV1DepositAction
   | VaultV1WithdrawAction
   | VaultV1RedeemAction
+  | VaultV1MigrateToV2Action
   | MarketV1SupplyCollateralAction
   | MarketV1BorrowAction
   | MarketV1SupplyCollateralBorrowAction
