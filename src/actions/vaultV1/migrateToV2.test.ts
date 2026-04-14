@@ -32,7 +32,6 @@ describe("vaultV1MigrateToV2 unit tests", () => {
         minSharePrice,
         maxSharePrice,
         recipient: client.account.address,
-        owner: client.account.address,
       },
     });
 
@@ -62,7 +61,6 @@ describe("vaultV1MigrateToV2 unit tests", () => {
         minSharePrice,
         maxSharePrice,
         recipient: client.account.address,
-        owner: client.account.address,
       },
     });
 
@@ -76,9 +74,7 @@ describe("vaultV1MigrateToV2 unit tests", () => {
     expect(tx.value).toBe(0n);
   });
 
-  test("should allow different recipient and owner addresses", async ({
-    client,
-  }) => {
+  test("should allow different recipient address", async () => {
     const differentRecipient =
       "0x1234567890123456789012345678901234567890" as const;
 
@@ -92,7 +88,6 @@ describe("vaultV1MigrateToV2 unit tests", () => {
         minSharePrice: 1000000000000000000000000000n,
         maxSharePrice: 1000000000000000000000000000n,
         recipient: differentRecipient,
-        owner: client.account.address,
       },
     });
 
@@ -113,7 +108,6 @@ describe("vaultV1MigrateToV2 unit tests", () => {
           minSharePrice: 1000000000000000000000000000n,
           maxSharePrice: 0n,
           recipient: client.account.address,
-          owner: client.account.address,
         },
       }),
     ).toThrow(NonPositiveMaxSharePriceError);
@@ -133,7 +127,6 @@ describe("vaultV1MigrateToV2 unit tests", () => {
           minSharePrice: 1000000000000000000000000000n,
           maxSharePrice: -1n,
           recipient: client.account.address,
-          owner: client.account.address,
         },
       }),
     ).toThrow(NonPositiveMaxSharePriceError);
@@ -153,7 +146,6 @@ describe("vaultV1MigrateToV2 unit tests", () => {
           minSharePrice: -1n,
           maxSharePrice: 1000000000000000000000000000n,
           recipient: client.account.address,
-          owner: client.account.address,
         },
       }),
     ).toThrow(NegativeMinRedeemSharePriceError);
@@ -170,7 +162,6 @@ describe("vaultV1MigrateToV2 unit tests", () => {
         minSharePrice: 0n,
         maxSharePrice: 1000000000000000000000000000n,
         recipient: client.account.address,
-        owner: client.account.address,
       },
     });
 
@@ -189,7 +180,6 @@ describe("vaultV1MigrateToV2 unit tests", () => {
         minSharePrice: 1000000000000000000000000000n,
         maxSharePrice: 1000000000000000000000000000n,
         recipient: client.account.address,
-        owner: client.account.address,
       },
     });
 
@@ -206,7 +196,6 @@ describe("vaultV1MigrateToV2 unit tests", () => {
       minSharePrice: 1000000000000000000000000000n,
       maxSharePrice: 1000000000000000000000000000n,
       recipient: client.account.address,
-      owner: client.account.address,
     } as const;
 
     const txWithout = vaultV1MigrateToV2({

@@ -117,7 +117,9 @@ export interface VaultV1Actions {
     targetAccrualVault: AccrualVaultV2;
     slippageTolerance?: bigint;
   }) => {
-    buildTx: () => Readonly<Transaction<VaultV1MigrateToV2Action>>;
+    buildTx: (
+      requirementSignature?: RequirementSignature,
+    ) => Readonly<Transaction<VaultV1MigrateToV2Action>>;
     getRequirements: (params?: {
       useSimplePermit?: boolean;
     }) => Promise<(Readonly<Transaction<ERC20ApprovalAction>> | Requirement)[]>;
@@ -375,7 +377,7 @@ export class MorphoVaultV1 implements VaultV1Actions {
         });
       },
 
-      buildTx: () =>
+      buildTx: (requirementSignature?: RequirementSignature) =>
         vaultV1MigrateToV2({
           vault: {
             chainId: this.chainId,
@@ -386,7 +388,7 @@ export class MorphoVaultV1 implements VaultV1Actions {
             minSharePrice,
             maxSharePrice,
             recipient: userAddress,
-            owner: userAddress,
+            requirementSignature,
           },
           metadata: this.client.options.metadata,
         }),

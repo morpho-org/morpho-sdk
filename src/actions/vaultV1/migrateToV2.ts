@@ -7,9 +7,11 @@ import {
   type Metadata,
   NegativeMinRedeemSharePriceError,
   NonPositiveMaxSharePriceError,
+  type RequirementSignature,
   type Transaction,
   type VaultV1MigrateToV2Action,
 } from "../../types";
+import { getRequirementsAction } from "../requirements/getRequirementsAction";
 
 /** Solidity `type(uint256).max` — used as sentinel for "all shares" / "entire balance". */
 const MAX_UINT_256 = 2n ** 256n - 1n;
@@ -28,8 +30,8 @@ export interface VaultV1MigrateToV2Params {
     readonly maxSharePrice: bigint;
     /** Receives the V2 vault shares. */
     readonly recipient: Address;
-    /** V1 share owner whose position is being migrated. */
-    readonly owner: Address;
+    /** Pre-signed permit/permit2 approval for V1 share transfer. */
+    readonly requirementSignature?: RequirementSignature;
   };
   metadata?: Metadata;
 }
@@ -37,15 +39,16 @@ export interface VaultV1MigrateToV2Params {
 /**
  * Prepares an atomic full-migration transaction from VaultV1 to VaultV2.
  *
- * Routed through bundler3: redeems all V1 shares via `erc4626Redeem` (with
- * `type(uint256).max` to redeem the owner's full balance), then deposits the
- * resulting assets into V2 via `erc4626Deposit` (with `type(uint256).max` to
- * deposit the adapter's entire balance). Both operations execute atomically
- * in a single transaction.
+ * Routed through bundler3: transfers V1 shares to GeneralAdapter1 (via
+ * `erc20TransferFrom` or permit/permit2), redeems them via `erc4626Redeem`
+ * (GA1 redeems its own shares — no allowance check), then deposits the
+ * resulting assets into V2 via `erc4626Deposit`. All operations execute
+ * atomically in a single transaction.
  *
- * **Prerequisite:** The owner must approve GeneralAdapter1 to spend their V1
- * vault shares. Use `getRequirements()` on the entity to check and obtain the
- * approval transaction.
+ * **Prerequisite:** The user must either approve GeneralAdapter1 to spend
+ * their V1 vault shares (classic approve) or provide a pre-signed
+ * permit/permit2 via `requirementSignature`. Use `getRequirements()` on the
+ * entity to resolve the appropriate approval.
  *
  * @param params - The migration parameters.
  * @param params.vault.chainId - The chain ID (used to resolve bundler addresses).
@@ -54,13 +57,19 @@ export interface VaultV1MigrateToV2Params {
  * @param params.args.minSharePrice - Minimum V1 share price in RAY (slippage protection for redeem).
  * @param params.args.maxSharePrice - Maximum V2 share price in RAY (inflation protection for deposit).
  * @param params.args.recipient - Receives the V2 vault shares.
- * @param params.args.owner - V1 share owner whose position is migrated.
+ * @param params.args.requirementSignature - Pre-signed permit/permit2 for V1 share transfer.
  * @param params.metadata - Optional analytics metadata.
  * @returns Deep-frozen transaction.
  */
 export const vaultV1MigrateToV2 = ({
   vault: { chainId, address: sourceVault },
-  args: { targetVault, minSharePrice, maxSharePrice, recipient, owner },
+  args: {
+    targetVault,
+    minSharePrice,
+    maxSharePrice,
+    recipient,
+    requirementSignature,
+  },
   metadata,
 }: VaultV1MigrateToV2Params): Readonly<
   Transaction<VaultV1MigrateToV2Action>
@@ -77,29 +86,57 @@ export const vaultV1MigrateToV2 = ({
     bundler3: { generalAdapter1 },
   } = getChainAddresses(chainId);
 
-  const actions: Action[] = [
-    {
-      type: "erc4626Redeem",
+  const actions: Action[] = [];
+
+  // Transfer V1 shares from user to GA1.
+  // With a signature: permit/permit2 + transferFrom for the signed amount.
+  // Without: plain erc20TransferFrom with MAX_UINT_256 (adapter resolves to
+  // initiator's full balance).
+  if (requirementSignature) {
+    actions.push(
+      ...getRequirementsAction({
+        chainId,
+        asset: sourceVault,
+        amount: requirementSignature.args.amount,
+        requirementSignature,
+      }),
+    );
+  } else {
+    actions.push({
+      type: "erc20TransferFrom",
       args: [
         sourceVault,
         MAX_UINT_256,
-        minSharePrice,
         generalAdapter1,
-        owner,
         false /* skipRevert */,
       ],
-    },
-    {
-      type: "erc4626Deposit",
-      args: [
-        targetVault,
-        MAX_UINT_256,
-        maxSharePrice,
-        recipient,
-        false /* skipRevert */,
-      ],
-    },
-  ];
+    });
+  }
+
+  // GA1 redeems its own shares (owner = GA1, no allowance check).
+  actions.push({
+    type: "erc4626Redeem",
+    args: [
+      sourceVault,
+      MAX_UINT_256,
+      minSharePrice,
+      generalAdapter1,
+      generalAdapter1,
+      false /* skipRevert */,
+    ],
+  });
+
+  // Deposit all resulting assets into V2.
+  actions.push({
+    type: "erc4626Deposit",
+    args: [
+      targetVault,
+      MAX_UINT_256,
+      maxSharePrice,
+      recipient,
+      false /* skipRevert */,
+    ],
+  });
 
   let tx = BundlerAction.encodeBundle(chainId, actions);
 
