@@ -1,14 +1,16 @@
 import {
   type AccrualVault,
+  type AccrualVaultV2,
   DEFAULT_SLIPPAGE_TOLERANCE,
   getChainAddresses,
   MathLib,
 } from "@morpho-org/blue-sdk";
 import { fetchAccrualVault } from "@morpho-org/blue-sdk-viem";
-import { type Address, isAddressEqual } from "viem";
+import { type Address, erc20Abi, isAddressEqual, publicActions } from "viem";
 import {
   getRequirements,
   vaultV1Deposit,
+  vaultV1MigrateToV2,
   vaultV1Redeem,
   vaultV1Withdraw,
 } from "../../actions";
@@ -30,6 +32,7 @@ import {
   type Transaction,
   VaultAddressMismatchError,
   type VaultV1DepositAction,
+  type VaultV1MigrateToV2Action,
   type VaultV1RedeemAction,
   type VaultV1WithdrawAction,
 } from "../../types";
@@ -94,6 +97,30 @@ export interface VaultV1Actions {
    */
   redeem: (params: { shares: bigint; userAddress: Address }) => {
     buildTx: () => Readonly<Transaction<VaultV1RedeemAction>>;
+  };
+  /**
+   * Prepares a full migration from VaultV1 to VaultV2.
+   *
+   * Redeems all V1 shares and atomically deposits the resulting assets into V2
+   * via bundler3. Computes slippage-protected share prices for both legs.
+   *
+   * @param {Object} params - The migration parameters.
+   * @param {Address} params.userAddress - User address initiating the migration.
+   * @param {AccrualVault} params.accrualVault - Pre-fetched V1 vault data.
+   * @param {AccrualVaultV2} params.targetAccrualVault - Pre-fetched V2 vault data.
+   * @param {bigint} [params.slippageTolerance=DEFAULT_SLIPPAGE_TOLERANCE] - Slippage tolerance (default 0.03%, max 10%).
+   * @returns {Object} Object with `buildTx` and `getRequirements`.
+   */
+  migrateToV2: (params: {
+    userAddress: Address;
+    accrualVault: AccrualVault;
+    targetAccrualVault: AccrualVaultV2;
+    slippageTolerance?: bigint;
+  }) => {
+    buildTx: () => Readonly<Transaction<VaultV1MigrateToV2Action>>;
+    getRequirements: (params?: {
+      useSimplePermit?: boolean;
+    }) => Promise<(Readonly<Transaction<ERC20ApprovalAction>> | Requirement)[]>;
   };
 }
 
@@ -263,6 +290,103 @@ export class MorphoVaultV1 implements VaultV1Actions {
             shares,
             recipient: userAddress,
             onBehalf: userAddress,
+          },
+          metadata: this.client.options.metadata,
+        }),
+    };
+  }
+
+  migrateToV2({
+    userAddress,
+    accrualVault,
+    targetAccrualVault,
+    slippageTolerance = DEFAULT_SLIPPAGE_TOLERANCE,
+  }: {
+    userAddress: Address;
+    accrualVault: AccrualVault;
+    targetAccrualVault: AccrualVaultV2;
+    slippageTolerance?: bigint;
+  }) {
+    if (this.client.viemClient.chain?.id !== this.chainId) {
+      throw new ChainIdMismatchError(
+        this.client.viemClient.chain?.id,
+        this.chainId,
+      );
+    }
+
+    if (!isAddressEqual(accrualVault.address, this.vault)) {
+      throw new VaultAddressMismatchError(this.vault, accrualVault.address);
+    }
+
+    if (slippageTolerance < 0n) {
+      throw new NegativeSlippageToleranceError(slippageTolerance);
+    }
+    if (slippageTolerance > MAX_SLIPPAGE_TOLERANCE) {
+      throw new ExcessiveSlippageToleranceError(slippageTolerance);
+    }
+
+    // Compute minSharePrice for V1 redeem (slippage downward)
+    const v1RefShares = MathLib.WAD;
+    const v1RefAssets = accrualVault.toAssets(v1RefShares);
+    const minSharePrice =
+      v1RefAssets > 0n
+        ? MathLib.mulDivDown(
+            v1RefAssets,
+            MathLib.wToRay(MathLib.WAD - slippageTolerance),
+            v1RefShares,
+          )
+        : 0n;
+
+    // Compute maxSharePrice for V2 deposit (slippage upward)
+    const v2RefAssets = MathLib.WAD;
+    const v2RefShares = targetAccrualVault.toShares(v2RefAssets);
+    const maxSharePrice =
+      v2RefShares > 0n
+        ? MathLib.min(
+            MathLib.mulDivUp(
+              v2RefAssets,
+              MathLib.wToRay(MathLib.WAD + slippageTolerance),
+              v2RefShares,
+            ),
+            MathLib.RAY * 100n,
+          )
+        : MathLib.RAY * 100n;
+
+    return {
+      getRequirements: async (params?: { useSimplePermit?: boolean }) => {
+        const pc = this.client.viemClient.extend(publicActions);
+        const shareBalance = await pc.readContract({
+          address: this.vault,
+          abi: erc20Abi,
+          functionName: "balanceOf",
+          args: [userAddress],
+        });
+
+        return await getRequirements(this.client.viemClient, {
+          address: this.vault,
+          chainId: this.chainId,
+          supportSignature: this.client.options.supportSignature,
+          supportDeployless: this.client.options.supportDeployless,
+          useSimplePermit: params?.useSimplePermit,
+          args: {
+            amount: shareBalance,
+            from: userAddress,
+          },
+        });
+      },
+
+      buildTx: () =>
+        vaultV1MigrateToV2({
+          vault: {
+            chainId: this.chainId,
+            address: this.vault,
+          },
+          args: {
+            targetVault: targetAccrualVault.address,
+            minSharePrice,
+            maxSharePrice,
+            recipient: userAddress,
+            owner: userAddress,
           },
           metadata: this.client.options.metadata,
         }),
