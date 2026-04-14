@@ -129,14 +129,14 @@ Rename, document, and release the SDK publicly as `@morpho-org/morpho-sdk@1.0.0`
   8. **Fix changeset config** _(Owner: Benjamin)_
      - `.changeset/config.json`: change `"access": "restricted"` to `"access": "public"`
 
-  9. **Harden CI/CD for public repo** _(Owner: Benjamin / Tarik)_
+  9. **Harden CI/CD for public repo** _(Owner: Benjamin / Foulques)_
      - **Pin all GitHub Actions to commit SHAs** — mutable tags (`@v4`, `@v1`) are a supply chain risk for a DeFi SDK with npm publish credentials. Pin `actions/checkout`, `actions/setup-node`, `pnpm/action-setup`, `changesets/action`, `actions/create-github-app-token`, `foundry-rs/foundry-toolchain` to full SHAs.
      - **Restrict CI triggers** — change `ci.yml` from `on: push` (no branch filter) to `push: branches: [main]` + `pull_request`. Currently, test workflow receives `secrets.MAINNET_RPC_URL` on all pushes — external collaborators could leak it.
      - **Add npm provenance** — add `--provenance` flag to `pnpm release` in `release.yml`. OIDC `id-token: write` is already configured. Cryptographically links the published package to its source commit via Sigstore.
      - **Audit NPM_TOKEN vs OIDC** — release workflow uses both `id-token: write` (OIDC) and a static `NPM_TOKEN` secret. Determine which is actually used by changesets/action and remove the other.
      - **Scope workflow permissions** — `contents: write` + `pull-requests: write` are available to all steps including third-party actions. Consider restricting per-step where possible.
 
-  10. **Configure branch protection on main** _(Owner: admin / Tarik)_
+  10. **Configure branch protection on main** _(Owner: admin / Foulques)_
       - Required pull request reviews before merging
       - Required status checks (CI must pass)
       - No force pushes
@@ -159,7 +159,7 @@ Rename, document, and release the SDK publicly as `@morpho-org/morpho-sdk@1.0.0`
       - PR process: changesets required, CI must pass
       - Reference to code of conduct
 
-  13. **Add SECURITY.md** _(Owner: Tarik)_
+  13. **Add SECURITY.md** _(Owner: Foulques)_
       - Responsible disclosure process for vulnerabilities
       - Contact information (security@morpho.org or similar)
       - Critical for a DeFi protocol SDK handling real financial transactions
