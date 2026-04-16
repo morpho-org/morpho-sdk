@@ -329,6 +329,10 @@ export class MorphoVaultV1 implements VaultV1Actions {
       throw new VaultAssetMismatchError(this.vault, targetAccrualVault.address);
     }
 
+    if (shares <= 0n) {
+      throw new NonPositiveSharesAmountError(this.vault);
+    }
+
     if (slippageTolerance < 0n) {
       throw new NegativeSlippageToleranceError(slippageTolerance);
     }
