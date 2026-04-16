@@ -5,8 +5,9 @@ import type { Address } from "viem";
 import { addTransactionMetadata } from "../../helpers";
 import {
   type Metadata,
-  NegativeMinRedeemSharePriceError,
   NonPositiveMaxSharePriceError,
+  NonPositiveMinSharePriceError,
+  NonPositiveSharesAmountError,
   type RequirementSignature,
   type Transaction,
   type VaultV1MigrateToV2Action,
@@ -19,19 +20,21 @@ const MAX_UINT_256 = 2n ** 256n - 1n;
 /** Parameters for {@link vaultV1MigrateToV2}. */
 export interface VaultV1MigrateToV2Params {
   vault: {
-    readonly chainId: number;
-    readonly address: Address;
+    chainId: number;
+    address: Address;
   };
   args: {
-    readonly targetVault: Address;
+    targetVault: Address;
+    /** Number of V1 shares to migrate. */
+    shares: bigint;
     /** Minimum acceptable share price for V1 redeem (slippage protection, in RAY). */
-    readonly minSharePrice: bigint;
+    minSharePrice: bigint;
     /** Maximum acceptable share price for V2 deposit (inflation protection, in RAY). */
-    readonly maxSharePrice: bigint;
+    maxSharePrice: bigint;
     /** Receives the V2 vault shares. */
-    readonly recipient: Address;
+    recipient: Address;
     /** Pre-signed permit/permit2 approval for V1 share transfer. */
-    readonly requirementSignature?: RequirementSignature;
+    requirementSignature?: RequirementSignature;
   };
   metadata?: Metadata;
 }
@@ -54,6 +57,7 @@ export interface VaultV1MigrateToV2Params {
  * @param params.vault.chainId - The chain ID (used to resolve bundler addresses).
  * @param params.vault.address - The VaultV1 (MetaMorpho) address.
  * @param params.args.targetVault - The VaultV2 address to deposit into.
+ * @param params.args.shares - Number of V1 shares to migrate.
  * @param params.args.minSharePrice - Minimum V1 share price in RAY (slippage protection for redeem).
  * @param params.args.maxSharePrice - Maximum V2 share price in RAY (inflation protection for deposit).
  * @param params.args.recipient - Receives the V2 vault shares.
@@ -65,6 +69,7 @@ export const vaultV1MigrateToV2 = ({
   vault: { chainId, address: sourceVault },
   args: {
     targetVault,
+    shares,
     minSharePrice,
     maxSharePrice,
     recipient,
@@ -74,8 +79,12 @@ export const vaultV1MigrateToV2 = ({
 }: VaultV1MigrateToV2Params): Readonly<
   Transaction<VaultV1MigrateToV2Action>
 > => {
-  if (minSharePrice < 0n) {
-    throw new NegativeMinRedeemSharePriceError(sourceVault);
+  if (shares <= 0n) {
+    throw new NonPositiveSharesAmountError(sourceVault);
+  }
+
+  if (minSharePrice <= 0n) {
+    throw new NonPositiveMinSharePriceError(sourceVault);
   }
 
   if (maxSharePrice <= 0n) {
@@ -90,26 +99,20 @@ export const vaultV1MigrateToV2 = ({
 
   // Transfer V1 shares from user to GA1.
   // With a signature: permit/permit2 + transferFrom for the signed amount.
-  // Without: plain erc20TransferFrom with MAX_UINT_256 (adapter resolves to
-  // initiator's full balance).
+  // Without: plain erc20TransferFrom for the specified shares amount.
   if (requirementSignature) {
     actions.push(
       ...getRequirementsAction({
         chainId,
         asset: sourceVault,
-        amount: requirementSignature.args.amount,
+        amount: shares,
         requirementSignature,
       }),
     );
   } else {
     actions.push({
       type: "erc20TransferFrom",
-      args: [
-        sourceVault,
-        MAX_UINT_256,
-        generalAdapter1,
-        false /* skipRevert */,
-      ],
+      args: [sourceVault, shares, generalAdapter1, false /* skipRevert */],
     });
   }
 
@@ -151,6 +154,9 @@ export const vaultV1MigrateToV2 = ({
       args: {
         sourceVault,
         targetVault,
+        shares,
+        minSharePrice,
+        maxSharePrice,
         recipient,
       },
     },

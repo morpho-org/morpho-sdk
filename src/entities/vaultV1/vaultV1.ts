@@ -6,7 +6,7 @@ import {
   MathLib,
 } from "@morpho-org/blue-sdk";
 import { fetchAccrualVault } from "@morpho-org/blue-sdk-viem";
-import { type Address, erc20Abi, isAddressEqual, publicActions } from "viem";
+import { type Address, isAddressEqual } from "viem";
 import {
   getRequirements,
   vaultV1Deposit,
@@ -31,6 +31,7 @@ import {
   type RequirementSignature,
   type Transaction,
   VaultAddressMismatchError,
+  VaultAssetMismatchError,
   type VaultV1DepositAction,
   type VaultV1MigrateToV2Action,
   type VaultV1RedeemAction,
@@ -108,6 +109,7 @@ export interface VaultV1Actions {
    * @param {Address} params.userAddress - User address initiating the migration.
    * @param {AccrualVault} params.accrualVault - Pre-fetched V1 vault data.
    * @param {AccrualVaultV2} params.targetAccrualVault - Pre-fetched V2 vault data.
+   * @param {bigint} params.shares - User's V1 share balance to migrate.
    * @param {bigint} [params.slippageTolerance=DEFAULT_SLIPPAGE_TOLERANCE] - Slippage tolerance (default 0.03%, max 10%).
    * @returns {Object} Object with `buildTx` and `getRequirements`.
    */
@@ -115,6 +117,7 @@ export interface VaultV1Actions {
     userAddress: Address;
     accrualVault: AccrualVault;
     targetAccrualVault: AccrualVaultV2;
+    shares: bigint;
     slippageTolerance?: bigint;
   }) => {
     buildTx: (
@@ -302,11 +305,13 @@ export class MorphoVaultV1 implements VaultV1Actions {
     userAddress,
     accrualVault,
     targetAccrualVault,
+    shares,
     slippageTolerance = DEFAULT_SLIPPAGE_TOLERANCE,
   }: {
     userAddress: Address;
     accrualVault: AccrualVault;
     targetAccrualVault: AccrualVaultV2;
+    shares: bigint;
     slippageTolerance?: bigint;
   }) {
     if (this.client.viemClient.chain?.id !== this.chainId) {
@@ -320,6 +325,10 @@ export class MorphoVaultV1 implements VaultV1Actions {
       throw new VaultAddressMismatchError(this.vault, accrualVault.address);
     }
 
+    if (!isAddressEqual(accrualVault.asset, targetAccrualVault.asset)) {
+      throw new VaultAssetMismatchError(this.vault, targetAccrualVault.address);
+    }
+
     if (slippageTolerance < 0n) {
       throw new NegativeSlippageToleranceError(slippageTolerance);
     }
@@ -330,7 +339,7 @@ export class MorphoVaultV1 implements VaultV1Actions {
     // Compute minSharePrice for V1 redeem (slippage downward)
     const v1RefShares = MathLib.WAD;
     const v1RefAssets = accrualVault.toAssets(v1RefShares);
-    const minSharePrice =
+    const computedMinSharePrice =
       v1RefAssets > 0n
         ? MathLib.mulDivDown(
             v1RefAssets,
@@ -338,6 +347,10 @@ export class MorphoVaultV1 implements VaultV1Actions {
             v1RefShares,
           )
         : 0n;
+    // Ensure positive: a value of 1n in RAY (~10^-27) is negligible
+    // protection, only reachable when vault share price rounds to zero.
+    const minSharePrice =
+      computedMinSharePrice > 0n ? computedMinSharePrice : 1n;
 
     // Compute maxSharePrice for V2 deposit (slippage upward)
     const v2RefAssets = MathLib.WAD;
@@ -355,27 +368,18 @@ export class MorphoVaultV1 implements VaultV1Actions {
         : MathLib.RAY * 100n;
 
     return {
-      getRequirements: async (params?: { useSimplePermit?: boolean }) => {
-        const pc = this.client.viemClient.extend(publicActions);
-        const shareBalance = await pc.readContract({
-          address: this.vault,
-          abi: erc20Abi,
-          functionName: "balanceOf",
-          args: [userAddress],
-        });
-
-        return await getRequirements(this.client.viemClient, {
+      getRequirements: async (params?: { useSimplePermit?: boolean }) =>
+        await getRequirements(this.client.viemClient, {
           address: this.vault,
           chainId: this.chainId,
           supportSignature: this.client.options.supportSignature,
           supportDeployless: this.client.options.supportDeployless,
           useSimplePermit: params?.useSimplePermit,
           args: {
-            amount: shareBalance,
+            amount: shares,
             from: userAddress,
           },
-        });
-      },
+        }),
 
       buildTx: (requirementSignature?: RequirementSignature) =>
         vaultV1MigrateToV2({
@@ -385,6 +389,7 @@ export class MorphoVaultV1 implements VaultV1Actions {
           },
           args: {
             targetVault: targetAccrualVault.address,
+            shares,
             minSharePrice,
             maxSharePrice,
             recipient: userAddress,

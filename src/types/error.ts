@@ -344,8 +344,16 @@ export class NonPositiveMinBorrowSharePriceError extends Error {
   }
 }
 
-export class NegativeMinRedeemSharePriceError extends Error {
+export class VaultAssetMismatchError extends Error {
+  constructor(sourceVault: Address, targetVault: Address) {
+    super(
+      `Source vault ${sourceVault} and target vault ${targetVault} do not share the same underlying asset`,
+    );
+  }
+}
+
+export class NonPositiveMinSharePriceError extends Error {
   constructor(vault: Address) {
-    super(`Min share price must be non-negative for vault: ${vault}`);
+    super(`Min share price must be positive for vault: ${vault}`);
   }
 }

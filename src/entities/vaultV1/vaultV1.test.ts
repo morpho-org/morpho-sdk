@@ -6,7 +6,10 @@ import {
   GauntletWethVaultV1,
   SteakhouseUsdcVaultV1,
 } from "../../../test/fixtures/vaultV1";
-import { KeyrockUsdcVaultV2 } from "../../../test/fixtures/vaultV2";
+import {
+  KeyrockUsdcVaultV2,
+  KpkWETHVaultV2,
+} from "../../../test/fixtures/vaultV2";
 import { test } from "../../../test/setup";
 import { MorphoClient } from "../../client";
 import { MAX_SLIPPAGE_TOLERANCE } from "../../helpers/constant";
@@ -16,6 +19,7 @@ import {
   NativeAmountOnNonWNativeVaultError,
   NegativeNativeAmountError,
   NegativeSlippageToleranceError,
+  VaultAssetMismatchError,
 } from "../../types";
 
 describe("MorphoVaultV1 entity tests", () => {
@@ -216,6 +220,7 @@ describe("MorphoVaultV1 entity tests", () => {
         userAddress: client.account.address,
         accrualVault,
         targetAccrualVault,
+        shares: parseUnits("1000", 18),
       });
 
       expect(result.buildTx).toBeDefined();
@@ -225,6 +230,7 @@ describe("MorphoVaultV1 entity tests", () => {
       expect(tx.action.type).toBe("vaultV1MigrateToV2");
       expect(tx.action.args.sourceVault).toBe(SteakhouseUsdcVaultV1.address);
       expect(tx.action.args.targetVault).toBe(KeyrockUsdcVaultV2.address);
+      expect(tx.action.args.recipient).toBe(client.account.address);
       expect(tx.data).toBeDefined();
       expect(tx.value).toBe(0n);
     });
@@ -252,6 +258,7 @@ describe("MorphoVaultV1 entity tests", () => {
           userAddress: client.account.address,
           accrualVault,
           targetAccrualVault,
+          shares: parseUnits("1000", 18),
           slippageTolerance: -1n,
         }),
       ).toThrow(NegativeSlippageToleranceError);
@@ -280,9 +287,38 @@ describe("MorphoVaultV1 entity tests", () => {
           userAddress: client.account.address,
           accrualVault,
           targetAccrualVault,
+          shares: parseUnits("1000", 18),
           slippageTolerance: MAX_SLIPPAGE_TOLERANCE + 1n,
         }),
       ).toThrow(ExcessiveSlippageToleranceError);
+    });
+
+    test("should throw VaultAssetMismatchError when V1 and V2 have different underlying assets", async ({
+      client,
+    }) => {
+      const morphoClient = new MorphoClient(client, {
+        supportSignature: false,
+      });
+      const vault = morphoClient.vaultV1(
+        SteakhouseUsdcVaultV1.address,
+        mainnet.id,
+      );
+
+      const accrualVault = await vault.getData();
+      const targetAccrualVault = await fetchAccrualVaultV2(
+        KpkWETHVaultV2.address,
+        client,
+        { chainId: mainnet.id },
+      );
+
+      expect(() =>
+        vault.migrateToV2({
+          userAddress: client.account.address,
+          accrualVault,
+          targetAccrualVault,
+          shares: parseUnits("1000", 18),
+        }),
+      ).toThrow(VaultAssetMismatchError);
     });
 
     test("should accept slippageTolerance of exactly 0n", async ({
@@ -307,12 +343,121 @@ describe("MorphoVaultV1 entity tests", () => {
         userAddress: client.account.address,
         accrualVault,
         targetAccrualVault,
+        shares: parseUnits("1000", 18),
         slippageTolerance: 0n,
       });
 
       expect(result.buildTx).toBeDefined();
       const tx = result.buildTx();
       expect(tx.data).toBeDefined();
+    });
+
+    test("should accept slippageTolerance of exactly MAX_SLIPPAGE_TOLERANCE", async ({
+      client,
+    }) => {
+      const morphoClient = new MorphoClient(client, {
+        supportSignature: false,
+      });
+      const vault = morphoClient.vaultV1(
+        SteakhouseUsdcVaultV1.address,
+        mainnet.id,
+      );
+
+      const accrualVault = await vault.getData();
+      const targetAccrualVault = await fetchAccrualVaultV2(
+        KeyrockUsdcVaultV2.address,
+        client,
+        { chainId: mainnet.id },
+      );
+
+      const result = vault.migrateToV2({
+        userAddress: client.account.address,
+        accrualVault,
+        targetAccrualVault,
+        shares: parseUnits("1000", 18),
+        slippageTolerance: MAX_SLIPPAGE_TOLERANCE,
+      });
+
+      expect(result.buildTx).toBeDefined();
+      const tx = result.buildTx();
+      expect(tx.data).toBeDefined();
+    });
+
+    test("should return classic approval requirement for V1 shares when supportSignature is false", async ({
+      client,
+    }) => {
+      const shares = parseUnits("1000", 18);
+      await client.deal({
+        erc20: SteakhouseUsdcVaultV1.address,
+        amount: shares,
+      });
+
+      const morphoClient = new MorphoClient(client, {
+        supportSignature: false,
+      });
+      const vault = morphoClient.vaultV1(
+        SteakhouseUsdcVaultV1.address,
+        mainnet.id,
+      );
+
+      const accrualVault = await vault.getData();
+      const targetAccrualVault = await fetchAccrualVaultV2(
+        KeyrockUsdcVaultV2.address,
+        client,
+        { chainId: mainnet.id },
+      );
+
+      const { getRequirements } = vault.migrateToV2({
+        userAddress: client.account.address,
+        accrualVault,
+        targetAccrualVault,
+        shares,
+      });
+
+      const requirements = await getRequirements();
+
+      expect(requirements).toHaveLength(1);
+
+      const approval = requirements[0];
+      if (!isRequirementApproval(approval)) {
+        throw new Error("Requirement is not an approval transaction");
+      }
+    });
+
+    test("should return requirement for V1 shares when supportSignature is true", async ({
+      client,
+    }) => {
+      const shares = parseUnits("1000", 18);
+      await client.deal({
+        erc20: SteakhouseUsdcVaultV1.address,
+        amount: shares,
+      });
+
+      const morphoClient = new MorphoClient(client, {
+        supportSignature: true,
+      });
+      const vault = morphoClient.vaultV1(
+        SteakhouseUsdcVaultV1.address,
+        mainnet.id,
+      );
+
+      const accrualVault = await vault.getData();
+      const targetAccrualVault = await fetchAccrualVaultV2(
+        KeyrockUsdcVaultV2.address,
+        client,
+        { chainId: mainnet.id },
+      );
+
+      const { getRequirements } = vault.migrateToV2({
+        userAddress: client.account.address,
+        accrualVault,
+        targetAccrualVault,
+        shares,
+      });
+
+      const requirements = await getRequirements();
+
+      expect(requirements.length).toBeGreaterThanOrEqual(1);
     });
   });
 });
