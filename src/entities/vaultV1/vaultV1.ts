@@ -341,8 +341,8 @@ export class MorphoVaultV1 implements VaultV1Actions {
     }
 
     // Compute minSharePrice for V1 redeem (slippage downward)
-    const v1RefShares = MathLib.WAD;
-    const v1RefAssets = accrualVault.toAssets(v1RefShares);
+    const v1RefShares = shares;
+    const v1RefAssets = accrualVault.toAssets(shares);
     const computedMinSharePrice =
       v1RefAssets > 0n
         ? MathLib.mulDivDown(
@@ -357,7 +357,7 @@ export class MorphoVaultV1 implements VaultV1Actions {
       computedMinSharePrice > 0n ? computedMinSharePrice : 1n;
 
     // Compute maxSharePrice for V2 deposit (slippage upward)
-    const v2RefAssets = MathLib.WAD;
+    const v2RefAssets = v1RefAssets;
     const v2RefShares = targetAccrualVault.toShares(v2RefAssets);
     const maxSharePrice =
       v2RefShares > 0n
