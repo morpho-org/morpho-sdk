@@ -13,8 +13,8 @@ import {
   DepositAssetMismatchError,
   isRequirementApproval,
   isRequirementSignature,
+  NegativeMinSharePriceError,
   NonPositiveMaxSharePriceError,
-  NonPositiveMinSharePriceError,
   NonPositiveSharesAmountError,
 } from "../../types";
 import { getRequirements } from "../requirements";
@@ -382,7 +382,7 @@ describe("vaultV1MigrateToV2 unit tests", () => {
     ).toThrow(NonPositiveMaxSharePriceError);
   });
 
-  test("should throw NonPositiveMinSharePriceError when minSharePriceVaultV1 is zero", async ({
+  test("should accept minSharePriceVaultV1 of zero (no slippage floor)", async ({
     client,
   }) => {
     expect(() =>
@@ -399,10 +399,10 @@ describe("vaultV1MigrateToV2 unit tests", () => {
           recipient: client.account.address,
         },
       }),
-    ).toThrow(NonPositiveMinSharePriceError);
+    ).not.toThrow();
   });
 
-  test("should throw NonPositiveMinSharePriceError when minSharePriceVaultV1 is negative", async ({
+  test("should throw NegativeMinSharePriceError when minSharePriceVaultV1 is negative", async ({
     client,
   }) => {
     expect(() =>
@@ -419,7 +419,7 @@ describe("vaultV1MigrateToV2 unit tests", () => {
           recipient: client.account.address,
         },
       }),
-    ).toThrow(NonPositiveMinSharePriceError);
+    ).toThrow(NegativeMinSharePriceError);
   });
 
   test("should return a deep-frozen transaction object", async ({ client }) => {

@@ -5,8 +5,8 @@ import { type Address, maxUint256 } from "viem";
 import { addTransactionMetadata } from "../../helpers";
 import {
   type Metadata,
+  NegativeMinSharePriceError,
   NonPositiveMaxSharePriceError,
-  NonPositiveMinSharePriceError,
   NonPositiveSharesAmountError,
   type RequirementSignature,
   type Transaction,
@@ -80,8 +80,8 @@ export const vaultV1MigrateToV2 = ({
     throw new NonPositiveSharesAmountError(sourceVault);
   }
 
-  if (minSharePriceVaultV1 <= 0n) {
-    throw new NonPositiveMinSharePriceError(sourceVault);
+  if (minSharePriceVaultV1 < 0n) {
+    throw new NegativeMinSharePriceError(sourceVault);
   }
 
   if (maxSharePriceVaultV2 <= 0n) {

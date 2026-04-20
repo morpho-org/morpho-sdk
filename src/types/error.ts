@@ -352,8 +352,8 @@ export class VaultAssetMismatchError extends Error {
   }
 }
 
-export class NonPositiveMinSharePriceError extends Error {
+export class NegativeMinSharePriceError extends Error {
   constructor(vault: Address) {
-    super(`Min share price must be positive for vault: ${vault}`);
+    super(`Min share price must be non-negative for vault: ${vault}`);
   }
 }

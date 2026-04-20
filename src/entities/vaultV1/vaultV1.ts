@@ -15,7 +15,10 @@ import {
   vaultV1Withdraw,
 } from "../../actions";
 import { validateChainId } from "../../helpers";
-import { MAX_SLIPPAGE_TOLERANCE } from "../../helpers/constant";
+import {
+  MAX_ABSOLUTE_SHARE_PRICE,
+  MAX_SLIPPAGE_TOLERANCE,
+} from "../../helpers/constant";
 import {
   ChainIdMismatchError,
   ChainWNativeMissingError,
@@ -222,7 +225,7 @@ export class MorphoVaultV1 implements VaultV1Actions {
         MathLib.wToRay(MathLib.WAD + slippageTolerance),
         shares,
       ),
-      MathLib.RAY * 100n,
+      MAX_ABSOLUTE_SHARE_PRICE,
     );
 
     return {
@@ -337,35 +340,26 @@ export class MorphoVaultV1 implements VaultV1Actions {
     }
 
     // Compute minSharePriceVaultV1 for V1 redeem (slippage downward)
-    const v1RefShares = shares;
     const v1RefAssets = sourceVault.toAssets(shares);
-    const computedMinSharePriceVaultV1 =
-      v1RefAssets > 0n
-        ? MathLib.mulDivDown(
-            v1RefAssets,
-            MathLib.wToRay(MathLib.WAD - slippageTolerance),
-            v1RefShares,
-          )
-        : 0n;
-    // Ensure positive: a value of 1n in RAY (~10^-27) is negligible
-    // protection, only reachable when vault share price rounds to zero.
-    const minSharePriceVaultV1 =
-      computedMinSharePriceVaultV1 > 0n ? computedMinSharePriceVaultV1 : 1n;
+    const minSharePriceVaultV1 = MathLib.mulDivDown(
+      v1RefAssets,
+      MathLib.wToRay(MathLib.WAD - slippageTolerance),
+      shares,
+    );
 
     // Compute maxSharePriceVaultV2 for V2 deposit (slippage upward)
-    const v2RefAssets = v1RefAssets;
-    const v2RefShares = targetVault.toShares(v2RefAssets);
-    const maxSharePriceVaultV2 =
-      v2RefShares > 0n
-        ? MathLib.min(
-            MathLib.mulDivUp(
-              v2RefAssets,
-              MathLib.wToRay(MathLib.WAD + slippageTolerance),
-              v2RefShares,
-            ),
-            MathLib.RAY * 100n,
-          )
-        : MathLib.RAY * 100n;
+    const v2RefShares = targetVault.toShares(v1RefAssets);
+    if (v2RefShares <= 0n) {
+      throw new NonPositiveSharesAmountError(targetVault.address);
+    }
+    const maxSharePriceVaultV2 = MathLib.min(
+      MathLib.mulDivUp(
+        v1RefAssets,
+        MathLib.wToRay(MathLib.WAD + slippageTolerance),
+        v2RefShares,
+      ),
+      MAX_ABSOLUTE_SHARE_PRICE,
+    );
 
     return {
       getRequirements: async (params?: { useSimplePermit?: boolean }) =>
