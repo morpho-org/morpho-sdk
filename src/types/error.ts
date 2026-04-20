@@ -345,9 +345,9 @@ export class NonPositiveMinBorrowSharePriceError extends Error {
 }
 
 export class VaultAssetMismatchError extends Error {
-  constructor(sourceVault: Address, targetVault: Address) {
+  constructor(sourceAsset: Address, targetAsset: Address) {
     super(
-      `Source vault ${sourceVault} and target vault ${targetVault} do not share the same underlying asset`,
+      `Source vault asset ${sourceAsset} does not match target vault asset ${targetAsset}`,
     );
   }
 }

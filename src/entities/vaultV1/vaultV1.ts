@@ -325,7 +325,7 @@ export class MorphoVaultV1 implements VaultV1Actions {
     }
 
     if (!isAddressEqual(sourceVault.asset, targetVault.asset)) {
-      throw new VaultAssetMismatchError(this.vault, targetVault.address);
+      throw new VaultAssetMismatchError(sourceVault.asset, targetVault.asset);
     }
 
     if (shares <= 0n) {
