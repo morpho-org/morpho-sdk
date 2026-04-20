@@ -343,3 +343,17 @@ export class NonPositiveMinBorrowSharePriceError extends Error {
     super(`Min share price must be non-negative for market: ${market}`);
   }
 }
+
+export class VaultAssetMismatchError extends Error {
+  constructor(sourceAsset: Address, targetAsset: Address) {
+    super(
+      `Source vault asset ${sourceAsset} does not match target vault asset ${targetAsset}`,
+    );
+  }
+}
+
+export class NegativeMinSharePriceError extends Error {
+  constructor(vault: Address) {
+    super(`Min share price must be non-negative for vault: ${vault}`);
+  }
+}

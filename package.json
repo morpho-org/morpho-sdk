@@ -55,7 +55,7 @@
     "dotenv": "^17.2.3",
     "husky": "^9.1.7",
     "typescript": "^5.7.2",
-    "viem": "^2.41.2",
+    "viem": "^2.48.1",
     "vitest": "^3.0.5"
   },
   "publishConfig": {
