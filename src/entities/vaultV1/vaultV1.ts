@@ -14,6 +14,7 @@ import {
   vaultV1Redeem,
   vaultV1Withdraw,
 } from "../../actions";
+import { validateChainId } from "../../helpers";
 import { MAX_SLIPPAGE_TOLERANCE } from "../../helpers/constant";
 import {
   ChainIdMismatchError,
@@ -314,12 +315,7 @@ export class MorphoVaultV1 implements VaultV1Actions {
     shares: bigint;
     slippageTolerance?: bigint;
   }) {
-    if (this.client.viemClient.chain?.id !== this.chainId) {
-      throw new ChainIdMismatchError(
-        this.client.viemClient.chain?.id,
-        this.chainId,
-      );
-    }
+    validateChainId(this.client.viemClient.chain?.id, this.chainId);
 
     if (!isAddressEqual(accrualVault.address, this.vault)) {
       throw new VaultAddressMismatchError(this.vault, accrualVault.address);
