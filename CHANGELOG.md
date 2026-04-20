@@ -1,5 +1,12 @@
 # @morpho-org/consumer-sdk
 
+## 0.5.1
+
+### Patch Changes
+
+- c2ea532: Bump `viem` peer dependency to `^2.48.1`.
+- b1b4cb3: Pin GitHub Actions refs to commit SHAs for supply chain hardening.
+
 ## 0.5.0
 
 ### Minor Changes
