@@ -18,6 +18,7 @@
 | **VaultV1**  | `deposit`                | Bundler (general adapter) | Same ERC-4626 inflation attack prevention as V2. Supports native token wrapping.                    |
 |              | `withdraw`               | Direct vault call         | No attack surface                                                                                   |
 |              | `redeem`                 | Direct vault call         | No attack surface                                                                                   |
+|              | `migrateToV2`            | Bundler (general adapter) | Atomic V1 → V2 migration: redeem V1 shares + deposit into V2 in one tx. Slippage-protected.         |
 | **MarketV1** | `supplyCollateral`       | Bundler (general adapter) | `erc20TransferFrom` + `morphoSupplyCollateral`. Supports native wrapping.                           |
 |              | `borrow`                 | Bundler (general adapter) | `morphoBorrow` with `minSharePrice` slippage protection. Requires GA1 auth. Supports reallocations. |
 |              | `supplyCollateralBorrow` | Bundler (general adapter) | Atomic supply + borrow. LLTV buffer prevents instant liquidation. Supports reallocations.           |
@@ -154,6 +155,25 @@ const { buildTx } = vault.redeem({
 const tx = buildTx();
 ```
 
+### Migrate to V2
+
+Atomically migrate a full position from a VaultV1 (MetaMorpho) vault into a VaultV2 vault. The bundler redeems the V1 shares and deposits the resulting assets into V2 in a single transaction. Both vaults must share the same underlying asset.
+
+```typescript
+const sourceVault = morpho.vaultV1("0xV1Vault...", 1);
+const targetVault = morpho.vaultV2("0xV2Vault...", 1);
+
+const { buildTx, getRequirements } = sourceVault.migrateToV2({
+  userAddress: "0xUser...",
+  sourceVault: await sourceVault.getData(),
+  targetVault: await targetVault.getData(),
+  shares: 1000000000000000000n,
+});
+
+const requirements = await getRequirements();
+const tx = buildTx(requirementSignature);
+```
+
 ## MarketV1
 
 ```typescript
@@ -274,10 +294,12 @@ graph LR
         MV1 --> V1D[vaultV1Deposit]
         MV1 --> V1W[vaultV1Withdraw]
         MV1 --> V1R[vaultV1Redeem]
+        MV1 --> V1M[vaultV1MigrateToV2]
 
         V1D -->|nativeTransfer + wrapNative + erc4626Deposit| B1[Bundler3]
         V1W -->|direct call| MM[MetaMorpho]
         V1R -->|direct call| MM
+        V1M -->|erc20TransferFrom + erc4626Redeem + erc4626Deposit| B1
     end
 
     subgraph VaultV2 Flow
