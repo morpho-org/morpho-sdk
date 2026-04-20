@@ -287,20 +287,23 @@ const tx = buildTx(requirementSignature);
 
 ### Repay
 
-Two modes depending on whether the caller specifies `amount` (partial repay) or `shares` (full repay, immune to interest accrual between quote and inclusion):
+Two modes depending on whether the caller specifies `assets` (partial repay) or `shares` (full repay, immune to interest accrual between quote and inclusion):
 
 ```typescript
+const positionData = await market.getPositionData("0xUser...");
+
 // Partial repay — by assets
 const { buildTx, getRequirements } = market.repay({
-  amount: 250000000000000000n,
+  assets: 250000000000000000n,
   userAddress: "0xUser...",
+  positionData,
 });
 
 // Full repay — by shares (recommended to clear the full debt atomically)
-const position = await market.getPositionData("0xUser...");
 const { buildTx, getRequirements } = market.repay({
-  shares: position.borrowShares,
+  shares: positionData.borrowShares,
   userAddress: "0xUser...",
+  positionData,
 });
 
 const requirements = await getRequirements();
@@ -331,8 +334,8 @@ Direct call to `morpho.withdrawCollateral()` — no bundler, no `GeneralAdapter1
 const positionData = await market.getPositionData("0xUser...");
 
 const { buildTx, getRequirements } = market.repayWithdrawCollateral({
-  repay: { amount: 250000000000000000n }, // or { shares: ... }
-  withdrawCollateral: { amount: 500000000000000000n },
+  assets: 250000000000000000n, // or shares: ...
+  withdrawAmount: 500000000000000000n,
   userAddress: "0xUser...",
   positionData,
 });
