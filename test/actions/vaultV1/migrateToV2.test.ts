@@ -13,7 +13,7 @@ import { KeyrockUsdcVaultV2 } from "../../fixtures/vaultV2";
 import { testInvariants } from "../../helpers/invariants";
 import { test } from "../../setup";
 
-describe.sequential("MigrateToV2 VaultV1", () => {
+describe("MigrateToV2 VaultV1", () => {
   test("should create migration bundle via entity", async ({ client }) => {
     const morpho = new MorphoClient(client);
 
