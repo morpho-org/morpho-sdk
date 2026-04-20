@@ -7,6 +7,7 @@ Rename `@morpho-org/consumer-sdk` to `@morpho-org/morpho-sdk` and release public
 Breaking change: consumers must update all import paths from `@morpho-org/consumer-sdk` to `@morpho-org/morpho-sdk`. The legacy package is deprecated on npm.
 
 Additional changes:
+
 - `viem` is now a declared peer dependency (`^2.0.0`); install it alongside the SDK.
-- `LICENSE` (MIT), `CONTRIBUTING.md`, `SECURITY.md`, and `CODE_OF_CONDUCT.md` added.
+- `LICENSE` (MIT), `CONTRIBUTING.md` and `SECURITY.md` added.
 - Public npm releases are now published with Sigstore provenance (verify with `npm audit signatures`).

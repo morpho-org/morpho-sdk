@@ -43,13 +43,22 @@ In scope:
 
 Out of scope:
 
-- Issues in the underlying Morpho smart contracts — report those via the [Morpho bug bounty program](https://immunefi.com/bounty/morpho/).
 - Issues in `viem` or other third-party dependencies — please report upstream.
 - Social-engineering, DoS on npm/GitHub, physical attacks.
 
+## Dependency Version Ranges
+
+Runtime dependencies in `package.json` — including `@morpho-org/*` packages — use caret (`^`) ranges. This lets coordinated patch and minor releases (e.g., a `blue-sdk` fix) reach SDK consumers without requiring a `morpho-sdk` release for every upstream patch, which would otherwise widen the window in which consumers run known-vulnerable versions.
+
+In practice, consumers resolve dependencies via their own lockfile, so caret ranges only float on fresh installs or explicit updates. We recommend:
+
+- Commit your lockfile (`package-lock.json`, `pnpm-lock.yaml`, `yarn.lock`) and install with `npm ci` / `pnpm install --frozen-lockfile` in CI.
+- Run `npm audit signatures` after installs to verify provenance (see below).
+- If you require stricter isolation, pin `@morpho-org/*` to exact versions in your own manifest, or use `overrides` / `resolutions` to pin transitive versions.
+
 ## Verification
 
-Releases published by the official CI are signed with npm provenance via Sigstore. Consumers can verify with:
+Starting with `v1.0.0`, releases published by the official CI are signed with npm provenance via Sigstore. Earlier versions (including `0.x` releases and the legacy `@morpho-org/consumer-sdk` package) are unsigned and cannot be verified this way. Consumers can verify provenance with:
 
 ```bash
 npm audit signatures

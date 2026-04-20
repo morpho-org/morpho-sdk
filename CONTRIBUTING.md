@@ -2,10 +2,6 @@
 
 Thanks for taking the time to contribute. This document describes the development workflow, code style, and PR process for this repository.
 
-## Code of Conduct
-
-This project follows the [Contributor Covenant](./CODE_OF_CONDUCT.md). By participating, you agree to abide by its terms.
-
 ## Development Setup
 
 ### Prerequisites
@@ -51,7 +47,7 @@ This repository uses [Biome](https://biomejs.dev/) for formatting and linting.
 - **No unused imports or variables** — `pnpm lint` will flag them
 - **Strict TypeScript:** zero `any`, all strict flags enabled, `type` imports where possible, `readonly` on properties
 - **Immutability:** every returned `Transaction` object must be `deepFreeze`-d
-- **Comments:** default to no comments. Add one only when the *why* is non-obvious
+- **Comments:** default to no comments. Add one only when the _why_ is non-obvious
 
 Run `pnpm lint` before pushing. A pre-commit hook (`husky`) runs it automatically if installed.
 
@@ -75,13 +71,13 @@ The SDK enforces a strict **Client → Entity → Action** layering. Never skip 
    ```
    Pick `patch` / `minor` / `major` and write a short changelog entry. PRs without a changeset will fail CI.
 4. Run `pnpm lint && pnpm build && pnpm test` locally.
-5. Push and open a PR against `main`. Fill in the PR template.
+5. Push and open a PR against `main`.
 6. CI must pass. A maintainer will review.
 7. Once approved, a maintainer will merge. The `changesets/action` bot will open a "Version Packages" PR; merging that PR triggers the npm release.
 
 ## Reporting bugs
 
-Use the [bug report template](./.github/ISSUE_TEMPLATE/bug_report.md). Include:
+Open an issue on GitHub. Include:
 
 - SDK version
 - `viem` version
