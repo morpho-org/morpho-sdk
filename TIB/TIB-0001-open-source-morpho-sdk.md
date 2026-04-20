@@ -2,18 +2,20 @@
 
 | Field             | Value                          |
 | ----------------- | ------------------------------ |
-| **Status**        | Proposed                       |
-| **Date**          | 2026-04-14                     |
+| **Status**        | In Progress                    |
+| **Date**          | 2026-04-14 (last updated 2026-04-20) |
 | **Author**        | @Benjamin                      |
 | **Scope**         | Repo-wide                      |
 | **Supersedes**    | N/A                            |
 | **Superseded by** | N/A                            |
 
+> **Execution note (2026-04-20):** Phase 1 items 2, 3, 5, 6, 7, 8, 9 and Phase 2 items 12, 13 have landed in the open-source prep PR. Completed items are struck through below. Item 4 (version bump to 1.0.0) was temporarily reverted to `0.5.1` to ship the rename as a non-breaking release first; the 1.0.0 bump will follow. Items 1, 10, 11, 14, 15 remain admin/pre-publish tasks.
+
 ---
 
 ## Context
 
-The Tether WDK launch is blocked on the consumer-sdk being publicly available on npm. The SDK is currently published as `@morpho-org/consumer-sdk@0.5.0` under a private/restricted scope with experimental markers.
+The Tether WDK launch is blocked on the consumer-sdk being publicly available on npm. The SDK is currently published as `@morpho-org/consumer-sdk@0.5.0` with experimental markers; the changeset config is marked `restricted` while `publishConfig.access` is `public`, which is inconsistent and will be fixed in Phase 1.
 
 Aseem identified the core checklist for a public release (Slack, 2026-04-14):
 
@@ -89,7 +91,7 @@ Rename, document, and release the SDK publicly as `@morpho-org/morpho-sdk@1.0.0`
        git for-each-ref --format='delete %(refname)' refs/conductor-checkpoints/ | git update-ref --stdin
        ```
 
-  2. **Rename package** `@morpho-org/consumer-sdk` -> `@morpho-org/morpho-sdk` _(Owner: Benjamin)_
+  2. ~~**Rename package** `@morpho-org/consumer-sdk` -> `@morpho-org/morpho-sdk`~~ ✅ _(Owner: Benjamin)_
      - Run `grep -rn "consumer-sdk" . --include='*.md' --include='*.ts' --include='*.mdc' --include='*.json'` and update **all** hits. Known files:
        - `package.json`: update `name`, `repository` (`github:morpho-org/morpho-sdk`), `homepage`, `bugs.url`
        - `README.md`: title and all import paths
@@ -101,7 +103,7 @@ Rename, document, and release the SDK publicly as `@morpho-org/morpho-sdk@1.0.0`
      - Note: `CLAUDE.md` does **not** contain `consumer-sdk` despite earlier assumption — no update needed there.
      - GitHub: rename repository from `consumer-sdk` to `morpho-sdk` (admin action). GitHub creates automatic redirects; do not create a new repo named `consumer-sdk` or the redirect breaks.
 
-  3. **Add LICENSE file** at repo root _(Owner: Benjamin)_
+  3. ~~**Add LICENSE file** at repo root~~ ✅ _(Owner: Benjamin)_
      - Standard MIT license text, copyright `Morpho Association`
      - `package.json` already declares `"license": "MIT"` -- file makes it enforceable and GitHub-detectable
 
@@ -110,26 +112,26 @@ Rename, document, and release the SDK publicly as `@morpho-org/morpho-sdk@1.0.0`
      - Create changeset entry for the major version bump (must happen **after** the rename so Changesets uses the new name)
      - Update CHANGELOG.md
 
-  5. **Remove experimental/beta markers from README** _(Owner: Benjamin)_
+  5. ~~**Remove experimental/beta markers from README**~~ ✅ _(Owner: Benjamin)_
      - Remove `![Beta](https://img.shields.io/badge/status-beta-orange)` badge (line 3)
      - Remove `> ⚠️ **Experimental package**` warning (line 5)
 
-  6. **Update README for external developers** _(Owner: Benjamin)_
+  6. ~~**Update README for external developers**~~ ✅ _(Owner: Benjamin)_
      - Add installation section: `pnpm add @morpho-org/morpho-sdk viem`
      - Add missing MarketV1 documentation: `repay`, `withdrawCollateral`, `repayWithdrawCollateral`
      - Add brief section explaining `getRequirements()` flow (approvals, permits, authorizations)
      - Note `viem ^2.x` as a required peer dependency
      - Add "Migration from @morpho-org/consumer-sdk" section (the package rename is itself a breaking change — consumers must update all import paths)
 
-  7. **Add `viem` to peerDependencies** _(Owner: Benjamin)_
+  7. ~~**Add `viem` to peerDependencies**~~ ✅ _(Owner: Benjamin)_
      - Currently only in `devDependencies`; consumers must install it themselves but npm/pnpm won't warn them
      - Add `"viem": "^2.0.0"` to `peerDependencies`
      - Shipping v1.0.0 without this guarantees broken installs for new users
 
-  8. **Fix changeset config** _(Owner: Benjamin)_
+  8. ~~**Fix changeset config**~~ ✅ _(Owner: Benjamin)_
      - `.changeset/config.json`: change `"access": "restricted"` to `"access": "public"`
 
-  9. **Harden CI/CD for public repo** _(Owner: Benjamin / Foulques)_
+  9. ~~**Harden CI/CD for public repo**~~ ✅ _(Owner: Benjamin / Foulques)_ — SHAs pinned, CI triggers restricted to `main` + PRs, `--provenance` added, static `NPM_TOKEN` removed in favor of OIDC, workflow permissions scoped per-job.
      - **Pin all GitHub Actions to commit SHAs** — mutable tags (`@v4`, `@v1`) are a supply chain risk for a DeFi SDK with npm publish credentials. Pin `actions/checkout`, `actions/setup-node`, `pnpm/action-setup`, `changesets/action`, `actions/create-github-app-token`, `foundry-rs/foundry-toolchain` to full SHAs.
      - **Restrict CI triggers** — change `ci.yml` from `on: push` (no branch filter) to `push: branches: [main]` + `pull_request`. Currently, test workflow receives `secrets.MAINNET_RPC_URL` on all pushes — external collaborators could leak it.
      - **Add npm provenance** — add `--provenance` flag to `pnpm release` in `release.yml`. OIDC `id-token: write` is already configured. Cryptographically links the published package to its source commit via Sigstore.
@@ -152,14 +154,14 @@ Rename, document, and release the SDK publicly as `@morpho-org/morpho-sdk@1.0.0`
 - **Phase 2 -- Important (should complete before open-sourcing):**
   - **Target:** April 22, 2026
 
-  12. **Add CONTRIBUTING.md** _(Owner: Benjamin)_
+  12. ~~**Add CONTRIBUTING.md**~~ ✅ _(Owner: Benjamin)_
       - Development setup: pnpm, Node version (`.nvmrc` -> Node 24)
       - Code style: Biome, double quotes, 2-space indent, no unused imports
       - Running tests: requires `MAINNET_RPC_URL` environment variable — recommend a free-tier RPC provider (e.g., Alchemy free tier) or note that CI runs tests and contributors can rely on it for test validation
       - PR process: changesets required, CI must pass
       - Reference to code of conduct
 
-  13. **Add SECURITY.md** _(Owner: Foulques)_
+  13. ~~**Add SECURITY.md**~~ ✅ _(Owner: Foulques)_
       - Responsible disclosure process for vulnerabilities
       - Contact information (security@morpho.org or similar)
       - Critical for a DeFi protocol SDK handling real financial transactions
