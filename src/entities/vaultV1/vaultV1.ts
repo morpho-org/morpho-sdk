@@ -108,16 +108,16 @@ export interface VaultV1Actions {
    *
    * @param {Object} params - The migration parameters.
    * @param {Address} params.userAddress - User address initiating the migration.
-   * @param {AccrualVault} params.accrualVault - Pre-fetched V1 vault data.
-   * @param {AccrualVaultV2} params.targetAccrualVault - Pre-fetched V2 vault data.
+   * @param {AccrualVault} params.sourceVault - Pre-fetched V1 vault data.
+   * @param {AccrualVaultV2} params.targetVault - Pre-fetched V2 vault data.
    * @param {bigint} params.shares - User's V1 share balance to migrate.
    * @param {bigint} [params.slippageTolerance=DEFAULT_SLIPPAGE_TOLERANCE] - Slippage tolerance (default 0.03%, max 10%).
    * @returns {Object} Object with `buildTx` and `getRequirements`.
    */
   migrateToV2: (params: {
     userAddress: Address;
-    accrualVault: AccrualVault;
-    targetAccrualVault: AccrualVaultV2;
+    sourceVault: AccrualVault;
+    targetVault: AccrualVaultV2;
     shares: bigint;
     slippageTolerance?: bigint;
   }) => {
@@ -304,25 +304,25 @@ export class MorphoVaultV1 implements VaultV1Actions {
 
   migrateToV2({
     userAddress,
-    accrualVault,
-    targetAccrualVault,
+    sourceVault,
+    targetVault,
     shares,
     slippageTolerance = DEFAULT_SLIPPAGE_TOLERANCE,
   }: {
     userAddress: Address;
-    accrualVault: AccrualVault;
-    targetAccrualVault: AccrualVaultV2;
+    sourceVault: AccrualVault;
+    targetVault: AccrualVaultV2;
     shares: bigint;
     slippageTolerance?: bigint;
   }) {
     validateChainId(this.client.viemClient.chain?.id, this.chainId);
 
-    if (!isAddressEqual(accrualVault.address, this.vault)) {
-      throw new VaultAddressMismatchError(this.vault, accrualVault.address);
+    if (!isAddressEqual(sourceVault.address, this.vault)) {
+      throw new VaultAddressMismatchError(this.vault, sourceVault.address);
     }
 
-    if (!isAddressEqual(accrualVault.asset, targetAccrualVault.asset)) {
-      throw new VaultAssetMismatchError(this.vault, targetAccrualVault.address);
+    if (!isAddressEqual(sourceVault.asset, targetVault.asset)) {
+      throw new VaultAssetMismatchError(this.vault, targetVault.address);
     }
 
     if (shares <= 0n) {
@@ -338,7 +338,7 @@ export class MorphoVaultV1 implements VaultV1Actions {
 
     // Compute minSharePriceVaultV1 for V1 redeem (slippage downward)
     const v1RefShares = shares;
-    const v1RefAssets = accrualVault.toAssets(shares);
+    const v1RefAssets = sourceVault.toAssets(shares);
     const computedMinSharePriceVaultV1 =
       v1RefAssets > 0n
         ? MathLib.mulDivDown(
@@ -354,7 +354,7 @@ export class MorphoVaultV1 implements VaultV1Actions {
 
     // Compute maxSharePriceVaultV2 for V2 deposit (slippage upward)
     const v2RefAssets = v1RefAssets;
-    const v2RefShares = targetAccrualVault.toShares(v2RefAssets);
+    const v2RefShares = targetVault.toShares(v2RefAssets);
     const maxSharePriceVaultV2 =
       v2RefShares > 0n
         ? MathLib.min(
@@ -388,7 +388,7 @@ export class MorphoVaultV1 implements VaultV1Actions {
             address: this.vault,
           },
           args: {
-            targetVault: targetAccrualVault.address,
+            targetVault: targetVault.address,
             shares,
             minSharePriceVaultV1,
             maxSharePriceVaultV2,

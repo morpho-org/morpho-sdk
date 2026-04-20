@@ -18,16 +18,16 @@ describe.sequential("MigrateToV2 VaultV1", () => {
     const morpho = new MorphoClient(client);
 
     const vaultV1 = morpho.vaultV1(SteakhouseUsdcVaultV1.address, mainnet.id);
-    const accrualVault = await vaultV1.getData();
+    const sourceVault = await vaultV1.getData();
 
     const vaultV2 = morpho.vaultV2(KeyrockUsdcVaultV2.address, mainnet.id);
-    const targetAccrualVault = await vaultV2.getData();
+    const targetVault = await vaultV2.getData();
 
     const shares = parseUnits("1000", 18);
     const migrate = vaultV1.migrateToV2({
       userAddress: client.account.address,
-      accrualVault,
-      targetAccrualVault,
+      sourceVault,
+      targetVault,
       shares,
     });
 
@@ -51,8 +51,8 @@ describe.sequential("MigrateToV2 VaultV1", () => {
     expect(migrate).toBeDefined();
     expect(requirements).toBeDefined();
     expect(tx_1).toStrictEqual(tx_2);
-    expect(accrualVault.asset).toStrictEqual(SteakhouseUsdcVaultV1.asset);
-    expect(accrualVault.address).toStrictEqual(SteakhouseUsdcVaultV1.address);
+    expect(sourceVault.asset).toStrictEqual(SteakhouseUsdcVaultV1.asset);
+    expect(sourceVault.address).toStrictEqual(SteakhouseUsdcVaultV1.address);
   });
 
   test("should migrate full USDC position from V1 to V2", async ({
@@ -82,13 +82,13 @@ describe.sequential("MigrateToV2 VaultV1", () => {
         );
         const vaultV2 = morpho.vaultV2(KeyrockUsdcVaultV2.address, mainnet.id);
 
-        const accrualVault = await vaultV1.getData();
-        const targetAccrualVault = await vaultV2.getData();
+        const sourceVault = await vaultV1.getData();
+        const targetVault = await vaultV2.getData();
 
         const migrate = vaultV1.migrateToV2({
           userAddress: client.account.address,
-          accrualVault,
-          targetAccrualVault,
+          sourceVault,
+          targetVault,
           shares,
         });
 
@@ -151,13 +151,13 @@ describe.sequential("MigrateToV2 VaultV1", () => {
         );
         const vaultV2 = morpho.vaultV2(KeyrockUsdcVaultV2.address, mainnet.id);
 
-        const accrualVault = await vaultV1.getData();
-        const targetAccrualVault = await vaultV2.getData();
+        const sourceVault = await vaultV1.getData();
+        const targetVault = await vaultV2.getData();
 
         const migrate = vaultV1.migrateToV2({
           userAddress: client.account.address,
-          accrualVault,
-          targetAccrualVault,
+          sourceVault,
+          targetVault,
           shares,
         });
 
@@ -232,13 +232,13 @@ describe.sequential("MigrateToV2 VaultV1", () => {
         );
         const vaultV2 = morpho.vaultV2(KeyrockUsdcVaultV2.address, mainnet.id);
 
-        const accrualVault = await vaultV1.getData();
-        const targetAccrualVault = await vaultV2.getData();
+        const sourceVault = await vaultV1.getData();
+        const targetVault = await vaultV2.getData();
 
         const migrate = vaultV1.migrateToV2({
           userAddress: client.account.address,
-          accrualVault,
-          targetAccrualVault,
+          sourceVault,
+          targetVault,
           shares,
         });
 

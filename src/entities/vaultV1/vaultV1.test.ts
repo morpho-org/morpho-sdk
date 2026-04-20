@@ -209,8 +209,8 @@ describe("MorphoVaultV1 entity tests", () => {
         mainnet.id,
       );
 
-      const accrualVault = await vault.getData();
-      const targetAccrualVault = await fetchAccrualVaultV2(
+      const sourceVault = await vault.getData();
+      const targetVault = await fetchAccrualVaultV2(
         KeyrockUsdcVaultV2.address,
         client,
         { chainId: mainnet.id },
@@ -218,8 +218,8 @@ describe("MorphoVaultV1 entity tests", () => {
 
       const result = vault.migrateToV2({
         userAddress: client.account.address,
-        accrualVault,
-        targetAccrualVault,
+        sourceVault,
+        targetVault,
         shares: parseUnits("1000", 18),
       });
 
@@ -246,8 +246,8 @@ describe("MorphoVaultV1 entity tests", () => {
         mainnet.id,
       );
 
-      const accrualVault = await vault.getData();
-      const targetAccrualVault = await fetchAccrualVaultV2(
+      const sourceVault = await vault.getData();
+      const targetVault = await fetchAccrualVaultV2(
         KeyrockUsdcVaultV2.address,
         client,
         { chainId: mainnet.id },
@@ -256,8 +256,8 @@ describe("MorphoVaultV1 entity tests", () => {
       expect(() =>
         vault.migrateToV2({
           userAddress: client.account.address,
-          accrualVault,
-          targetAccrualVault,
+          sourceVault,
+          targetVault,
           shares: parseUnits("1000", 18),
           slippageTolerance: -1n,
         }),
@@ -275,8 +275,8 @@ describe("MorphoVaultV1 entity tests", () => {
         mainnet.id,
       );
 
-      const accrualVault = await vault.getData();
-      const targetAccrualVault = await fetchAccrualVaultV2(
+      const sourceVault = await vault.getData();
+      const targetVault = await fetchAccrualVaultV2(
         KeyrockUsdcVaultV2.address,
         client,
         { chainId: mainnet.id },
@@ -285,8 +285,8 @@ describe("MorphoVaultV1 entity tests", () => {
       expect(() =>
         vault.migrateToV2({
           userAddress: client.account.address,
-          accrualVault,
-          targetAccrualVault,
+          sourceVault,
+          targetVault,
           shares: parseUnits("1000", 18),
           slippageTolerance: MAX_SLIPPAGE_TOLERANCE + 1n,
         }),
@@ -304,8 +304,8 @@ describe("MorphoVaultV1 entity tests", () => {
         mainnet.id,
       );
 
-      const accrualVault = await vault.getData();
-      const targetAccrualVault = await fetchAccrualVaultV2(
+      const sourceVault = await vault.getData();
+      const targetVault = await fetchAccrualVaultV2(
         KpkWETHVaultV2.address,
         client,
         { chainId: mainnet.id },
@@ -314,8 +314,8 @@ describe("MorphoVaultV1 entity tests", () => {
       expect(() =>
         vault.migrateToV2({
           userAddress: client.account.address,
-          accrualVault,
-          targetAccrualVault,
+          sourceVault,
+          targetVault,
           shares: parseUnits("1000", 18),
         }),
       ).toThrow(VaultAssetMismatchError);
@@ -332,8 +332,8 @@ describe("MorphoVaultV1 entity tests", () => {
         mainnet.id,
       );
 
-      const accrualVault = await vault.getData();
-      const targetAccrualVault = await fetchAccrualVaultV2(
+      const sourceVault = await vault.getData();
+      const targetVault = await fetchAccrualVaultV2(
         KeyrockUsdcVaultV2.address,
         client,
         { chainId: mainnet.id },
@@ -341,8 +341,8 @@ describe("MorphoVaultV1 entity tests", () => {
 
       const result = vault.migrateToV2({
         userAddress: client.account.address,
-        accrualVault,
-        targetAccrualVault,
+        sourceVault,
+        targetVault,
         shares: parseUnits("1000", 18),
         slippageTolerance: 0n,
       });
@@ -363,8 +363,8 @@ describe("MorphoVaultV1 entity tests", () => {
         mainnet.id,
       );
 
-      const accrualVault = await vault.getData();
-      const targetAccrualVault = await fetchAccrualVaultV2(
+      const sourceVault = await vault.getData();
+      const targetVault = await fetchAccrualVaultV2(
         KeyrockUsdcVaultV2.address,
         client,
         { chainId: mainnet.id },
@@ -372,8 +372,8 @@ describe("MorphoVaultV1 entity tests", () => {
 
       const result = vault.migrateToV2({
         userAddress: client.account.address,
-        accrualVault,
-        targetAccrualVault,
+        sourceVault,
+        targetVault,
         shares: parseUnits("1000", 18),
         slippageTolerance: MAX_SLIPPAGE_TOLERANCE,
       });
@@ -400,8 +400,8 @@ describe("MorphoVaultV1 entity tests", () => {
         mainnet.id,
       );
 
-      const accrualVault = await vault.getData();
-      const targetAccrualVault = await fetchAccrualVaultV2(
+      const sourceVault = await vault.getData();
+      const targetVault = await fetchAccrualVaultV2(
         KeyrockUsdcVaultV2.address,
         client,
         { chainId: mainnet.id },
@@ -409,8 +409,8 @@ describe("MorphoVaultV1 entity tests", () => {
 
       const { getRequirements } = vault.migrateToV2({
         userAddress: client.account.address,
-        accrualVault,
-        targetAccrualVault,
+        sourceVault,
+        targetVault,
         shares,
       });
 
@@ -441,8 +441,8 @@ describe("MorphoVaultV1 entity tests", () => {
         mainnet.id,
       );
 
-      const accrualVault = await vault.getData();
-      const targetAccrualVault = await fetchAccrualVaultV2(
+      const sourceVault = await vault.getData();
+      const targetVault = await fetchAccrualVaultV2(
         KeyrockUsdcVaultV2.address,
         client,
         { chainId: mainnet.id },
@@ -450,8 +450,8 @@ describe("MorphoVaultV1 entity tests", () => {
 
       const { getRequirements } = vault.migrateToV2({
         userAddress: client.account.address,
-        accrualVault,
-        targetAccrualVault,
+        sourceVault,
+        targetVault,
         shares,
       });
 
