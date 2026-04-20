@@ -1,5 +1,11 @@
 # @morpho-org/consumer-sdk
 
+## 0.6.0
+
+### Minor Changes
+
+- 866a4c9: Add `vaultV1MigrateToV2` atomic migration action that transfers a user's VaultV1 (MetaMorpho) position to VaultV2 in a single bundler3 transaction. The flow transfers V1 shares via `erc20TransferFrom`, redeems them via `erc4626Redeem`, and deposits the resulting assets into V2 via `erc4626Deposit` — all through GeneralAdapter1. Includes `migrateToV2()` entity method on `MorphoVaultV1`, slippage protection (`minSharePrice`/`maxSharePrice`), new error classes (`NonPositiveMinSharePriceError`, `NonPositiveSharesAmountError`, `VaultAssetMismatchError`), and comprehensive test coverage.
+
 ## 0.5.1
 
 ### Patch Changes
