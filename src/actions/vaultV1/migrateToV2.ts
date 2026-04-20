@@ -1,7 +1,7 @@
 import { getChainAddresses } from "@morpho-org/blue-sdk";
 import { type Action, BundlerAction } from "@morpho-org/bundler-sdk-viem";
 import { deepFreeze } from "@morpho-org/morpho-ts";
-import type { Address } from "viem";
+import { type Address, maxUint256 } from "viem";
 import { addTransactionMetadata } from "../../helpers";
 import {
   type Metadata,
@@ -14,9 +14,6 @@ import {
 } from "../../types";
 import { getRequirementsAction } from "../requirements/getRequirementsAction";
 
-/** Solidity `type(uint256).max` — used as sentinel for "all shares" / "entire balance". */
-const MAX_UINT_256 = 2n ** 256n - 1n;
-
 /** Parameters for {@link vaultV1MigrateToV2}. */
 export interface VaultV1MigrateToV2Params {
   vault: {
@@ -28,9 +25,9 @@ export interface VaultV1MigrateToV2Params {
     /** Number of V1 shares to migrate. */
     shares: bigint;
     /** Minimum acceptable share price for V1 redeem (slippage protection, in RAY). */
-    minSharePrice: bigint;
+    minSharePriceVaultV1: bigint;
     /** Maximum acceptable share price for V2 deposit (inflation protection, in RAY). */
-    maxSharePrice: bigint;
+    maxSharePriceVaultV2: bigint;
     /** Receives the V2 vault shares. */
     recipient: Address;
     /** Pre-signed permit/permit2 approval for V1 share transfer. */
@@ -58,8 +55,8 @@ export interface VaultV1MigrateToV2Params {
  * @param params.vault.address - The VaultV1 (MetaMorpho) address.
  * @param params.args.targetVault - The VaultV2 address to deposit into.
  * @param params.args.shares - Number of V1 shares to migrate.
- * @param params.args.minSharePrice - Minimum V1 share price in RAY (slippage protection for redeem).
- * @param params.args.maxSharePrice - Maximum V2 share price in RAY (inflation protection for deposit).
+ * @param params.args.minSharePriceVaultV1 - Minimum V1 share price in RAY (slippage protection for redeem).
+ * @param params.args.maxSharePriceVaultV2 - Maximum V2 share price in RAY (inflation protection for deposit).
  * @param params.args.recipient - Receives the V2 vault shares.
  * @param params.args.requirementSignature - Pre-signed permit/permit2 for V1 share transfer.
  * @param params.metadata - Optional analytics metadata.
@@ -70,8 +67,8 @@ export const vaultV1MigrateToV2 = ({
   args: {
     targetVault,
     shares,
-    minSharePrice,
-    maxSharePrice,
+    minSharePriceVaultV1,
+    maxSharePriceVaultV2,
     recipient,
     requirementSignature,
   },
@@ -83,11 +80,11 @@ export const vaultV1MigrateToV2 = ({
     throw new NonPositiveSharesAmountError(sourceVault);
   }
 
-  if (minSharePrice <= 0n) {
+  if (minSharePriceVaultV1 <= 0n) {
     throw new NonPositiveMinSharePriceError(sourceVault);
   }
 
-  if (maxSharePrice <= 0n) {
+  if (maxSharePriceVaultV2 <= 0n) {
     throw new NonPositiveMaxSharePriceError(targetVault);
   }
 
@@ -121,8 +118,8 @@ export const vaultV1MigrateToV2 = ({
     type: "erc4626Redeem",
     args: [
       sourceVault,
-      MAX_UINT_256,
-      minSharePrice,
+      maxUint256,
+      minSharePriceVaultV1,
       generalAdapter1,
       generalAdapter1,
       false /* skipRevert */,
@@ -134,8 +131,8 @@ export const vaultV1MigrateToV2 = ({
     type: "erc4626Deposit",
     args: [
       targetVault,
-      MAX_UINT_256,
-      maxSharePrice,
+      maxUint256,
+      maxSharePriceVaultV2,
       recipient,
       false /* skipRevert */,
     ],
@@ -155,8 +152,8 @@ export const vaultV1MigrateToV2 = ({
         sourceVault,
         targetVault,
         shares,
-        minSharePrice,
-        maxSharePrice,
+        minSharePriceVaultV1,
+        maxSharePriceVaultV2,
         recipient,
       },
     },

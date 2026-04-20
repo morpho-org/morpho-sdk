@@ -340,10 +340,10 @@ export class MorphoVaultV1 implements VaultV1Actions {
       throw new ExcessiveSlippageToleranceError(slippageTolerance);
     }
 
-    // Compute minSharePrice for V1 redeem (slippage downward)
+    // Compute minSharePriceVaultV1 for V1 redeem (slippage downward)
     const v1RefShares = shares;
     const v1RefAssets = accrualVault.toAssets(shares);
-    const computedMinSharePrice =
+    const computedMinSharePriceVaultV1 =
       v1RefAssets > 0n
         ? MathLib.mulDivDown(
             v1RefAssets,
@@ -353,13 +353,13 @@ export class MorphoVaultV1 implements VaultV1Actions {
         : 0n;
     // Ensure positive: a value of 1n in RAY (~10^-27) is negligible
     // protection, only reachable when vault share price rounds to zero.
-    const minSharePrice =
-      computedMinSharePrice > 0n ? computedMinSharePrice : 1n;
+    const minSharePriceVaultV1 =
+      computedMinSharePriceVaultV1 > 0n ? computedMinSharePriceVaultV1 : 1n;
 
-    // Compute maxSharePrice for V2 deposit (slippage upward)
+    // Compute maxSharePriceVaultV2 for V2 deposit (slippage upward)
     const v2RefAssets = v1RefAssets;
     const v2RefShares = targetAccrualVault.toShares(v2RefAssets);
-    const maxSharePrice =
+    const maxSharePriceVaultV2 =
       v2RefShares > 0n
         ? MathLib.min(
             MathLib.mulDivUp(
@@ -394,8 +394,8 @@ export class MorphoVaultV1 implements VaultV1Actions {
           args: {
             targetVault: targetAccrualVault.address,
             shares,
-            minSharePrice,
-            maxSharePrice,
+            minSharePriceVaultV1,
+            maxSharePriceVaultV2,
             recipient: userAddress,
             requirementSignature,
           },

@@ -26,8 +26,8 @@ describe("vaultV1MigrateToV2 unit tests", () => {
     client,
   }) => {
     const shares = 1000000000000000000n;
-    const minSharePrice = 1000000000000000000000000000n;
-    const maxSharePrice = 1000000000000000000000000000n;
+    const minSharePriceVaultV1 = 1000000000000000000000000000n;
+    const maxSharePriceVaultV2 = 1000000000000000000000000000n;
 
     const tx = vaultV1MigrateToV2({
       vault: {
@@ -37,8 +37,8 @@ describe("vaultV1MigrateToV2 unit tests", () => {
       args: {
         targetVault: KeyrockUsdcVaultV2.address,
         shares,
-        minSharePrice,
-        maxSharePrice,
+        minSharePriceVaultV1,
+        maxSharePriceVaultV2,
         recipient: client.account.address,
       },
     });
@@ -47,8 +47,8 @@ describe("vaultV1MigrateToV2 unit tests", () => {
     expect(tx.action.type).toBe("vaultV1MigrateToV2");
     expect(tx.action.args.sourceVault).toBe(SteakhouseUsdcVaultV1.address);
     expect(tx.action.args.targetVault).toBe(KeyrockUsdcVaultV2.address);
-    expect(tx.action.args.minSharePrice).toBe(minSharePrice);
-    expect(tx.action.args.maxSharePrice).toBe(maxSharePrice);
+    expect(tx.action.args.minSharePriceVaultV1).toBe(minSharePriceVaultV1);
+    expect(tx.action.args.maxSharePriceVaultV2).toBe(maxSharePriceVaultV2);
     expect(tx.action.args.recipient).toBe(client.account.address);
     expect(tx.to).toBeDefined();
     expect(tx.data).toBeDefined();
@@ -59,8 +59,8 @@ describe("vaultV1MigrateToV2 unit tests", () => {
     client,
   }) => {
     const shares = 1000000000000000000n;
-    const minSharePrice = 1000000000000000000000000000n;
-    const maxSharePrice = 1000000000000000000000000000n;
+    const minSharePriceVaultV1 = 1000000000000000000000000000n;
+    const maxSharePriceVaultV2 = 1000000000000000000000000000n;
 
     const tx = vaultV1MigrateToV2({
       vault: {
@@ -70,8 +70,8 @@ describe("vaultV1MigrateToV2 unit tests", () => {
       args: {
         targetVault: KpkWETHVaultV2.address,
         shares,
-        minSharePrice,
-        maxSharePrice,
+        minSharePriceVaultV1,
+        maxSharePriceVaultV2,
         recipient: client.account.address,
       },
     });
@@ -80,8 +80,8 @@ describe("vaultV1MigrateToV2 unit tests", () => {
     expect(tx.action.type).toBe("vaultV1MigrateToV2");
     expect(tx.action.args.sourceVault).toBe(GauntletWethVaultV1.address);
     expect(tx.action.args.targetVault).toBe(KpkWETHVaultV2.address);
-    expect(tx.action.args.minSharePrice).toBe(minSharePrice);
-    expect(tx.action.args.maxSharePrice).toBe(maxSharePrice);
+    expect(tx.action.args.minSharePriceVaultV1).toBe(minSharePriceVaultV1);
+    expect(tx.action.args.maxSharePriceVaultV2).toBe(maxSharePriceVaultV2);
     expect(tx.action.args.recipient).toBe(client.account.address);
     expect(tx.to).toBeDefined();
     expect(tx.data).toBeDefined();
@@ -100,8 +100,8 @@ describe("vaultV1MigrateToV2 unit tests", () => {
       args: {
         targetVault: KeyrockUsdcVaultV2.address,
         shares: 1000000000000000000n,
-        minSharePrice: 1000000000000000000000000000n,
-        maxSharePrice: 1000000000000000000000000000n,
+        minSharePriceVaultV1: 1000000000000000000000000000n,
+        maxSharePriceVaultV2: 1000000000000000000000000000n,
         recipient: differentRecipient,
       },
     });
@@ -152,8 +152,8 @@ describe("vaultV1MigrateToV2 unit tests", () => {
       args: {
         targetVault: KeyrockUsdcVaultV2.address,
         shares,
-        minSharePrice: 1000000000000000000000000000n,
-        maxSharePrice: 1000000000000000000000000000n,
+        minSharePriceVaultV1: 1000000000000000000000000000n,
+        maxSharePriceVaultV2: 1000000000000000000000000000n,
         recipient: client.account.address,
         requirementSignature,
       },
@@ -212,8 +212,8 @@ describe("vaultV1MigrateToV2 unit tests", () => {
       args: {
         targetVault: KpkWETHVaultV2.address,
         shares,
-        minSharePrice: 1000000000000000000000000000n,
-        maxSharePrice: 1000000000000000000000000000n,
+        minSharePriceVaultV1: 1000000000000000000000000000n,
+        maxSharePriceVaultV2: 1000000000000000000000000000n,
         recipient: client.account.address,
         requirementSignature,
       },
@@ -245,8 +245,8 @@ describe("vaultV1MigrateToV2 unit tests", () => {
       args: {
         targetVault: KeyrockUsdcVaultV2.address,
         shares: 1000000000000000000n,
-        minSharePrice: 1000000000000000000000000000n,
-        maxSharePrice: 1000000000000000000000000000n,
+        minSharePriceVaultV1: 1000000000000000000000000000n,
+        maxSharePriceVaultV2: 1000000000000000000000000000n,
         recipient: client.account.address,
       },
     });
@@ -293,8 +293,8 @@ describe("vaultV1MigrateToV2 unit tests", () => {
         args: {
           targetVault: KeyrockUsdcVaultV2.address,
           shares,
-          minSharePrice: 1000000000000000000000000000n,
-          maxSharePrice: 1000000000000000000000000000n,
+          minSharePriceVaultV1: 1000000000000000000000000000n,
+          maxSharePriceVaultV2: 1000000000000000000000000000n,
           recipient: client.account.address,
           requirementSignature,
         },
@@ -314,8 +314,8 @@ describe("vaultV1MigrateToV2 unit tests", () => {
         args: {
           targetVault: KeyrockUsdcVaultV2.address,
           shares: 0n,
-          minSharePrice: 1000000000000000000000000000n,
-          maxSharePrice: 1000000000000000000000000000n,
+          minSharePriceVaultV1: 1000000000000000000000000000n,
+          maxSharePriceVaultV2: 1000000000000000000000000000n,
           recipient: client.account.address,
         },
       }),
@@ -334,15 +334,15 @@ describe("vaultV1MigrateToV2 unit tests", () => {
         args: {
           targetVault: KeyrockUsdcVaultV2.address,
           shares: -1n,
-          minSharePrice: 1000000000000000000000000000n,
-          maxSharePrice: 1000000000000000000000000000n,
+          minSharePriceVaultV1: 1000000000000000000000000000n,
+          maxSharePriceVaultV2: 1000000000000000000000000000n,
           recipient: client.account.address,
         },
       }),
     ).toThrow(NonPositiveSharesAmountError);
   });
 
-  test("should throw NonPositiveMaxSharePriceError when maxSharePrice is zero", async ({
+  test("should throw NonPositiveMaxSharePriceError when maxSharePriceVaultV2 is zero", async ({
     client,
   }) => {
     expect(() =>
@@ -354,15 +354,15 @@ describe("vaultV1MigrateToV2 unit tests", () => {
         args: {
           targetVault: KeyrockUsdcVaultV2.address,
           shares: 1000000000000000000n,
-          minSharePrice: 1000000000000000000000000000n,
-          maxSharePrice: 0n,
+          minSharePriceVaultV1: 1000000000000000000000000000n,
+          maxSharePriceVaultV2: 0n,
           recipient: client.account.address,
         },
       }),
     ).toThrow(NonPositiveMaxSharePriceError);
   });
 
-  test("should throw NonPositiveMaxSharePriceError when maxSharePrice is negative", async ({
+  test("should throw NonPositiveMaxSharePriceError when maxSharePriceVaultV2 is negative", async ({
     client,
   }) => {
     expect(() =>
@@ -374,15 +374,15 @@ describe("vaultV1MigrateToV2 unit tests", () => {
         args: {
           targetVault: KeyrockUsdcVaultV2.address,
           shares: 1000000000000000000n,
-          minSharePrice: 1000000000000000000000000000n,
-          maxSharePrice: -1n,
+          minSharePriceVaultV1: 1000000000000000000000000000n,
+          maxSharePriceVaultV2: -1n,
           recipient: client.account.address,
         },
       }),
     ).toThrow(NonPositiveMaxSharePriceError);
   });
 
-  test("should throw NonPositiveMinSharePriceError when minSharePrice is zero", async ({
+  test("should throw NonPositiveMinSharePriceError when minSharePriceVaultV1 is zero", async ({
     client,
   }) => {
     expect(() =>
@@ -394,15 +394,15 @@ describe("vaultV1MigrateToV2 unit tests", () => {
         args: {
           targetVault: KeyrockUsdcVaultV2.address,
           shares: 1000000000000000000n,
-          minSharePrice: 0n,
-          maxSharePrice: 1000000000000000000000000000n,
+          minSharePriceVaultV1: 0n,
+          maxSharePriceVaultV2: 1000000000000000000000000000n,
           recipient: client.account.address,
         },
       }),
     ).toThrow(NonPositiveMinSharePriceError);
   });
 
-  test("should throw NonPositiveMinSharePriceError when minSharePrice is negative", async ({
+  test("should throw NonPositiveMinSharePriceError when minSharePriceVaultV1 is negative", async ({
     client,
   }) => {
     expect(() =>
@@ -414,8 +414,8 @@ describe("vaultV1MigrateToV2 unit tests", () => {
         args: {
           targetVault: KeyrockUsdcVaultV2.address,
           shares: 1000000000000000000n,
-          minSharePrice: -1n,
-          maxSharePrice: 1000000000000000000000000000n,
+          minSharePriceVaultV1: -1n,
+          maxSharePriceVaultV2: 1000000000000000000000000000n,
           recipient: client.account.address,
         },
       }),
@@ -431,8 +431,8 @@ describe("vaultV1MigrateToV2 unit tests", () => {
       args: {
         targetVault: KeyrockUsdcVaultV2.address,
         shares: 1000000000000000000n,
-        minSharePrice: 1000000000000000000000000000n,
-        maxSharePrice: 1000000000000000000000000000n,
+        minSharePriceVaultV1: 1000000000000000000000000000n,
+        maxSharePriceVaultV2: 1000000000000000000000000000n,
         recipient: client.account.address,
       },
     });
@@ -448,8 +448,8 @@ describe("vaultV1MigrateToV2 unit tests", () => {
     const args = {
       targetVault: KeyrockUsdcVaultV2.address,
       shares: 1000000000000000000n,
-      minSharePrice: 1000000000000000000000000000n,
-      maxSharePrice: 1000000000000000000000000000n,
+      minSharePriceVaultV1: 1000000000000000000000000000n,
+      maxSharePriceVaultV2: 1000000000000000000000000000n,
       recipient: client.account.address,
     } as const;
 

@@ -42,8 +42,8 @@ describe.sequential("MigrateToV2 VaultV1", () => {
       args: {
         targetVault: KeyrockUsdcVaultV2.address,
         shares,
-        minSharePrice: tx_1.action.args.minSharePrice,
-        maxSharePrice: tx_1.action.args.maxSharePrice,
+        minSharePriceVaultV1: tx_1.action.args.minSharePriceVaultV1,
+        maxSharePriceVaultV2: tx_1.action.args.maxSharePriceVaultV2,
         recipient: client.account.address,
       },
     });

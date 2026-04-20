@@ -109,8 +109,8 @@ export interface VaultV1MigrateToV2Action
       sourceVault: Address;
       targetVault: Address;
       shares: bigint;
-      minSharePrice: bigint;
-      maxSharePrice: bigint;
+      minSharePriceVaultV1: bigint;
+      maxSharePriceVaultV2: bigint;
       recipient: Address;
     }
   > {}
