@@ -123,7 +123,7 @@ After the PR is created, output:
 Example output:
 
 ```
-PR created: https://github.com/morpho-org/consumer-sdk/pull/123
+PR created: https://github.com/morpho-org/morpho-sdk/pull/123
 
 - Branch: feat/add-dark-mode
 - Title: feat: add dark mode toggle

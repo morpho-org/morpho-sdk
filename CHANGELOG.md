@@ -1,4 +1,4 @@
-# @morpho-org/consumer-sdk
+# @morpho-org/morpho-sdk
 
 ## 0.5.0
 
