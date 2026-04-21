@@ -16,7 +16,7 @@ Morpho's TypeScript surface today is fragmented across 10+ published packages (`
 Two forcing functions align now:
 
 1. **Tether WDK launch** (target 2026-04-27) is blocked on `consumer-sdk` being public. Cantina security scan is in flight.
-2. **Aseem's *DevEx Product Plan*** (Apr 10 2026) commits Morpho to converging on a single SDK — `@morpho-org/morpho-sdk` — as the one place business logic lives. Every other surface (MCP server, write API, partner apps, Morpho's own products) becomes a thin wrapper.
+2. The ***DevEx Product Plan*** (Apr 10 2026) commits Morpho to converging on a single SDK — `@morpho-org/morpho-sdk` — as the one place business logic lives. Every other surface (MCP server, write API, partner apps, Morpho's own products) becomes a thin wrapper.
 
 This TIB does not invent the SDK. It **codifies** the principles and architectural decisions that make the Product Plan's commitment durable — so the SDK stays coherent as it grows, and so integrators, contributors, and future agents all share the same mental model.
 
@@ -38,7 +38,7 @@ This TIB does not invent the SDK. It **codifies** the principles and architectur
 - Framework helpers (React hooks, wagmi adapters) — explicitly out of core.
 - Deprecating Bundler3 or `@morpho-org/bundler-sdk-viem` — protocol decision, not this TIB's concern.
 - New protocol features, Markets V2 design, or any on-chain change.
-- **Owning and executing** the migration of each Morpho app onto the SDK — each app team owns their migration. The SDK team gates v1.0 stable on at least one internal dogfood, but does not run the migrations itself (see DevEx Contract, "Dogfood as release gate").
+- **Owning and executing** the migration of each Morpho app onto the SDK — each app is responsible for its own migration. v1.0 stable is gated on at least one successful internal dogfood (see DevEx Contract, "Dogfood as release gate").
 
 ## Current Solution
 
@@ -52,13 +52,13 @@ A **principle-driven, single-package SDK** — `@morpho-org/morpho-sdk` — livi
 
 ### How We Work — Morpho's Core Values
 
-Every decision in this TIB — scope, priorities, principles, what we say no to — is measured against [Morpho's Core Values](https://www.notion.so/morpho-labs/Morpho-s-Core-Values-7eef0cb4b0ed4ed8918df2080de33687), not SDK-team-local preferences. The values are the decision lens; the principles and commitments below are how they land in this codebase.
+Every decision in this TIB — scope, principles, what to defer, what to refuse — is measured against [Morpho's Core Values](https://www.notion.so/morpho-labs/Morpho-s-Core-Values-7eef0cb4b0ed4ed8918df2080de33687). The values are the decision lens; the principles and commitments below are how they land in this codebase.
 
-- **Laser-Focused.** The SDK does one thing — build ready-to-send Morpho transactions. Framework wrappers, simulation engines, UI, risk management — all out of scope by design. Non-goals in this TIB are load-bearing. If a request doesn't make an integration faster or safer, we say no.
-- **First Principles.** The non-negotiable principles below _are_ the justification, not a vote. When a change conflicts with them, we question the change before we question the principle. We document _why_, not just _what_. We avoid "disagree and commit" and push for real alignment first.
-- **Simplicity.** Fewer lines, fewer deps, fewer exports, fewer abstractions. We delete before we add. `morpho-sdk` + `viem` is the full integrator install. We re-declare types locally rather than take a transitive dep we don't need. When unsure a helper is useful, we remove it and see what breaks.
-- **Obsessed with Critical Feedback.** Integrator friction becomes a ticket the same day it's reported. We surface DevEx pain publicly, not in DMs. Post-mortems on API mistakes, missed deprecations, broken migrations. We name the limiting factor — when a principle is violated, when onboarding is too slow, when a package in `morpho-org/*` is doing more harm than good.
-- **Bias for Action.** Triage bugs in 2 business days, ship patches on-demand. Partner-blocking issues don't wait for a sprint. No task too low: if examples need updating, we update them — in the next patch, not "later".
+- **Laser-Focused.** The SDK does one thing — build ready-to-send Morpho transactions. Framework wrappers, simulation engines, UI, risk management are out of scope by design. Non-goals in this TIB are load-bearing; a request that doesn't make an integration faster or safer is declined.
+- **First Principles.** The non-negotiable principles below _are_ the justification, not convention. When a change conflicts with a principle, the change is under scrutiny, not the principle. Every design decision is documented with its _why_.
+- **Simplicity.** Fewer lines, fewer deps, fewer exports, fewer abstractions. `morpho-sdk` + `viem` is the full integrator install. Types at risk of upstream churn are re-declared locally rather than taken as transitive deps. Helpers whose utility is unclear are removed to see what breaks.
+- **Obsessed with Critical Feedback.** Integrator friction surfaces fast and publicly. API mistakes, missed deprecations, and broken migrations are dissected in post-mortems linked from the CHANGELOG — not buried.
+- **Bias for Action.** Partner-blocking issues ship as patches on demand. Examples, docs, and codemods are first-class work, not afterthoughts.
 
 These values show up in the vision, the principles, and the DevEx contract that follow.
 
@@ -251,7 +251,7 @@ A minor release whose only purpose is adding deprecations ahead of a major is le
 
 #### Release mechanism
 
-Changesets-driven. Every user-visible change ships with a changeset (no changeset → CI fails). Patch releases are lightweight (1-maintainer review). Major releases require a release plan, integration team sign-off, and a migration guide. Pre-release channels use `rc.N` / `beta.N` / `alpha.N` via npm dist-tags and never publish to `latest`.
+Changesets-driven. Every user-visible change ships with a changeset (no changeset → CI fails). Patch releases are lightweight (single reviewer). Major releases require a release plan, representative integrator sign-off, and a migration guide. Pre-release channels use `rc.N` / `beta.N` / `alpha.N` via npm dist-tags and never publish to `latest`.
 
 #### Package rename (`consumer-sdk` → `morpho-sdk`)
 
@@ -303,7 +303,7 @@ Post-v1.0 (out of this TIB, covered separately): indexer-backed reads (`morpho.a
 
 ## Assumptions & Constraints
 
-- Cantina security scan completes without critical findings by 2026-04-27 (Aseem driving).
+- Cantina security scan completes without critical findings by 2026-04-27.
 - `morpho-org/sdks` monorepo accepts Changesets as its release mechanism (currently absent).
 - The `@morpho-org/test` package can host or already hosts shared anvil fixtures (sibling packages `liquidation-sdk-viem`, `bundler-sdk-viem` use fork-based tests — check before migration).
 - Tether WDK remains the near-term driving forcing function; delays in WDK do not weaken the case for consolidation.
@@ -317,8 +317,8 @@ Post-v1.0 (out of this TIB, covered separately): indexer-backed reads (`morpho.a
 - Internal workspace deps: `@morpho-org/blue-sdk`, `blue-sdk-viem`, `bundler-sdk-viem`, `morpho-ts` — consumed as `workspace:^` after migration.
 - `@morpho-org/test` — dev-dep, fork test harness.
 - `morpho-org/sdks` monorepo access for the migration PR.
-- Cantina scan completion (Aseem) to unblock the public repo flip.
-- Product Plan approval (Aseem's doc) — this TIB derives from it.
+- Cantina scan completion to unblock the public repo flip.
+- Product Plan approval — this TIB derives from it.
 
 ## Observability
 
@@ -360,7 +360,7 @@ Security is the posture. Testing and audits are the evidence. Code is written as
 
 ## Success Metrics
 
-Product metrics, not engineering vanity metrics. From the Product Plan, with TIB additions:
+Product metrics, not vanity metrics. From the Product Plan, with TIB additions:
 
 - **Time to first transaction:** < 10 minutes — for humans and agents.
 - **Partner SDK adoption:** 100% of new integrations via the SDK, vs custom wrappers.
@@ -370,7 +370,7 @@ Product metrics, not engineering vanity metrics. From the Product Plan, with TIB
 - **Release predictability:** no unplanned majors; every deprecation honors the 4-step flow.
 - **Issue SLA:** 2 business days for bugs, 5 for feature requests.
 
-These are the numbers we revisit every release. A regression on any of them is a product signal that drives backlog, docs, and API-shape work.
+These numbers are revisited every release. A regression on any of them is a product signal that shapes follow-up docs and API changes.
 
 ## Future Considerations
 
@@ -384,7 +384,7 @@ These are the numbers we revisit every release. A regression on any of them is a
 
 ## Bundler 4
 
-Bundler 4 is a new bundler version (details in scope of the protocol team, not this TIB). The SDK's commitment: when Bundler 4 lands, its handlers plug into the existing `Client → Entity → Action` layering without special-casing the public API. Today's bundler-backed operations (deposits, market actions) evolve their internal routing; integrator-facing call signatures remain Protocol-faithful (§3.7) — same shape where semantics overlap, new shape where they genuinely differ.
+Bundler 4 is a new bundler version (details governed by the protocol, not this TIB). The SDK's commitment: when Bundler 4 lands, its handlers plug into the existing `Client → Entity → Action` layering without special-casing the public API. Today's bundler-backed operations (deposits, market actions) evolve their internal routing; integrator-facing call signatures remain Protocol-faithful (§3.7) — same shape where semantics overlap, new shape where they genuinely differ.
 
 Open questions deferred to a follow-up TIB when Bundler 4's interface is pinned:
 
@@ -410,13 +410,13 @@ Open questions deferred to a follow-up TIB when Midnight's interface is pinned:
 
 - **Single package vs future split.** Commit to one package now, revisit only if a specific partner audit requires hard package-level isolation.
 - **`zod` — keep or drop?** Runtime + bundle cost on an SDK whose inputs are TypeScript-typed. Evaluate replacement with lightweight typed guards before the v1.0 cut.
-- **Tombstone duration.** 1 minor of `morpho-sdk` proposed for `consumer-sdk` re-export window. Integration team sign-off needed.
+- **Tombstone duration.** 1 minor of `morpho-sdk` proposed for `consumer-sdk` re-export window. Representative integrator sign-off needed.
 - **Docs infrastructure.** TypeDoc alone, TypeDoc + Starlight, or plugged into `docs.morpho.org`? Owner for DNS/deployment?
 - **Pre-release publishing cadence.** `rc.N` weekly until 1.0, or ad-hoc when a material change lands?
 
 ## References
 
-- [Aseem Sood — DevEx Product Plan (Notion, Apr 10 2026)](https://www.notion.so/morpho-labs/DevEx-Product-Plan-336d69939e6d81f5862defa54cdea16a) — parent product plan this TIB implements.
+- [DevEx Product Plan (Notion, Apr 10 2026)](https://www.notion.so/morpho-labs/DevEx-Product-Plan-336d69939e6d81f5862defa54cdea16a) — parent product plan this TIB implements.
 - [Linear — Open-sourcing consumer-sdk project](https://linear.app/morpho-labs/project/open-sourcing-consumer-sdk-7cf8dea412b1/overview)
 - [`morpho-org/consumer-sdk` PR #112](https://github.com/morpho-org/consumer-sdk/pull/112)
 - [`morpho-org/sdks`](https://github.com/morpho-org/sdks) — destination monorepo.
