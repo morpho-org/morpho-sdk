@@ -1,5 +1,12 @@
 # @morpho-org/morpho-sdk
 
+## 0.7.0
+
+### Minor Changes
+
+- 1b740cf: Rename `@morpho-org/consumer-sdk` to `@morpho-org/morpho-sdk` and prepare the package for public open-source release. Consumers must update all import paths from `@morpho-org/consumer-sdk` to `@morpho-org/morpho-sdk`; the legacy package is deprecated on npm. `viem` is now a declared peer dependency (`^2.0.0`) and must be installed alongside the SDK. Adds `LICENSE` (MIT), `CONTRIBUTING.md`, `SECURITY.md`, and `BUNDLER3.md` documenting bundler3 / GeneralAdapter1 flows and security features. Public npm releases now publish with Sigstore provenance (verify via `npm audit signatures`).
+- 8a9429d: Bump Morpho SDK dependencies: `@morpho-org/blue-sdk` → `^5.23.0`, `@morpho-org/blue-sdk-viem` → `^4.6.3`, `@morpho-org/bundler-sdk-viem` → `^4.3.3`, `@morpho-org/morpho-ts` → `^2.5.1`, `@morpho-org/simulation-sdk` → `^3.4.2`.
+
 ## 0.6.0
 
 ### Minor Changes
