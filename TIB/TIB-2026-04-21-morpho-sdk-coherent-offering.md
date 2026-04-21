@@ -357,13 +357,17 @@ Open questions deferred to a follow-up TIB when Bundler 4's interface is pinned:
 
 ## Morpho Midnight
 
-Morpho Midnight is a chain-specific Morpho deployment. The SDK's commitment: Midnight is supported behind the same layered architecture as every other chain — no separate SDK, no parallel fork, no special exports. Chain-specific differences (addresses, block times, gas profiles, any chain-unique handlers) are resolved through the existing per-chain address and ABI tables and through the standard entity fetchers.
+Morpho Midnight is the next major version of the Morpho market protocol (Markets V2) — a new protocol surface, not a chain-specific deployment. The SDK's commitment: Midnight lands behind the same `Client → Entity → Action` layering as MarketV1, under a new entity (e.g. `MorphoMarketV2` / `MorphoMidnight`) with its own action set. No parallel SDK, no forked codebase, no public-API special-cases.
 
-Open questions deferred to a follow-up TIB when Midnight's surface is known:
+Consistency follows **principle #7 (Protocol-faithful API)**: operations that overlap semantically with MarketV1 (e.g. supply, borrow, repay in their conceptual forms) keep a shape that reads naturally alongside V1; operations that are genuinely new to V2 (order book, term loans, multi-collateral, rollover, etc.) get their own honest shapes — we don't cram V2 mechanics into V1-shaped APIs, and we don't invent a parallel surface for overlapping concepts.
 
-- Support tier (first-class Tier 1 vs. Tier 2 community-supported — see §3 chain support policy).
-- Any Midnight-specific operations not covered by the existing V1 / V2 / MarketV1 surface.
-- Test harness implications (fork block pinning, RPC availability).
+Open questions deferred to a follow-up TIB when Midnight's interface is pinned:
+
+- Data model: how much of MarketV1's entity shape (`MarketParams`, `AccrualPosition`, LLTV, etc.) carries over; what needs a new type.
+- Coexistence: do V1 and V2 markets live side-by-side in `morpho-sdk` indefinitely, or does V1 enter a deprecation window once V2 ships?
+- Version gating: does V2 support require a `morpho-sdk` major (breaking), or can it land additively in a minor because V1 operations keep working?
+- Bundler surface: does V2 use bundler3, Bundler 4, or its own routing — and does any of that leak into integrator calldata?
+- Test harness: fork-block pinning per V2 testnet, integration-test coverage matrix.
 
 ## Open Questions
 
