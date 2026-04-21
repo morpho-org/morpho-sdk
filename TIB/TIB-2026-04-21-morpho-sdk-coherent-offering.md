@@ -71,7 +71,7 @@ The through-lines of the SDK. If a change violates one, the change doesn't land.
 4. **Immutable outputs.** Every returned `Transaction` is `deepFreeze`-d. No in-flight mutation. No ambiguity about what will be sent.
 5. **Strict TypeScript, zero `any`.** All `strict` flags on. Discriminated unions for action types. `readonly` on every public property. Exhaustive `switch` enforced at the type level. If something is hard to type, the API is wrong — fix the API.
 6. **Typed errors as public API.** No `throw new Error(...)`. Every failure mode is a named, exported class. Integrators pattern-match on classes, not strings.
-7. **Identical shape across protocol versions.** `vault.deposit(args)` works the same on VaultV1 and VaultV2. Protocol differences live inside the SDK, not at the call site.
+7. **Protocol-faithful API.** Where protocols overlap (e.g. ERC-4626 deposits across VaultV1 and VaultV2), the SDK offers a consistent shape. Where they genuinely differ — force-deallocation, market lending, future bundlers, chain-specific handlers — we expose the difference honestly. No forced sameness, no manufactured complexity.
 8. **No framework coupling.** No wagmi, React, ethers, Redux, or RxJS. `viem` is the only peer dep. Framework helpers, if ever needed, are separate opt-in packages — never a runtime dep of core. CI enforces with a forbidden-import rule.
 9. **RPC-only in v1.0.** Zero dependency on Morpho-operated infrastructure. Any RPC + viem is sufficient for the full public surface. When indexer-backed reads land later, opting out keeps this principle true.
 10. **Security invariants codified as tests.** Prose in docs is a guide, not a guarantee. Every security invariant (inflation-attack defense, LLTV buffer, `chainId` validation) is asserted by a test that would fail if removed.
@@ -347,11 +347,23 @@ Publish `morpho-sdk` as a meta-package that just re-exports from `blue-sdk` + `b
 
 ## Bundler 4
 
-_TBD — to be filled in._
+Bundler 4 is a new bundler version (details in scope of the protocol team, not this TIB). The SDK's commitment: when Bundler 4 lands, its handlers plug into the existing `Client → Entity → Action` layering without special-casing the public API. Today's bundler-backed operations (deposits, market actions) evolve their internal routing; integrator-facing call signatures remain Protocol-faithful (§3.7) — same shape where semantics overlap, new shape where they genuinely differ.
+
+Open questions deferred to a follow-up TIB when Bundler 4's interface is pinned:
+
+- Does it replace bundler3 entirely for `morpho-sdk` operations, or coexist per-chain?
+- New action encoders — absorbed into `morpho-sdk` internals, or kept in an updated `bundler-sdk-viem`?
+- Migration window for integrators using operations whose calldata changes byte-for-byte.
 
 ## Morpho Midnight
 
-_TBD — to be filled in._
+Morpho Midnight is a chain-specific Morpho deployment. The SDK's commitment: Midnight is supported behind the same layered architecture as every other chain — no separate SDK, no parallel fork, no special exports. Chain-specific differences (addresses, block times, gas profiles, any chain-unique handlers) are resolved through the existing per-chain address and ABI tables and through the standard entity fetchers.
+
+Open questions deferred to a follow-up TIB when Midnight's surface is known:
+
+- Support tier (first-class Tier 1 vs. Tier 2 community-supported — see §3 chain support policy).
+- Any Midnight-specific operations not covered by the existing V1 / V2 / MarketV1 surface.
+- Test harness implications (fork block pinning, RPC availability).
 
 ## Open Questions
 
