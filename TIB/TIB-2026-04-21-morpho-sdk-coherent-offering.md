@@ -289,38 +289,6 @@ Step 2 details (for reference, execution owned in a separate migration doc):
 
 Post-v1.0 (out of this TIB, covered separately): indexer-backed reads (`morpho.api.*`), pure simulation, historical / analytics. Designed so the RPC-only principle holds for callers that opt out.
 
-## Considered Alternatives
-
-### Alternative 1: Keep fragmented packages, rename `consumer-sdk` only
-
-Open-source `consumer-sdk` under its own repo as-is, don't migrate into `morpho-org/sdks`, leave integrators to install several `@morpho-org/*` packages.
-
-**Why rejected:** Preserves every integrator complaint we heard (too many packages, unclear entry point, no unified CHANGELOG). Misses the forcing function — the Product Plan explicitly commits to SDK convergence. Near-term speed gain, long-term incoherence.
-
-### Alternative 2: Two packages — `morpho-sdk-core` + `morpho-sdk`
-
-Hard package split where `morpho-sdk-core` is RPC-only (for audit-constrained partners) and `morpho-sdk` adds indexer-backed reads on top.
-
-**Why rejected:** The audit-constrained concern is real, but a namespace boundary (`onchain.*` vs future `api.*`) is sufficient — partners inspect the code they ship regardless of package boundary. A split doubles our release surface for zero partner-visible benefit. Revisit if a specific partner audit explicitly requires package-level isolation.
-
-### Alternative 3: Stateful client with on-chain cache
-
-`MorphoClient` holds snapshots of market/vault state, reused across calls to reduce RPC load.
-
-**Why rejected:** Directly contradicts the "no opaque payload" posture that audit-constrained partners require. Creates cache-invalidation footguns. Makes the SDK impossible to reason about under concurrent on-chain changes. Caching is the integrator's concern, not ours.
-
-### Alternative 4: Include indexer-backed reads and simulation in v1.0
-
-Ship `morpho.api.*` and simulation now, inside the v1.0 cut.
-
-**Why rejected:** Expands scope, delays Tether WDK, introduces Morpho-infra runtime dependency into the core SDK. Deferring keeps v1.0 achievable by 2026-05-23 and preserves principle #9. Indexer and simulation land in a later TIB without contradicting v1.0's shape.
-
-### Alternative 5: Thin wrapper / meta-package
-
-Publish `morpho-sdk` as a meta-package that just re-exports from `blue-sdk` + `blue-sdk-viem` + `bundler-sdk-viem`.
-
-**Why rejected:** Doesn't solve the "too many deps in lockfile" complaint (transitive deps are still visible). Doesn't give us a place to enforce layering, invariants, or the DevEx contract. Re-exports alone don't make an SDK coherent.
-
 ## Assumptions & Constraints
 
 - Cantina security scan completes without critical findings by 2026-04-27 (Aseem driving).
