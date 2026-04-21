@@ -38,7 +38,7 @@ This TIB does not invent the SDK. It **codifies** the principles and architectur
 - Framework helpers (React hooks, wagmi adapters) — explicitly out of core.
 - Deprecating Bundler3 or `@morpho-org/bundler-sdk-viem` — protocol decision, not this TIB's concern.
 - New protocol features, Markets V2 design, or any on-chain change.
-- Migrating Morpho's own apps onto the SDK (tracked in Product Plan Phase 1 exit criteria, not here).
+- **Owning and executing** the migration of each Morpho app onto the SDK — each app team owns their migration. The SDK team gates v1.0 stable on at least one internal dogfood, but does not run the migrations itself (see DevEx Contract, "Dogfood as release gate").
 
 ## Current Solution
 
@@ -49,6 +49,18 @@ This TIB does not invent the SDK. It **codifies** the principles and architectur
 ## Proposed Solution
 
 A **principle-driven, single-package SDK** — `@morpho-org/morpho-sdk` — living in the existing `morpho-org/sdks` monorepo. The principles, architecture, and contracts below are the load-bearing content. Migration and release mechanics follow.
+
+### How We Work — Morpho's Core Values
+
+Every decision in this TIB — scope, priorities, principles, what we say no to — is measured against [Morpho's Core Values](https://www.notion.so/morpho-labs/Morpho-s-Core-Values-7eef0cb4b0ed4ed8918df2080de33687), not SDK-team-local preferences. The values are the decision lens; the principles and commitments below are how they land in this codebase.
+
+- **Laser-Focused.** The SDK does one thing — build ready-to-send Morpho transactions. Framework wrappers, simulation engines, UI, risk management — all out of scope by design. Non-goals in this TIB are load-bearing. If a request doesn't make an integration faster or safer, we say no.
+- **First Principles.** The non-negotiable principles below _are_ the justification, not a vote. When a change conflicts with them, we question the change before we question the principle. We document _why_, not just _what_. We avoid "disagree and commit" and push for real alignment first.
+- **Simplicity.** Fewer lines, fewer deps, fewer exports, fewer abstractions. We delete before we add. `morpho-sdk` + `viem` is the full integrator install. We re-declare types locally rather than take a transitive dep we don't need. When unsure a helper is useful, we remove it and see what breaks.
+- **Obsessed with Critical Feedback.** Integrator friction becomes a ticket the same day it's reported. We surface DevEx pain publicly, not in DMs. Post-mortems on API mistakes, missed deprecations, broken migrations. We name the limiting factor — when a principle is violated, when onboarding is too slow, when a package in `morpho-org/*` is doing more harm than good.
+- **Bias for Action.** Triage bugs in 2 business days, ship patches on-demand. Partner-blocking issues don't wait for a sprint. No task too low: if examples need updating, we update them — in the next patch, not "later".
+
+These values show up in the vision, the principles, and the DevEx contract that follow.
 
 ### Vision
 
@@ -79,7 +91,7 @@ The through-lines of the SDK. If a change violates one, the change doesn't land.
 5. **Strict TypeScript, zero `any`.** All `strict` flags on. Discriminated unions for action types. `readonly` on every public property. Exhaustive `switch` enforced at the type level. If something is hard to type, the API is wrong — fix the API.
 6. **Typed errors as public API.** No `throw new Error(...)`. Every failure mode is a named, exported class. Integrators pattern-match on classes, not strings.
 7. **Protocol-faithful API.** Where protocols overlap (e.g. ERC-4626 deposits across VaultV1 and VaultV2), the SDK offers a consistent shape. Where they genuinely differ — force-deallocation, market lending, future bundlers, chain-specific handlers — we expose the difference honestly. No forced sameness, no manufactured complexity.
-8. **No framework coupling.** No wagmi, React, ethers, Redux, or RxJS. `viem` is the only peer dep. Framework helpers, if ever needed, are separate opt-in packages — never a runtime dep of core. CI enforces with a forbidden-import rule.
+8. **No framework coupling.** No wagmi, React, ethers, Redux, or RxJS. `viem` is the only peer dep. Framework helpers, if ever needed, are separate opt-in packages — never a runtime dep of core. _Commitment:_ a forbidden-import lint rule lands before v1.0 to enforce this in CI.
 9. **RPC-only in v1.0.** Zero dependency on Morpho-operated infrastructure. Any RPC + viem is sufficient for the full public surface. When indexer-backed reads land later, opting out keeps this principle true.
 10. **Security invariants codified as tests.** Prose in docs is a guide, not a guarantee. Every security invariant (inflation-attack defense, LLTV buffer, `chainId` validation) is asserted by a test that would fail if removed.
 
@@ -310,11 +322,11 @@ Post-v1.0 (out of this TIB, covered separately): indexer-backed reads (`morpho.a
 
 ## Observability
 
-- **Bundle size budget in CI.** Per-entry-point tree-shake assertion. Importing one action must not pull in unrelated code.
-- **Forbidden-import lint rule.** CI fails on any import of `wagmi`, `@wagmi/*`, `ethers`, `react`.
-- **Layered-import lint rule.** CI fails if an action imports from entities, or entities import from client.
-- **Fork test suite** in CI with `MAINNET_RPC_URL`, pinned block, per-chain matrix.
-- **Release automation telemetry.** Changesets-driven releases produce consistent CHANGELOG entries; missing changesets fail PR checks.
+- **Bundle size budget in CI** _(commitment for v1.0)_. Per-entry-point tree-shake assertion. Importing one action must not pull in unrelated code.
+- **Forbidden-import lint rule** _(commitment for v1.0)_. CI will fail on any import of `wagmi`, `@wagmi/*`, `ethers`, `react`.
+- **Layered-import lint rule** _(commitment for v1.0)_. CI will fail if an action imports from entities, or entities import from client.
+- **Fork test suite** in CI with `MAINNET_RPC_URL`, pinned block, per-chain matrix. (Present today.)
+- **Release automation telemetry** _(commitment for v1.0)_. Changesets-driven releases produce consistent CHANGELOG entries; missing changesets fail PR checks.
 - **npm download metrics** on `@morpho-org/morpho-sdk` post-launch — signal for integrator adoption.
 
 ## Security
@@ -365,9 +377,10 @@ These are the numbers we revisit every release. A regression on any of them is a
 - **`morpho.api.*` namespace.** Indexer-backed reads (queries, history, analytics). Requires `apiUrl` in client config. RPC-only callers never touch it. Separate TIB.
 - **Pure simulation.** `(inputs, state snapshot) → projected outcome`. No workers, no hidden fetches. Separate TIB.
 - **`morpho-sdk-react`** (opt-in). If demand materializes, a separate package with React hooks that wrap `morpho-sdk`. Never a core dep.
-- **Markets V2.** When the protocol ships V2 data model, evaluate whether to accommodate inside v1.x or cut v2.0 of the SDK alongside.
 - **Write API.** REST endpoints wrapping the SDK for non-TypeScript stacks (Coinbase Go, etc.). Product Plan Phase 3. The SDK stays the single source of business logic.
 - **Real-time feeds.** WebSockets / webhooks for health factor changes, cap updates. Product Plan Phase 4.
+
+(Markets V2 / Morpho Midnight and Bundler 4 have dedicated sections below.)
 
 ## Bundler 4
 
