@@ -1,13 +1,66 @@
-# Consumer SDK
+# @morpho-org/morpho-sdk
 
-![Beta](https://img.shields.io/badge/status-beta-orange)
-
-> ⚠️ **Experimental package**: This SDK is currently in experimental phase.
+[![npm version](https://img.shields.io/npm/v/@morpho-org/morpho-sdk.svg)](https://www.npmjs.com/package/@morpho-org/morpho-sdk)
+[![TypeScript](https://img.shields.io/badge/TypeScript-strict-blue.svg)](https://www.typescriptlang.org/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](./LICENSE)
+[![CI](https://github.com/morpho-org/morpho-sdk/actions/workflows/ci.yml/badge.svg)](https://github.com/morpho-org/morpho-sdk/actions/workflows/ci.yml)
 
 > **The abstraction layer that simplifies Morpho protocol**
 
+Build transactions for **VaultV1** (MetaMorpho), **VaultV2**, and **MarketV1** (Morpho Blue) on EVM-compatible chains.
+
+## Installation
+
+```bash
+pnpm add @morpho-org/morpho-sdk
+```
+
 ## Entities & Actions
 
+| Entity       | Action                    | Route                     | Why                                                                                                 |
+| ------------ | ------------------------- | ------------------------- | --------------------------------------------------------------------------------------------------- |
+| **VaultV2**  | `deposit`                 | Bundler (general adapter) | Enforces `maxSharePrice` — inflation attack prevention. Supports native token wrapping.             |
+|              | `withdraw`                | Direct vault call         | No attack surface, no bundler overhead needed                                                       |
+|              | `redeem`                  | Direct vault call         | No attack surface, no bundler overhead needed                                                       |
+|              | `forceWithdraw`           | Vault `multicall`         | N `forceDeallocate` + 1 `withdraw` in a single tx                                                   |
+|              | `forceRedeem`             | Vault `multicall`         | N `forceDeallocate` + 1 `redeem` in a single tx                                                     |
+| **VaultV1**  | `deposit`                 | Bundler (general adapter) | Same ERC-4626 inflation attack prevention as V2. Supports native token wrapping.                    |
+|              | `withdraw`                | Direct vault call         | No attack surface                                                                                   |
+|              | `redeem`                  | Direct vault call         | No attack surface                                                                                   |
+| **MarketV1** | `supplyCollateral`        | Bundler (general adapter) | `erc20TransferFrom` + `morphoSupplyCollateral`. Supports native wrapping.                           |
+|              | `borrow`                  | Bundler (general adapter) | `morphoBorrow` with `minSharePrice` slippage protection. Requires GA1 auth. Supports reallocations. |
+|              | `supplyCollateralBorrow`  | Bundler (general adapter) | Atomic supply + borrow. LLTV buffer prevents instant liquidation. Supports reallocations.           |
+|              | `repay`                   | Bundler (general adapter) | `erc20TransferFrom` + `morphoRepay` with `maxSharePrice` protection. Supports partial or full.      |
+|              | `withdrawCollateral`      | Direct Morpho call        | No bundler overhead. Validates position health after withdrawal.                                    |
+|              | `repayWithdrawCollateral` | Bundler (general adapter) | Atomic repay + withdraw. Bundle order matters: repay first, then withdraw.                          |
+
+## The `getRequirements` flow
+
+Every action that touches a user's tokens or positions returns two things:
+
+- `buildTx(signature?)` — builds the final viem `Transaction` object.
+- `getRequirements()` — returns the list of on-chain pre-requisites that must be satisfied first.
+
+Typical requirements:
+
+- **ERC-20 approval** — the user must approve the bundler (or Morpho directly) to pull tokens. Returned as a standard `approve` transaction the consumer sends first.
+- **Permit / Permit2 signature** — off-chain approvals that go into `buildTx` as a `signature` argument, avoiding the extra approval tx. Enabled via `MorphoClient({ supportSignature: true })`.
+- **Morpho authorization** — `borrow`, `supplyCollateralBorrow`, and `repayWithdrawCollateral` require the user to authorize `GeneralAdapter1` on the Morpho contract once (`setAuthorization`). The SDK returns this as an extra transaction if it's missing.
+
+Usage pattern:
+
+```typescript
+const { buildTx, getRequirements } = await vault.deposit({
+  /* ... */
+});
+
+const requirements = await getRequirements();
+// → [{ type: "approval", tx: {...} }, { type: "permit", sign: async () => {...} }]
+
+// Consumer satisfies each requirement (send tx / sign permit), collects the signature,
+// then calls buildTx to get the final transaction:
+const tx = buildTx(permitSignature);
+```
 | Entity       | Action                   | Route                     | Why                                                                                                 |
 | ------------ | ------------------------ | ------------------------- | --------------------------------------------------------------------------------------------------- |
 | **VaultV2**  | `deposit`                | Bundler (general adapter) | Enforces `maxSharePrice` — inflation attack prevention. Supports native token wrapping.             |
@@ -26,7 +79,7 @@
 ## VaultV2
 
 ```typescript
-import { MorphoClient } from "@morpho-org/consumer-sdk";
+import { MorphoClient } from "@morpho-org/morpho-sdk";
 import { createPublicClient, http } from "viem";
 import { mainnet } from "viem/chains";
 
@@ -232,12 +285,73 @@ const requirements = await getRequirements();
 const tx = buildTx(requirementSignature);
 ```
 
+### Repay
+
+Two modes depending on whether the caller specifies `assets` (partial repay) or `shares` (full repay, immune to interest accrual between quote and inclusion):
+
+```typescript
+const positionData = await market.getPositionData("0xUser...");
+
+// Partial repay — by assets
+const { buildTx, getRequirements } = market.repay({
+  assets: 250000000000000000n,
+  userAddress: "0xUser...",
+  positionData,
+});
+
+// Full repay — by shares (recommended to clear the full debt atomically)
+const { buildTx, getRequirements } = market.repay({
+  shares: positionData.borrowShares,
+  userAddress: "0xUser...",
+  positionData,
+});
+
+const requirements = await getRequirements();
+const tx = buildTx(requirementSignature);
+```
+
+Repay does **not** require Morpho authorization (it only requires a loan token approval for `GeneralAdapter1`).
+
+### Withdraw Collateral
+
+```typescript
+const positionData = await market.getPositionData("0xUser...");
+
+const { buildTx } = market.withdrawCollateral({
+  amount: 500000000000000000n,
+  userAddress: "0xUser...",
+  positionData,
+});
+
+const tx = buildTx();
+```
+
+Direct call to `morpho.withdrawCollateral()` — no bundler, no `GeneralAdapter1` authorization needed. The SDK validates position health after withdrawal against the LLTV buffer to prevent instant liquidation.
+
+### Repay & Withdraw Collateral
+
+```typescript
+const positionData = await market.getPositionData("0xUser...");
+
+const { buildTx, getRequirements } = market.repayWithdrawCollateral({
+  assets: 250000000000000000n, // or shares: ...
+  withdrawAmount: 500000000000000000n,
+  userAddress: "0xUser...",
+  positionData,
+});
+
+const requirements = await getRequirements();
+const tx = buildTx(requirementSignature);
+```
+
+Atomically bundles repay → withdraw collateral via bundler3. Bundle order is critical: repay runs first to reduce debt, then withdraw. Requires both a loan token approval (for repay) and a Morpho authorization (for withdraw). The SDK validates combined position health by simulating the repay before checking withdrawal safety.
+
 ### Borrow with Shared Liquidity (Reallocations)
 
 When a market lacks sufficient liquidity, you can reallocate liquidity from other markets managed by MetaMorpho Vaults via the **PublicAllocator** contract:
 
 ```typescript
-import type { VaultReallocation } from "@morpho-org/consumer-sdk";
+import type { VaultReallocation } from "@morpho-org/morpho-sdk";
 
 const reallocations: VaultReallocation[] = [
   {
@@ -353,7 +467,7 @@ graph LR
 Link this package to your app for local debugging:
 
 ```bash
-# In this consumer-sdk project
+# In this morpho-sdk project
 pnpm run build:link
 ```
 
@@ -361,9 +475,17 @@ In your other project:
 
 ```bash
 # Link the local package
-pnpm link consumer-sdk
+pnpm link @morpho-org/morpho-sdk
 ```
 
 ## Contributing
 
-Contributions are welcome! Feel free to open an issue or PR.
+Contributions are welcome. See [CONTRIBUTING.md](./CONTRIBUTING.md) for development setup, code style, and the PR workflow.
+
+## Security
+
+To report a vulnerability, see [SECURITY.md](./SECURITY.md). **Please do not open a public issue for security reports.**
+
+## License
+
+MIT — see [LICENSE](./LICENSE).

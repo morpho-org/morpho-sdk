@@ -1,18 +1,34 @@
 {
-  "name": "@morpho-org/consumer-sdk",
+  "name": "@morpho-org/morpho-sdk",
   "description": "Abstraction layer for Morpho's complexity.",
   "version": "0.6.0",
   "author": "Morpho Association <contact@morpho.org>",
   "contributors": [
     "Foulks-Plb <https://x.com/FoulkPlb>"
   ],
-  "repository": "github:morpho-org/consumer-sdk",
-  "homepage": "https://github.com/morpho-org/consumer-sdk",
+  "repository": "github:morpho-org/morpho-sdk",
+  "homepage": "https://github.com/morpho-org/morpho-sdk",
   "bugs": {
-    "url": "https://github.com/morpho-org/consumer-sdk/issues",
+    "url": "https://github.com/morpho-org/morpho-sdk/issues",
     "email": "contact@morpho.org"
   },
   "license": "MIT",
+  "keywords": [
+    "morpho",
+    "lending",
+    "borrowing",
+    "defi",
+    "ethereum",
+    "vault",
+    "market",
+    "sdk",
+    "viem",
+    "erc4626",
+    "morpho-blue",
+    "metamorpho",
+    "typescript",
+    "bundler"
+  ],
   "packageManager": "pnpm@10.24.0+sha512.01ff8ae71b4419903b65c60fb2dc9d34cf8bb6e06d03bde112ef38f7a34d6904c424ba66bea5cdcf12890230bf39f9580473140ed9c946fef328b6e5238a345a",
   "main": "src/index.ts",
   "files": [
@@ -58,5 +74,8 @@
     "@morpho-org/morpho-ts": "^2.4.6",
     "@morpho-org/simulation-sdk": "^3.2.3",
     "zod": "^4.1.12"
+  },
+  "peerDependencies": {
+    "viem": "^2.0.0"
   }
 }

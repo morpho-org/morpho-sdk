@@ -193,7 +193,7 @@ on the vault contract itself.
 The SDK builds on the Morpho TypeScript ecosystem. Each dependency has a specific role:
 
 ```
-consumer-sdk
+morpho-sdk
 ├── @morpho-org/blue-sdk           Core protocol constants and math
 ├── @morpho-org/blue-sdk-viem      On-chain data fetching and ABIs
 ├── @morpho-org/bundler-sdk-viem   Bundle encoding for deposits
