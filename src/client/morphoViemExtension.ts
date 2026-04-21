@@ -15,7 +15,7 @@ import { MorphoClient } from "./morphoClient";
  * ```ts
  * import { createWalletClient, http } from 'viem';
  * import { mainnet } from 'viem/chains';
- * import { morphoViemExtension } from '@morpho-org/consumer-sdk';
+ * import { morphoViemExtension } from '@morpho-org/morpho-sdk';
  *
  * const client = createWalletClient({
  *   chain: mainnet,

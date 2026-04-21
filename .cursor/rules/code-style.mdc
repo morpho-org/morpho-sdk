@@ -1,5 +1,5 @@
 ---
-description: Code style and TypeScript conventions for the consumer-sdk
+description: Code style and TypeScript conventions for the morpho-sdk
 globs: src/**/*.ts
 alwaysApply: false
 ---
