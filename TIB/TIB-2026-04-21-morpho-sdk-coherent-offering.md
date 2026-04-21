@@ -24,10 +24,11 @@ This TIB does not invent the SDK. It **codifies** the principles and architectur
 
 **Goals**
 
-- Establish `@morpho-org/morpho-sdk` as the one integrator-facing TypeScript SDK for Morpho.
+- Establish `@morpho-org/morpho-sdk` as the **single, security-first, user-oriented, AI-friendly** TypeScript SDK for Morpho.
 - Codify non-negotiable principles — purity, statelessness, layering, immutability, typed errors, zero framework coupling — as the contract every future change is measured against.
+- Treat the SDK as a **product** with real users (integrators, human _and_ AI), product metrics, and dogfood-gated releases.
 - Define an architecture that makes the SDK trivially auditable and easy to reason about for audit-constrained partners (Privi, Bitwise, Tether).
-- Commit to a clear versioning & deprecation contract the integration team can rely on.
+- Commit to a clear versioning & deprecation contract integrators can rely on.
 - Consolidate into the existing `morpho-org/sdks` monorepo so internal deps become `workspace:*` and the release story is unified.
 
 **Non-Goals**
@@ -59,6 +60,12 @@ The SDK is a **pure, deterministic calldata factory**. Given the same inputs and
 
 Audit-constrained partners need to inspect exactly what they ship. A small, deterministic, stateless SDK is easy to audit, easy to pin, easy to trust. An SDK that secretly fetches, caches, or mutates is none of those things.
 
+**The SDK is a product, not a library dump.** It has _users_ (integrators, internal and external, human _and_ AI), a _roadmap_ driven by user outcomes, _quality bars_ (security, tests, docs, DX, reliability, AI-friendliness), and _ownership_ accountable for its success in their hands. We measure it the way product teams measure products — adoption, time-to-first-transaction, integration time, issue SLA, partner NPS, agent success rate — and invest accordingly.
+
+**AI-friendliness is first class.** A meaningful share of new Morpho integrations will be built by AI agents — MCP tools, code-gen assistants, Claude Code and its siblings, partner copilots. An SDK that's clean for humans is a multiplier for agents; an SDK that's ambiguous for humans is broken for them.
+
+One SDK. One contract. Every invariant tested. Every major audited. Every symbol documented. Every API shape agent-legible. Treated as a product.
+
 > *"Pure functions that return ready-to-send Morpho transactions. No simulation engines, no hidden state, no framework lock-in — just calldata you can trust."*
 
 ### Core Principles (non-negotiable)
@@ -67,7 +74,7 @@ The through-lines of the SDK. If a change violates one, the change doesn't land.
 
 1. **Pure I/O.** Actions are `(args: Args) => Transaction<TType>`. No side effects, no network, no clock, no randomness. Actions are not `async`. Network I/O exists in exactly one layer — entity fetchers — and is always named, typed, and documented.
 2. **Strictly stateless.** `MorphoClient` wraps a `viem.Client` + options. It does not cache on-chain data, not even opportunistically. No `init()`, no warm-up. The SDK has no lifecycle. Integrators either pass state in or re-fetch.
-3. **Layered, one-way.** `Client → Entity → Action`. Calls flow strictly downward. Actions never call entities; entities never construct clients. Enforced by a forbidden-import lint rule at folder boundaries.
+3. **Layered, one-way.** `Client → Entity → Action`. Calls flow strictly downward. Actions never call entities; entities never construct clients. _Commitment:_ a forbidden-import lint rule at folder boundaries lands before v1.0 to enforce this structurally.
 4. **Immutable outputs.** Every returned `Transaction` is `deepFreeze`-d. No in-flight mutation. No ambiguity about what will be sent.
 5. **Strict TypeScript, zero `any`.** All `strict` flags on. Discriminated unions for action types. `readonly` on every public property. Exhaustive `switch` enforced at the type level. If something is hard to type, the API is wrong — fix the API.
 6. **Typed errors as public API.** No `throw new Error(...)`. Every failure mode is a named, exported class. Integrators pattern-match on classes, not strings.
@@ -180,21 +187,25 @@ Re-export policy: types an integrator needs at the call site pass through `morph
 
 ### DevEx Contract
 
-What we commit to the integration team:
+What we commit to integrators. Two parts: baseline commitments (table) and the explicit documented / AI-legible surface beneath.
 
-| Commitment                  | Concrete form                                                                                                   |
-| --------------------------- | --------------------------------------------------------------------------------------------------------------- |
-| Stable public API           | SemVer. Breaking changes only on major. Deprecation window ≥ 1 minor with `@deprecated` JSDoc + CHANGELOG entry. |
-| Zero-overhead install       | `morpho-sdk` + `viem`. No other `@morpho-org/*` deps surfaced on the happy path.                                |
-| Typed errors as public API  | Every failure class exported; pattern-match, don't string-match.                                                |
-| Predictable I/O             | Every function's JSDoc lists the exact on-chain reads it triggers.                                              |
-| Same shape V1 ↔ V2 ↔ Market | Identical call signatures across protocol versions.                                                             |
-| First-class docs            | TypeDoc + handwritten recipes. LLM-ready chunks. Public Allocator gets a dedicated guide.                       |
-| Examples repo               | `morpho-sdk-examples` — one runnable file per operation, commented, with troubleshooting annotations.           |
-| Migration guides            | Every major release ships a migration guide + codemods where mechanical.                                        |
-| Fork-based test harness     | Integrators can run against a pinned block with an Alchemy key.                                                 |
-| Pinned ABIs and addresses   | Ship in-package, not fetched at runtime.                                                                        |
-| Dogfood                     | Morpho's own products migrate onto `morpho-sdk` before v1.0 stable.                                             |
+| Commitment                     | Concrete form                                                                                                   |
+| ------------------------------ | --------------------------------------------------------------------------------------------------------------- |
+| Stable public API              | SemVer. Breaking changes only on major. Deprecation window ≥ 1 minor with `@deprecated` JSDoc + CHANGELOG entry. |
+| Zero-overhead install          | `morpho-sdk` + `viem`. No other `@morpho-org/*` deps surfaced on the happy path.                                |
+| Typed errors as public API     | Every failure class exported; pattern-match, don't string-match.                                                |
+| Predictable I/O                | Every function's JSDoc lists the exact on-chain reads it triggers.                                              |
+| Protocol-faithful API          | Consistent shape where protocols overlap; honest differences where they genuinely differ (principle #7).        |
+| First-class, AI-legible docs   | TypeDoc + handwritten recipes. LLM-optimized markdown chunks, `/llms.txt` (Wagmi's model), machine-readable index. |
+| Agent-legible API shapes       | Discriminated unions with obvious `type` tags, `@throws` JSDoc on typed errors, deterministic outputs verifiable byte-for-byte. |
+| Error messages as instructions | An agent should act on a thrown message without guessing.                                                       |
+| Examples repo                  | `morpho-sdk-examples` — one runnable file per operation, kept green against every release.                      |
+| Migration guides               | Every major release ships a migration guide + codemods where mechanical.                                        |
+| CHANGELOG via Changesets       | Every user-visible change has a changeset, or CI fails.                                                         |
+| Fork-based test harness        | Integrators can run against a pinned block with an Alchemy key.                                                 |
+| Pinned ABIs and addresses      | Ship in-package, not fetched at runtime.                                                                        |
+| Dogfood as release gate        | Morpho's own products migrate onto `morpho-sdk` before v1.0 stable.                                             |
+| Feedback loop to docs          | If the same integrator question is asked twice (human or agent), it becomes a doc section.                      |
 
 ### Versioning & Deprecation
 
@@ -255,16 +266,28 @@ Anti-patterns rejected in review: `any`, `throw new Error(...)`, `async` actions
 
 ### Implementation Phases
 
-- **Phase 0 — Open-source (pre-migration):** `consumer-sdk` repo flipped public after Cantina scan (target 2026-04-27). Enables Tether WDK immediately; buys time to land the monorepo migration without blocking partners.
-- **Phase 1 — Consolidate into `morpho-org/sdks` and cut v1.0:**
-  - Drop sources into `packages/morpho-sdk/`. Preserve history via `git subtree`.
-  - Convert 5 Morpho deps to `workspace:^`. Remove `@morpho-org/simulation-sdk` (inline constants + local types).
-  - Align tooling (Biome, tsconfig, Vitest, anvil fixtures from `@morpho-org/test`) with monorepo root.
-  - Introduce Changesets at monorepo root (load-bearing for v1.0 release mechanics).
-  - Add to CI matrix; wire `MAINNET_RPC_URL` at destination.
-  - Rename `consumer-sdk` → `morpho-sdk`, cut `1.0.0-rc.0`, dogfood with Tether WDK, then cut `1.0.0` stable.
-  - Tombstone `@morpho-org/consumer-sdk` with a final re-export release.
-- **Phase 2+ — Reads, simulation, indexer integration (future TIB):** `morpho.api.*` namespace, pure simulation, historical/analytics. Designed so the RPC-only principle holds for callers that opt out. Covered by a separate TIB.
+A product roadmap driven by integrator outcomes. Each step ships when its user-visible outcome is proven in a real integrator's hands.
+
+| # | Step | Outcome | Target |
+| --- | --- | --- | --- |
+| 1 | **Open-source `consumer-sdk` as `morpho-sdk`** | Public repo, rename to `@morpho-org/morpho-sdk`, first Tether WDK integration unblocked. | 2026-04-27 (Cantina scan gate) |
+| 2 | **Migrate `morpho-sdk` into the `morpho-org/sdks` monorepo** | Single monorepo, shared tooling, Changesets introduced, workspace deps, v1.0.0 cut. | 2026-05 |
+| 3 | **Clean up / remove legacy SDK packages** | `simulation-sdk` sunset (constants inlined), wagmi helpers deprecated, package landscape matches the Product Plan's 6-month table. | 2026-05 → 2026-06 |
+| 4 | **Implement Bundler 4, Morpho Midnight (Markets V2), and any new protocol handlers** | New bundler versions and new protocol surfaces land behind the same layered architecture — no public-API special-casing. | Upcoming, driven by protocol timing |
+
+Sequencing is non-negotiable: **steps 1–3 precede step 4**. A clean, single SDK is the foundation every new handler plugs into.
+
+Step 2 details (for reference, execution owned in a separate migration doc):
+
+- Drop sources into `packages/morpho-sdk/`. Preserve history via `git subtree`.
+- Convert Morpho deps to `workspace:^`. Remove `@morpho-org/simulation-sdk` (inline constants + local types).
+- Align tooling (Biome, tsconfig, Vitest, anvil fixtures from `@morpho-org/test`) with monorepo root.
+- Introduce Changesets at monorepo root (load-bearing for v1.0 release mechanics).
+- Add to CI matrix; wire `MAINNET_RPC_URL` at destination.
+- Rename `consumer-sdk` → `morpho-sdk`, cut `1.0.0-rc.0`, dogfood with Tether WDK, then cut `1.0.0` stable.
+- Tombstone `@morpho-org/consumer-sdk` with a final re-export release.
+
+Post-v1.0 (out of this TIB, covered separately): indexer-backed reads (`morpho.api.*`), pure simulation, historical / analytics. Designed so the RPC-only principle holds for callers that opt out.
 
 ## Considered Alternatives
 
@@ -328,13 +351,46 @@ Publish `morpho-sdk` as a meta-package that just re-exports from `blue-sdk` + `b
 
 ## Security
 
-- **Cantina scan** on every major release. Documented threat model per attack surface (inflation attack, reentrancy on bundled calls, signature replay, LLTV-liquidation race).
-- **Security invariants as tests** — the codified invariants (bundler-adapter routing for deposits, LLTV buffer on combined market actions, `chainId` validation) each have a test that would fail if the invariant were removed.
-- **Typed errors** prevent silent failures; integrators must handle named failure cases.
-- **Pinned ABIs and addresses** — no runtime ABI fetching. Reproducible calldata byte-for-byte.
-- **Deep-freeze on all outputs** — no in-flight mutation of `Transaction`.
-- **No wallet access, no broadcast** — minimizes our blast radius in any partner incident.
-- **Audit-friendly shape** — small, deterministic, stateless. Partners pin the exact version they ship.
+Security is the posture. Testing and audits are the evidence. Code is written as if Cantina will read it next week — because they will.
+
+**Posture.**
+
+- Security invariants codified as tests: inflation-attack routing, LLTV buffer, `chainId` validation. Removing the invariant fails the test.
+- Typed errors for every failure mode. No silent failures, no `throw new Error(...)`. `deepFreeze` on all `Transaction` outputs.
+- Pinned ABIs and addresses in-package — no runtime ABI fetch, no address drift.
+- No bypass of protocol-level safety: deposits through the general adapter, combined market actions behind the LLTV buffer.
+- Security concerns escalate immediately; security-driven patches jump the queue.
+- No wallet access, no broadcast — minimizes blast radius in any partner incident.
+- Audit-friendly shape — small, deterministic, stateless. Partners pin the exact version they ship.
+
+**Verification.**
+
+- Unit tests on every action; fork-based integration tests on every entity fetcher. Test coverage is a commitment, not a vanity metric.
+- Fork suite runs in CI against pinned blocks per chain matrix; green suite gates every release.
+- Property-based tests (`fast-check`) on calldata encoders.
+- Coverage threshold enforced in CI (target ≥ 90% on `src/`; frozen at v1.0 cut).
+
+**Audit.**
+
+- Cantina audit on every major. Scope: `morpho-sdk` + any internal workspace deps whose code ships in user-facing calldata.
+- Dependency security audits (`pnpm audit` + socket.dev or equivalent) on every minor. Critical CVEs trigger out-of-band patches.
+- Threat model per attack surface (inflation, reentrancy in bundles, signature replay, LLTV-liquidation race) — reviewed on every major and whenever a new protocol surface lands.
+- Public audit reports linked from the CHANGELOG entry of the audited release.
+- Pre-release dogfood on every minor: at least one internal app and one external partner before the `latest` tag flips.
+
+## Success Metrics
+
+Product metrics, not engineering vanity metrics. From the Product Plan, with TIB additions:
+
+- **Time to first transaction:** < 10 minutes — for humans and agents.
+- **Partner SDK adoption:** 100% of new integrations via the SDK, vs custom wrappers.
+- **Agent success rate:** single-prompt → valid Morpho transaction > 90%.
+- **SDK/frontend consistency:** zero critical issues from logic divergence.
+- **Integration time:** < 1 day signing-to-production.
+- **Release predictability:** no unplanned majors; every deprecation honors the 4-step flow.
+- **Issue SLA:** 2 business days for bugs, 5 for feature requests.
+
+These are the numbers we revisit every release. A regression on any of them is a product signal that drives backlog, docs, and API-shape work.
 
 ## Future Considerations
 
