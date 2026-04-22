@@ -34,7 +34,7 @@ This TIB does not invent the SDK. It **codifies** the principles and architectur
 **Non-Goals**
 
 - Indexer-backed reads (`morpho.api.*`) — deferred to a later TIB.
-- Simulation, historical/analytics queries, real-time data (webhooks) — deferred.
+- Hosted simulation API, historical/analytics queries, real-time data (webhooks) — deferred. (A simulation-handler *package* is in the roadmap below as step 4; a hosted service wrapping it is separate.)
 - Framework helpers (React hooks, wagmi adapters) — explicitly out of core.
 - Deprecating Bundler3 or `@morpho-org/bundler-sdk-viem` — protocol decision, not this TIB's concern.
 - New protocol features, Markets V2 design, or any on-chain change.
@@ -280,16 +280,36 @@ Anti-patterns rejected in review: `any`, `throw new Error(...)`, `async` actions
 
 A product roadmap driven by integrator outcomes. Each step ships when its user-visible outcome is proven in a real integrator's hands.
 
-| # | Step | Outcome | Target |
-| --- | --- | --- | --- |
-| 1 | **Open-source `consumer-sdk` as `morpho-sdk`** | Public repo, rename to `@morpho-org/morpho-sdk`, first Tether WDK integration unblocked. | 2026-04-27 (Cantina scan gate) |
-| 2 | **Migrate `morpho-sdk` into the `morpho-org/sdks` monorepo** | Single monorepo, shared tooling, Changesets introduced, workspace deps, v1.0.0 cut. | 2026-05 |
-| 3 | **Clean up / remove legacy SDK packages** | `simulation-sdk` sunset (constants inlined), wagmi helpers deprecated, package landscape matches the Product Plan's 6-month table. | 2026-05 → 2026-06 |
-| 4 | **Implement Bundler 4, Morpho Midnight (Markets V2), and any new protocol handlers** | New bundler versions and new protocol surfaces land behind the same layered architecture — no public-API special-casing. | Upcoming, driven by protocol timing |
+| #  | Step                                                          | Outcome                                                                                                                          | Target                              |
+| -- | ------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------- |
+| 1  | **Open-source `consumer-sdk` as `morpho-sdk`**                | Public repo, rename to `@morpho-org/morpho-sdk`.                                                                                 | 2026-04-27 (Cantina scan gate)      |
+| 2  | **Vault: migrate Vault V1 → Vault V2**                        | New handler.                                                                                                                     | End of April 2026                   |
+| 3  | **Migrate `morpho-sdk` into the `morpho-org/sdks` monorepo**  | Single monorepo, shared tooling, Changesets introduced, workspace deps, v1.0.0 cut.                                              | May–June 2026                       |
+| 4  | **EVM simulation package**                                    | Simulation handlers only (package of pure handlers, not a hosted service).                                                       | May 2026                            |
+| 5  | **Tempo wallet integration**                                  | Support integration.                                                                                                             | Early May 2026                      |
+| 6  | **Tether WDK integration**                                    | Support integration.                                                                                                             | Early May 2026                      |
+| 7  | **Vault: force withdraw with penalties**                      | New handler.                                                                                                                     | May 2026                            |
+| 8  | **Vault: migrate AAVE V3**                                    | New handler.                                                                                                                     | May 2026                            |
+| 9  | **Vault: in-kind redemption**                                 | New handler.                                                                                                                     | June 2026                           |
+| 10 | **Market: direct supply**                                     | New handler.                                                                                                                     | June 2026                           |
+| 11 | **Clean up / remove legacy SDK packages**                     | `simulation-sdk` and wagmi helpers sunset; package landscape matches the Product Plan's 6-month table.                           | May–June 2026                       |
+| 12 | **Bundler 4**                                                 | New bundler-version handlers behind the same `Client → Entity → Action` layering — no public-API special-casing (see §Bundler 4). | Upcoming, driven by protocol timing |
+| 13 | **Repay with collateral / Multiply**                          | Swap-based handlers built on Bundler 4.                                                                                          | TBD                                 |
+| 14 | **Midnight protocol actions**                                 | Scope TBD (see §Morpho Midnight).                                                                                                | TBD                                 |
+| 15 | **Curator actions**                                           | Scope TBD.                                                                                                                       | TBD                                 |
+| 16 | **Bitgo integration**                                         | Support integration.                                                                                                             | TBD                                 |
+| 17 | **Privy integration**                                         | Support integration.                                                                                                             | TBD                                 |
+| 18 | **Dynamic integration**                                       | Support integration.                                                                                                             | TBD                                 |
 
-Sequencing is non-negotiable: **steps 1–3 precede step 4**. A clean, single SDK is the foundation every new handler plugs into.
+Sequencing commitments:
 
-Step 2 details (for reference, execution owned in a separate migration doc):
+- **Steps 1 and 3 are foundation.** Open-sourcing first (Cantina gate), then monorepo consolidation. Every other step assumes the SDK is public and in the monorepo.
+- **Step 11 closes the v1.0 consolidation story** — legacy packages sunset alongside the migration.
+- **Protocol handlers (2, 7–10, 13–15)** plug into the existing `Client → Entity → Action` layering. No public-API special-casing. Principle #7 (Protocol-faithful API) governs V1↔V2 shape decisions.
+- **Integrator support items (5, 6, 16–18)** are engagement work feeding backlog — not new SDK surface area.
+- **Bundler 4 (12)** unlocks 13 and any future Bundler-4-dependent handlers.
+
+Step-3 migration details (execution owned in a separate migration doc):
 
 - Drop sources into `packages/morpho-sdk/`. Preserve history via `git subtree`.
 - Convert Morpho deps to `workspace:^`. Remove `@morpho-org/simulation-sdk` (inline constants + local types).
@@ -299,7 +319,7 @@ Step 2 details (for reference, execution owned in a separate migration doc):
 - Rename `consumer-sdk` → `morpho-sdk`, cut `1.0.0-rc.0`, dogfood with Tether WDK, then cut `1.0.0` stable.
 - Tombstone `@morpho-org/consumer-sdk` with a final re-export release.
 
-Post-v1.0 (out of this TIB, covered separately): indexer-backed reads (`morpho.api.*`), pure simulation, historical / analytics. Designed so the RPC-only principle holds for callers that opt out.
+Post-v1.0 (out of this TIB, covered separately): indexer-backed reads (`morpho.api.*`), a hosted simulation service wrapping the step-4 handler package, historical / analytics. Designed so the RPC-only principle holds for callers that opt out.
 
 ## Assumptions & Constraints
 
@@ -375,7 +395,7 @@ These numbers are revisited every release. A regression on any of them is a prod
 ## Future Considerations
 
 - **`morpho.api.*` namespace.** Indexer-backed reads (queries, history, analytics). Requires `apiUrl` in client config. RPC-only callers never touch it. Separate TIB.
-- **Pure simulation.** `(inputs, state snapshot) → projected outcome`. No workers, no hidden fetches. Separate TIB.
+- **Hosted simulation service.** Once the EVM simulation handler package (roadmap #4) ships, a hosted REST service wrapping it is the natural next step. Separate TIB.
 - **`morpho-sdk-react`** (opt-in). If demand materializes, a separate package with React hooks that wrap `morpho-sdk`. Never a core dep.
 - **Write API.** REST endpoints wrapping the SDK for non-TypeScript stacks (Coinbase Go, etc.). Product Plan Phase 3. The SDK stays the single source of business logic.
 - **Real-time feeds.** WebSockets / webhooks for health factor changes, cap updates. Product Plan Phase 4.
