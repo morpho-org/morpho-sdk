@@ -1,11 +1,11 @@
 # TIB-2026-04-21: Morpho SDK — A Coherent, Principle-Driven SDK Offering
 
-| Field             | Value                                                   |
-| ----------------- | ------------------------------------------------------- |
-| **Status**        | Proposed                                                |
-| **Date**          | 2026-04-21                                              |
-| **Author**        | @0xbulma                                                |
-| **Scope**         | Repo-wide — `consumer-sdk` → `morpho-org/sdks` monorepo |
+| Field      | Value                                                   |
+| ---------- | ------------------------------------------------------- |
+| **Status** | Proposed                                                |
+| **Date**   | 2026-04-21                                              |
+| **Author** | @0xbulma                                                |
+| **Scope**  | Repo-wide — `consumer-sdk` → `morpho-org/sdks` monorepo |
 
 ---
 
@@ -25,7 +25,7 @@ Audit-constrained partners need to inspect exactly what they ship. A small, dete
 
 One SDK. One contract. Every invariant tested. Every major audited. Every symbol documented. Every API shape agent-legible. Treated as a product.
 
-> *"Pure functions that return ready-to-send Morpho transactions. No simulation engines, no hidden state, no framework lock-in — just calldata you can trust."*
+> _"Pure functions that return ready-to-send Morpho transactions. No simulation engines, no hidden state, no framework lock-in — just calldata you can trust."_
 
 **Explicit goals:**
 
@@ -149,26 +149,26 @@ The through-lines of the SDK. If a change violates one, the change doesn't land.
 
 A product roadmap driven by integrator outcomes. Each step ships when its user-visible outcome is proven in a real integrator's hands.
 
-| #  | Step                                                          | Outcome                                                                                                                          | Target                              |
-| -- | ------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------- |
-| 1  | **Open-source `consumer-sdk` as `morpho-sdk`**                | Public repo, rename to `@morpho-org/morpho-sdk`.                                                                                 | 2026-04-27 (Cantina scan gate)      |
-| 2  | **Vault: migrate Vault V1 → Vault V2**                        | New handler.                                                                                                                     | End of April 2026                   |
-| 3  | **Migrate `morpho-sdk` into the `morpho-org/sdks` monorepo**  | Single monorepo, shared tooling, Changesets introduced, workspace deps, v1.0.0 cut.                                              | May–June 2026                       |
-| 4  | **EVM simulation package**                                    | Simulation handlers only (package of pure handlers, not a hosted service).                                                       | May 2026                            |
-| 5  | **Tempo wallet integration**                                  | Support integration.                                                                                                             | Early May 2026                      |
-| 6  | **Tether WDK integration**                                    | Support integration.                                                                                                             | Early May 2026                      |
-| 7  | **Vault: force withdraw with penalties**                      | New handler.                                                                                                                     | May 2026                            |
-| 8  | **Vault: migrate AAVE V3**                                    | New handler.                                                                                                                     | May 2026                            |
-| 9  | **Vault: in-kind redemption**                                 | New handler.                                                                                                                     | June 2026                           |
-| 10 | **Market: direct supply**                                     | New handler.                                                                                                                     | June 2026                           |
-| 11 | **Clean up / remove legacy SDK packages**                     | `simulation-sdk` and wagmi helpers sunset; package landscape matches the Product Plan's 6-month table.                           | May–June 2026                       |
-| 12 | **Bundler 4**                                                 | New bundler-version handlers behind the same `Client → Entity → Action` layering — no public-API special-casing (see §Bundler 4). | Upcoming, driven by protocol timing |
-| 13 | **Repay with collateral / Multiply**                          | Swap-based handlers built on Bundler 4.                                                                                          | TBD                                 |
-| 14 | **Midnight protocol actions**                                 | Scope TBD (see §Morpho Midnight).                                                                                                | TBD                                 |
-| 15 | **Curator actions**                                           | Scope TBD.                                                                                                                       | TBD                                 |
-| 16 | **Bitgo integration**                                         | Support integration.                                                                                                             | TBD                                 |
-| 17 | **Privy integration**                                         | Support integration.                                                                                                             | TBD                                 |
-| 18 | **Dynamic integration**                                       | Support integration.                                                                                                             | TBD                                 |
+| #   | Step                                                         | Outcome                                                                                                                           | Target                              |
+| --- | ------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------- |
+| 1   | **Open-source `consumer-sdk` as `morpho-sdk`**               | Public repo, rename to `@morpho-org/morpho-sdk`.                                                                                  | 2026-04-27 (Cantina scan gate)      |
+| 2   | **Vault: migrate Vault V1 → Vault V2**                       | New handler.                                                                                                                      | End of April 2026                   |
+| 3   | **Migrate `morpho-sdk` into the `morpho-org/sdks` monorepo** | Single monorepo, shared tooling, Changesets introduced, workspace deps, v1.0.0 cut.                                               | May–June 2026                       |
+| 4   | **EVM simulation package**                                   | Simulation handlers only (package of pure handlers, not a hosted service).                                                        | May 2026                            |
+| 5   | **Tempo wallet integration**                                 | Support integration.                                                                                                              | Early May 2026                      |
+| 6   | **Tether WDK integration**                                   | Support integration.                                                                                                              | Early May 2026                      |
+| 7   | **Vault: force withdraw with penalties**                     | New handler.                                                                                                                      | May 2026                            |
+| 8   | **Vault: migrate AAVE V3**                                   | New handler.                                                                                                                      | May 2026                            |
+| 9   | **Vault: in-kind redemption**                                | New handler.                                                                                                                      | June 2026                           |
+| 10  | **Market: direct supply**                                    | New handler.                                                                                                                      | June 2026                           |
+| 11  | **Clean up / remove legacy SDK packages**                    | `simulation-sdk` and wagmi helpers sunset; package landscape matches the Product Plan's 6-month table.                            | May–June 2026                       |
+| 12  | **Bundler 4**                                                | New bundler-version handlers behind the same `Client → Entity → Action` layering — no public-API special-casing (see §Bundler 4). | Upcoming, driven by protocol timing |
+| 13  | **Repay with collateral / Multiply**                         | Swap-based handlers built on Bundler 4.                                                                                           | TBD                                 |
+| 14  | **Midnight protocol actions**                                | Scope TBD (see §Morpho Midnight).                                                                                                 | TBD                                 |
+| 15  | **Curator actions**                                          | Scope TBD.                                                                                                                        | TBD                                 |
+| 16  | **Bitgo integration**                                        | Support integration.                                                                                                              | TBD                                 |
+| 17  | **Privy integration**                                        | Support integration.                                                                                                              | TBD                                 |
+| 18  | **Dynamic integration**                                      | Support integration.                                                                                                              | TBD                                 |
 
 Sequencing commitments:
 
@@ -223,11 +223,11 @@ Post-v1.0 (out of this TIB, covered separately): indexer-backed reads (`morpho.a
 
 Each layer has one job:
 
-| Layer      | Job                                                                                                  | Forbidden                                     |
-| ---------- | ---------------------------------------------------------------------------------------------------- | --------------------------------------------- |
-| **Client** | Wrap viem client, hold options, mint entities                                                        | Call actions directly; hold mutable state     |
-| **Entity** | Fetch on-chain data, compute derived values (`maxSharePrice`, LLTV buffer), delegate to actions      | Encode calldata; know bundler internals      |
-| **Action** | Validate inputs, encode calldata, `deepFreeze`, return `Transaction`                                 | Fetch data; hold state; mutate inputs        |
+| Layer      | Job                                                                                             | Forbidden                                 |
+| ---------- | ----------------------------------------------------------------------------------------------- | ----------------------------------------- |
+| **Client** | Wrap viem client, hold options, mint entities                                                   | Call actions directly; hold mutable state |
+| **Entity** | Fetch on-chain data, compute derived values (`maxSharePrice`, LLTV buffer), delegate to actions | Encode calldata; know bundler internals   |
+| **Action** | Validate inputs, encode calldata, `deepFreeze`, return `Transaction`                            | Fetch data; hold state; mutate inputs     |
 
 ### Boundaries the SDK defends
 
@@ -274,23 +274,23 @@ Each layer has one job:
 
 Internal packages:
 
-| Package             | Role                                                                                                |
-| ------------------- | --------------------------------------------------------------------------------------------------- |
-| `blue-sdk`          | Pure domain model — entity types, `MarketParams`, `MathLib`, chain addresses, protocol constants   |
-| `blue-sdk-viem`     | Viem layer: ABIs, fetchers (`fetchMarket`, `fetchVault`, `fetchAccrualPosition`), EIP-712 helpers   |
-| `bundler-sdk-viem`  | Bundler3 action encoders + `BundlerAction.encodeBundle()`                                           |
-| `morpho-ts`         | Cross-cutting utilities (`deepFreeze`, `Time`, `isDefined`) — no domain knowledge                   |
-| `morpho-sdk` (this) | Composition layer — the integrator-facing surface                                                   |
+| Package             | Role                                                                                              |
+| ------------------- | ------------------------------------------------------------------------------------------------- |
+| `blue-sdk`          | Pure domain model — entity types, `MarketParams`, `MathLib`, chain addresses, protocol constants  |
+| `blue-sdk-viem`     | Viem layer: ABIs, fetchers (`fetchMarket`, `fetchVault`, `fetchAccrualPosition`), EIP-712 helpers |
+| `bundler-sdk-viem`  | Bundler3 action encoders + `BundlerAction.encodeBundle()`                                         |
+| `morpho-ts`         | Cross-cutting utilities (`deepFreeze`, `Time`, `isDefined`) — no domain knowledge                 |
+| `morpho-sdk` (this) | Composition layer — the integrator-facing surface                                                 |
 
 Not depended on (and why):
 
-| Package                                            | Status           | Why                                                                                     |
-| -------------------------------------------------- | ---------------- | --------------------------------------------------------------------------------------- |
-| `simulation-sdk`                                   | **Sunsetting**   | Today used only for 2 constants + 3 types. Inlined into `morpho-sdk`; package deprecated |
-| `blue-api-sdk`                                     | Out of v1.0     | GraphQL consumer types — relevant only if `morpho.api.*` lands later                    |
-| `liquidity-sdk-viem`                               | Orthogonal      | Specialized PublicAllocator query helpers; write-side reallocation lives in `morpho-sdk` |
-| `liquidation-sdk-viem`                             | Orthogonal      | Liquidation-bot tooling; specialized consumer                                            |
-| `blue-sdk-wagmi`, `simulation-sdk-wagmi`           | Deprecating      | Framework coupling — violates principle #8                                              |
+| Package                                  | Status         | Why                                                                                      |
+| ---------------------------------------- | -------------- | ---------------------------------------------------------------------------------------- |
+| `simulation-sdk`                         | **Sunsetting** | Today used only for 2 constants + 3 types. Inlined into `morpho-sdk`; package deprecated |
+| `blue-api-sdk`                           | Out of v1.0    | GraphQL consumer types — relevant only if `morpho.api.*` lands later                     |
+| `liquidity-sdk-viem`                     | Orthogonal     | Specialized PublicAllocator query helpers; write-side reallocation lives in `morpho-sdk` |
+| `liquidation-sdk-viem`                   | Orthogonal     | Liquidation-bot tooling; specialized consumer                                            |
+| `blue-sdk-wagmi`, `simulation-sdk-wagmi` | Deprecating    | Framework coupling — violates principle #8                                               |
 
 Re-export policy: types an integrator needs at the call site pass through `morpho-sdk`'s root barrel; functions from internal packages do not. Types at risk of upstream churn are re-declared locally to keep `morpho-sdk`'s version story decoupled from internal-dep churn.
 
@@ -300,23 +300,23 @@ Re-export policy: types an integrator needs at the call site pass through `morph
 
 A summary of what the SDK commits to integrators. Comprehensive detail in Specific Goals above.
 
-| Commitment                     | Concrete form                                                                                                   |
-| ------------------------------ | --------------------------------------------------------------------------------------------------------------- |
-| Stable public API              | SemVer. Breaking changes only on major. Deprecation window ≥ 1 minor with `@deprecated` JSDoc + CHANGELOG entry. |
-| Zero-overhead install          | `morpho-sdk` + `viem`. No other `@morpho-org/*` deps surfaced on the happy path.                                |
-| Typed errors as public API     | Every failure class exported; pattern-match, don't string-match.                                                |
-| Predictable I/O                | Every function's JSDoc lists the exact on-chain reads it triggers.                                              |
-| Protocol-faithful API          | Consistent shape where protocols overlap; honest differences where they genuinely differ (principle #7).        |
-| First-class, AI-legible docs   | TypeDoc + handwritten recipes. LLM-optimized markdown chunks, `/llms.txt` (Wagmi's model), machine-readable index. |
+| Commitment                     | Concrete form                                                                                                                   |
+| ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------- |
+| Stable public API              | SemVer. Breaking changes only on major. Deprecation window ≥ 1 minor with `@deprecated` JSDoc + CHANGELOG entry.                |
+| Zero-overhead install          | `morpho-sdk` + `viem`. No other `@morpho-org/*` deps surfaced on the happy path.                                                |
+| Typed errors as public API     | Every failure class exported; pattern-match, don't string-match.                                                                |
+| Predictable I/O                | Every function's JSDoc lists the exact on-chain reads it triggers.                                                              |
+| Protocol-faithful API          | Consistent shape where protocols overlap; honest differences where they genuinely differ (principle #7).                        |
+| First-class, AI-legible docs   | TypeDoc + handwritten recipes. LLM-optimized markdown chunks, `/llms.txt` (Wagmi's model), machine-readable index.              |
 | Agent-legible API shapes       | Discriminated unions with obvious `type` tags, `@throws` JSDoc on typed errors, deterministic outputs verifiable byte-for-byte. |
-| Error messages as instructions | An agent should act on a thrown message without guessing.                                                       |
-| Examples repo                  | `morpho-sdk-examples` — one runnable file per operation, kept green against every release.                      |
-| Migration guides               | Every major release ships a migration guide + codemods where mechanical.                                        |
-| CHANGELOG via Changesets       | Every user-visible change has a changeset, or CI fails.                                                         |
-| Fork-based test harness        | Integrators can run against a pinned block with an Alchemy key.                                                 |
-| Pinned ABIs and addresses      | Ship in-package, not fetched at runtime.                                                                        |
-| Dogfood as release gate        | Morpho's own products migrate onto `morpho-sdk` before v1.0 stable.                                             |
-| Feedback loop to docs          | If the same integrator question is asked twice (human or agent), it becomes a doc section.                      |
+| Error messages as instructions | An agent should act on a thrown message without guessing.                                                                       |
+| Examples repo                  | `morpho-sdk-examples` — one runnable file per operation, kept green against every release.                                      |
+| Migration guides               | Every major release ships a migration guide + codemods where mechanical.                                                        |
+| CHANGELOG via Changesets       | Every user-visible change has a changeset, or CI fails.                                                                         |
+| Fork-based test harness        | Integrators can run against a pinned block with an Alchemy key.                                                                 |
+| Pinned ABIs and addresses      | Ship in-package, not fetched at runtime.                                                                                        |
+| Dogfood as release gate        | Morpho's own products migrate onto `morpho-sdk` before v1.0 stable.                                                             |
+| Feedback loop to docs          | If the same integrator question is asked twice (human or agent), it becomes a doc section.                                      |
 
 ---
 
@@ -345,7 +345,9 @@ Not breaking: internal refactors, new optional fields, new overloads, bug fixes 
 
 ```ts
 /** @deprecated since 1.3.0 — use `vault.depositV2(...)` instead. Removed in 2.0. */
-export function depositLegacy(args: LegacyArgs): Transaction { /* ... */ }
+export function depositLegacy(args: LegacyArgs): Transaction {
+  /* ... */
+}
 ```
 
 A minor release whose only purpose is adding deprecations ahead of a major is legitimate and expected.
@@ -399,12 +401,12 @@ These numbers are revisited every release. A regression on any of them is a prod
 
 ## Context
 
-Morpho's TypeScript surface today is fragmented across 10+ published packages (`blue-sdk`, `blue-sdk-viem`, `bundler-sdk-viem`, `simulation-sdk`, `morpho-ts`, plus wagmi helpers and specialized consumers). Integrators routinely report the same friction: *too many packages, unclear entry point, no single place to file issues*. At the same time, `@morpho-org/consumer-sdk` has matured into a clean, layered, pure-I/O transaction builder — but it lives in its own private repo and is not the canonical surface integrators reach for.
+Morpho's TypeScript surface today is fragmented across 10+ published packages (`blue-sdk`, `blue-sdk-viem`, `bundler-sdk-viem`, `simulation-sdk`, `morpho-ts`, plus wagmi helpers and specialized consumers). Integrators routinely report the same friction: _too many packages, unclear entry point, no single place to file issues_. At the same time, `@morpho-org/consumer-sdk` has matured into a clean, layered, pure-I/O transaction builder — but it lives in its own private repo and is not the canonical surface integrators reach for.
 
 Two forcing functions align now:
 
 1. **Tether WDK launch** (target 2026-04-27) is blocked on `consumer-sdk` being public. Cantina security scan is in flight.
-2. The ***DevEx Product Plan*** (Apr 10 2026) commits Morpho to converging on a single SDK — `@morpho-org/morpho-sdk` — as the one place business logic lives. Every other surface (MCP server, write API, partner apps, Morpho's own products) becomes a thin wrapper.
+2. The **_DevEx Product Plan_** (Apr 10 2026) commits Morpho to converging on a single SDK — `@morpho-org/morpho-sdk` — as the one place business logic lives. Every other surface (MCP server, write API, partner apps, Morpho's own products) becomes a thin wrapper.
 
 This TIB does not invent the SDK. It **codifies** the principles and architectural decisions that make the Product Plan's commitment durable — so the SDK stays coherent as it grows, and so integrators, contributors, and future agents all share the same mental model.
 
@@ -421,7 +423,7 @@ This TIB does not invent the SDK. It **codifies** the principles and architectur
 ## Non-Goals
 
 - Indexer-backed reads (`morpho.api.*`) — deferred to a later TIB.
-- Hosted simulation API, historical/analytics queries, real-time data (webhooks) — deferred. (A simulation-handler *package* is in the roadmap above as step 4; a hosted service wrapping it is separate.)
+- Hosted simulation API, historical/analytics queries, real-time data (webhooks) — deferred. (A simulation-handler _package_ is in the roadmap above as step 4; a hosted service wrapping it is separate.)
 - Framework helpers (React hooks, wagmi adapters) — explicitly out of core.
 - Deprecating Bundler3 or `@morpho-org/bundler-sdk-viem` — protocol decision, not this TIB's concern.
 - New protocol features, Markets V2 design, or any on-chain change.
@@ -489,17 +491,9 @@ Open questions deferred to a follow-up TIB when Bundler 4's interface is pinned:
 
 ## Morpho Midnight
 
-Morpho Midnight is the next major version of the Morpho market protocol (Markets V2) — a new protocol surface, not a chain-specific deployment. The SDK's commitment: Midnight lands behind the same `Client → Entity → Action` layering as MarketV1, under a new entity (e.g. `MorphoMarketV2` / `MorphoMidnight`) with its own action set. No parallel SDK, no forked codebase, no public-API special-cases.
+Morpho Midnight is the next major version of the Morpho market protocol (Markets V2) — a new protocol surface. The SDK's commitment: Midnight lands behind the same `Client → Entity → Action` layering as MarketV1, under a new entity (e.g. `MorphoMarketV2` / `MorphoMidnight`) with its own action set. No parallel SDK, no forked codebase, no public-API special-cases.
 
 Consistency follows **principle #7 (Protocol-faithful API)**: operations that overlap semantically with MarketV1 (e.g. supply, borrow, repay in their conceptual forms) keep a shape that reads naturally alongside V1; operations that are genuinely new to V2 (order book, term loans, multi-collateral, rollover, etc.) get their own honest shapes — V2 mechanics aren't crammed into V1-shaped APIs, and no parallel surface is invented for overlapping concepts.
-
-Open questions deferred to a follow-up TIB when Midnight's interface is pinned:
-
-- Data model: how much of MarketV1's entity shape (`MarketParams`, `AccrualPosition`, LLTV, etc.) carries over; what needs a new type.
-- Coexistence: do V1 and V2 markets live side-by-side in `morpho-sdk` indefinitely, or does V1 enter a deprecation window once V2 ships?
-- Version gating: does V2 support require a `morpho-sdk` major (breaking), or can it land additively in a minor because V1 operations keep working?
-- Bundler surface: does V2 use bundler3, Bundler 4, or its own routing — and does any of that leak into integrator calldata?
-- Test harness: fork-block pinning per V2 testnet, integration-test coverage matrix.
 
 ---
 
@@ -524,4 +518,4 @@ Open questions deferred to a follow-up TIB when Midnight's interface is pinned:
 - [TIB-2026-04-08 — TIB structure](https://github.com/morpho-org/morpho-apps/blob/main/docs/tibs/TIB-2026-04-08-tib-structure.md) — template source.
 - SDK assessment (Notion, Sept 2025).
 - Paperclip Partner Call — SDK ecosystem feedback (Granola, Feb 2026).
-- *Helping integrators Write: SDK vs API* — Granola call (Apr 2, 2026).
+- _Helping integrators Write: SDK vs API_ — Granola call (Apr 2, 2026).
