@@ -23,7 +23,7 @@ Audit-constrained partners need to inspect exactly what they ship. A small, dete
 
 **AI-friendliness is first class.** A meaningful share of new Morpho integrations will be built by AI agents — MCP tools, code-gen assistants, Claude Code and its siblings, partner copilots. An SDK that's clean for humans is a multiplier for agents; an SDK that's ambiguous for humans is broken for them.
 
-One SDK. One contract. Every invariant tested. Every major audited. Every symbol documented. Every API shape agent-legible. Treated as a product.
+One SDK. One contract. Every invariant tested. Every major releases audited. Every symbol documented. Every API shape agent-legible. Treated as a product.
 
 > _"Pure functions that return ready-to-send Morpho transactions. No simulation engines, no hidden state, no framework lock-in — just calldata you can trust."_
 
