@@ -155,28 +155,29 @@ A product roadmap driven by integrator outcomes. Each step ships when its user-v
 | 2   | **Vault: migrate Vault V1 → Vault V2**                       | New handler.                                                                                                                      | End of April 2026                   |
 | 3   | **Migrate `morpho-sdk` into the `morpho-org/sdks` monorepo** | Single monorepo, shared tooling, Changesets introduced, workspace deps, v1.0.0 cut.                                               | May–June 2026                       |
 | 4   | **EVM simulation package**                                   | Simulation handlers only (package of pure handlers, not a hosted service).                                                        | May 2026                            |
-| 5   | **Tempo wallet integration**                                 | Support integration.                                                                                                              | Early May 2026                      |
-| 6   | **Tether WDK integration**                                   | Support integration.                                                                                                              | Early May 2026                      |
-| 7   | **Vault: force withdraw with penalties**                     | New handler.                                                                                                                      | May 2026                            |
-| 8   | **Vault: migrate AAVE V3**                                   | New handler.                                                                                                                      | May 2026                            |
-| 9   | **Vault: in-kind redemption**                                | New handler.                                                                                                                      | June 2026                           |
-| 10  | **Market: direct supply**                                    | New handler.                                                                                                                      | June 2026                           |
-| 11  | **Clean up / remove legacy SDK packages**                    | `simulation-sdk` and wagmi helpers sunset; package landscape matches the Product Plan's 6-month table.                            | May–June 2026                       |
-| 12  | **Bundler 4**                                                | New bundler-version handlers behind the same `Client → Entity → Action` layering — no public-API special-casing (see §Bundler 4). | Upcoming, driven by protocol timing |
-| 13  | **Repay with collateral / Multiply**                         | Swap-based handlers built on Bundler 4.                                                                                           | TBD                                 |
-| 14  | **Midnight protocol actions**                                | Scope TBD (see §Morpho Midnight).                                                                                                 | TBD                                 |
-| 15  | **Curator actions**                                          | Scope TBD.                                                                                                                        | TBD                                 |
-| 16  | **Bitgo integration**                                        | Support integration.                                                                                                              | TBD                                 |
-| 17  | **Privy integration**                                        | Support integration.                                                                                                              | TBD                                 |
-| 18  | **Dynamic integration**                                      | Support integration.                                                                                                              | TBD                                 |
+| 5   | **MCP integration**                                          | Morpho's MCP server wraps `morpho-sdk` with zero business-logic duplication.                                                      | May 2026                            |
+| 6   | **Tempo wallet integration**                                 | Support integration.                                                                                                              | Early May 2026                      |
+| 7   | **Tether WDK integration**                                   | Support integration.                                                                                                              | Early May 2026                      |
+| 8   | **Vault: force withdraw with penalties**                     | New handler.                                                                                                                      | May 2026                            |
+| 9   | **Vault: migrate AAVE V3**                                   | New handler.                                                                                                                      | May 2026                            |
+| 10  | **Vault: in-kind redemption**                                | New handler.                                                                                                                      | June 2026                           |
+| 11  | **Market: direct supply**                                    | New handler.                                                                                                                      | June 2026                           |
+| 12  | **Clean up / remove legacy SDK packages**                    | `simulation-sdk` and wagmi helpers sunset; package landscape matches the Product Plan's 6-month table.                            | May–June 2026                       |
+| 13  | **Bundler 4**                                                | New bundler-version handlers behind the same `Client → Entity → Action` layering — no public-API special-casing (see §Bundler 4). | Upcoming, driven by protocol timing |
+| 14  | **Repay with collateral / Multiply**                         | Swap-based handlers built on Bundler 4.                                                                                           | TBD                                 |
+| 15  | **Midnight protocol actions**                                | Scope TBD (see §Morpho Midnight).                                                                                                 | TBD                                 |
+| 16  | **Curator actions**                                          | Scope TBD.                                                                                                                        | TBD                                 |
+| 17  | **Bitgo integration**                                        | Support integration.                                                                                                              | TBD                                 |
+| 18  | **Privy integration**                                        | Support integration.                                                                                                              | TBD                                 |
+| 19  | **Dynamic integration**                                      | Support integration.                                                                                                              | TBD                                 |
 
 Sequencing commitments:
 
 - **Steps 1 and 3 are foundation.** Open-sourcing first (Cantina gate), then monorepo consolidation. Every other step assumes the SDK is public and in the monorepo.
-- **Step 11 closes the v1.0 consolidation story** — legacy packages sunset alongside the migration.
-- **Protocol handlers (2, 7–10, 13–15)** plug into the existing `Client → Entity → Action` layering. No public-API special-casing. Principle #7 (Protocol-faithful API) governs V1↔V2 shape decisions.
-- **Integrator support items (5, 6, 16–18)** are engagement work feeding backlog — not new SDK surface area.
-- **Bundler 4 (12)** unlocks 13 and any future Bundler-4-dependent handlers.
+- **Step 12 closes the v1.0 consolidation story** — legacy packages sunset alongside the migration.
+- **Protocol handlers (2, 8–11, 14–16)** plug into the existing `Client → Entity → Action` layering. No public-API special-casing. Principle #7 (Protocol-faithful API) governs V1↔V2 shape decisions.
+- **Integrator / consumer support items (5, 6, 7, 17–19)** are engagement work feeding backlog — not new SDK surface area. Step 5 (MCP) is an internal dogfood consumer; the rest are external.
+- **Bundler 4 (13)** unlocks 14 and any future Bundler-4-dependent handlers.
 
 Step-3 migration details (execution owned in a separate migration doc):
 
