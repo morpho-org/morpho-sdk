@@ -7,7 +7,6 @@ export {
 export {
   validateAccrualPosition,
   validateChainId,
-  validateInitiatorIsUser,
   validateNativeCollateral,
   validatePositionHealth,
   validatePositionHealthAfterWithdraw,

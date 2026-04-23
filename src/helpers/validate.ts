@@ -15,9 +15,7 @@ import {
   ChainWNativeMissingError,
   EmptyReallocationWithdrawalsError,
   ExcessiveSlippageToleranceError,
-  InitiatorMismatchError,
   MarketIdMismatchError,
-  MissingInitiatorError,
   MissingMarketPriceError,
   MutuallyExclusiveRepayAmountsError,
   NativeAmountOnNonWNativeCollateralError,
@@ -58,40 +56,6 @@ export const validateUserAddress = (
     !isAddressEqual(clientAccountAddress, userAddress)
   ) {
     throw new AddressMismatchError(clientAccountAddress, userAddress);
-  }
-};
-
-/**
- * Validates that the transaction initiator will equal `userAddress`.
- *
- * Required for bundler flows whose on-chain semantics depend on `initiator()`
- * (e.g. `morphoBorrow` in GeneralAdapter1). If the initiator and `userAddress`
- * differ, the emitted bundle can mix accounts — supplying collateral to one
- * user while opening debt against another.
- *
- * The initiator is resolved in this order:
- * 1. `clientAccountAddress` (wallet client connected account), or
- * 2. `signerAddress` (explicit override for public-client / external-signing flows).
- *
- * Throws {@link MissingInitiatorError} if neither is defined.
- * Throws {@link InitiatorMismatchError} if the resolved initiator differs from
- * `userAddress`.
- *
- * @param clientAccountAddress - The client's connected account (may be undefined).
- * @param signerAddress - Optional explicit signer address for public-client flows.
- * @param userAddress - The Morpho account the operation targets.
- */
-export const validateInitiatorIsUser = (
-  clientAccountAddress: Address | undefined,
-  signerAddress: Address | undefined,
-  userAddress: Address,
-): void => {
-  const initiator = clientAccountAddress ?? signerAddress;
-  if (initiator === undefined) {
-    throw new MissingInitiatorError(userAddress);
-  }
-  if (!isAddressEqual(initiator, userAddress)) {
-    throw new InitiatorMismatchError(initiator, userAddress);
   }
 };
 

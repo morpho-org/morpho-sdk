@@ -5,30 +5,21 @@ import {
 } from "@morpho-org/blue-sdk";
 import { blueAbi } from "@morpho-org/blue-sdk-viem";
 
-import {
-  createPublicClient,
-  encodeFunctionData,
-  http,
-  parseUnits,
-  zeroAddress,
-} from "viem";
+import { encodeFunctionData, parseUnits } from "viem";
 import { mainnet } from "viem/chains";
 import { describe, expect } from "vitest";
 import {
   BorrowExceedsSafeLtvError,
   computeMinBorrowSharePrice,
   ExcessiveSlippageToleranceError,
-  InitiatorMismatchError,
   isRequirementApproval,
   isRequirementAuthorization,
   isRequirementSignature,
   MissingAccrualPositionError,
-  MissingInitiatorError,
   MorphoClient,
   marketV1SupplyCollateralBorrow,
 } from "../../../src";
 import { MAX_SLIPPAGE_TOLERANCE } from "../../../src/helpers/constant";
-import { env } from "../../env";
 import { UsdcEurcvMarketV1, WethUsdsMarketV1 } from "../../fixtures/marketV1";
 import { testInvariants } from "../../helpers/invariants";
 import { supplyCollateral } from "../../helpers/marketV1";
@@ -609,106 +600,6 @@ describe("SupplyCollateralBorrowMarketV1", () => {
           slippageTolerance: MAX_SLIPPAGE_TOLERANCE + 1n,
         }),
       ).toThrow(ExcessiveSlippageToleranceError);
-    });
-
-    test("should throw InitiatorMismatchError when wallet client account differs from userAddress", async ({
-      client,
-    }) => {
-      const morphoClient = new MorphoClient(client);
-      const market = morphoClient.marketV1(WethUsdsMarketV1, mainnet.id);
-      const positionData = await market.getPositionData(client.account.address);
-
-      expect(() =>
-        market.supplyCollateralBorrow({
-          userAddress: zeroAddress,
-          amount: parseUnits("10", 18),
-          borrowAmount: parseUnits("1000", 18),
-          positionData,
-        }),
-      ).toThrow(InitiatorMismatchError);
-    });
-
-    test("should throw MissingInitiatorError when using a public client without signerAddress", async ({
-      client,
-    }) => {
-      const morphoClient = new MorphoClient(client);
-      const market = morphoClient.marketV1(WethUsdsMarketV1, mainnet.id);
-      const positionData = await market.getPositionData(client.account.address);
-
-      const publicClient = createPublicClient({
-        chain: mainnet,
-        transport: http(env().MAINNET_RPC_URL),
-      });
-      const publicMorphoClient = new MorphoClient(publicClient);
-      const publicMarket = publicMorphoClient.marketV1(
-        WethUsdsMarketV1,
-        mainnet.id,
-      );
-
-      expect(() =>
-        publicMarket.supplyCollateralBorrow({
-          userAddress: client.account.address,
-          amount: parseUnits("10", 18),
-          borrowAmount: parseUnits("1000", 18),
-          positionData,
-        }),
-      ).toThrow(MissingInitiatorError);
-    });
-
-    test("should throw InitiatorMismatchError when public client signerAddress differs from userAddress", async ({
-      client,
-    }) => {
-      const morphoClient = new MorphoClient(client);
-      const market = morphoClient.marketV1(WethUsdsMarketV1, mainnet.id);
-      const positionData = await market.getPositionData(client.account.address);
-
-      const publicClient = createPublicClient({
-        chain: mainnet,
-        transport: http(env().MAINNET_RPC_URL),
-      });
-      const publicMorphoClient = new MorphoClient(publicClient);
-      const publicMarket = publicMorphoClient.marketV1(
-        WethUsdsMarketV1,
-        mainnet.id,
-      );
-
-      expect(() =>
-        publicMarket.supplyCollateralBorrow({
-          userAddress: client.account.address,
-          signerAddress: zeroAddress,
-          amount: parseUnits("10", 18),
-          borrowAmount: parseUnits("1000", 18),
-          positionData,
-        }),
-      ).toThrow(InitiatorMismatchError);
-    });
-
-    test("should accept a public client when signerAddress matches userAddress", async ({
-      client,
-    }) => {
-      const morphoClient = new MorphoClient(client);
-      const market = morphoClient.marketV1(WethUsdsMarketV1, mainnet.id);
-      const positionData = await market.getPositionData(client.account.address);
-
-      const publicClient = createPublicClient({
-        chain: mainnet,
-        transport: http(env().MAINNET_RPC_URL),
-      });
-      const publicMorphoClient = new MorphoClient(publicClient);
-      const publicMarket = publicMorphoClient.marketV1(
-        WethUsdsMarketV1,
-        mainnet.id,
-      );
-
-      expect(() =>
-        publicMarket.supplyCollateralBorrow({
-          userAddress: client.account.address,
-          signerAddress: client.account.address,
-          amount: parseUnits("10", 18),
-          borrowAmount: parseUnits("1000", 18),
-          positionData,
-        }),
-      ).not.toThrow();
     });
   });
 });

@@ -36,7 +36,6 @@ import {
   computeReallocations,
   validateAccrualPosition,
   validateChainId,
-  validateInitiatorIsUser,
   validateNativeCollateral,
   validatePositionHealth,
   validatePositionHealthAfterWithdraw,
@@ -253,13 +252,6 @@ export interface MarketV1Actions {
    * - ERC20 approval or permit for collateral token (to GeneralAdapter1).
    * - `morpho.setAuthorization(generalAdapter1, true)` if adapter is not yet authorized.
    *
-   * **Signer must equal `userAddress`.** `GeneralAdapter1.morphoBorrow` binds the
-   * borrower to `initiator()` on-chain while `morphoSupplyCollateral` uses the
-   * `onBehalf` parameter. A mismatch would deposit the signer's collateral into
-   * `userAddress`'s position and open debt on the signer. For public clients,
-   * pass `signerAddress` to enforce the match; otherwise the wallet client's
-   * connected account must equal `userAddress`.
-   *
    * **Stale `positionData` may cause unexpected health.**
    *
    * @param params - Combined parameters including pre-fetched `positionData` for health validation.
@@ -268,15 +260,6 @@ export interface MarketV1Actions {
   supplyCollateralBorrow: (
     params: {
       userAddress: Address;
-      /**
-       * Address of the account that will sign and submit the built transaction.
-       * Required when the client has no connected account (public client) so the
-       * SDK can enforce `signer === userAddress` — the `morphoBorrow` leg is bound
-       * to the transaction initiator on-chain, so a mismatch would mix accounts
-       * (collateral credited to `userAddress`, debt opened on the signer).
-       * If the client has a connected account, this field is ignored.
-       */
-      signerAddress?: Address;
       positionData: AccrualPosition;
       borrowAmount: bigint;
       slippageTolerance?: bigint;
@@ -828,7 +811,6 @@ export class MorphoMarketV1 implements MarketV1Actions {
   supplyCollateralBorrow({
     amount = 0n,
     userAddress,
-    signerAddress,
     positionData,
     borrowAmount,
     nativeAmount,
@@ -836,21 +818,13 @@ export class MorphoMarketV1 implements MarketV1Actions {
     reallocations,
   }: {
     userAddress: Address;
-    signerAddress?: Address;
     positionData: AccrualPosition;
     borrowAmount: bigint;
     slippageTolerance?: bigint;
     reallocations?: readonly VaultReallocation[];
   } & DepositAmountArgs) {
     validateChainId(this.client.viemClient.chain?.id, this.chainId);
-    // morphoBorrow in GeneralAdapter1 uses initiator() as the borrower, while
-    // morphoSupplyCollateral uses onBehalf — a mismatch would split collateral
-    // and debt across accounts.
-    validateInitiatorIsUser(
-      this.client.viemClient.account?.address,
-      signerAddress,
-      userAddress,
-    );
+    validateUserAddress(this.client.viemClient.account?.address, userAddress);
 
     if (amount < 0n) {
       throw new NonPositiveAssetAmountError(this.marketParams.collateralToken);
