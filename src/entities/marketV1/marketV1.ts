@@ -751,10 +751,7 @@ export class MorphoMarketV1 implements MarketV1Actions {
       });
     }
 
-    // Simulate repay 10 min in the future: asset mode burns
-    // `toBorrowShares(assets, "Down")`, which returns fewer shares as
-    // `totalBorrowAssets` accrues, leaving a larger residual debt on-chain
-    // than a lastUpdate-pinned simulation would predict.
+    // +10 min accrual buffer: residual debt grows between build and execute.
     const accrualTimestamp =
       MathLib.max(Time.timestamp(), positionData.market.lastUpdate) +
       Time.s.from.min(10n);
