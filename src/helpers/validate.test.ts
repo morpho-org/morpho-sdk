@@ -20,6 +20,7 @@ import {
   EmptyReallocationWithdrawalsError,
   ExcessiveSlippageToleranceError,
   MarketIdMismatchError,
+  MissingClientPropertyError,
   MissingMarketPriceError,
   NativeAmountOnNonWNativeCollateralError,
   NegativeReallocationFeeError,
@@ -93,8 +94,10 @@ describe("validateUserAddress", () => {
     expect(() => validateUserAddress(USER_A, USER_A)).not.toThrow();
   });
 
-  test("should pass when clientAccountAddress is undefined", () => {
-    expect(() => validateUserAddress(undefined, USER_A)).not.toThrow();
+  test("should throw MissingClientPropertyError when clientAccountAddress is undefined", () => {
+    expect(() => validateUserAddress(undefined, USER_A)).toThrow(
+      MissingClientPropertyError,
+    );
   });
 
   test("should throw AddressMismatchError when addresses differ", () => {

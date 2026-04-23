@@ -16,6 +16,7 @@ import {
   EmptyReallocationWithdrawalsError,
   ExcessiveSlippageToleranceError,
   MarketIdMismatchError,
+  MissingClientPropertyError,
   MissingMarketPriceError,
   MutuallyExclusiveRepayAmountsError,
   NativeAmountOnNonWNativeCollateralError,
@@ -37,12 +38,20 @@ import {
 import { DEFAULT_LLTV_BUFFER, MAX_SLIPPAGE_TOLERANCE } from "./constant";
 
 /**
- * Validates that the provided user address matches the client's connected account.
- * Only enforced when the client has an account — skips validation for public clients
- * (e.g., when building transactions to be signed externally).
+ * Validates that the client has a connected account AND that it matches
+ * the provided user address.
  *
- * Throws {@link AddressMismatchError} if the client account is present
- * and does not match `userAddress`.
+ * The builder of the transaction (whose account fills `userAddress`) MUST
+ * be the same as the eventual executor (signer / `msg.sender` of the
+ * bundler call). This is required because some bundle actions (notably
+ * `morphoWithdrawCollateral` and `erc20TransferFrom`) implicitly act on
+ * the initiator rather than on `userAddress`. If the two diverge, an
+ * attacker-built quote signed by a victim could atomically repay the
+ * attacker's debt while withdrawing the victim's collateral.
+ *
+ * Throws {@link MissingClientPropertyError} if the client has no account.
+ * Throws {@link AddressMismatchError} if the client account differs from
+ * `userAddress`.
  *
  * @param clientAccountAddress - The client's account address (may be undefined).
  * @param userAddress - The user address provided by the caller.
@@ -51,10 +60,10 @@ export const validateUserAddress = (
   clientAccountAddress: Address | undefined,
   userAddress: Address,
 ): void => {
-  if (
-    clientAccountAddress !== undefined &&
-    !isAddressEqual(clientAccountAddress, userAddress)
-  ) {
+  if (clientAccountAddress === undefined) {
+    throw new MissingClientPropertyError("account");
+  }
+  if (!isAddressEqual(clientAccountAddress, userAddress)) {
     throw new AddressMismatchError(clientAccountAddress, userAddress);
   }
 };

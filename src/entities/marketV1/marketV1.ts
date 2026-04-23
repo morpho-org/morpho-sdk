@@ -214,6 +214,17 @@ export interface MarketV1Actions {
    *
    * **Stale `positionData` risks underestimated debt and unsafe withdrawal.**
    *
+   * **Builder must equal executor.** The account that builds this transaction
+   * (and fills `userAddress`) MUST be the same account that executes/signs it.
+   * This invariant is enforced via {@link validateUserAddress}, which requires
+   * the client to have a connected account matching `userAddress`. It is
+   * particularly critical here because the bundle structurally mixes the
+   * explicit `userAddress` (used by `morphoRepay.onBehalf`) with the implicit
+   * initiator (`msg.sender`) used by `erc20TransferFrom` and
+   * `morphoWithdrawCollateral`. If the builder and executor diverged, an
+   * attacker-built quote signed by a victim could repay the attacker's debt
+   * while withdrawing the victim's collateral to the attacker.
+   *
    * @param params - Combined parameters including pre-fetched `positionData`.
    * @returns Object with `buildTx` and `getRequirements`.
    */
