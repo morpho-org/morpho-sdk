@@ -14,6 +14,7 @@ import { test } from "../../../test/setup";
 import { MorphoClient } from "../../client";
 import { MAX_SLIPPAGE_TOLERANCE } from "../../helpers/constant";
 import {
+  AddressMismatchError,
   ExcessiveSlippageToleranceError,
   isRequirementApproval,
   NativeAmountOnNonWNativeVaultError,
@@ -291,6 +292,36 @@ describe("MorphoVaultV1 entity tests", () => {
           slippageTolerance: MAX_SLIPPAGE_TOLERANCE + 1n,
         }),
       ).toThrow(ExcessiveSlippageToleranceError);
+    });
+
+    test("should throw AddressMismatchError when userAddress differs from connected client account (SDK-101)", async ({
+      client,
+    }) => {
+      const morphoClient = new MorphoClient(client, {
+        supportSignature: false,
+      });
+      const vault = morphoClient.vaultV1(
+        SteakhouseUsdcVaultV1.address,
+        mainnet.id,
+      );
+
+      const sourceVault = await vault.getData();
+      const targetVault = await fetchAccrualVaultV2(
+        KeyrockUsdcVaultV2.address,
+        client,
+        { chainId: mainnet.id },
+      );
+
+      const attacker = "0x000000000000000000000000000000000000dEaD";
+
+      expect(() =>
+        vault.migrateToV2({
+          userAddress: attacker,
+          sourceVault,
+          targetVault,
+          shares: parseUnits("1000", 18),
+        }),
+      ).toThrow(AddressMismatchError);
     });
 
     test("should throw VaultAssetMismatchError when V1 and V2 have different underlying assets", async ({

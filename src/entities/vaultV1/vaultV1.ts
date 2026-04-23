@@ -14,7 +14,7 @@ import {
   vaultV1Redeem,
   vaultV1Withdraw,
 } from "../../actions";
-import { validateChainId } from "../../helpers";
+import { validateChainId, validateUserAddress } from "../../helpers";
 import {
   MAX_ABSOLUTE_SHARE_PRICE,
   MAX_SLIPPAGE_TOLERANCE,
@@ -319,6 +319,10 @@ export class MorphoVaultV1 implements VaultV1Actions {
     slippageTolerance?: bigint;
   }) {
     validateChainId(this.client.viemClient.chain?.id, this.chainId);
+    // The migration bundle pulls V1 shares from `msg.sender` (signer) but
+    // mints V2 shares to `userAddress`. Without this check, a malicious
+    // frontend could redirect the V2 shares to an attacker (SDK-101).
+    validateUserAddress(this.client.viemClient.account?.address, userAddress);
 
     if (!isAddressEqual(sourceVault.address, this.vault)) {
       throw new VaultAddressMismatchError(this.vault, sourceVault.address);
