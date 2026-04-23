@@ -26,6 +26,26 @@ export class AddressMismatchError extends Error {
   }
 }
 
+export class InitiatorMismatchError extends Error {
+  constructor(initiator: Address, userAddress: Address) {
+    super(
+      `Transaction initiator ${initiator} must match userAddress ${userAddress}: ` +
+        "morphoBorrow is bound to the initiator on-chain while morphoSupplyCollateral " +
+        "is bound to userAddress, so a mismatch would split collateral and debt across accounts.",
+    );
+  }
+}
+
+export class MissingInitiatorError extends Error {
+  constructor(userAddress: Address) {
+    super(
+      `Cannot build a transaction for ${userAddress} from a public client without a signerAddress. ` +
+        "morphoBorrow uses the transaction initiator on-chain; pass signerAddress matching userAddress " +
+        "when building from an account-less client.",
+    );
+  }
+}
+
 export class ChainIdMismatchError extends Error {
   constructor(clientChainId: number | undefined, argsChainId: number) {
     super(
