@@ -64,20 +64,7 @@ const tx = buildTx(permitSignature);
 
 ## Integration invariant — builder = signer
 
-**The viem client used to build a transaction MUST be the client that signs and broadcasts it.** Concretely, the `userAddress` passed to any action MUST equal the address of the connected account on the `MorphoClient`'s underlying viem client. The SDK enforces this via `validateUserAddress` and throws `MissingClientPropertyError("account")` if the client has no account, or `AddressMismatchError` on mismatch.
-
-Public-client / external-signing setups (where a quote is built without an account and signed elsewhere) are **not supported** for action builders.
-
-### Why this matters — the `repayWithdrawCollateral` case
-
-Bundle3 actions reference user accounts in two different ways:
-
-- **Explicit `onBehalf`** parameter — `morphoRepay`, `morphoSupplyCollateral`. These act on the address you pass in (`userAddress`).
-- **Implicit initiator** (`msg.sender` of `bundler3.multicall`) — `erc20TransferFrom`, `morphoWithdrawCollateral`. These act on whoever signs the final transaction.
-
-`repayWithdrawCollateral` mixes both kinds in the same bundle: the repay leg uses `onBehalf = userAddress`, while the transfer-from and the withdraw act on the initiator. If the builder address (`userAddress`) and the signer (`msg.sender`) diverged, the bundle would atomically pull loan tokens from the signer to repay someone else's debt, then withdraw the signer's collateral to a receiver chosen by the builder. The builder = signer invariant closes this hazard.
-
-The same invariant applies uniformly across all entity actions for consistency, even on operations where the bundle would not be exploitable.
+**`userAddress` MUST equal the connected account on the viem client used to build the tx, and that same client MUST sign it.** Enforced by `validateUserAddress` (throws `MissingClientPropertyError` / `AddressMismatchError`); critical for `repayWithdrawCollateral`, whose bundle mixes explicit `onBehalf` (repay) with implicit `msg.sender` (transfer-from + withdraw) — see [BUNDLER3.md](./BUNDLER3.md#other-pitfalls).
 | Entity       | Action                   | Route                     | Why                                                                                                 |
 | ------------ | ------------------------ | ------------------------- | --------------------------------------------------------------------------------------------------- |
 | **VaultV2**  | `deposit`                | Bundler (general adapter) | Enforces `maxSharePrice` — inflation attack prevention. Supports native token wrapping.             |
