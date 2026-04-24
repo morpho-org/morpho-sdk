@@ -14,6 +14,7 @@ import { test } from "../../../test/setup";
 import { MorphoClient } from "../../client";
 import { MAX_SLIPPAGE_TOLERANCE } from "../../helpers/constant";
 import {
+  AddressMismatchError,
   ExcessiveSlippageToleranceError,
   isRequirementApproval,
   NativeAmountOnNonWNativeVaultError,
@@ -21,6 +22,8 @@ import {
   NegativeSlippageToleranceError,
   VaultAssetMismatchError,
 } from "../../types";
+
+const ATTACKER_ADDRESS = "0x000000000000000000000000000000000000dEaD";
 
 describe("MorphoVaultV1 entity tests", () => {
   describe("slippageTolerance boundary", () => {
@@ -458,6 +461,61 @@ describe("MorphoVaultV1 entity tests", () => {
       const requirements = await getRequirements();
 
       expect(requirements.length).toBeGreaterThanOrEqual(1);
+    });
+  });
+
+  describe("userAddress validation", () => {
+    test("deposit throws AddressMismatchError when userAddress differs from client", async ({
+      client,
+    }) => {
+      const morphoClient = new MorphoClient(client);
+      const vault = morphoClient.vaultV1(
+        SteakhouseUsdcVaultV1.address,
+        mainnet.id,
+      );
+      const accrualVault = await vault.getData();
+
+      expect(() =>
+        vault.deposit({
+          amount: parseUnits("100", 6),
+          userAddress: ATTACKER_ADDRESS,
+          accrualVault,
+        }),
+      ).toThrow(AddressMismatchError);
+    });
+
+    test("withdraw throws AddressMismatchError when userAddress differs from client", async ({
+      client,
+    }) => {
+      const morphoClient = new MorphoClient(client);
+      const vault = morphoClient.vaultV1(
+        SteakhouseUsdcVaultV1.address,
+        mainnet.id,
+      );
+
+      expect(() =>
+        vault.withdraw({
+          amount: parseUnits("100", 6),
+          userAddress: ATTACKER_ADDRESS,
+        }),
+      ).toThrow(AddressMismatchError);
+    });
+
+    test("redeem throws AddressMismatchError when userAddress differs from client", async ({
+      client,
+    }) => {
+      const morphoClient = new MorphoClient(client);
+      const vault = morphoClient.vaultV1(
+        SteakhouseUsdcVaultV1.address,
+        mainnet.id,
+      );
+
+      expect(() =>
+        vault.redeem({
+          shares: parseUnits("100", 18),
+          userAddress: ATTACKER_ADDRESS,
+        }),
+      ).toThrow(AddressMismatchError);
     });
   });
 });

@@ -14,7 +14,7 @@ import {
   vaultV1Redeem,
   vaultV1Withdraw,
 } from "../../actions";
-import { validateChainId } from "../../helpers";
+import { validateChainId, validateUserAddress } from "../../helpers";
 import {
   MAX_ABSOLUTE_SHARE_PRICE,
   MAX_SLIPPAGE_TOLERANCE,
@@ -169,12 +169,8 @@ export class MorphoVaultV1 implements VaultV1Actions {
     accrualVault: AccrualVault;
     slippageTolerance?: bigint;
   } & DepositAmountArgs) {
-    if (this.client.viemClient.chain?.id !== this.chainId) {
-      throw new ChainIdMismatchError(
-        this.client.viemClient.chain?.id,
-        this.chainId,
-      );
-    }
+    validateChainId(this.client.viemClient.chain?.id, this.chainId);
+    validateUserAddress(this.client.viemClient.account?.address, userAddress);
 
     if (!isAddressEqual(accrualVault.address, this.vault)) {
       throw new VaultAddressMismatchError(this.vault, accrualVault.address);
@@ -262,12 +258,8 @@ export class MorphoVaultV1 implements VaultV1Actions {
   }
 
   withdraw({ amount, userAddress }: { amount: bigint; userAddress: Address }) {
-    if (this.client.viemClient.chain?.id !== this.chainId) {
-      throw new ChainIdMismatchError(
-        this.client.viemClient.chain?.id,
-        this.chainId,
-      );
-    }
+    validateChainId(this.client.viemClient.chain?.id, this.chainId);
+    validateUserAddress(this.client.viemClient.account?.address, userAddress);
 
     return {
       buildTx: () =>
@@ -284,12 +276,8 @@ export class MorphoVaultV1 implements VaultV1Actions {
   }
 
   redeem({ shares, userAddress }: { shares: bigint; userAddress: Address }) {
-    if (this.client.viemClient.chain?.id !== this.chainId) {
-      throw new ChainIdMismatchError(
-        this.client.viemClient.chain?.id,
-        this.chainId,
-      );
-    }
+    validateChainId(this.client.viemClient.chain?.id, this.chainId);
+    validateUserAddress(this.client.viemClient.account?.address, userAddress);
 
     return {
       buildTx: () =>
