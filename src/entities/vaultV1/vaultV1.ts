@@ -111,9 +111,6 @@ export interface VaultV1Actions {
    *
    * @param {Object} params - The migration parameters.
    * @param {Address} params.userAddress - User address initiating the migration.
-   *   Must equal the connected viem client account; otherwise throws
-   *   `MissingClientPropertyError` (no account) or `AddressMismatchError`
-   *   (account mismatch). See the builder=signer invariant in `BUNDLER3.md`.
    * @param {AccrualVault} params.sourceVault - Pre-fetched V1 vault data.
    * @param {AccrualVaultV2} params.targetVault - Pre-fetched V2 vault data.
    * @param {bigint} params.shares - User's V1 share balance to migrate.
