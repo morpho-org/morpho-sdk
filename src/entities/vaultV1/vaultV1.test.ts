@@ -314,14 +314,16 @@ describe("MorphoVaultV1 entity tests", () => {
 
       const attacker = "0x000000000000000000000000000000000000dEaD";
 
-      expect(() =>
+      const buildAttackerMigration = () =>
         vault.migrateToV2({
           userAddress: attacker,
           sourceVault,
           targetVault,
           shares: parseUnits("1000", 18),
-        }),
-      ).toThrow(AddressMismatchError);
+        });
+      expect(buildAttackerMigration).toThrow(AddressMismatchError);
+      // Lock in the message so a rename of the error text still fails the test.
+      expect(buildAttackerMigration).toThrow(/address.*mismatch/i);
     });
 
     test("should throw VaultAssetMismatchError when V1 and V2 have different underlying assets", async ({
