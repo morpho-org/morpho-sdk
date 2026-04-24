@@ -17,6 +17,19 @@ interface GetRequirementsActionParams {
     args: PermitArgs;
     action: PermitAction | Permit2Action;
   };
+  /**
+   * When true, the permit / approve2 leg is encoded with `skipRevert = true`
+   * so a pre-consumed nonce does not brick the whole bundle. The subsequent
+   * `erc20TransferFrom` / `transferFrom2` leg keeps `skipRevert = false`, so
+   * the bundle still fails closed if no sufficient allowance is installed.
+   *
+   * Intended for flows where a signed requirement signature is visible in the
+   * mempool and an attacker could cheaply front-run the permit call to grief
+   * the user (e.g. time-sensitive repayment bundles).
+   *
+   * @default false
+   */
+  skipRevertOnPermit?: boolean;
 }
 
 /**
@@ -27,6 +40,7 @@ export const getRequirementsAction = ({
   asset,
   amount,
   requirementSignature,
+  skipRevertOnPermit = false,
 }: GetRequirementsActionParams): Action[] => {
   if (!isAddressEqual(requirementSignature.args.asset, asset)) {
     throw new DepositAssetMismatchError(asset, requirementSignature.args.asset);
@@ -62,7 +76,7 @@ export const getRequirementsAction = ({
             sigDeadline: requirementSignature.args.deadline,
           },
           requirementSignature.args.signature,
-          false /* skipRevert */,
+          skipRevertOnPermit,
         ],
       },
       {
@@ -81,7 +95,7 @@ export const getRequirementsAction = ({
         requirementSignature.args.amount,
         requirementSignature.args.deadline,
         requirementSignature.args.signature,
-        false /* skipRevert */,
+        skipRevertOnPermit,
       ],
     },
     {

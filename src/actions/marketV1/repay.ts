@@ -86,6 +86,7 @@ export const marketV1Repay = ({
         asset: marketParams.loanToken,
         amount: transferAmount,
         requirementSignature,
+        skipRevertOnPermit: true,
       }),
     );
   } else {

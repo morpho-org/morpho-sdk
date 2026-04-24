@@ -101,6 +101,7 @@ export const marketV1RepayWithdrawCollateral = ({
         asset: marketParams.loanToken,
         amount: transferAmount,
         requirementSignature,
+        skipRevertOnPermit: true,
       }),
     );
   } else {
