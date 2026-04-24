@@ -41,19 +41,21 @@ import { DEFAULT_LLTV_BUFFER, MAX_SLIPPAGE_TOLERANCE } from "./constant";
  * Validates that the client has a connected account AND that it matches
  * the provided user address.
  *
- * The builder of the transaction (whose account fills `userAddress`) MUST
- * be the same as the eventual executor (signer / `msg.sender` of the
- * bundler call). This is required because some bundle actions (notably
- * `morphoWithdrawCollateral` and `erc20TransferFrom`) implicitly act on
- * the initiator rather than on `userAddress`. If the two diverge, an
- * attacker-built quote signed by a victim could atomically repay the
- * attacker's debt while withdrawing the victim's collateral.
+ * Enforces the uniform builder = executor invariant across every MarketV1
+ * entity method: the account that builds the transaction (whose address
+ * fills `userAddress`) MUST be the same as the eventual executor
+ * (signer / initiator of the bundler call). Some bundle actions (e.g.
+ * `erc20TransferFrom`, `morphoWithdrawCollateral`) implicitly act on the
+ * initiator rather than on `userAddress`, so a divergence between the two
+ * can enable mixed-account bundles (the `repayWithdrawCollateral` case
+ * flagged as SDK-100 is one instance).
  *
  * Throws {@link MissingClientPropertyError} if the client has no account.
  * Throws {@link AddressMismatchError} if the client account differs from
  * `userAddress`.
  *
- * @param clientAccountAddress - The client's account address (may be undefined).
+ * @param clientAccountAddress - The client's account address; if undefined,
+ *   `MissingClientPropertyError` is thrown.
  * @param userAddress - The user address provided by the caller.
  */
 export const validateUserAddress = (
