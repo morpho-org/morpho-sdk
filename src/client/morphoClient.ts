@@ -1,7 +1,11 @@
-import type { MarketParams } from "@morpho-org/blue-sdk";
+import { type MarketParams, MarketUtils } from "@morpho-org/blue-sdk";
 import type { Address, Client } from "viem";
 import { MorphoMarketV1, MorphoVaultV1, MorphoVaultV2 } from "../entities";
-import type { Metadata, MorphoClientType } from "../types";
+import {
+  MarketIdMismatchError,
+  type Metadata,
+  type MorphoClientType,
+} from "../types";
 
 export class MorphoClient implements MorphoClientType {
   readonly options: {
@@ -34,6 +38,15 @@ export class MorphoClient implements MorphoClientType {
   }
 
   public marketV1(marketParams: MarketParams, chainId: number) {
+    // Structural typing lets callers pass a plain object whose `id` does not
+    // match the (loanToken, collateralToken, oracle, irm, lltv) tuple. Reads
+    // key off `id`; writes encode the tuple — a mismatch silently routes the
+    // two to different markets. Recompute the canonical id from the tuple
+    // and reject any input whose supplied id disagrees.
+    const derivedId = MarketUtils.getMarketId(marketParams);
+    if (marketParams.id !== derivedId) {
+      throw new MarketIdMismatchError(marketParams.id, derivedId);
+    }
     return new MorphoMarketV1(this, marketParams, chainId);
   }
 }
