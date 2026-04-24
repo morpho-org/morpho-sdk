@@ -47,7 +47,6 @@ import {
 import {
   type DepositAmountArgs,
   type ERC20ApprovalAction,
-  MarketIdMismatchError,
   type MarketV1BorrowAction,
   type MarketV1RepayAction,
   type MarketV1RepayWithdrawCollateralAction,
@@ -284,6 +283,13 @@ export interface MarketV1Actions {
    * Fetches all on-chain data needed to construct a {@link SimulationState}
    * for computing vault reallocations via the public allocator.
    *
+   * The target market is refetched internally at `block.number` so the
+   * reallocation planner always compares source-vault liquidity against a
+   * fresh target-market snapshot from the same block. Passing a caller-owned
+   * market here would open a mixed-epoch planning window in which a stale or
+   * adversarial snapshot could cause unnecessary `reallocateTo` actions (and
+   * their native PublicAllocator fees) to be appended to the bundle.
+   *
    * The returned simulation state can be passed to {@link getReallocations}
    * to compute the `VaultReallocation[]` array for `borrow()` or
    * `supplyCollateralBorrow()`.
@@ -291,13 +297,11 @@ export interface MarketV1Actions {
    * **Stale data reverts on-chain (fail-safe).**
    *
    * @param params.vaultAddresses - Addresses of MetaMorpho vaults that allocate to this market.
-   * @param params.market - The target market data (from {@link getPositionData} or {@link getMarketData}).
    * @param params.block - The block to fetch data at (number and timestamp).
    * @returns A SimulationState populated with all required data.
    */
   getReallocationData: (params: {
     vaultAddresses: readonly Address[];
-    market: Market;
     block: MinimalBlock;
   }) => Promise<SimulationState>;
 
@@ -917,17 +921,12 @@ export class MorphoMarketV1 implements MarketV1Actions {
 
   async getReallocationData({
     vaultAddresses,
-    market,
     block,
   }: {
     vaultAddresses: readonly Address[];
-    market: Market;
     block: MinimalBlock;
   }): Promise<SimulationState> {
     validateChainId(this.client.viemClient.chain?.id, this.chainId);
-    if (market.id !== this.marketParams.id) {
-      throw new MarketIdMismatchError(market.id, this.marketParams.id);
-    }
 
     const client = this.client.viemClient;
     const fetchParams = {
@@ -936,13 +935,19 @@ export class MorphoMarketV1 implements MarketV1Actions {
       deployless: this.client.options.supportDeployless,
     };
 
-    // Phase 1: Fetch all vaults in parallel to get their withdrawQueues.
-    const vaults = await Promise.all(
-      vaultAddresses.map((addr) => fetchVault(addr, client, fetchParams)),
-    );
+    const targetMarketId = this.marketParams.id;
+
+    // Phase 1: Fetch the target market and all vaults at `block.number` in
+    // parallel. The target market is refetched internally so the reallocation
+    // planner never trusts a caller-owned snapshot (see Cantina MORP2-72).
+    const [targetMarket, vaults] = await Promise.all([
+      fetchMarket(targetMarketId, client, fetchParams),
+      Promise.all(
+        vaultAddresses.map((addr) => fetchVault(addr, client, fetchParams)),
+      ),
+    ]);
 
     // Collect unique market IDs from all vault withdrawQueues + target market.
-    const targetMarketId = this.marketParams.id;
     const allMarketIds = new Set<MarketId>([targetMarketId]);
     const vaultMarketPairs: { vault: Address; marketId: MarketId }[] = [];
 
@@ -963,7 +968,7 @@ export class MorphoMarketV1 implements MarketV1Actions {
       (mid) => mid !== targetMarketId,
     );
 
-    const loanToken = market.params.loanToken;
+    const loanToken = targetMarket.params.loanToken;
 
     const [markets, configs, positions, holdings] = await Promise.all([
       Promise.all(
@@ -994,7 +999,7 @@ export class MorphoMarketV1 implements MarketV1Actions {
 
     // Assemble records for SimulationState.
     const marketsRecord: Record<MarketId, Market | undefined> = {
-      [targetMarketId]: market,
+      [targetMarketId]: targetMarket,
     };
     for (const m of markets) {
       marketsRecord[m.id] = m;
