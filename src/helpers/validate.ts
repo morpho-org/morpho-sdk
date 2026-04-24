@@ -41,14 +41,10 @@ import { DEFAULT_LLTV_BUFFER, MAX_SLIPPAGE_TOLERANCE } from "./constant";
  * Validates that the client has a connected account AND that it matches
  * the provided user address.
  *
- * Enforces the uniform builder = executor invariant across every MarketV1
- * entity method: the account that builds the transaction (whose address
- * fills `userAddress`) MUST be the same as the eventual executor
- * (signer / initiator of the bundler call). Some bundle actions (e.g.
- * `erc20TransferFrom`, `morphoWithdrawCollateral`) implicitly act on the
- * initiator rather than on `userAddress`, so a divergence between the two
- * can enable mixed-account bundles (the `repayWithdrawCollateral` case
- * flagged as SDK-100 is one instance).
+ * Enforces the builder = executor invariant: `userAddress` MUST equal the
+ * connected client account. Some bundle actions (e.g. `erc20TransferFrom`,
+ * `morphoWithdrawCollateral`) act implicitly on the initiator rather than
+ * on `userAddress`, so a divergence can produce mixed-account bundles.
  *
  * Throws {@link MissingClientPropertyError} if the client has no account.
  * Throws {@link AddressMismatchError} if the client account differs from
