@@ -20,6 +20,7 @@ import {
   EmptyReallocationWithdrawalsError,
   ExcessiveSlippageToleranceError,
   MarketIdMismatchError,
+  MissingClientPropertyError,
   MissingMarketPriceError,
   NativeAmountOnNonWNativeCollateralError,
   NegativeReallocationFeeError,
@@ -93,8 +94,13 @@ describe("validateUserAddress", () => {
     expect(() => validateUserAddress(USER_A, USER_A)).not.toThrow();
   });
 
-  test("should pass when clientAccountAddress is undefined", () => {
-    expect(() => validateUserAddress(undefined, USER_A)).not.toThrow();
+  test("should throw MissingClientPropertyError when clientAccountAddress is undefined", () => {
+    expect(() => validateUserAddress(undefined, USER_A)).toThrow(
+      MissingClientPropertyError,
+    );
+    // Also lock in that the error names the missing property (`account`), so
+    // a refactor swapping to e.g. `MissingClientPropertyError("chain")` fails.
+    expect(() => validateUserAddress(undefined, USER_A)).toThrow(/account/);
   });
 
   test("should throw AddressMismatchError when addresses differ", () => {

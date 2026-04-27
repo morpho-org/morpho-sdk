@@ -16,6 +16,7 @@ import {
   EmptyReallocationWithdrawalsError,
   ExcessiveSlippageToleranceError,
   MarketIdMismatchError,
+  MissingClientPropertyError,
   MissingMarketPriceError,
   MutuallyExclusiveRepayAmountsError,
   NativeAmountOnNonWNativeCollateralError,
@@ -37,24 +38,30 @@ import {
 import { DEFAULT_LLTV_BUFFER, MAX_SLIPPAGE_TOLERANCE } from "./constant";
 
 /**
- * Validates that the provided user address matches the client's connected account.
- * Only enforced when the client has an account — skips validation for public clients
- * (e.g., when building transactions to be signed externally).
+ * Validates that the client has a connected account AND that it matches
+ * the provided user address.
  *
- * Throws {@link AddressMismatchError} if the client account is present
- * and does not match `userAddress`.
+ * Enforces the builder = executor invariant: `userAddress` MUST equal the
+ * connected client account. Some bundle actions (e.g. `erc20TransferFrom`,
+ * `morphoWithdrawCollateral`) act implicitly on the initiator rather than
+ * on `userAddress`, so a divergence can produce mixed-account bundles.
  *
- * @param clientAccountAddress - The client's account address (may be undefined).
+ * Throws {@link MissingClientPropertyError} if the client has no account.
+ * Throws {@link AddressMismatchError} if the client account differs from
+ * `userAddress`.
+ *
+ * @param clientAccountAddress - The client's account address; if undefined,
+ *   `MissingClientPropertyError` is thrown.
  * @param userAddress - The user address provided by the caller.
  */
 export const validateUserAddress = (
   clientAccountAddress: Address | undefined,
   userAddress: Address,
 ): void => {
-  if (
-    clientAccountAddress !== undefined &&
-    !isAddressEqual(clientAccountAddress, userAddress)
-  ) {
+  if (clientAccountAddress === undefined) {
+    throw new MissingClientPropertyError("account");
+  }
+  if (!isAddressEqual(clientAccountAddress, userAddress)) {
     throw new AddressMismatchError(clientAccountAddress, userAddress);
   }
 };

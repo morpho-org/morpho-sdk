@@ -15,6 +15,7 @@ This repo uses a layered documentation approach. Before working in any directory
 - **Validate before done.** After every change: `pnpm lint && pnpm build`. Fix errors before stopping.
 - **Never bypass the general adapter for deposits.** It enforces `maxSharePrice` — inflation attack vector otherwise.
 - **LLTV buffer on combined market actions.** `supplyCollateralBorrow` validates position health with a buffer (default 0.5%) below LLTV to prevent instant liquidation.
+- **Builder = signer.** The viem client used to build a transaction MUST be the client that signs it. `userAddress` MUST equal the connected account address. Enforced by `validateUserAddress` (throws `MissingClientPropertyError` or `AddressMismatchError`). Critical for `repayWithdrawCollateral`, where the bundle mixes explicit `onBehalf = userAddress` (repay) with implicit initiator (`erc20TransferFrom`, `morphoWithdrawCollateral`). Note: this check runs at build time on the builder's own client, so it prevents an honest integrator from *accidentally* emitting the mixed-account bundle — it is **not** a defense against a malicious builder (the signer remains responsible for reviewing what they sign).
 - Always validate `chainId` match before any on-chain call between client and params.
 - **Immutability.** Every returned `Transaction` object must be `deepFreeze`-d. No exceptions.
 - **Strict TypeScript.** Zero `any`. All strict flags enabled. Use `type` imports, `readonly` properties.

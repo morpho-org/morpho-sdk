@@ -61,6 +61,11 @@ const requirements = await getRequirements();
 // then calls buildTx to get the final transaction:
 const tx = buildTx(permitSignature);
 ```
+
+## Integration invariant — builder = signer
+
+**`userAddress` MUST equal the connected account on the viem client used to build the tx, and that same client MUST sign it.** Enforced by `validateUserAddress` (throws `MissingClientPropertyError` / `AddressMismatchError`); critical for `repayWithdrawCollateral`, whose bundle mixes explicit `onBehalf` (repay) with implicit `msg.sender` (transfer-from + withdraw) — see [BUNDLER3.md](./BUNDLER3.md#other-pitfalls).
+
 | Entity       | Action                   | Route                     | Why                                                                                                 |
 | ------------ | ------------------------ | ------------------------- | --------------------------------------------------------------------------------------------------- |
 | **VaultV2**  | `deposit`                | Bundler (general adapter) | Enforces `maxSharePrice` — inflation attack prevention. Supports native token wrapping.             |
