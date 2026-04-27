@@ -24,5 +24,6 @@ Each layer has its own `AGENTS.md` with scoped context:
 
 - `pnpm lint && pnpm build` after every change.
 - Never bypass the general adapter for deposits.
+- **Builder = signer.** `userAddress` MUST equal the connected viem account. Enforced by `validateUserAddress` (throws `MissingClientPropertyError` or `AddressMismatchError`). Critical for `repayWithdrawCollateral` — the bundle mixes explicit `onBehalf = userAddress` (repay) with implicit initiator (`erc20TransferFrom`, `morphoWithdrawCollateral`). Build-time check only: it prevents accidental mixed-account bundles from honest integrators, not malicious builders.
 - All returned `Transaction` objects must be `deepFreeze`-d.
 - Zero `any`. Strict TypeScript.

@@ -67,6 +67,8 @@ Atomic repay + withdraw. Validates combined health: simulates repay via `accrual
 
 `getRequirements` returns both loan token approval and Morpho authorization.
 
+**Builder = signer is mandatory here.** The bundle mixes explicit `onBehalf = userAddress` (`morphoRepay`) with the implicit initiator used by `erc20TransferFrom` and `morphoWithdrawCollateral` (the latter exposes no `onBehalf` parameter on GA1). If the address that built the tx differed from the address that signs it, the signer's tokens would repay someone else's debt and their collateral would be withdrawn to a builder-chosen receiver. `validateUserAddress` enforces this on every `MorphoMarketV1` method.
+
 ## Key Constraints
 
 - Validate `chainId` match before any on-chain call.
