@@ -6,6 +6,12 @@
 
 - First stable open-source release of `@morpho-org/morpho-sdk`. Marks the public availability of the SDK on npm under its final name, with full support for VaultV1 (MetaMorpho), VaultV2, and MarketV1 (Morpho Blue) operations. From this version onward, the SDK follows Semantic Versioning: breaking changes require a major bump.
 
+### Patch Changes
+
+- 5ce90e1: Fix `vaultV1MigrateToV2` to validate `userAddress` against the connected client account (SDK-101). The V1→V2 migration bundle pulls V1 shares from `msg.sender` via `erc20TransferFrom` but mints V2 shares to `userAddress`; without this check, a malicious frontend could redirect the resulting V2 shares to an attacker after the user approves GeneralAdapter1 for their V1 shares. Now throws `MissingClientPropertyError` or `AddressMismatchError`, mirroring the existing pattern on `MorphoMarketV1`.
+- f8ce526: Enforce builder = signer on MarketV1 `repayWithdrawCollateral` (SDK-100 / MORP2-69). `validateUserAddress` now throws `MissingClientPropertyError("account")` when the client has no connected account, in addition to the existing `AddressMismatchError` on mismatch. This closes a mixed-account hazard where a quote built by one address but signed by another could atomically repay the builder's debt while withdrawing the signer's collateral. The invariant is documented at the integration entry points (README, BUNDLER3.md) as a build-time guard — it is not a defense against a malicious builder, since the signer remains responsible for reviewing what they sign.
+- ab8b89b: Project interest accrual +10 minutes when validating position health in `repayWithdrawCollateral`. Asset-mode repay burns `toBorrowShares(assets, "Down")`; as interest accrues between build and execute, fewer shares are burned than the `lastUpdate`-pinned simulation predicted, leaving a larger residual debt on-chain. Validation could pass off-chain but the on-chain withdraw would revert. The 10-minute projection produces a conservative upper bound on residual debt; the projection is clamped to `lastUpdate` to avoid `InvalidInterestAccrual` on fork-pinned clocks.
+
 ## 0.7.0
 
 ### Minor Changes
