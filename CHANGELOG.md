@@ -1,5 +1,11 @@
 # @morpho-org/morpho-sdk
 
+## 1.0.0
+
+### Major Changes
+
+- First stable open-source release of `@morpho-org/morpho-sdk`. Marks the public availability of the SDK on npm under its final name, with full support for VaultV1 (MetaMorpho), VaultV2, and MarketV1 (Morpho Blue) operations. From this version onward, the SDK follows Semantic Versioning: breaking changes require a major bump.
+
 ## 0.7.0
 
 ### Minor Changes
