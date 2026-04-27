@@ -18,6 +18,7 @@ import {
   fetchVault,
   fetchVaultMarketConfig,
 } from "@morpho-org/blue-sdk-viem";
+import { Time } from "@morpho-org/morpho-ts";
 import { type MinimalBlock, SimulationState } from "@morpho-org/simulation-sdk";
 import type { Address } from "viem";
 import {
@@ -750,8 +751,15 @@ export class MorphoMarketV1 implements MarketV1Actions {
       });
     }
 
-    // Simulate repay to get post-repay position, then validate withdraw health
-    const { position: positionAfterRepay } = positionData.repay(assets, shares);
+    // +10 min accrual buffer: residual debt grows between build and execute.
+    const accrualTimestamp =
+      MathLib.max(Time.timestamp(), positionData.market.lastUpdate) +
+      Time.s.from.min(10n);
+    const { position: positionAfterRepay } = positionData.repay(
+      assets,
+      shares,
+      accrualTimestamp,
+    );
     validatePositionHealthAfterWithdraw({
       positionData: positionAfterRepay,
       withdrawAmount,
