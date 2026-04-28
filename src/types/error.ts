@@ -88,18 +88,6 @@ export class DepositAssetMismatchError extends Error {
   }
 }
 
-export class DeallocationsExceedWithdrawError extends Error {
-  constructor(params: {
-    vault: Address;
-    withdrawAmount: bigint;
-    totalDeallocated: bigint;
-  }) {
-    super(
-      `Total deallocated amount (${params.totalDeallocated}) exceed withdraw amount (${params.withdrawAmount}) for vault: ${params.vault}`,
-    );
-  }
-}
-
 export class NativeAmountOnNonWNativeVaultError extends Error {
   constructor(vaultAsset: Address, wNative: Address) {
     super(
