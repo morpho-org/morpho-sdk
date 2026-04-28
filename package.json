@@ -1,7 +1,7 @@
 {
   "name": "@morpho-org/morpho-sdk",
   "description": "Abstraction layer for Morpho's complexity.",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "author": "Morpho Association <contact@morpho.org>",
   "contributors": [
     "Foulks-Plb <https://x.com/FoulkPlb>"
@@ -30,7 +30,8 @@
     "bundler"
   ],
   "packageManager": "pnpm@10.24.0+sha512.01ff8ae71b4419903b65c60fb2dc9d34cf8bb6e06d03bde112ef38f7a34d6904c424ba66bea5cdcf12890230bf39f9580473140ed9c946fef328b6e5238a345a",
-  "main": "src/index.ts",
+  "main": "./lib/index.js",
+  "types": "./lib/index.d.ts",
   "files": [
     "lib"
   ],
@@ -63,9 +64,7 @@
     "vitest": "^3.0.5"
   },
   "publishConfig": {
-    "access": "public",
-    "main": "lib/index.js",
-    "types": "lib/index.d.ts"
+    "access": "public"
   },
   "dependencies": {
     "@morpho-org/blue-sdk": "^5.23.0",
