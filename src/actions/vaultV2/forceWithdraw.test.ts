@@ -3,7 +3,6 @@ import { type Address, isHex, parseUnits } from "viem";
 import { describe, expect } from "vitest";
 import { test } from "../../../test/setup";
 import {
-  DeallocationsExceedWithdrawError,
   EmptyDeallocationsError,
   NonPositiveAssetAmountError,
 } from "../../types";
@@ -234,26 +233,28 @@ describe("forceWithdrawVaultV2 unit tests", () => {
     ).toThrow(NonPositiveAssetAmountError);
   });
 
-  test("should throw DeallocationsExceedWithdrawError when total deallocated exceeds withdraw", ({
+  test("should allow deallocated assets greater than withdraw assets", ({
     client,
   }) => {
     const deallocatedAssets = parseUnits("100", 18);
     const withdrawAssets = parseUnits("50", 18);
 
-    expect(() =>
-      vaultV2ForceWithdraw({
-        vault: { address: mockVaultAddress },
-        args: {
-          deallocations: [
-            { adapter: mockAdapterAddress, amount: deallocatedAssets },
-          ],
-          withdraw: {
-            amount: withdrawAssets,
-            recipient: client.account.address,
-          },
-          onBehalf: client.account.address,
+    const tx = vaultV2ForceWithdraw({
+      vault: { address: mockVaultAddress },
+      args: {
+        deallocations: [
+          { adapter: mockAdapterAddress, amount: deallocatedAssets },
+        ],
+        withdraw: {
+          amount: withdrawAssets,
+          recipient: client.account.address,
         },
-      }),
-    ).toThrow(DeallocationsExceedWithdrawError);
+        onBehalf: client.account.address,
+      },
+    });
+
+    expect(tx).toBeDefined();
+    expect(tx.action.args.withdraw.amount).toBe(withdrawAssets);
+    expect(tx.action.args.deallocations[0]?.amount).toBe(deallocatedAssets);
   });
 });
