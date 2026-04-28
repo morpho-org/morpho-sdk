@@ -5,7 +5,6 @@ import { addTransactionMetadata } from "../../helpers";
 import { encodeForceDeallocateCall } from "../../helpers/encodeDeallocation";
 import {
   type Deallocation,
-  DeallocationsExceedWithdrawError,
   EmptyDeallocationsError,
   type Metadata,
   NonPositiveAssetAmountError,
@@ -64,15 +63,6 @@ export const vaultV2ForceWithdraw = ({
 
   if (withdraw.amount <= 0n) {
     throw new NonPositiveAssetAmountError(vaultAddress);
-  }
-
-  const totalDeallocated = deallocations.reduce((sum, d) => sum + d.amount, 0n);
-  if (withdraw.amount < totalDeallocated) {
-    throw new DeallocationsExceedWithdrawError({
-      vault: vaultAddress,
-      withdrawAmount: withdraw.amount,
-      totalDeallocated,
-    });
   }
 
   const calls: Hex[] = [];
