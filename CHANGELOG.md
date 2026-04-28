@@ -1,5 +1,11 @@
 # @morpho-org/morpho-sdk
 
+## 1.1.0
+
+### Minor Changes
+
+- 226f8c7: Drop the `deallocation <= withdraw` check on VaultV2 `forceWithdraw`. The check incorrectly rejected flows where the amount deallocated upstream exceeds what the user ultimately withdraws (e.g. when a deallocation fee is taken on top of the requested amount). The dedicated `DeallocationsExceedWithdrawError` is also removed.
+
 ## 1.0.1
 
 ### Patch Changes
