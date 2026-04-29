@@ -1,24 +1,24 @@
 import {
+  MathLib,
   addressesRegistry,
   getChainAddresses,
-  MathLib,
 } from "@morpho-org/blue-sdk";
 import { isHex, parseUnits } from "viem";
 import { mainnet } from "viem/chains";
 import { describe, expect } from "vitest";
 import {
+  MorphoClient,
   isRequirementApproval,
   isRequirementSignature,
-  MorphoClient,
   vaultV1Deposit,
-} from "../../../src";
+} from "../../../src/index.js";
 import {
   GauntletWethVaultV1,
   SteakhouseUSDTVaultV1,
   SteakhouseUsdcVaultV1,
-} from "../../fixtures/vaultV1";
-import { testInvariants } from "../../helpers/invariants";
-import { test } from "../../setup";
+} from "../../fixtures/vaultV1.js";
+import { testInvariants } from "../../helpers/invariants.js";
+import { test } from "../../setup.js";
 
 describe("DepositVaultV1", () => {
   test("should create deposit bundle", async ({ client }) => {

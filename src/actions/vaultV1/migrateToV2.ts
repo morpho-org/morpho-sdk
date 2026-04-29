@@ -2,7 +2,7 @@ import { getChainAddresses } from "@morpho-org/blue-sdk";
 import { type Action, BundlerAction } from "@morpho-org/bundler-sdk-viem";
 import { deepFreeze } from "@morpho-org/morpho-ts";
 import { type Address, maxUint256 } from "viem";
-import { addTransactionMetadata } from "../../helpers";
+import { addTransactionMetadata } from "../../helpers/index.js";
 import {
   type Metadata,
   NegativeMinSharePriceError,
@@ -11,8 +11,8 @@ import {
   type RequirementSignature,
   type Transaction,
   type VaultV1MigrateToV2Action,
-} from "../../types";
-import { getRequirementsAction } from "../requirements/getRequirementsAction";
+} from "../../types/index.js";
+import { getRequirementsAction } from "../requirements/getRequirementsAction.js";
 
 /** Parameters for {@link vaultV1MigrateToV2}. */
 export interface VaultV1MigrateToV2Params {

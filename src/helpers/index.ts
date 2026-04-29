@@ -1,9 +1,9 @@
-export { computeReallocations } from "./computeReallocations";
-export { addTransactionMetadata } from "./metadata";
+export { computeReallocations } from "./computeReallocations.js";
+export { addTransactionMetadata } from "./metadata.js";
 export {
   computeMaxRepaySharePrice,
   computeMinBorrowSharePrice,
-} from "./slippage";
+} from "./slippage.js";
 export {
   validateAccrualPosition,
   validateChainId,
@@ -16,4 +16,4 @@ export {
   validateRepayShares,
   validateSlippageTolerance,
   validateUserAddress,
-} from "./validate";
+} from "./validate.js";

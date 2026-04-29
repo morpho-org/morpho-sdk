@@ -1,1 +1,1 @@
-export * from "./vaultV2";
+export * from "./vaultV2.js";

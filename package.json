@@ -3,9 +3,7 @@
   "description": "Abstraction layer for Morpho's complexity.",
   "version": "1.1.0",
   "author": "Morpho Association <contact@morpho.org>",
-  "contributors": [
-    "Foulks-Plb <https://x.com/FoulkPlb>"
-  ],
+  "contributors": ["Foulks-Plb <https://x.com/FoulkPlb>"],
   "repository": "github:morpho-org/morpho-sdk",
   "homepage": "https://github.com/morpho-org/morpho-sdk",
   "bugs": {
@@ -30,16 +28,16 @@
     "bundler"
   ],
   "packageManager": "pnpm@10.24.0+sha512.01ff8ae71b4419903b65c60fb2dc9d34cf8bb6e06d03bde112ef38f7a34d6904c424ba66bea5cdcf12890230bf39f9580473140ed9c946fef328b6e5238a345a",
-  "main": "./lib/index.js",
-  "types": "./lib/index.d.ts",
-  "files": [
-    "lib"
-  ],
+  "type": "module",
+  "main": "src/index.ts",
+  "files": ["lib"],
   "scripts": {
     "prepublish": "$npm_execpath build",
     "lint": "biome check",
     "prepare": "husky install",
-    "build": "tsc --noEmit && tsc --build tsconfig.build.json",
+    "build": "tsc --noEmit && $npm_execpath build:cjs && $npm_execpath build:esm",
+    "build:cjs": "tsc --build tsconfig.build.cjs.json && echo '{\"type\":\"commonjs\"}' > lib/cjs/package.json",
+    "build:esm": "tsc --build tsconfig.build.esm.json && echo '{\"type\":\"module\"}' > lib/esm/package.json",
     "link": "pnpm link --global",
     "unlink": "pnpm unlink --global",
     "build:link": "pnpm run build && pnpm link --global",
@@ -51,20 +49,27 @@
     "release": "changeset publish"
   },
   "devDependencies": {
-    "@biomejs/biome": "2.3.3",
+    "@biomejs/biome": "^1.9.4",
     "@changesets/cli": "^2.29.8",
     "@morpho-org/test": "2.7.1",
-    "@types/node": "^24.9.1",
+    "@types/node": "^24.10.2",
     "@vitest/coverage-v8": "3.2.4",
     "@vitest/ui": "3.2.4",
     "dotenv": "^17.2.3",
     "husky": "^9.1.7",
-    "typescript": "^5.7.2",
+    "typescript": "^5.9.3",
     "viem": "^2.48.1",
     "vitest": "^3.0.5"
   },
   "publishConfig": {
-    "access": "public"
+    "access": "public",
+    "exports": {
+      ".": {
+        "types": "./lib/esm/index.d.ts",
+        "import": "./lib/esm/index.js",
+        "require": "./lib/cjs/index.js"
+      }
+    }
   },
   "dependencies": {
     "@morpho-org/blue-sdk": "^5.23.0",

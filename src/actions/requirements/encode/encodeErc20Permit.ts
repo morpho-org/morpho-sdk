@@ -1,6 +1,6 @@
 import type { Address } from "@morpho-org/blue-sdk";
 import { fetchToken, getPermitTypedData } from "@morpho-org/blue-sdk-viem";
-import { deepFreeze, Time } from "@morpho-org/morpho-ts";
+import { Time, deepFreeze } from "@morpho-org/morpho-ts";
 import { type Client, verifyTypedData } from "viem";
 import { signTypedData } from "viem/actions";
 import {
@@ -10,7 +10,7 @@ import {
   MissingClientPropertyError,
   type PermitAction,
   type Requirement,
-} from "../../../types";
+} from "../../../types/index.js";
 
 interface EncodeErc20PermitParams {
   token: Address;

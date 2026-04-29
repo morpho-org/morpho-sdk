@@ -1,18 +1,16 @@
 {
-  "$schema": "https://biomejs.dev/schemas/2.3.3/schema.json",
-  "vcs": {
-    "enabled": true,
-    "clientKind": "git",
-    "useIgnoreFile": true
-  },
+  "$schema": "https://biomejs.dev/schemas/1.9.3/schema.json",
   "files": {
-    "ignoreUnknown": false
+    "ignore": ["lib", ".vscode", "cache", "coverage", "artifacts"]
   },
   "formatter": {
     "enabled": true,
     "formatWithErrors": false,
     "indentStyle": "space",
     "indentWidth": 2
+  },
+  "organizeImports": {
+    "enabled": true
   },
   "linter": {
     "enabled": true,
@@ -21,14 +19,6 @@
       "complexity": {
         "noForEach": "off",
         "noBannedTypes": "off"
-      },
-      "nursery": {
-        "useMaxParams": {
-          "level": "error",
-          "options": {
-            "max": 3
-          }
-        }
       },
       "correctness": {
         "noUnusedImports": "error",
@@ -45,19 +35,6 @@
         "useGetterReturn": "off",
         "noAssignInExpressions": "off",
         "noFallthroughSwitchClause": "off"
-      }
-    }
-  },
-  "javascript": {
-    "formatter": {
-      "quoteStyle": "double"
-    }
-  },
-  "assist": {
-    "enabled": true,
-    "actions": {
-      "source": {
-        "organizeImports": "on"
       }
     }
   }

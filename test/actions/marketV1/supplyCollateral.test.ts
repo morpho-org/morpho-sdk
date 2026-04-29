@@ -1,24 +1,24 @@
 import {
+  MathLib,
   addressesRegistry,
   getChainAddresses,
-  MathLib,
 } from "@morpho-org/blue-sdk";
 import { isHex, parseUnits } from "viem";
 import { mainnet } from "viem/chains";
 import { describe, expect } from "vitest";
 import {
+  MorphoClient,
   isRequirementApproval,
   isRequirementSignature,
-  MorphoClient,
   marketV1SupplyCollateral,
-} from "../../../src";
+} from "../../../src/index.js";
 import {
   CbbtcUsdcMarketV1,
   UsdcEurcvMarketV1,
   WethUsdsMarketV1,
-} from "../../fixtures/marketV1";
-import { testInvariants } from "../../helpers/invariants";
-import { test } from "../../setup";
+} from "../../fixtures/marketV1.js";
+import { testInvariants } from "../../helpers/invariants.js";
+import { test } from "../../setup.js";
 
 describe("SupplyCollateralMarketV1", () => {
   test("should create supply collateral bundle", async ({ client }) => {

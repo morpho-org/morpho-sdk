@@ -2,8 +2,8 @@ import {
   type AccrualVault,
   type AccrualVaultV2,
   DEFAULT_SLIPPAGE_TOLERANCE,
-  getChainAddresses,
   MathLib,
+  getChainAddresses,
 } from "@morpho-org/blue-sdk";
 import { fetchAccrualVault } from "@morpho-org/blue-sdk-viem";
 import { type Address, isAddressEqual } from "viem";
@@ -13,12 +13,13 @@ import {
   vaultV1MigrateToV2,
   vaultV1Redeem,
   vaultV1Withdraw,
-} from "../../actions";
-import { validateChainId, validateUserAddress } from "../../helpers";
+} from "../../actions/index.js";
 import {
   MAX_ABSOLUTE_SHARE_PRICE,
   MAX_SLIPPAGE_TOLERANCE,
-} from "../../helpers/constant";
+} from "../../helpers/constant.js";
+import { validateChainId, validateUserAddress } from "../../helpers/index.js";
+import type { FetchParameters } from "../../types/data.js";
 import {
   ChainIdMismatchError,
   ChainWNativeMissingError,
@@ -40,8 +41,7 @@ import {
   type VaultV1MigrateToV2Action,
   type VaultV1RedeemAction,
   type VaultV1WithdrawAction,
-} from "../../types";
-import type { FetchParameters } from "../../types/data";
+} from "../../types/index.js";
 
 export interface VaultV1Actions {
   /**

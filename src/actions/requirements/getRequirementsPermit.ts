@@ -1,6 +1,6 @@
 import { getChainAddresses } from "@morpho-org/blue-sdk";
 import type { Address, Client } from "viem";
-import { encodeErc20Permit } from "./encode";
+import { encodeErc20Permit } from "./encode/index.js";
 
 /**
  * Get token "requirement" for permit (EIP-2612).

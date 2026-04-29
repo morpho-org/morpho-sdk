@@ -1,15 +1,15 @@
 import { Market, MarketParams, MathLib } from "@morpho-org/blue-sdk";
 import { describe, expect, test } from "vitest";
-import { WethUsdsMarketV1 } from "../../test/fixtures/marketV1";
+import { WethUsdsMarketV1 } from "../../test/fixtures/marketV1.js";
 import {
   ExcessiveSlippageToleranceError,
   ShareDivideByZeroError,
-} from "../types";
-import { MAX_ABSOLUTE_SHARE_PRICE } from "./constant";
+} from "../types/index.js";
+import { MAX_ABSOLUTE_SHARE_PRICE } from "./constant.js";
 import {
   computeMaxRepaySharePrice,
   computeMinBorrowSharePrice,
-} from "./slippage";
+} from "./slippage.js";
 
 /** 1:1 share-to-asset ratio market for predictable results. */
 const normalMarket = new Market({

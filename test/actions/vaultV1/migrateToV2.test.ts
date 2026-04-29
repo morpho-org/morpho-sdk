@@ -1,17 +1,17 @@
-import { addressesRegistry, MathLib } from "@morpho-org/blue-sdk";
+import { MathLib, addressesRegistry } from "@morpho-org/blue-sdk";
 import { isHex, parseUnits } from "viem";
 import { mainnet } from "viem/chains";
 import { describe, expect } from "vitest";
 import {
+  MorphoClient,
   isRequirementApproval,
   isRequirementSignature,
-  MorphoClient,
   vaultV1MigrateToV2,
-} from "../../../src";
-import { SteakhouseUsdcVaultV1 } from "../../fixtures/vaultV1";
-import { KeyrockUsdcVaultV2 } from "../../fixtures/vaultV2";
-import { testInvariants } from "../../helpers/invariants";
-import { test } from "../../setup";
+} from "../../../src/index.js";
+import { SteakhouseUsdcVaultV1 } from "../../fixtures/vaultV1.js";
+import { KeyrockUsdcVaultV2 } from "../../fixtures/vaultV2.js";
+import { testInvariants } from "../../helpers/invariants.js";
+import { test } from "../../setup.js";
 
 describe("MigrateToV2 VaultV1", () => {
   test("should create migration bundle via entity", async ({ client }) => {

@@ -5,19 +5,19 @@ import { describe, expect, vi } from "vitest";
 import {
   UsdcEurcvMarketV1,
   WethUsdsMarketV1,
-} from "../../../test/fixtures/marketV1";
-import { test } from "../../../test/setup";
+} from "../../../test/fixtures/marketV1.js";
+import { test } from "../../../test/setup.js";
 import {
-  isRequirementApproval,
-  isRequirementSignature,
   NativeAmountOnNonWNativeCollateralError,
   NegativeNativeAmountError,
   NonPositiveAssetAmountError,
   ZeroCollateralAmountError,
-} from "../../types";
-import { getRequirements } from "../requirements";
-import * as getRequirementsActionModule from "../requirements/getRequirementsAction";
-import { marketV1SupplyCollateral } from "./supplyCollateral";
+  isRequirementApproval,
+  isRequirementSignature,
+} from "../../types/index.js";
+import * as getRequirementsActionModule from "../requirements/getRequirementsAction.js";
+import { getRequirements } from "../requirements/index.js";
+import { marketV1SupplyCollateral } from "./supplyCollateral.js";
 
 describe("marketV1SupplyCollateral unit tests", () => {
   const { wNative } = addressesRegistry[mainnet.id];

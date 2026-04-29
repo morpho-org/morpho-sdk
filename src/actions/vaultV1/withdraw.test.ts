@@ -3,10 +3,10 @@ import { describe, expect } from "vitest";
 import {
   GauntletWethVaultV1,
   SteakhouseUsdcVaultV1,
-} from "../../../test/fixtures/vaultV1";
-import { test } from "../../../test/setup";
-import { NonPositiveAssetAmountError } from "../../types";
-import { vaultV1Withdraw } from "./withdraw";
+} from "../../../test/fixtures/vaultV1.js";
+import { test } from "../../../test/setup.js";
+import { NonPositiveAssetAmountError } from "../../types/index.js";
+import { vaultV1Withdraw } from "./withdraw.js";
 
 describe("withdrawVaultV1 unit tests", () => {
   test("should create withdraw transaction with USDC vault", async ({

@@ -7,7 +7,7 @@ import {
   type Permit2Action,
   type PermitAction,
   type PermitArgs,
-} from "../../types";
+} from "../../types/index.js";
 
 interface GetRequirementsActionParams {
   chainId: number;

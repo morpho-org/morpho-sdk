@@ -3,9 +3,9 @@ import { Time } from "@morpho-org/morpho-ts";
 import { type Address, isHex } from "viem";
 import { mainnet } from "viem/chains";
 import { describe, expect } from "vitest";
-import { test } from "../../../../test/setup";
-import { AddressMismatchError } from "../../../types";
-import { encodeErc20Permit } from "./encodeErc20Permit";
+import { test } from "../../../../test/setup.js";
+import { AddressMismatchError } from "../../../types/index.js";
+import { encodeErc20Permit } from "./encodeErc20Permit.js";
 
 describe("encodeErc20Permit", () => {
   const {

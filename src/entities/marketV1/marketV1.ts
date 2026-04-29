@@ -30,7 +30,7 @@ import {
   marketV1SupplyCollateral,
   marketV1SupplyCollateralBorrow,
   marketV1WithdrawCollateral,
-} from "../../actions";
+} from "../../actions/index.js";
 import {
   computeMaxRepaySharePrice,
   computeMinBorrowSharePrice,
@@ -44,7 +44,8 @@ import {
   validateRepayShares,
   validateSlippageTolerance,
   validateUserAddress,
-} from "../../helpers";
+} from "../../helpers/index.js";
+import type { FetchParameters } from "../../types/data.js";
 import {
   type DepositAmountArgs,
   type ERC20ApprovalAction,
@@ -72,8 +73,7 @@ import {
   type VaultReallocation,
   WithdrawExceedsCollateralError,
   ZeroCollateralAmountError,
-} from "../../types";
-import type { FetchParameters } from "../../types/data";
+} from "../../types/index.js";
 
 export interface MarketV1Actions {
   /**

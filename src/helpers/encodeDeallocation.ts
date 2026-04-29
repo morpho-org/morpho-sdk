@@ -2,11 +2,14 @@ import { marketParamsAbi } from "@morpho-org/blue-sdk";
 import { vaultV2Abi } from "@morpho-org/blue-sdk-viem";
 import {
   type Address,
+  type Hex,
   encodeAbiParameters,
   encodeFunctionData,
-  type Hex,
 } from "viem";
-import { type Deallocation, NonPositiveAssetAmountError } from "../types";
+import {
+  type Deallocation,
+  NonPositiveAssetAmountError,
+} from "../types/index.js";
 
 /**
  * Encodes the adapter-specific `data` bytes for a `forceDeallocate` call.

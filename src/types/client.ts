@@ -4,8 +4,8 @@ import type {
   MarketV1Actions,
   VaultV1Actions,
   VaultV2Actions,
-} from "../entities";
-import type { Metadata } from "./index";
+} from "../entities/index.js";
+import type { Metadata } from "./index.js";
 
 export interface MorphoClientType {
   readonly viemClient: Client;

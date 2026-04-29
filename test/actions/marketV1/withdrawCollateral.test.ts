@@ -5,16 +5,16 @@ import { describe, expect } from "vitest";
 import {
   MissingAccrualPositionError,
   MorphoClient,
-  marketV1WithdrawCollateral,
   NonPositiveWithdrawCollateralAmountError,
   WithdrawExceedsCollateralError,
   WithdrawMakesPositionUnhealthyError,
-} from "../../../src";
-import { WethUsdsMarketV1 } from "../../fixtures/marketV1";
-import { testInvariants } from "../../helpers/invariants";
-import { borrow, supplyCollateral } from "../../helpers/marketV1";
+  marketV1WithdrawCollateral,
+} from "../../../src/index.js";
+import { WethUsdsMarketV1 } from "../../fixtures/marketV1.js";
+import { testInvariants } from "../../helpers/invariants.js";
+import { borrow, supplyCollateral } from "../../helpers/marketV1.js";
 
-import { test } from "../../setup";
+import { test } from "../../setup.js";
 
 describe("WithdrawCollateralMarketV1", () => {
   test("should create withdrawCollateral bundle", async ({ client }) => {

@@ -1,7 +1,11 @@
 import type { MarketParams } from "@morpho-org/blue-sdk";
 import type { Address, Client } from "viem";
-import { MorphoMarketV1, MorphoVaultV1, MorphoVaultV2 } from "../entities";
-import type { Metadata, MorphoClientType } from "../types";
+import {
+  MorphoMarketV1,
+  MorphoVaultV1,
+  MorphoVaultV2,
+} from "../entities/index.js";
+import type { Metadata, MorphoClientType } from "../types/index.js";
 
 export class MorphoClient implements MorphoClientType {
   readonly options: {

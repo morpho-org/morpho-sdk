@@ -1,24 +1,24 @@
-import { getChainAddresses, MathLib } from "@morpho-org/blue-sdk";
+import { MathLib, getChainAddresses } from "@morpho-org/blue-sdk";
 import { isHex, parseUnits } from "viem";
 import { mainnet } from "viem/chains";
 import { describe, expect } from "vitest";
 import {
-  isRequirementApproval,
-  isRequirementSignature,
   MorphoClient,
   NativeAmountOnNonWNativeVaultError,
   NegativeNativeAmountError,
+  ZeroDepositAmountError,
+  isRequirementApproval,
+  isRequirementSignature,
   vaultV1Deposit,
   vaultV2Deposit,
-  ZeroDepositAmountError,
-} from "../../src";
+} from "../../src/index.js";
 import {
   GauntletWethVaultV1,
   SteakhouseUsdcVaultV1,
-} from "../fixtures/vaultV1";
-import { KeyrockUsdcVaultV2, KpkWETHVaultV2 } from "../fixtures/vaultV2";
-import { testInvariants } from "../helpers/invariants";
-import { test } from "../setup";
+} from "../fixtures/vaultV1.js";
+import { KeyrockUsdcVaultV2, KpkWETHVaultV2 } from "../fixtures/vaultV2.js";
+import { testInvariants } from "../helpers/invariants.js";
+import { test } from "../setup.js";
 
 describe("WrapNative - VaultV1", () => {
   test("should deposit native ETH only in WETH vaultV1", async ({ client }) => {

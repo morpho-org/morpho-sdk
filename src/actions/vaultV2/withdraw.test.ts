@@ -3,10 +3,10 @@ import { describe, expect } from "vitest";
 import {
   KeyrockUsdcVaultV2,
   KpkWETHVaultV2,
-} from "../../../test/fixtures/vaultV2";
-import { test } from "../../../test/setup";
-import { NonPositiveAssetAmountError } from "../../types";
-import { vaultV2Withdraw } from "./withdraw";
+} from "../../../test/fixtures/vaultV2.js";
+import { test } from "../../../test/setup.js";
+import { NonPositiveAssetAmountError } from "../../types/index.js";
+import { vaultV2Withdraw } from "./withdraw.js";
 
 describe("withdrawVaultV2 unit tests", () => {
   test("should create withdraw transaction with USDC vault", async ({

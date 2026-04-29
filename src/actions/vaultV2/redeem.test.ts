@@ -1,9 +1,12 @@
-import { KeyrockUsdcVaultV2, KpkWETHVaultV2 } from "test/fixtures/vaultV2";
 import { parseUnits } from "viem";
 import { describe, expect } from "vitest";
-import { test } from "../../../test/setup";
-import { NonPositiveSharesAmountError } from "../../types";
-import { vaultV2Redeem } from "./redeem";
+import {
+  KeyrockUsdcVaultV2,
+  KpkWETHVaultV2,
+} from "../../../test/fixtures/vaultV2.js";
+import { test } from "../../../test/setup.js";
+import { NonPositiveSharesAmountError } from "../../types/index.js";
+import { vaultV2Redeem } from "./redeem.js";
 
 describe("redeemVaultV2 unit tests", () => {
   test("should create redeem transaction with USDC vault", async ({
