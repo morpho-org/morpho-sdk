@@ -11,7 +11,7 @@ import { describe, expect, test } from "vitest";
 import {
   CbbtcUsdcMarketV1,
   WethUsdsMarketV1,
-} from "../../test/fixtures/marketV1";
+} from "../../test/fixtures/marketV1.js";
 import {
   AccrualPositionUserMismatchError,
   AddressMismatchError,
@@ -32,8 +32,8 @@ import {
   UnsortedReallocationWithdrawalsError,
   type VaultReallocation,
   WithdrawMakesPositionUnhealthyError,
-} from "../types";
-import { MAX_SLIPPAGE_TOLERANCE } from "./constant";
+} from "../types/index.js";
+import { MAX_SLIPPAGE_TOLERANCE } from "./constant.js";
 import {
   validateAccrualPosition,
   validateChainId,
@@ -45,7 +45,7 @@ import {
   validateRepayShares,
   validateSlippageTolerance,
   validateUserAddress,
-} from "./validate";
+} from "./validate.js";
 
 const USER_A: Address = "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266";
 const USER_B: Address = "0x70997970C51812dc3A010C7d01b50e0d17dc79C8";

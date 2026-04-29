@@ -1,10 +1,10 @@
-import { MorphoClient, vaultV2Withdraw } from "src";
-import { KeyrockUsdcVaultV2 } from "test/fixtures/vaultV2";
-import { testInvariants } from "test/helpers/invariants";
 import { parseUnits } from "viem";
 import { mainnet } from "viem/chains";
 import { describe, expect } from "vitest";
-import { test } from "../../setup";
+import { MorphoClient, vaultV2Withdraw } from "../../../src/index.js";
+import { KeyrockUsdcVaultV2 } from "../../fixtures/vaultV2.js";
+import { testInvariants } from "../../helpers/invariants.js";
+import { test } from "../../setup.js";
 
 describe("Withdraw VaultV2", () => {
   test("should create redeem transaction", async ({ client }) => {

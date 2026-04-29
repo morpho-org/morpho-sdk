@@ -1,0 +1,29 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "rootDir": "src",
+    "module": "CommonJS",
+    "moduleResolution": "node10",
+    "outDir": "./lib/cjs",
+    "tsBuildInfoFile": "tsconfig.cjs.tsbuildinfo",
+    "paths": {
+      "@morpho-org/blue-sdk": [
+        "./node_modules/@morpho-org/blue-sdk/lib/esm/index.d.ts"
+      ],
+      "@morpho-org/blue-sdk-viem": [
+        "./node_modules/@morpho-org/blue-sdk-viem/lib/esm/index.d.ts"
+      ],
+      "@morpho-org/bundler-sdk-viem": [
+        "./node_modules/@morpho-org/bundler-sdk-viem/lib/esm/index.d.ts"
+      ],
+      "@morpho-org/morpho-ts": [
+        "./node_modules/@morpho-org/morpho-ts/lib/esm/index.d.ts"
+      ],
+      "@morpho-org/simulation-sdk": [
+        "./node_modules/@morpho-org/simulation-sdk/lib/esm/index.d.ts"
+      ]
+    }
+  },
+  "include": ["src"],
+  "exclude": ["**/*.test.ts"]
+}

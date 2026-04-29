@@ -10,16 +10,16 @@ import { mainnet } from "viem/chains";
 import { describe, expect } from "vitest";
 import {
   BorrowExceedsSafeLtvError,
-  computeMinBorrowSharePrice,
-  isRequirementAuthorization,
   MissingAccrualPositionError,
   MorphoClient,
+  computeMinBorrowSharePrice,
+  isRequirementAuthorization,
   marketV1Borrow,
-} from "../../../src";
-import { WethUsdsMarketV1 } from "../../fixtures/marketV1";
-import { testInvariants } from "../../helpers/invariants";
-import { supplyCollateral } from "../../helpers/marketV1";
-import { test } from "../../setup";
+} from "../../../src/index.js";
+import { WethUsdsMarketV1 } from "../../fixtures/marketV1.js";
+import { testInvariants } from "../../helpers/invariants.js";
+import { supplyCollateral } from "../../helpers/marketV1.js";
+import { test } from "../../setup.js";
 
 describe("BorrowMarketV1", () => {
   test("should create borrow bundle", async ({ client }) => {

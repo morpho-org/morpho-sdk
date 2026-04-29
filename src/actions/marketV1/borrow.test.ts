@@ -2,14 +2,14 @@ import { getChainAddresses } from "@morpho-org/blue-sdk";
 import { parseUnits } from "viem";
 import { mainnet } from "viem/chains";
 import { describe, expect } from "vitest";
-import { WethUsdsMarketV1 } from "../../../test/fixtures/marketV1";
+import { WethUsdsMarketV1 } from "../../../test/fixtures/marketV1.js";
 
-import { test } from "../../../test/setup";
+import { test } from "../../../test/setup.js";
 import {
   NonPositiveBorrowAmountError,
   NonPositiveMinBorrowSharePriceError,
-} from "../../types";
-import { marketV1Borrow } from "./borrow";
+} from "../../types/index.js";
+import { marketV1Borrow } from "./borrow.js";
 
 describe("marketV1Borrow unit tests", () => {
   const {

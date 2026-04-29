@@ -3,10 +3,10 @@ import { describe, expect } from "vitest";
 import {
   GauntletWethVaultV1,
   SteakhouseUsdcVaultV1,
-} from "../../../test/fixtures/vaultV1";
-import { test } from "../../../test/setup";
-import { NonPositiveSharesAmountError } from "../../types";
-import { vaultV1Redeem } from "./redeem";
+} from "../../../test/fixtures/vaultV1.js";
+import { test } from "../../../test/setup.js";
+import { NonPositiveSharesAmountError } from "../../types/index.js";
+import { vaultV1Redeem } from "./redeem.js";
 
 describe("redeemVaultV1 unit tests", () => {
   test("should create redeem transaction with USDC vault", async ({

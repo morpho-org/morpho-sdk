@@ -1,25 +1,25 @@
-import { addressesRegistry, MarketParams } from "@morpho-org/blue-sdk";
+import { MarketParams, addressesRegistry } from "@morpho-org/blue-sdk";
 import { parseUnits } from "viem";
 import { mainnet } from "viem/chains";
 import { describe, expect, vi } from "vitest";
 import {
   UsdcEurcvMarketV1,
   WethUsdsMarketV1,
-} from "../../../test/fixtures/marketV1";
-import { test } from "../../../test/setup";
+} from "../../../test/fixtures/marketV1.js";
+import { test } from "../../../test/setup.js";
 import {
-  isRequirementApproval,
-  isRequirementSignature,
   NativeAmountOnNonWNativeCollateralError,
   NegativeNativeAmountError,
   NonPositiveAssetAmountError,
   NonPositiveBorrowAmountError,
   NonPositiveMinBorrowSharePriceError,
   ZeroCollateralAmountError,
-} from "../../types";
-import { getRequirements } from "../requirements";
-import * as getRequirementsActionModule from "../requirements/getRequirementsAction";
-import { marketV1SupplyCollateralBorrow } from "./supplyCollateralBorrow";
+  isRequirementApproval,
+  isRequirementSignature,
+} from "../../types/index.js";
+import * as getRequirementsActionModule from "../requirements/getRequirementsAction.js";
+import { getRequirements } from "../requirements/index.js";
+import { marketV1SupplyCollateralBorrow } from "./supplyCollateralBorrow.js";
 
 describe("marketV1SupplyCollateralBorrow unit tests", () => {
   const { wNative } = addressesRegistry[mainnet.id];

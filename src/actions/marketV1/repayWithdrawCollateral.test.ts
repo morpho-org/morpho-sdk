@@ -2,8 +2,8 @@ import { getChainAddresses } from "@morpho-org/blue-sdk";
 import { parseUnits } from "viem";
 import { mainnet } from "viem/chains";
 import { describe, expect, vi } from "vitest";
-import { WethUsdsMarketV1 } from "../../../test/fixtures/marketV1";
-import { test } from "../../../test/setup";
+import { WethUsdsMarketV1 } from "../../../test/fixtures/marketV1.js";
+import { test } from "../../../test/setup.js";
 import {
   MutuallyExclusiveRepayAmountsError,
   NonPositiveRepayAmountError,
@@ -11,9 +11,9 @@ import {
   NonPositiveTransferAmountError,
   NonPositiveWithdrawCollateralAmountError,
   TransferAmountNotEqualToAssetsError,
-} from "../../types";
-import * as getRequirementsActionModule from "../requirements/getRequirementsAction";
-import { marketV1RepayWithdrawCollateral } from "./repayWithdrawCollateral";
+} from "../../types/index.js";
+import * as getRequirementsActionModule from "../requirements/getRequirementsAction.js";
+import { marketV1RepayWithdrawCollateral } from "./repayWithdrawCollateral.js";
 
 describe("marketV1RepayWithdrawCollateral unit tests", () => {
   const {

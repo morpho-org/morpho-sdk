@@ -12,9 +12,9 @@ import {
   WbtcUsdcSourceMarket,
   WethUsdsMarketV1,
   WstethUsdcSourceMarket,
-} from "../../test/fixtures/marketV1";
-import { MissingPublicAllocatorConfigError } from "../types";
-import { computeReallocations } from "./computeReallocations";
+} from "../../test/fixtures/marketV1.js";
+import { MissingPublicAllocatorConfigError } from "../types/index.js";
+import { computeReallocations } from "./computeReallocations.js";
 
 // --- Constants ---
 

@@ -1,6 +1,6 @@
 import { describe, expect } from "vitest";
-import { MorphoClient } from "../src/client";
-import { test } from "./setup";
+import { MorphoClient } from "../src/client/index.js";
+import { test } from "./setup.js";
 
 describe("MorphoClient", () => {
   test("should create a morpho client", ({ client }) => {

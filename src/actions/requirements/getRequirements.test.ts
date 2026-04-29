@@ -1,4 +1,4 @@
-import { addressesRegistry, Holding, MathLib } from "@morpho-org/blue-sdk";
+import { Holding, MathLib, addressesRegistry } from "@morpho-org/blue-sdk";
 import type { Address, Client } from "viem";
 import { mainnet } from "viem/chains";
 import { beforeEach, describe, expect, test, vi } from "vitest";
@@ -6,8 +6,8 @@ import {
   ChainIdMismatchError,
   isRequirementApproval,
   isRequirementSignature,
-} from "../../types";
-import { getRequirements } from "./getRequirements";
+} from "../../types/index.js";
+import { getRequirements } from "./getRequirements.js";
 
 vi.mock("@morpho-org/blue-sdk-viem", async (_importOriginal) => {
   return {

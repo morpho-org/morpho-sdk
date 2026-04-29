@@ -1,10 +1,10 @@
 import { parseUnits } from "viem";
 import { mainnet } from "viem/chains";
 import { describe, expect } from "vitest";
-import { MorphoClient, vaultV1Withdraw } from "../../../src";
-import { SteakhouseUsdcVaultV1 } from "../../fixtures/vaultV1";
-import { testInvariants } from "../../helpers/invariants";
-import { test } from "../../setup";
+import { MorphoClient, vaultV1Withdraw } from "../../../src/index.js";
+import { SteakhouseUsdcVaultV1 } from "../../fixtures/vaultV1.js";
+import { testInvariants } from "../../helpers/invariants.js";
+import { test } from "../../setup.js";
 
 describe("Withdraw VaultV1", () => {
   test("should create withdraw transaction", async ({ client }) => {

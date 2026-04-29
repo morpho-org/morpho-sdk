@@ -1,13 +1,13 @@
 import { vaultV2Abi } from "@morpho-org/blue-sdk-viem";
 import { deepFreeze } from "@morpho-org/morpho-ts";
 import { type Address, encodeFunctionData } from "viem";
-import { addTransactionMetadata } from "../../helpers";
+import { addTransactionMetadata } from "../../helpers/index.js";
 import {
   type Metadata,
   NonPositiveSharesAmountError,
   type Transaction,
   type VaultV2RedeemAction,
-} from "../../types";
+} from "../../types/index.js";
 
 export interface VaultV2RedeemParams {
   vault: {

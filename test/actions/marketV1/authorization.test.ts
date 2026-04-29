@@ -2,10 +2,13 @@ import { getChainAddresses } from "@morpho-org/blue-sdk";
 import { parseUnits } from "viem";
 import { mainnet } from "viem/chains";
 import { describe, expect } from "vitest";
-import { isRequirementAuthorization, MorphoClient } from "../../../src";
-import { WethUsdsMarketV1 } from "../../fixtures/marketV1";
-import { supplyCollateral } from "../../helpers/marketV1";
-import { test } from "../../setup";
+import {
+  MorphoClient,
+  isRequirementAuthorization,
+} from "../../../src/index.js";
+import { WethUsdsMarketV1 } from "../../fixtures/marketV1.js";
+import { supplyCollateral } from "../../helpers/marketV1.js";
+import { test } from "../../setup.js";
 
 describe("AuthorizationMarketV1", () => {
   describe("authorization requirements", () => {

@@ -6,7 +6,7 @@ import {
   MissingPublicAllocatorConfigError,
   type ReallocationComputeOptions,
   type VaultReallocation,
-} from "../types";
+} from "../types/index.js";
 
 /**
  * Computes vault reallocations for a borrow operation on a target market.
