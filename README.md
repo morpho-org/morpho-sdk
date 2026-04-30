@@ -1,5 +1,8 @@
 # @morpho-org/morpho-sdk
 
+> [!WARNING]
+> **This repository is deprecated.** Development has moved to the [`morpho-org/sdks` monorepo](https://github.com/morpho-org/sdks/tree/main/packages/morpho-sdk). Please use that package for all new integrations and updates — this repo will no longer receive fixes or new features.
+
 [![npm version](https://img.shields.io/npm/v/@morpho-org/morpho-sdk.svg)](https://www.npmjs.com/package/@morpho-org/morpho-sdk)
 [![TypeScript](https://img.shields.io/badge/TypeScript-strict-blue.svg)](https://www.typescriptlang.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](./LICENSE)
