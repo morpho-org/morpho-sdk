@@ -4,8 +4,8 @@ import {
   ApprovalAmountLessThanSpendAmountError,
   type ERC20ApprovalAction,
   type Transaction,
-} from "../../types";
-import { encodeErc20Approval } from "./encode/encodeErc20Approval";
+} from "../../types/index.js";
+import { encodeErc20Approval } from "./encode/encodeErc20Approval.js";
 
 /**
  * Get token "requirement" for approval.

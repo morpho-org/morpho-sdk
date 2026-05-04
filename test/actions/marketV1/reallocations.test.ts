@@ -6,25 +6,25 @@ import { mainnet } from "viem/chains";
 import { describe, expect } from "vitest";
 import {
   EmptyReallocationWithdrawalsError,
-  isRequirementApproval,
-  isRequirementAuthorization,
   MorphoClient,
-  marketV1Borrow,
-  marketV1SupplyCollateralBorrow,
   NegativeReallocationFeeError,
   NonPositiveReallocationAmountError,
   ReallocationWithdrawalOnTargetMarketError,
-} from "../../../src";
-import type { VaultReallocation } from "../../../src/types";
+  isRequirementApproval,
+  isRequirementAuthorization,
+  marketV1Borrow,
+  marketV1SupplyCollateralBorrow,
+} from "../../../src/index.js";
+import type { VaultReallocation } from "../../../src/types/index.js";
 import {
   CbbtcUsdcMarketV1,
   WbtcUsdcSourceMarket,
   WstethUsdcSourceMarket,
-} from "../../fixtures/marketV1";
-import { SteakhouseUsdcVaultV1 } from "../../fixtures/vaultV1";
-import { testInvariants } from "../../helpers/invariants";
-import { supplyCollateral } from "../../helpers/marketV1";
-import { test } from "../../setup";
+} from "../../fixtures/marketV1.js";
+import { SteakhouseUsdcVaultV1 } from "../../fixtures/vaultV1.js";
+import { testInvariants } from "../../helpers/invariants.js";
+import { supplyCollateral } from "../../helpers/marketV1.js";
+import { test } from "../../setup.js";
 
 /** PublicAllocator admin for the Steakhouse vault at the fork block. */
 const PA_ADMIN: Address = "0x9E9110cFd24cd851ea5bc73a27975B33E308f9e1";

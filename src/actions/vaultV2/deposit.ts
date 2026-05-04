@@ -2,7 +2,7 @@ import { getChainAddresses } from "@morpho-org/blue-sdk";
 import { type Action, BundlerAction } from "@morpho-org/bundler-sdk-viem";
 import { deepFreeze, isDefined } from "@morpho-org/morpho-ts";
 import { type Address, isAddressEqual } from "viem";
-import { addTransactionMetadata } from "../../helpers";
+import { addTransactionMetadata } from "../../helpers/index.js";
 import {
   ChainWNativeMissingError,
   type DepositAmountArgs,
@@ -15,8 +15,8 @@ import {
   type Transaction,
   type VaultV2DepositAction,
   ZeroDepositAmountError,
-} from "../../types";
-import { getRequirementsAction } from "../requirements/getRequirementsAction";
+} from "../../types/index.js";
+import { getRequirementsAction } from "../requirements/getRequirementsAction.js";
 
 export interface VaultV2DepositParams {
   vault: {

@@ -4,9 +4,9 @@ import type {
   ERC20ApprovalAction,
   Requirement,
   Transaction,
-} from "../../types";
-import { encodeErc20Permit2 } from "./encode/encodeErc20Permit2";
-import { getRequirementsApproval } from "./getRequirementsApproval";
+} from "../../types/index.js";
+import { encodeErc20Permit2 } from "./encode/encodeErc20Permit2.js";
+import { getRequirementsApproval } from "./getRequirementsApproval.js";
 
 /**
  * Get token "requirement" for permit2.

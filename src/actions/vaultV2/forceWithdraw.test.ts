@@ -1,12 +1,12 @@
 import { MarketParams } from "@morpho-org/blue-sdk";
 import { type Address, isHex, parseUnits } from "viem";
 import { describe, expect } from "vitest";
-import { test } from "../../../test/setup";
+import { test } from "../../../test/setup.js";
 import {
   EmptyDeallocationsError,
   NonPositiveAssetAmountError,
-} from "../../types";
-import { vaultV2ForceWithdraw } from "./forceWithdraw";
+} from "../../types/index.js";
+import { vaultV2ForceWithdraw } from "./forceWithdraw.js";
 
 describe("forceWithdrawVaultV2 unit tests", () => {
   const mockVaultAddress: Address =
@@ -17,9 +17,9 @@ describe("forceWithdrawVaultV2 unit tests", () => {
     "0x0000000000000000000000000000000000000003";
 
   const mockMarketParams = new MarketParams({
-    loanToken: "0x000000000000000000000000000000000000000a",
+    loanToken: "0x000000000000000000000000000000000000000A",
     collateralToken: "0x000000000000000000000000000000000000000b",
-    oracle: "0x000000000000000000000000000000000000000c",
+    oracle: "0x000000000000000000000000000000000000000C",
     irm: "0x000000000000000000000000000000000000000d",
     lltv: parseUnits("0.8", 18),
   });

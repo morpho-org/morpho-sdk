@@ -1,9 +1,9 @@
 import {
   type AccrualPosition,
-  getChainAddresses,
   type MarketId,
   MathLib,
   ORACLE_PRICE_SCALE,
+  getChainAddresses,
 } from "@morpho-org/blue-sdk";
 import { isDefined } from "@morpho-org/morpho-ts";
 import { type Address, isAddressEqual } from "viem";
@@ -34,8 +34,8 @@ import {
   type VaultReallocation,
   WithdrawExceedsCollateralError,
   WithdrawMakesPositionUnhealthyError,
-} from "../types";
-import { DEFAULT_LLTV_BUFFER, MAX_SLIPPAGE_TOLERANCE } from "./constant";
+} from "../types/index.js";
+import { DEFAULT_LLTV_BUFFER, MAX_SLIPPAGE_TOLERANCE } from "./constant.js";
 
 /**
  * Validates that the client has a connected account AND that it matches

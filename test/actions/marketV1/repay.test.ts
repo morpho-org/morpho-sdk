@@ -8,21 +8,21 @@ import { parseUnits } from "viem";
 import { mainnet } from "viem/chains";
 import { describe, expect } from "vitest";
 import {
-  computeMaxRepaySharePrice,
-  isRequirementApproval,
   MissingAccrualPositionError,
   MorphoClient,
-  marketV1Repay,
   NonPositiveRepayAmountError,
   RepayExceedsDebtError,
   RepaySharesExceedDebtError,
   ShareDivideByZeroError,
-} from "../../../src";
-import { WethUsdsMarketV1 } from "../../fixtures/marketV1";
-import { testInvariants } from "../../helpers/invariants";
-import { borrow, supplyCollateral } from "../../helpers/marketV1";
+  computeMaxRepaySharePrice,
+  isRequirementApproval,
+  marketV1Repay,
+} from "../../../src/index.js";
+import { WethUsdsMarketV1 } from "../../fixtures/marketV1.js";
+import { testInvariants } from "../../helpers/invariants.js";
+import { borrow, supplyCollateral } from "../../helpers/marketV1.js";
 
-import { test } from "../../setup";
+import { test } from "../../setup.js";
 
 describe("RepayMarketV1", () => {
   test("should create repay bundle (by assets)", async ({ client }) => {

@@ -1,6 +1,6 @@
 import type { Client } from "viem";
-import type { Metadata } from "../types";
-import { MorphoClient } from "./morphoClient";
+import type { Metadata } from "../types/index.js";
+import { MorphoClient } from "./morphoClient.js";
 
 /**
  * Morpho extension for viem clients.

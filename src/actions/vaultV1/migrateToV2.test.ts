@@ -3,23 +3,23 @@ import { describe, expect, vi } from "vitest";
 import {
   GauntletWethVaultV1,
   SteakhouseUsdcVaultV1,
-} from "../../../test/fixtures/vaultV1";
+} from "../../../test/fixtures/vaultV1.js";
 import {
   KeyrockUsdcVaultV2,
   KpkWETHVaultV2,
-} from "../../../test/fixtures/vaultV2";
-import { test } from "../../../test/setup";
+} from "../../../test/fixtures/vaultV2.js";
+import { test } from "../../../test/setup.js";
 import {
   DepositAssetMismatchError,
-  isRequirementApproval,
-  isRequirementSignature,
   NegativeMinSharePriceError,
   NonPositiveMaxSharePriceError,
   NonPositiveSharesAmountError,
-} from "../../types";
-import { getRequirements } from "../requirements";
-import * as getRequirementsActionModule from "../requirements/getRequirementsAction";
-import { vaultV1MigrateToV2 } from "./migrateToV2";
+  isRequirementApproval,
+  isRequirementSignature,
+} from "../../types/index.js";
+import * as getRequirementsActionModule from "../requirements/getRequirementsAction.js";
+import { getRequirements } from "../requirements/index.js";
+import { vaultV1MigrateToV2 } from "./migrateToV2.js";
 
 describe("vaultV1MigrateToV2 unit tests", () => {
   test("should create migrate transaction for USDC vaults", async ({

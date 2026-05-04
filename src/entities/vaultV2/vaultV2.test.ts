@@ -4,16 +4,16 @@ import { describe, expect } from "vitest";
 import {
   KeyrockUsdcVaultV2,
   KpkWETHVaultV2,
-} from "../../../test/fixtures/vaultV2";
-import { test } from "../../../test/setup";
-import { MorphoClient } from "../../client";
-import { MAX_SLIPPAGE_TOLERANCE } from "../../helpers/constant";
+} from "../../../test/fixtures/vaultV2.js";
+import { test } from "../../../test/setup.js";
+import { MorphoClient } from "../../client/index.js";
+import { MAX_SLIPPAGE_TOLERANCE } from "../../helpers/constant.js";
 import {
   ExcessiveSlippageToleranceError,
   NativeAmountOnNonWNativeVaultError,
   NegativeNativeAmountError,
   NegativeSlippageToleranceError,
-} from "../../types";
+} from "../../types/index.js";
 
 describe("MorphoVaultV2 entity tests", () => {
   describe("slippageTolerance boundary", () => {

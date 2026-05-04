@@ -1,7 +1,7 @@
 import type { AnvilTestClient } from "@morpho-org/test";
 import { createViemTest } from "@morpho-org/test/vitest";
 import { mainnet } from "viem/chains";
-import { env } from "./env";
+import { env } from "./env.js";
 
 /**
  * This test will run on `mainnet`

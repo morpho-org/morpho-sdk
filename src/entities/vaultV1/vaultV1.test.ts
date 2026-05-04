@@ -5,23 +5,23 @@ import { describe, expect } from "vitest";
 import {
   GauntletWethVaultV1,
   SteakhouseUsdcVaultV1,
-} from "../../../test/fixtures/vaultV1";
+} from "../../../test/fixtures/vaultV1.js";
 import {
   KeyrockUsdcVaultV2,
   KpkWETHVaultV2,
-} from "../../../test/fixtures/vaultV2";
-import { test } from "../../../test/setup";
-import { MorphoClient } from "../../client";
-import { MAX_SLIPPAGE_TOLERANCE } from "../../helpers/constant";
+} from "../../../test/fixtures/vaultV2.js";
+import { test } from "../../../test/setup.js";
+import { MorphoClient } from "../../client/index.js";
+import { MAX_SLIPPAGE_TOLERANCE } from "../../helpers/constant.js";
 import {
   AddressMismatchError,
   ExcessiveSlippageToleranceError,
-  isRequirementApproval,
   NativeAmountOnNonWNativeVaultError,
   NegativeNativeAmountError,
   NegativeSlippageToleranceError,
   VaultAssetMismatchError,
-} from "../../types";
+  isRequirementApproval,
+} from "../../types/index.js";
 
 describe("MorphoVaultV1 entity tests", () => {
   describe("slippageTolerance boundary", () => {

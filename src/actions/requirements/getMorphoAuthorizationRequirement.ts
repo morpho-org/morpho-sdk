@@ -7,7 +7,7 @@ import {
   ChainIdMismatchError,
   type MorphoAuthorizationAction,
   type Transaction,
-} from "../../types";
+} from "../../types/index.js";
 
 /**
  * Checks whether GeneralAdapter1 is authorized on Morpho for the given user.

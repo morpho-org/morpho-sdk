@@ -1,7 +1,7 @@
 import type { MarketParams } from "@morpho-org/blue-sdk";
 import type { Action } from "@morpho-org/bundler-sdk-viem";
-import { validateReallocations } from "../../helpers";
-import type { VaultReallocation } from "../../types";
+import { validateReallocations } from "../../helpers/index.js";
+import type { VaultReallocation } from "../../types/index.js";
 
 /**
  * Builds reallocation bundler actions and computes the total fee.

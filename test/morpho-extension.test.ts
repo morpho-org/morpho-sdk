@@ -1,7 +1,7 @@
 import { mainnet } from "viem/chains";
 import { describe, expect } from "vitest";
-import { morphoViemExtension } from "../src/client";
-import { test } from "./setup";
+import { morphoViemExtension } from "../src/client/index.js";
+import { test } from "./setup.js";
 
 describe("Morpho viem extension", () => {
   test("should extend viem client with morpho namespace", ({ client }) => {

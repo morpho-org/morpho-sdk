@@ -2,7 +2,7 @@ import { addressesRegistry } from "@morpho-org/blue-sdk";
 import { decodeFunctionData, erc20Abi, isHex } from "viem";
 import { mainnet } from "viem/chains";
 import { describe, expect, test } from "vitest";
-import { encodeErc20Approval } from "./encodeErc20Approval";
+import { encodeErc20Approval } from "./encodeErc20Approval.js";
 
 describe("encodeErc20Approval", () => {
   const {

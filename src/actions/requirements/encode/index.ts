@@ -1,3 +1,3 @@
-export * from "./encodeErc20Approval";
-export * from "./encodeErc20Permit";
-export * from "./encodeErc20Permit2";
+export * from "./encodeErc20Approval.js";
+export * from "./encodeErc20Permit.js";
+export * from "./encodeErc20Permit2.js";

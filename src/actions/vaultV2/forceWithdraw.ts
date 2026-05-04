@@ -1,8 +1,8 @@
 import { vaultV2Abi } from "@morpho-org/blue-sdk-viem";
 import { deepFreeze } from "@morpho-org/morpho-ts";
-import { type Address, encodeFunctionData, type Hex } from "viem";
-import { addTransactionMetadata } from "../../helpers";
-import { encodeForceDeallocateCall } from "../../helpers/encodeDeallocation";
+import { type Address, type Hex, encodeFunctionData } from "viem";
+import { encodeForceDeallocateCall } from "../../helpers/encodeDeallocation.js";
+import { addTransactionMetadata } from "../../helpers/index.js";
 import {
   type Deallocation,
   EmptyDeallocationsError,
@@ -10,7 +10,7 @@ import {
   NonPositiveAssetAmountError,
   type Transaction,
   type VaultV2ForceWithdrawAction,
-} from "../../types";
+} from "../../types/index.js";
 
 export interface VaultV2ForceWithdrawParams {
   vault: {

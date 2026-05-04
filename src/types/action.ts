@@ -1,5 +1,5 @@
 import type { Address, Client, Hex } from "viem";
-import type { Deallocation } from "./deallocation";
+import type { Deallocation } from "./deallocation.js";
 
 export interface BaseAction<
   TType extends string = string,

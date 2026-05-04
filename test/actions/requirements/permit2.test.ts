@@ -1,20 +1,20 @@
-import { addressesRegistry, MathLib } from "@morpho-org/blue-sdk";
+import { MathLib, addressesRegistry } from "@morpho-org/blue-sdk";
+import { isHex, parseUnits } from "viem";
+import { mainnet } from "viem/chains";
+import { describe, expect } from "vitest";
 import {
+  MorphoClient,
   isRequirementApproval,
   isRequirementSignature,
-  MorphoClient,
-} from "src";
+} from "../../../src/index.js";
 import {
   KeyrockUsdcVaultV2,
   KpkWETHVaultV2,
   Re7UsdtVaultV2,
-} from "test/fixtures/vaultV2";
-import { testInvariants } from "test/helpers/invariants";
-import { createVaultV2 } from "test/helpers/vaultV2";
-import { isHex, parseUnits } from "viem";
-import { mainnet } from "viem/chains";
-import { describe, expect } from "vitest";
-import { test } from "../../setup";
+} from "../../fixtures/vaultV2.js";
+import { testInvariants } from "../../helpers/invariants.js";
+import { createVaultV2 } from "../../helpers/vaultV2.js";
+import { test } from "../../setup.js";
 
 describe("Permit2", () => {
   const {

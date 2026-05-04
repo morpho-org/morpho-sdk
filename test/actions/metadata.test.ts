@@ -1,11 +1,11 @@
 import { Time } from "@morpho-org/morpho-ts";
-import { KeyrockUsdcVaultV2 } from "test/fixtures/vaultV2";
-import { testInvariants } from "test/helpers/invariants";
 import { parseUnits } from "viem";
 import { mainnet } from "viem/chains";
 import { describe, expect } from "vitest";
-import { isRequirementApproval, MorphoClient } from "../../src";
-import { test } from "../setup";
+import { MorphoClient, isRequirementApproval } from "../../src/index.js";
+import { KeyrockUsdcVaultV2 } from "../fixtures/vaultV2.js";
+import { testInvariants } from "../helpers/invariants.js";
+import { test } from "../setup.js";
 
 describe("Metadata", () => {
   test("should create deposit bundle with origin and timestamp metadata", async ({
@@ -48,7 +48,7 @@ describe("Metadata", () => {
 
         const timestampHex = tx_1.data.slice(position - 8, position);
         expect(timestampHex).toMatch(/^[0-9a-fA-F]{8}$/);
-        const timestampNumber = parseInt(timestampHex, 16);
+        const timestampNumber = Number.parseInt(timestampHex, 16);
         expect(typeof timestampNumber).toBe("number");
         expect(timestampNumber).toBeLessThanOrEqual(Number(Time.timestamp()));
 

@@ -6,20 +6,20 @@ import { describe, expect, vi } from "vitest";
 import {
   KeyrockUsdcVaultV2,
   KpkWETHVaultV2,
-} from "../../../test/fixtures/vaultV2";
-import { test } from "../../../test/setup";
+} from "../../../test/fixtures/vaultV2.js";
+import { test } from "../../../test/setup.js";
 import {
   DepositAmountMismatchError,
   DepositAssetMismatchError,
-  isRequirementApproval,
-  isRequirementSignature,
   NonPositiveAssetAmountError,
   NonPositiveMaxSharePriceError,
   ZeroDepositAmountError,
-} from "../../types";
-import { getRequirements } from "../requirements";
-import * as getRequirementsActionModule from "../requirements/getRequirementsAction";
-import { vaultV2Deposit } from "./deposit";
+  isRequirementApproval,
+  isRequirementSignature,
+} from "../../types/index.js";
+import * as getRequirementsActionModule from "../requirements/getRequirementsAction.js";
+import { getRequirements } from "../requirements/index.js";
+import { vaultV2Deposit } from "./deposit.js";
 
 describe("depositVaultV2 unit tests", () => {
   const { dai, usdc, wNative } = addressesRegistry[mainnet.id];

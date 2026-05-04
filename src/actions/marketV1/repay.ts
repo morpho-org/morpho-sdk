@@ -1,15 +1,18 @@
-import { getChainAddresses, type MarketParams } from "@morpho-org/blue-sdk";
+import { type MarketParams, getChainAddresses } from "@morpho-org/blue-sdk";
 import { type Action, BundlerAction } from "@morpho-org/bundler-sdk-viem";
 import { deepFreeze } from "@morpho-org/morpho-ts";
 import { type Address, maxUint256 } from "viem";
-import { addTransactionMetadata, validateRepayParams } from "../../helpers";
+import {
+  addTransactionMetadata,
+  validateRepayParams,
+} from "../../helpers/index.js";
 import type {
   MarketV1RepayAction,
   Metadata,
   RequirementSignature,
   Transaction,
-} from "../../types";
-import { getRequirementsAction } from "../requirements/getRequirementsAction";
+} from "../../types/index.js";
+import { getRequirementsAction } from "../requirements/getRequirementsAction.js";
 
 /** Parameters for {@link marketV1Repay}. */
 export interface MarketV1RepayParams {

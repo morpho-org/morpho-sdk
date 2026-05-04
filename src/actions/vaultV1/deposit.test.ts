@@ -6,20 +6,20 @@ import { describe, expect, vi } from "vitest";
 import {
   GauntletWethVaultV1,
   SteakhouseUsdcVaultV1,
-} from "../../../test/fixtures/vaultV1";
-import { test } from "../../../test/setup";
+} from "../../../test/fixtures/vaultV1.js";
+import { test } from "../../../test/setup.js";
 import {
   DepositAmountMismatchError,
   DepositAssetMismatchError,
-  isRequirementApproval,
-  isRequirementSignature,
   NonPositiveAssetAmountError,
   NonPositiveMaxSharePriceError,
   ZeroDepositAmountError,
-} from "../../types";
-import { getRequirements } from "../requirements";
-import * as getRequirementsActionModule from "../requirements/getRequirementsAction";
-import { vaultV1Deposit } from "./deposit";
+  isRequirementApproval,
+  isRequirementSignature,
+} from "../../types/index.js";
+import * as getRequirementsActionModule from "../requirements/getRequirementsAction.js";
+import { getRequirements } from "../requirements/index.js";
+import { vaultV1Deposit } from "./deposit.js";
 
 describe("depositVaultV1 unit tests", () => {
   const { dai, usdc, wNative } = addressesRegistry[mainnet.id];

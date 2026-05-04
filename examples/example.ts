@@ -6,10 +6,10 @@
  */
 
 import dotenv from "dotenv";
-import { type Address, createWalletClient, http, parseUnits } from "viem";
+import { http, type Address, createWalletClient, parseUnits } from "viem";
 import { mainnet } from "viem/chains";
-import { MorphoClient } from "../src/client";
-import { env } from "../test/env";
+import { MorphoClient } from "../src/client/index.js";
+import { env } from "../test/env.js";
 
 // Load environment variables
 dotenv.config();

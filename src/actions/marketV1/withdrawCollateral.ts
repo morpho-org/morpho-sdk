@@ -1,14 +1,14 @@
-import { getChainAddresses, type MarketParams } from "@morpho-org/blue-sdk";
+import { type MarketParams, getChainAddresses } from "@morpho-org/blue-sdk";
 import { blueAbi } from "@morpho-org/blue-sdk-viem";
 import { deepFreeze } from "@morpho-org/morpho-ts";
 import { type Address, encodeFunctionData } from "viem";
-import { addTransactionMetadata } from "../../helpers";
+import { addTransactionMetadata } from "../../helpers/index.js";
 import {
   type MarketV1WithdrawCollateralAction,
   type Metadata,
   NonPositiveWithdrawCollateralAmountError,
   type Transaction,
-} from "../../types";
+} from "../../types/index.js";
 
 /** Parameters for {@link marketV1WithdrawCollateral}. */
 export interface MarketV1WithdrawCollateralParams {

@@ -1,6 +1,6 @@
 import { Time } from "@morpho-org/morpho-ts";
-import { type Address, concatHex, type Hex, isHex, numberToHex } from "viem";
-import type { Metadata } from "../types";
+import { type Address, type Hex, concatHex, isHex, numberToHex } from "viem";
+import type { Metadata } from "../types/index.js";
 
 /**
  * Adds metadata to a transaction object by concatenating additional

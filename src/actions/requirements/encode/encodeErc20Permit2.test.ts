@@ -1,11 +1,11 @@
-import { addressesRegistry, MathLib } from "@morpho-org/blue-sdk";
+import { MathLib, addressesRegistry } from "@morpho-org/blue-sdk";
 import { Time } from "@morpho-org/morpho-ts";
 import { type Address, isHex } from "viem";
 import { mainnet } from "viem/chains";
 import { describe, expect } from "vitest";
-import { test } from "../../../../test/setup";
-import { AddressMismatchError } from "../../../types";
-import { encodeErc20Permit2 } from "./encodeErc20Permit2";
+import { test } from "../../../../test/setup.js";
+import { AddressMismatchError } from "../../../types/index.js";
+import { encodeErc20Permit2 } from "./encodeErc20Permit2.js";
 
 describe("encodeErc20Permit2", () => {
   const {

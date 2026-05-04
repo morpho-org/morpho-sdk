@@ -1,11 +1,11 @@
-import { getChainAddresses, type MarketParams } from "@morpho-org/blue-sdk";
+import { type MarketParams, getChainAddresses } from "@morpho-org/blue-sdk";
 import { type Action, BundlerAction } from "@morpho-org/bundler-sdk-viem";
 import { deepFreeze } from "@morpho-org/morpho-ts";
 import type { Address } from "viem";
 import {
   addTransactionMetadata,
   validateNativeCollateral,
-} from "../../helpers";
+} from "../../helpers/index.js";
 import {
   type DepositAmountArgs,
   type MarketV1SupplyCollateralBorrowAction,
@@ -18,9 +18,9 @@ import {
   type Transaction,
   type VaultReallocation,
   ZeroCollateralAmountError,
-} from "../../types";
-import { getRequirementsAction } from "../requirements/getRequirementsAction";
-import { buildReallocationActions } from "./buildReallocationActions";
+} from "../../types/index.js";
+import { getRequirementsAction } from "../requirements/getRequirementsAction.js";
+import { buildReallocationActions } from "./buildReallocationActions.js";
 
 /** Parameters for {@link marketV1SupplyCollateralBorrow}. */
 export interface MarketV1SupplyCollateralBorrowParams {

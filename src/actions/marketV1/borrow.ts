@@ -2,7 +2,7 @@ import type { MarketParams } from "@morpho-org/blue-sdk";
 import { type Action, BundlerAction } from "@morpho-org/bundler-sdk-viem";
 import { deepFreeze } from "@morpho-org/morpho-ts";
 import type { Address } from "viem";
-import { addTransactionMetadata } from "../../helpers";
+import { addTransactionMetadata } from "../../helpers/index.js";
 import {
   type MarketV1BorrowAction,
   type Metadata,
@@ -10,8 +10,8 @@ import {
   NonPositiveMinBorrowSharePriceError,
   type Transaction,
   type VaultReallocation,
-} from "../../types";
-import { buildReallocationActions } from "./buildReallocationActions";
+} from "../../types/index.js";
+import { buildReallocationActions } from "./buildReallocationActions.js";
 
 /** Parameters for {@link marketV1Borrow}. */
 export interface MarketV1BorrowParams {

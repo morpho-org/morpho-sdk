@@ -1,2 +1,2 @@
-export * from "./morphoClient";
-export * from "./morphoViemExtension";
+export * from "./morphoClient.js";
+export * from "./morphoViemExtension.js";

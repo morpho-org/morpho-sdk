@@ -2,10 +2,10 @@ import { getChainAddresses } from "@morpho-org/blue-sdk";
 import { parseUnits } from "viem";
 import { mainnet } from "viem/chains";
 import { describe, expect } from "vitest";
-import { WethUsdsMarketV1 } from "../../../test/fixtures/marketV1";
-import { test } from "../../../test/setup";
-import { NonPositiveWithdrawCollateralAmountError } from "../../types";
-import { marketV1WithdrawCollateral } from "./withdrawCollateral";
+import { WethUsdsMarketV1 } from "../../../test/fixtures/marketV1.js";
+import { test } from "../../../test/setup.js";
+import { NonPositiveWithdrawCollateralAmountError } from "../../types/index.js";
+import { marketV1WithdrawCollateral } from "./withdrawCollateral.js";
 
 describe("marketV1WithdrawCollateral unit tests", () => {
   const { morpho } = getChainAddresses(mainnet.id);

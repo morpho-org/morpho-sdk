@@ -2,13 +2,13 @@ import { parseUnits } from "viem";
 import { mainnet } from "viem/chains";
 import { describe, expect } from "vitest";
 import {
-  isRequirementApproval,
   MorphoClient,
+  isRequirementApproval,
   vaultV1Redeem,
-} from "../../../src";
-import { SteakhouseUsdcVaultV1 } from "../../fixtures/vaultV1";
-import { testInvariants } from "../../helpers/invariants";
-import { test } from "../../setup";
+} from "../../../src/index.js";
+import { SteakhouseUsdcVaultV1 } from "../../fixtures/vaultV1.js";
+import { testInvariants } from "../../helpers/invariants.js";
+import { test } from "../../setup.js";
 
 describe("Redeem VaultV1", () => {
   test("should create redeem transaction", async ({ client }) => {

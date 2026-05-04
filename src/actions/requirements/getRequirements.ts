@@ -7,10 +7,10 @@ import {
   type ERC20ApprovalAction,
   type Requirement,
   type Transaction,
-} from "../../types";
-import { getRequirementsApproval } from "./getRequirementsApproval";
-import { getRequirementsPermit } from "./getRequirementsPermit";
-import { getRequirementsPermit2 } from "./getRequirementsPermit2";
+} from "../../types/index.js";
+import { getRequirementsApproval } from "./getRequirementsApproval.js";
+import { getRequirementsPermit } from "./getRequirementsPermit.js";
+import { getRequirementsPermit2 } from "./getRequirementsPermit2.js";
 
 type GetRequirementsBaseParams = {
   address: Address;

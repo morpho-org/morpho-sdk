@@ -8,22 +8,25 @@ import { blueAbi } from "@morpho-org/blue-sdk-viem";
 import { encodeFunctionData, parseUnits } from "viem";
 import { mainnet } from "viem/chains";
 import { describe, expect } from "vitest";
+import { MAX_SLIPPAGE_TOLERANCE } from "../../../src/helpers/constant.js";
 import {
   BorrowExceedsSafeLtvError,
-  computeMinBorrowSharePrice,
   ExcessiveSlippageToleranceError,
+  MissingAccrualPositionError,
+  MorphoClient,
+  computeMinBorrowSharePrice,
   isRequirementApproval,
   isRequirementAuthorization,
   isRequirementSignature,
-  MissingAccrualPositionError,
-  MorphoClient,
   marketV1SupplyCollateralBorrow,
-} from "../../../src";
-import { MAX_SLIPPAGE_TOLERANCE } from "../../../src/helpers/constant";
-import { UsdcEurcvMarketV1, WethUsdsMarketV1 } from "../../fixtures/marketV1";
-import { testInvariants } from "../../helpers/invariants";
-import { supplyCollateral } from "../../helpers/marketV1";
-import { test } from "../../setup";
+} from "../../../src/index.js";
+import {
+  UsdcEurcvMarketV1,
+  WethUsdsMarketV1,
+} from "../../fixtures/marketV1.js";
+import { testInvariants } from "../../helpers/invariants.js";
+import { supplyCollateral } from "../../helpers/marketV1.js";
+import { test } from "../../setup.js";
 
 describe("SupplyCollateralBorrowMarketV1", () => {
   test("should create supply collateral borrow bundle", async ({ client }) => {

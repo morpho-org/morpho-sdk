@@ -2,8 +2,8 @@ import { type Market, MathLib } from "@morpho-org/blue-sdk";
 import {
   ExcessiveSlippageToleranceError,
   ShareDivideByZeroError,
-} from "../types";
-import { MAX_ABSOLUTE_SHARE_PRICE } from "./constant";
+} from "../types/index.js";
+import { MAX_ABSOLUTE_SHARE_PRICE } from "./constant.js";
 
 /**
  * Computes the minimum borrow share price (in RAY, 1e27) for slippage protection.
